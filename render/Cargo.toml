@@ -1,0 +1,8 @@
+[package]
+name = "overhead-render"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+embedded-graphics.workspace = true
+overhead-core = { version = "0.1.0", path = "../core" }

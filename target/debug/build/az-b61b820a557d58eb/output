@@ -1,0 +1,6 @@
+$ mkdir -p "/Users/wesleyklein/Code/Overhead/target/debug/build/az-b61b820a557d58eb/out/try_track_caller"
+$ cd "/Users/wesleyklein/Code/Overhead/target/debug/build/az-b61b820a557d58eb/out/try_track_caller"
+$ printf '%s' "// try_tra"... > "/Users/wesleyklein/Code/Overhead/target/debug/build/az-b61b820a557d58eb/out/try_track_caller/try_track_caller.rs"
+$ cd "/Users/wesleyklein/Code/Overhead/target/debug/build/az-b61b820a557d58eb/out/try_track_caller" && "/Users/wesleyklein/.rustup/toolchains/stable-aarch64-apple-darwin/bin/rustc" "try_track_caller.rs" "--emit=dep-info,metadata" >& /dev/null
+cargo:rustc-cfg=track_caller
+$ rm -r "/Users/wesleyklein/Code/Overhead/target/debug/build/az-b61b820a557d58eb/out/try_track_caller"

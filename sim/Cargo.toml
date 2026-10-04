@@ -1,0 +1,9 @@
+[package]
+name = "overhead-sim"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+embedded-graphics.workspace = true
+embedded-graphics-simulator = "0.8.0"
+overhead-render = { version = "0.1.0", path = "../render" }
