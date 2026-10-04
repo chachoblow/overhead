@@ -1,0 +1,8 @@
+# Build artifacts
+target/
+
+# Per-crate lock files (workspace root Cargo.lock is the real one)
+/*/Cargo.lock
+
+# macOS
+.DS_Store
