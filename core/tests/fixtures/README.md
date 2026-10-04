@@ -68,3 +68,61 @@ python3 -m venv /tmp/overhead-coordinate-refs
 Generated with Python 3.14.6. Versions are checked by the script and stored
 in the JSON. Normal `cargo test` reads the checked-in JSON and needs no
 Python packages or network access.
+
+## observer.json
+
+Independent observer geometry and complete ISS pipeline references, generated
+on 2026-10-04 by `tools/generate_observer_fixtures.py`. No Overhead code is
+imported; the existing ISS elements are not refreshed.
+
+- **Isolated geometry:** pymap3d 3.2.0 `ecef2aer` on WGS-84, 27 cases:
+  three explicit ECEF targets at nine sites, including the named Vallado
+  site (39.007°N, 104.883°W, 2.187 km), Sydney, both hemispheres, equator,
+  antimeridian, negative height, both poles with nonzero longitudes, and
+  near-pole geometry. This is independently generated geometry at the
+  Vallado site's coordinates, not a published `razel` worked-example vector.
+  https://geospace-code.github.io/pymap3d/aer.html
+- **Complete pipeline:** Skyfield 1.54 `EarthSatellite.from_omm`, WGS-84
+  observer subtraction, and geometric `altaz()` with no refraction.
+  Twelve cases use `iss-25544.json` at T0/T1/T2 above, viewed from the first
+  four sites (Vallado site, Sydney, equator 80°W, equator 90°E). Include
+  both above- and below-horizon targets. No downloaded orbit/EOP data or
+  planetary ephemeris is used.
+  https://rhodesmill.org/skyfield/earth-satellites.html
+- Skyfield's `load.timescale(builtin=True)` uses the pinned wheel's bundled
+  leap-second/delta-T tables. No polar-motion table is installed. Its DUT1
+  estimate is approximately +0.0935..+0.0937 s for these timestamps (stored
+  per case); unlike Overhead it is not forced to zero. Skyfield also uses
+  its own satellite frame reduction and Python sgp4 initialization defaults;
+  Overhead retains AFSPC propagation and GMST-only UT1≈UTC reduction. The
+  fixture intentionally checks agreement within the agreed gates, not bitwise
+  equality between these models. Regeneration is offline after installation.
+- Angles in JSON are degrees; ECEF coordinates, observer height, and range
+  are km. Production engine APIs use radians. Isolated geometry gates are
+  1e-8 km in range and 1e-9 degrees in azimuth/elevation. Full-pipeline gates
+  remain decision 0006's 0.1 km / 0.01 degrees; azimuth differences wrap
+  across north. Observed pipeline maxima: 0.04110 km, 0.004672° azimuth,
+  0.004897° elevation. These are implementation/model comparisons, not
+  real-world orbit accuracy claims.
+- Rust analytic tests separately cover cardinal directions/quadrants,
+  north wrapping, exact horizon, below horizon, zenith/nadir, polar axes,
+  ellipsoid normals at different heights, antimeridian equivalence,
+  coincident/tiny ranges, singularity tolerance, invalid inputs, and numeric
+  overflow. pymap3d snaps sub-millimetre ENU components to zero and supplies
+  a numeric azimuth on the vertical; those library-specific singularities
+  are not our oracle. Our vertical azimuth is `None` per decision 0008.
+
+Regenerate in a separate temporary environment (no Cargo/firmware dependency):
+
+```sh
+python3 -m venv /tmp/overhead-observer-refs
+/tmp/overhead-observer-refs/bin/python -m pip install \
+  'pymap3d==3.2.0' 'numpy==2.4.2' 'skyfield==1.54' \
+  'sgp4==2.24' 'jplephem==2.24' 'certifi==2026.7.22'
+/tmp/overhead-observer-refs/bin/python tools/generate_observer_fixtures.py \
+  > core/tests/fixtures/observer.json
+```
+
+Generated with Python 3.14.6. All installed runtime package versions are
+pinned, checked by the generator, and recorded in JSON. Normal `cargo test`
+reads the checked-in fixture and needs neither Python nor network access.

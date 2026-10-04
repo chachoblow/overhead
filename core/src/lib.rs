@@ -10,8 +10,10 @@ pub use sgp4;
 
 mod coordinates;
 mod ingest;
+mod observer;
 mod propagate;
 
 pub use coordinates::{CoordinateError, GeodeticPosition, ecef_to_geodetic, teme_to_ecef};
 pub use ingest::{IngestError, Satellite};
+pub use observer::{LookAngles, ObservationError, ecef_to_look_angles};
 pub use propagate::{PropagateError, TemeState};

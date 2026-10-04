@@ -32,8 +32,9 @@ engine. No network fetching or display work required.
 - [x] Implement Earth-relative coordinate transformations and geodetic
   position/altitude; test against documented reference cases and boundaries.
   → core/src/coordinates.rs; ERFA/pymap3d fixtures; decision 0007
-- [ ] Implement observer-relative range, azimuth, and elevation for an explicit
+- [x] Implement observer-relative range, azimuth, and elevation for an explicit
   location; add independent reference and geometric edge-case tests.
+  → core/src/observer.rs; pymap3d/Skyfield fixtures; decision 0008
 - [ ] Add a headless runner for fixture, time, and location inputs; print
   satellite measurements and exercise the complete pipeline reproducibly.
 
