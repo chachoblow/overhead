@@ -1,7 +1,7 @@
 # 0006 — Use the `sgp4` crate; own the frame transforms; fixed conventions
 
 Date: 2026-10-04
-Status: accepted
+Status: accepted (coordinate implementation clarifications in 0007)
 
 ## Decision
 Use the `sgp4` crate (neuromorphicsystems, v2.4) for element parsing and
@@ -54,7 +54,8 @@ minutes-since-epoch. UT1 ≈ UTC for sidereal time (no ΔUT1/EOP data);
 worst-case ~0.9 s of Earth rotation ≈ 0.4 km surface displacement, far below
 TLE accuracy (km-level at epoch, growing ~km/day).
 
-**Frames.** SGP4 outputs position/velocity in TEME of epoch. TEME→PEF via a
+**Frames.** SGP4 outputs position/velocity in TEME at the propagation time
+(TEME of date; the original “of epoch” wording is corrected by 0007). TEME→PEF via a
 Z-rotation by GMST (IAU-1982 expression, the crate's sidereal-time function);
 PEF is treated as ECEF — polar motion (~15 m) neglected. Geodetic
 latitude/longitude/altitude on the WGS-84 ellipsoid (iterative method,
@@ -91,7 +92,8 @@ altitude in km above the ellipsoid.
 
 ## Consequences
 - `overhead-core` adds `sgp4` (and transitively `chrono`, `num-traits`,
-  `libm`); no other runtime dependencies for M1.
+  `libm`); coordinate math also declares the existing `libm` directly (0007).
+  No additional runtime library is introduced for the coordinate transforms.
 - We own ~200 lines of well-referenced transform math and its tests, rather
   than a young or oversized dependency.
 - Accuracy claims stay honest: the pipeline is verified to tolerances far

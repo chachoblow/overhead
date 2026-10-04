@@ -115,7 +115,7 @@ fn reports_divergence_after_epoch() {
         matches!(
             at_25,
             Err(PropagateError::Sgp4(
-                sgp4::Error::NegativeSemiLatusRectum { t } 
+                sgp4::Error::NegativeSemiLatusRectum { t }
             )) if t == 25.0
         ),
         "expected negative semi-latus rectum at t=25, got {at_25:?}",

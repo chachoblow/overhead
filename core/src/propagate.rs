@@ -1,9 +1,10 @@
 //! Propagation of a validated satellite to an explicit UTC timestamp.
 //!
 //! Output is the raw SGP4 state in the TEME frame (True Equator, Mean
-//! Equinox of epoch) — an Earth-centered inertial frame that does not rotate
-//! with the Earth. Earth-relative coordinates are a separate transform step.
-//! See docs/decisions/0006-sgp4-crate-and-conventions.md.
+//! Equinox), interpreted at the propagation time, not as a frame frozen at
+//! the element epoch. It does not rotate with the Earth. Earth-relative
+//! positions are a separate transform step; see `crate::teme_to_ecef`.
+//! See decisions 0006 and 0007 for conventions and the frame clarification.
 
 use crate::Satellite;
 

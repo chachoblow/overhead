@@ -18,3 +18,15 @@ Append-only. Newest entry at the bottom. 3â5 lines per session.
 - Recorded decision 0005: verified headless calculations before UI, explicit tuning inputs, separate presentation policies.
 - Kept compute benchmarks and minimal display testing early; full firmware integration remains M6.
 - Updated DESIGN, PLAN, HANDOFF, and planning context; no code changes or build/test runs.
+
+## 2026-10-04 (handoff housekeeping)
+- Reconciled HANDOFF with commits 7be5c0d and a39aa98: M1 research, OMM ingestion/validation, and timestamped propagation are implemented.
+- Recorded the next task: Earth-fixed/geodetic transforms with reference and boundary tests, followed by observer geometry and the headless runner.
+- Reviewed PLAN; its first three M1 checkboxes were already correct. No new decisions or code changes.
+- Documentation-only session; builds, tests, and simulator were not rerun.
+
+## 2026-10-04 (M1 Earth-relative coordinates)
+- Implemented no_std TEME→ECEF position rotation and WGS-84 geodetic inverse/forward conversions with explicit errors and bounded iteration.
+- Added independent ERFA/pymap3d fixtures, a pinned offline generator, and 12 tests including 594 round trips and geometric/time boundaries.
+- Recorded decision 0007's frame/boundary clarifications; checked off M1 transforms. Observer-relative range/azimuth/elevation is next.
+- Workspace check/tests (27 tests), no-default-feature core check, all-feature tests, strict Clippy, formatting, and fixture reproducibility pass; no simulator/hardware run.

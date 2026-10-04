@@ -29,8 +29,9 @@ engine. No network fetching or display work required.
   checked.
 - [x] Implement propagation at an explicit timestamp; validate against trusted
   reference vectors with documented tolerances and error cases.
-- [ ] Implement Earth-relative coordinate transformations and geodetic
+- [x] Implement Earth-relative coordinate transformations and geodetic
   position/altitude; test against documented reference cases and boundaries.
+  → core/src/coordinates.rs; ERFA/pymap3d fixtures; decision 0007
 - [ ] Implement observer-relative range, azimuth, and elevation for an explicit
   location; add independent reference and geometric edge-case tests.
 - [ ] Add a headless runner for fixture, time, and location inputs; print

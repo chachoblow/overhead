@@ -7,6 +7,8 @@ edition = "2024"
 # SGP4 propagation and element-set handling; no_std with libm float math.
 # See docs/decisions/0006-sgp4-crate-and-conventions.md.
 sgp4 = { version = "2.4", default-features = false, features = ["libm"] }
+# no_std coordinate math; already a transitive dependency of sgp4.
+libm = "0.2"
 
 [features]
 # OMM (JSON) parsing via sgp4's serde support; requires an allocator.
