@@ -22,27 +22,19 @@ _Last updated: 2026-10-04. Status: M1 in progress; position transforms implement
 
 ## What changed this session (by file)
 
-- core/src/coordinates.rs, core/src/lib.rs — position-transform API,
-  bounded geodetic iteration, WGS-84 forward conversion, explicit errors.
-- core/Cargo.toml, Cargo.lock — direct libm dependency using the existing
-  locked version for no_std coordinate math.
-- core/tests/coordinates.rs — 12 tests: independent references, 594 round
-  trips, axes/poles/antimeridian, negative heights, high orbits, invalid
-  data/time, overflow, non-convergence, and propagation composition.
-- core/tests/fixtures/coordinates.json, core/tests/fixtures/README.md,
-  tools/generate_coordinate_fixtures.py — pinned offline ERFA/pymap3d
-  reference data, provenance, and reproducible generation instructions.
-- core/src/propagate.rs — corrected frame documentation only; propagation
-  calculations unchanged. core/tests/propagate.rs — rustfmt whitespace only.
-- docs/decisions/0007-coordinate-implementation-conventions.md — recorded
-  implementation conventions; decision 0006 links to the clarification.
-- docs/PLAN.md, docs/HANDOFF.md, docs/PROGRESS.md — updated completed work
-  and next step; retained the earlier housekeeping history.
-- .pi/qrspi/earth-coordinates/ — scoped context and completed unit checklist.
+- docs/notes/implementation-roadmap.md — moved historical roadmap context
+  out of the retired workflow directory; marked it as historical and linked
+  to PLAN and decision 0005 instead of retaining workflow instructions.
+- docs/notes/earth-coordinates.md and
+  docs/notes/earth-coordinates-verification.md — moved implementation context
+  and completed checks into docs, with historical labels and cross-links.
+- docs/HANDOFF.md, docs/PROGRESS.md — recorded the documentation relocation.
+  Removed the empty workflow directories. No code, milestone, or decision
+  changes; observer geometry remains next.
 
 ## Verification
 
-All passed this session:
+All passed in the coordinate implementation session (commit `3db9435`):
 - `cargo check --workspace`
 - `cargo test --workspace` — 27 tests total (12 new coordinate tests)
 - `cargo check -p overhead-core --no-default-features --lib`
@@ -52,6 +44,8 @@ All passed this session:
 - Independent fixture regeneration matches byte-for-byte; `git diff --check`.
 
 Simulator was not launched; no hardware flashing or toolchain changes.
+This documentation-only follow-up did not rerun builds/tests. Documentation
+links and `git diff --check` were checked after the relocation.
 
 ## Next concrete step
 

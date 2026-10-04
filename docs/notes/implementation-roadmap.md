@@ -1,5 +1,10 @@
 # Implementation roadmap — planning context
 
+_Historical planning notes from 2026-10-04. Descriptions of the code reflect
+that session, not current state. See [PLAN](../PLAN.md) for current tasks and
+[decision 0005](../decisions/0005-engine-first-implementation.md) for the
+accepted roadmap rationale._
+
 ## Goal
 Agree and record an engine-first implementation roadmap from the current
 scaffolding to a standalone satellite-tracking dev-board prototype.
@@ -34,5 +39,4 @@ Early compute and display checks run alongside the engine work.
 
 Decision rationale is recorded in docs/decisions/0005-engine-first-implementation.md.
 The canonical milestones, acceptance outcomes, and task status live in
-docs/PLAN.md; do not maintain a duplicate task list here. Create implementation
-unit working files only when the corresponding work is planned in detail.
+docs/PLAN.md; this historical note is not a separate task list.

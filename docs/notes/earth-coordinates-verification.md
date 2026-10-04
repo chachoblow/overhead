@@ -1,4 +1,8 @@
-# Unit: Position transforms
+# Earth-relative coordinates — verification notes
+
+_Historical completion record from 2026-10-04. These checks describe the
+implementation session, not a fresh test run. See the
+[implementation notes](earth-coordinates.md) and [PLAN](../PLAN.md)._
 
 ## Plan
 1. Generate checked-in reference data with pinned offline ERFA/pymap3d dependencies and retain the generator/provenance.

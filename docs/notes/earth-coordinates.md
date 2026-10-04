@@ -1,5 +1,10 @@
 # M1 Earth-relative coordinates
 
+_Historical implementation notes from 2026-10-04. See [PLAN](../PLAN.md) for
+current tasks, [decision 0007](../decisions/0007-coordinate-implementation-conventions.md)
+for accepted conventions, and the [verification notes](earth-coordinates-verification.md)
+for completed checks._
+
 ## Goal
 Convert propagated TEME positions to Earth-fixed positions and WGS-84 geodetic latitude, longitude, and altitude, independently verified before observer geometry.
 
