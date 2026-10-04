@@ -53,7 +53,9 @@ Not included: pass lists, radio info, battery indicator.
   (decisions/0004).
 
 ## Scope for now
-Display and graphics first. Physical controls (knob) and enclosure later.
+The satellite display and graphics are the product focus. Implementation
+starts with a tested headless calculation engine, then builds the UI on real
+data (decisions/0005). Physical controls (knob) and enclosure come later.
 
 ## History
 Rewrite of an earlier project, "Satellite notifier": ESP32 driving an LED
