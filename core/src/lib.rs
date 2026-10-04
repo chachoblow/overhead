@@ -1,16 +1,13 @@
+//! Platform-agnostic satellite tracking engine: element ingestion, orbit
+//! propagation, coordinate transforms, and application state.
+//!
+//! `no_std`; no allocation unless the `omm` feature (OMM/JSON parsing) is
+//! enabled. Conventions (time, frames, units, tolerances) are documented in
+//! docs/decisions/0006-sgp4-crate-and-conventions.md.
 #![no_std]
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+pub use sgp4;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+mod ingest;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use ingest::{IngestError, Satellite};

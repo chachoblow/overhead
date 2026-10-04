@@ -1,0 +1,94 @@
+# 0006 — Use the `sgp4` crate; own the frame transforms; fixed conventions
+
+Date: 2026-10-04
+Status: accepted
+
+## Decision
+Use the `sgp4` crate (neuromorphicsystems, v2.4) for element parsing and
+propagation in `overhead-core`. Implement the downstream geometry ourselves:
+TEME→ECEF rotation, WGS-84 geodetic conversion, and observer-relative
+range/azimuth/elevation. Fix the time, frame, unit, and tolerance conventions
+below before implementation.
+
+## Dependency: `sgp4` 2.4
+
+- `no_std` with `default-features = false, features = ["libm"]` (uses
+  num-traits + libm for float math). TLE parsing and propagation need no
+  alloc. Pulls in `chrono` (default-features off, no_std-safe).
+- OMM (JSON) parsing sits behind the `serde` feature, which requires `alloc`
+  but not `std`. The ESP32-S3 firmware will have an allocator (esp-alloc,
+  8 MB PSRAM), so on-device OMM parsing is viable per decisions 0001/0002.
+- Mature and independently verified: ported from the Celestrak reference
+  implementation; the repo checks in the Vallado AIAA 2006-6753 verification
+  vectors (`tests/test_cases.toml`) and reports max deviation < 2×10⁻⁷ km
+  from the reference over 3.5 years.
+- Exposes `iau_epoch_to_sidereal_time` / `afspc_epoch_to_sidereal_time`,
+  which we reuse for the TEME→ECEF rotation so the reduction stays
+  consistent with the orbit model.
+
+### Parser placement
+`overhead-core` gets a default-off `omm` feature that enables `sgp4/serde`
+(+alloc). The M1 host runner enables it to load fixtures; the no_std core
+builds without it. Firmware enables it in M6.
+
+### Alternatives considered
+- `satkit` — std-only, heavy (ITRF, data files); not for embedded.
+- `kshana` — a large PNT simulation framework with its own SGP4 port; far
+  too broad a dependency for a tracker core.
+- `ephemerust`, `sgp4-predict` — cover transforms/passes but are weeks-old
+  0.x crates with negligible usage; the math they wrap is ~200 lines we can
+  implement with documented references and test independently. Pass search
+  (M2) stays ours because it must respect the device compute budget.
+
+## Conventions
+
+**Time.** UTC everywhere at API boundaries. Element epochs come from the
+OMM in UTC; propagation takes an explicit UTC timestamp converted to
+minutes-since-epoch. UT1 ≈ UTC for sidereal time (no ΔUT1/EOP data);
+worst-case ~0.9 s of Earth rotation ≈ 0.4 km surface displacement, far below
+TLE accuracy (km-level at epoch, growing ~km/day).
+
+**Frames.** SGP4 outputs position/velocity in TEME of epoch. TEME→PEF via a
+Z-rotation by GMST (IAU-1982 expression, the crate's sidereal-time function);
+PEF is treated as ECEF — polar motion (~15 m) neglected. Geodetic
+latitude/longitude/altitude on the WGS-84 ellipsoid (iterative method,
+Vallado Alg. 13). Observer look angles via the topocentric SEZ frame:
+azimuth clockwise from true north (0–360°), elevation from the local
+horizon, slant range direct.
+
+**Units.** Kilometres and km/s internally (matching the crate's output);
+radians internally, degrees only at display/reporting boundaries; geodetic
+altitude in km above the ellipsoid.
+
+**Tolerances (test gates).**
+- Propagation: match the Vallado verification vectors to 1×10⁻⁶ km in
+  position and 1×10⁻⁶ km/s in velocity at every test time step.
+- Geodetic conversion: round-trip and reference cases to 1 m / 1×10⁻⁶ deg.
+- Az/el/range: within 0.01° and 0.1 km of independently generated reference
+  values; exactness is bounded by the GMST-only reduction, which is still
+  ~100× better than element accuracy.
+
+## Reference cases (independent of our code)
+- Propagation: Vallado AIAA 2006-6753 ("Revisiting Spacetrack Report #3")
+  verification set — SGP4 and SDP4 cases incl. the TEME example satellite
+  (00005), checked into the sgp4 repo as `tests/test_cases.toml` and
+  published as `SGP4-VER.TLE` + expected ephemerides.
+- Geodetic: Vallado worked examples (Ex. 3-3) and cross-checks against
+  pymap3d/Skyfield for the chosen fixture satellite.
+- Az/el: Vallado `razel` test case (site 39.007°N, 104.883°W, alt 2.187 km)
+  and Skyfield-generated look angles for the fixture OMM at fixed timestamps,
+  recorded with provenance in the test data.
+- Geometric edge cases built analytically: satellite at zenith, on the
+  horizon, due north/east/south/west of the observer, observer at poles and
+  on the equator/antimeridian.
+
+## Consequences
+- `overhead-core` adds `sgp4` (and transitively `chrono`, `num-traits`,
+  `libm`); no other runtime dependencies for M1.
+- We own ~200 lines of well-referenced transform math and its tests, rather
+  than a young or oversized dependency.
+- Accuracy claims stay honest: the pipeline is verified to tolerances far
+  tighter than TLE accuracy, and known simplifications (UT1≈UTC, no polar
+  motion) are documented rather than silently absorbed.
+- Skyfield (Python) is used offline to generate some reference values; it is
+  a data-generation tool, not a dependency.

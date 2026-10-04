@@ -19,10 +19,11 @@ Build the physical calculation pipeline in `overhead-core`, exercised by a
 headless host runner. Keep host file I/O and reporting outside the no_std
 engine. No network fetching or display work required.
 
-- [ ] Research SGP4/OMM support and no_std compatibility; propose dependencies
+- [x] Research SGP4/OMM support and no_std compatibility; propose dependencies
   with rationale. Identify independent reference cases and document time,
   coordinate-frame, unit, and accuracy conventions before implementation.
-- [ ] Add a small checked-in OMM fixture with provenance and fixed test
+  → decisions/0006-sgp4-crate-and-conventions.md
+- [x] Add a small checked-in OMM fixture with provenance and fixed test
   timestamps; implement ingestion/validation into engine inputs, including
   invalid-data tests. Do not assume parser placement until compatibility is
   checked.
