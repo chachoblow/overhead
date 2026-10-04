@@ -74,7 +74,11 @@ impl Satellite {
         if !(1957..=2100).contains(&year) {
             return Err(IngestError::ImplausibleEpoch(year));
         }
-        let constants = sgp4::Constants::from_elements(elements).map_err(IngestError::Sgp4)?;
+        // AFSPC compatibility mode: the mode element sets are fitted in and
+        // the mode the Vallado verification vectors were generated with.
+        // See docs/decisions/0006-sgp4-crate-and-conventions.md.
+        let constants = sgp4::Constants::from_elements_afspc_compatibility_mode(elements)
+            .map_err(IngestError::Sgp4)?;
         Ok(Self {
             norad_id: elements.norad_id,
             epoch: elements.datetime,

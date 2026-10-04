@@ -9,5 +9,7 @@
 pub use sgp4;
 
 mod ingest;
+mod propagate;
 
 pub use ingest::{IngestError, Satellite};
+pub use propagate::{PropagateError, TemeState};

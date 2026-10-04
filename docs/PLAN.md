@@ -27,7 +27,7 @@ engine. No network fetching or display work required.
   timestamps; implement ingestion/validation into engine inputs, including
   invalid-data tests. Do not assume parser placement until compatibility is
   checked.
-- [ ] Implement propagation at an explicit timestamp; validate against trusted
+- [x] Implement propagation at an explicit timestamp; validate against trusted
   reference vectors with documented tolerances and error cases.
 - [ ] Implement Earth-relative coordinate transformations and geodetic
   position/altitude; test against documented reference cases and boundaries.
