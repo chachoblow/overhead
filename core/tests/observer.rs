@@ -3,8 +3,8 @@
 
 use core::f64::consts::{FRAC_PI_2, PI, TAU};
 use overhead_core::{
-    CoordinateError, GeodeticPosition, LookAngles, ObservationError, Satellite,
-    ecef_to_look_angles, teme_to_ecef,
+    CoordinateError, EcefPosition, GeodeticPosition, LookAngles, ObservationError, Satellite,
+    ecef_to_look_angles,
 };
 use serde_json::Value;
 use sgp4::chrono::NaiveDateTime;
@@ -46,9 +46,9 @@ fn assert_angles(actual: LookAngles, range: f64, az: Option<f64>, el: f64) {
     }
 }
 
-fn offset(observer: GeodeticPosition, delta: [f64; 3]) -> [f64; 3] {
-    let origin = observer.to_ecef().unwrap();
-    core::array::from_fn(|i| origin[i] + delta[i])
+fn offset(observer: GeodeticPosition, delta: [f64; 3]) -> EcefPosition {
+    let origin = observer.to_ecef().unwrap().km();
+    EcefPosition::from_km(core::array::from_fn(|i| origin[i] + delta[i]))
 }
 
 #[test]
@@ -57,7 +57,9 @@ fn isolated_geometry_matches_pymap3d() {
     let cases = references["geometry"].as_array().unwrap();
     assert_eq!(cases.len(), 27);
     for case in cases {
-        let target = core::array::from_fn(|i| case["ecef_km"][i].as_f64().unwrap());
+        let target = EcefPosition::from_km(core::array::from_fn(|i| {
+            case["ecef_km"][i].as_f64().unwrap()
+        }));
         let actual = ecef_to_look_angles(target, fixture_site(&case["observer"])).unwrap();
         assert!(
             (actual.range_km - case["range_km"].as_f64().unwrap()).abs() < 1e-8,
@@ -93,7 +95,7 @@ fn fixed_iss_pipeline_matches_skyfield() {
             NaiveDateTime::parse_from_str(case["utc"].as_str().unwrap(), "%Y-%m-%dT%H:%M:%S%.f")
                 .unwrap();
         let state = satellite.state_at(time).unwrap();
-        let ecef = teme_to_ecef(state.position, time).unwrap();
+        let ecef = state.to_ecef().unwrap();
         let actual = ecef_to_look_angles(ecef, fixture_site(&case["observer"])).unwrap();
         let errors = [
             (actual.range_km - case["range_km"].as_f64().unwrap()).abs(),
@@ -210,7 +212,7 @@ fn ellipsoid_normal_is_vertical_across_latitudes_and_heights() {
 
 #[test]
 fn antimeridian_endpoints_have_equivalent_look_angles() {
-    let target = [-7000.0, 2000.0, -3500.0];
+    let target = EcefPosition::from_km([-7000.0, 2000.0, -3500.0]);
     let a = ecef_to_look_angles(target, site(30.0, -180.0, 0.4)).unwrap();
     let b = ecef_to_look_angles(target, site(30.0, 180.0, 0.4)).unwrap();
     assert_angles(a, b.range_km, b.azimuth_rad, b.elevation_rad);
@@ -254,7 +256,7 @@ fn rejects_non_finite_target_and_observer_components() {
             let mut target = [7000.0, 100.0, 200.0];
             target[axis] = bad;
             assert_eq!(
-                ecef_to_look_angles(target, site(0.0, 0.0, 0.0)),
+                ecef_to_look_angles(EcefPosition::from_km(target), site(0.0, 0.0, 0.0)),
                 Err(CoordinateError::NonFinite.into())
             );
             let mut fields = [0.0; 3];
@@ -265,7 +267,7 @@ fn rejects_non_finite_target_and_observer_components() {
                 altitude_km: fields[2],
             };
             assert_eq!(
-                ecef_to_look_angles([7000.0, 0.0, 0.0], observer),
+                ecef_to_look_angles(EcefPosition::from_km([7000.0, 0.0, 0.0]), observer),
                 Err(CoordinateError::NonFinite.into())
             );
         }
@@ -281,7 +283,7 @@ fn rejects_invalid_observer_angles_and_overflow() {
         (site(0.0, -180.001, 0.0), CoordinateError::InvalidLongitude),
     ] {
         assert_eq!(
-            ecef_to_look_angles([7000.0, 0.0, 0.0], observer),
+            ecef_to_look_angles(EcefPosition::from_km([7000.0, 0.0, 0.0]), observer),
             Err(error.into())
         );
     }
@@ -291,12 +293,16 @@ fn rejects_invalid_observer_angles_and_overflow() {
         ([f64::MAX, 0.0, 0.0], site(0.0, 0.0, -f64::MAX)),
     ] {
         assert_eq!(
-            ecef_to_look_angles(target, observer),
+            ecef_to_look_angles(EcefPosition::from_km(target), observer),
             Err(CoordinateError::NonFinite.into())
         );
     }
     // Large finite norms should not overflow just from squaring components.
-    let actual = ecef_to_look_angles([f64::MAX / 2.0; 3], site(45.0, 45.0, 0.0)).unwrap();
+    let actual = ecef_to_look_angles(
+        EcefPosition::from_km([f64::MAX / 2.0; 3]),
+        site(45.0, 45.0, 0.0),
+    )
+    .unwrap();
     assert!(actual.range_km.is_finite());
     assert!(actual.azimuth_rad.unwrap().is_finite());
     assert!(actual.elevation_rad.is_finite());

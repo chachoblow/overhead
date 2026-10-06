@@ -6,8 +6,9 @@
 //! The rotation must NOT be used directly on velocity: that also requires
 //! the Earth's angular-velocity cross product.
 
+use crate::{EcefPosition, TemePosition, validate_utc_time};
 use core::f64::consts::{FRAC_PI_2, PI, TAU};
-use sgp4::chrono::{Datelike, NaiveDate, NaiveDateTime, Timelike};
+use sgp4::chrono::{NaiveDate, NaiveDateTime};
 
 const WGS84_A: f64 = 6378.137; // equatorial radius, km
 const WGS84_F: f64 = 1.0 / 298.257_223_563;
@@ -66,21 +67,20 @@ fn finite(values: [f64; 3]) -> Result<[f64; 3], CoordinateError> {
 
 /// Converts a TEME **position** (km) to ECEF (km) at an explicit UTC time.
 ///
-/// Pass the same timestamp used to propagate this position, not the orbital
-/// element epoch. UTC years 1957..=2100 are supported, matching ingestion's
-/// era. Explicit leap seconds are rejected; no leap-second/EOP tables are
-/// required. UT1≈UTC introduces up to ~0.4 km of surface rotation error.
+/// Low-level helper for synthetic/reference inputs. For propagated states,
+/// prefer [`crate::TemeState::to_ecef`] to preserve the timestamp automatically.
+/// Here the caller must supply the propagation timestamp, not the element
+/// epoch. UTC years 1957..=2100 are supported, matching ingestion's era.
+/// Explicit leap seconds are rejected; no leap-second/EOP tables are required. UT1≈UTC introduces up to ~0.4 km of surface rotation error.
 ///
 /// Uses the position matrix in Vallado's `teme2ecef` with GMST only and no
 /// polar motion: `[cos(θ)x + sin(θ)y, -sin(θ)x + cos(θ)y, z]`.
 pub fn teme_to_ecef(
-    position_km: [f64; 3],
+    position_km: TemePosition,
     datetime: NaiveDateTime,
-) -> Result<[f64; 3], CoordinateError> {
-    let [x, y, z] = finite(position_km)?;
-    if !(1957..=2100).contains(&datetime.year()) || datetime.nanosecond() >= 1_000_000_000 {
-        return Err(CoordinateError::UnsupportedTime);
-    }
+) -> Result<EcefPosition, CoordinateError> {
+    let [x, y, z] = finite(position_km.km())?;
+    validate_utc_time(datetime).map_err(|_| CoordinateError::UnsupportedTime)?;
     let j2000 = NaiveDate::from_ymd_opt(2000, 1, 1)
         .unwrap()
         .and_hms_opt(12, 0, 0)
@@ -92,7 +92,7 @@ pub fn teme_to_ecef(
     let years = seconds / (365.25 * 86400.0);
     let theta = sgp4::iau_epoch_to_sidereal_time(years);
     let (sin, cos) = libm::sincos(theta);
-    finite([cos * x + sin * y, -sin * x + cos * y, z])
+    finite([cos * x + sin * y, -sin * x + cos * y, z]).map(EcefPosition::from_km)
 }
 
 /// Converts ECEF position in km to WGS-84 geodetic coordinates.
@@ -105,8 +105,8 @@ pub fn teme_to_ecef(
 ///
 /// Height uses the projection onto the ellipsoid normal, avoiding division
 /// by sin(latitude) or cos(latitude) at the equator and poles.
-pub fn ecef_to_geodetic(position_km: [f64; 3]) -> Result<GeodeticPosition, CoordinateError> {
-    let [x, y, z] = finite(position_km)?;
+pub fn ecef_to_geodetic(position_km: EcefPosition) -> Result<GeodeticPosition, CoordinateError> {
+    let [x, y, z] = finite(position_km.km())?;
     let p = libm::hypot(x, y);
     let radius = libm::hypot(p, z);
     if !radius.is_finite() {
@@ -154,7 +154,7 @@ impl GeodeticPosition {
     ///
     /// Accepts longitude in [-π, π], latitude in [-π/2, π/2], and finite
     /// height (negative heights allowed). Exact poles produce x=y=0.
-    pub fn to_ecef(self) -> Result<[f64; 3], CoordinateError> {
+    pub fn to_ecef(self) -> Result<EcefPosition, CoordinateError> {
         let [latitude, longitude, height] =
             finite([self.latitude_rad, self.longitude_rad, self.altitude_km])?;
         if !(-FRAC_PI_2..=FRAC_PI_2).contains(&latitude) {
@@ -174,5 +174,6 @@ impl GeodeticPosition {
             (n + height) * cos_lat * sin_lon,
             (n * (1.0 - WGS84_E2) + height) * sin_lat,
         ])
+        .map(EcefPosition::from_km)
     }
 }

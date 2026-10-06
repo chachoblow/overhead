@@ -2,7 +2,10 @@
 //! Provenance, generation commands, conventions, and gates: fixtures/README.md.
 
 use core::f64::consts::{FRAC_PI_2, PI};
-use overhead_core::{CoordinateError, GeodeticPosition, Satellite, ecef_to_geodetic, teme_to_ecef};
+use overhead_core::{
+    CoordinateError, EcefPosition, GeodeticPosition, Satellite, TemePosition, ecef_to_geodetic,
+    teme_to_ecef,
+};
 use serde_json::Value;
 use sgp4::chrono::{NaiveDate, NaiveDateTime, TimeDelta};
 
@@ -25,7 +28,8 @@ fn distance(a: [f64; 3], b: [f64; 3]) -> f64 {
     (a[0] - b[0]).hypot(a[1] - b[1]).hypot(a[2] - b[2])
 }
 
-fn assert_position(actual: [f64; 3], expected: [f64; 3]) {
+fn assert_position(actual: EcefPosition, expected: [f64; 3]) {
+    let actual = actual.km();
     let error = distance(actual, expected);
     assert!(
         error < KM_TOL,
@@ -68,11 +72,15 @@ fn assert_geodetic(actual: GeodeticPosition, expected: GeodeticPosition) {
 fn teme_rotation_matches_erfa_at_independent_timestamps() {
     for case in references()["rotations"].as_array().unwrap() {
         let teme = vector(&case["teme_km"]);
-        let ecef = teme_to_ecef(teme, utc(case["utc"].as_str().unwrap())).unwrap();
+        let ecef = teme_to_ecef(
+            TemePosition::from_km(teme),
+            utc(case["utc"].as_str().unwrap()),
+        )
+        .unwrap();
         assert_position(ecef, vector(&case["ecef_km"]));
         // A pure Z rotation preserves radius and the polar component.
-        assert!((distance(ecef, [0.0; 3]) - distance(teme, [0.0; 3])).abs() < 1e-9);
-        assert_eq!(ecef[2], teme[2]);
+        assert!((distance(ecef.km(), [0.0; 3]) - distance(teme, [0.0; 3])).abs() < 1e-9);
+        assert_eq!(ecef.km()[2], teme[2]);
     }
 }
 
@@ -85,7 +93,10 @@ fn geodetic_conversions_match_independent_pymap3d_positions() {
             case["altitude_km"].as_f64().unwrap(),
         );
         let ecef = vector(&case["ecef_km"]);
-        assert_geodetic(ecef_to_geodetic(ecef).unwrap(), expected);
+        assert_geodetic(
+            ecef_to_geodetic(EcefPosition::from_km(ecef)).unwrap(),
+            expected,
+        );
         assert_position(expected.to_ecef().unwrap(), ecef);
     }
 }
@@ -111,7 +122,7 @@ fn grid_round_trips_surface_leo_geo_and_high_orbits() {
                 let ecef = original.to_ecef().unwrap();
                 let restored = ecef_to_geodetic(ecef).unwrap();
                 assert_geodetic(restored, original);
-                assert_position(restored.to_ecef().unwrap(), ecef);
+                assert_position(restored.to_ecef().unwrap(), ecef.km());
             }
         }
     }
@@ -130,14 +141,14 @@ fn axes_use_wgs84_and_defined_pole_and_antimeridian_conventions() {
         ([0.0, 0.0, b + 420.0], geodetic(90.0, 0.0, 420.0)),
         ([0.0, 0.0, -b - 420.0], geodetic(-90.0, 0.0, 420.0)),
     ] {
-        let result = ecef_to_geodetic(ecef).unwrap();
+        let result = ecef_to_geodetic(EcefPosition::from_km(ecef)).unwrap();
         assert_geodetic(result, expected);
         assert_eq!(result.longitude_rad, expected.longitude_rad);
     }
     // Any input longitude at an exact pole produces the exact polar axis.
     for lat in [-90.0, 90.0] {
         let ecef = geodetic(lat, 123.0, 0.0).to_ecef().unwrap();
-        assert_eq!(&ecef[..2], &[0.0, 0.0]);
+        assert_eq!(&ecef.km()[..2], &[0.0, 0.0]);
         assert_eq!(ecef_to_geodetic(ecef).unwrap().longitude_rad, 0.0);
     }
 }
@@ -146,9 +157,9 @@ fn axes_use_wgs84_and_defined_pole_and_antimeridian_conventions() {
 fn subsecond_time_is_not_truncated() {
     let t0 = utc("2026-10-04T12:43:41.000000");
     let t1 = t0 + TimeDelta::milliseconds(500);
-    let r0 = teme_to_ecef([7000.0, 0.0, 0.0], t0).unwrap();
-    let r1 = teme_to_ecef([7000.0, 0.0, 0.0], t1).unwrap();
-    let movement = distance(r0, r1);
+    let r0 = teme_to_ecef(TemePosition::from_km([7000.0, 0.0, 0.0]), t0).unwrap();
+    let r1 = teme_to_ecef(TemePosition::from_km([7000.0, 0.0, 0.0]), t1).unwrap();
+    let movement = distance(r0.km(), r1.km());
     assert!(
         (0.25..0.26).contains(&movement),
         "half-second movement {movement} km"
@@ -164,9 +175,13 @@ fn rotation_is_continuous_across_calendar_boundaries() {
         "2026-12-31T23:59:59",
     ] {
         let t = utc(text);
-        let r0 = teme_to_ecef([7000.0, 0.0, 0.0], t).unwrap();
-        let r1 = teme_to_ecef([7000.0, 0.0, 0.0], t + TimeDelta::seconds(1)).unwrap();
-        assert!((0.510..0.511).contains(&distance(r0, r1)));
+        let r0 = teme_to_ecef(TemePosition::from_km([7000.0, 0.0, 0.0]), t).unwrap();
+        let r1 = teme_to_ecef(
+            TemePosition::from_km([7000.0, 0.0, 0.0]),
+            t + TimeDelta::seconds(1),
+        )
+        .unwrap();
+        assert!((0.510..0.511).contains(&distance(r0.km(), r1.km())));
     }
 }
 
@@ -186,10 +201,10 @@ fn propagated_vanguard_positions_compose_with_reference_rotations() {
         }
         let time = utc(case["utc"].as_str().unwrap());
         let state = satellite.state_at(time).unwrap();
-        let ecef = teme_to_ecef(state.position, time).unwrap();
+        let ecef = state.to_ecef().unwrap();
         assert_position(ecef, vector(&case["ecef_km"]));
         let geodetic = ecef_to_geodetic(ecef).unwrap();
-        assert_position(geodetic.to_ecef().unwrap(), ecef);
+        assert_position(geodetic.to_ecef().unwrap(), ecef.km());
         checked += 1;
     }
     assert_eq!(checked, 2);
@@ -203,11 +218,11 @@ fn iss_fixture_composes_at_fixed_timestamps() {
     for minutes in [0, 90, 1440] {
         let time = satellite.epoch() + TimeDelta::minutes(minutes);
         let state = satellite.state_at(time).unwrap();
-        let ecef = teme_to_ecef(state.position, time).unwrap();
+        let ecef = state.to_ecef().unwrap();
         let geodetic = ecef_to_geodetic(ecef).unwrap();
         assert!((350.0..500.0).contains(&geodetic.altitude_km));
         assert!(geodetic.latitude_rad.to_degrees().abs() < 52.0);
-        assert_position(geodetic.to_ecef().unwrap(), ecef);
+        assert_position(geodetic.to_ecef().unwrap(), ecef.km());
     }
 }
 
@@ -219,10 +234,13 @@ fn rejects_non_finite_inputs_in_every_component() {
             let mut position = [7000.0, 100.0, 200.0];
             position[axis] = bad;
             assert_eq!(
-                teme_to_ecef(position, time),
+                teme_to_ecef(TemePosition::from_km(position), time),
                 Err(CoordinateError::NonFinite)
             );
-            assert_eq!(ecef_to_geodetic(position), Err(CoordinateError::NonFinite));
+            assert_eq!(
+                ecef_to_geodetic(EcefPosition::from_km(position)),
+                Err(CoordinateError::NonFinite)
+            );
             let mut fields = [0.0, 0.0, 0.0];
             fields[axis] = bad;
             let geodetic = GeodeticPosition {
@@ -250,15 +268,18 @@ fn rejects_invalid_angles_center_and_numeric_overflow() {
         );
     }
     assert_eq!(
-        ecef_to_geodetic([0.0; 3]),
+        ecef_to_geodetic(EcefPosition::from_km([0.0; 3])),
         Err(CoordinateError::EarthCenter)
     );
     assert_eq!(
-        ecef_to_geodetic([f64::MAX; 3]),
+        ecef_to_geodetic(EcefPosition::from_km([f64::MAX; 3])),
         Err(CoordinateError::NonFinite)
     );
     assert_eq!(
-        teme_to_ecef([f64::MAX; 3], utc("2000-01-01T12:00:00")),
+        teme_to_ecef(
+            TemePosition::from_km([f64::MAX; 3]),
+            utc("2000-01-01T12:00:00")
+        ),
         Err(CoordinateError::NonFinite)
     );
 }
@@ -266,7 +287,7 @@ fn rejects_invalid_angles_center_and_numeric_overflow() {
 #[test]
 fn difficult_deep_interior_input_returns_error_instead_of_unbounded_iteration() {
     assert_eq!(
-        ecef_to_geodetic([43.0, 0.0, 1.0]),
+        ecef_to_geodetic(EcefPosition::from_km([43.0, 0.0, 1.0])),
         Err(CoordinateError::NoConvergence)
     );
 }
@@ -283,7 +304,7 @@ fn unsupported_times_and_explicit_leap_seconds_are_rejected() {
         leap_second,
     ] {
         assert_eq!(
-            teme_to_ecef([7000.0, 0.0, 0.0], time),
+            teme_to_ecef(TemePosition::from_km([7000.0, 0.0, 0.0]), time),
             Err(CoordinateError::UnsupportedTime)
         );
     }

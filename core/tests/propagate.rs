@@ -30,18 +30,19 @@ fn assert_matches_reference(satellite: &Satellite, states: &[RefState]) {
         let state = satellite
             .state_at(datetime)
             .unwrap_or_else(|error| panic!("propagation to t={minutes} min failed: {error}"));
-        assert_eq!(state.minutes_since_epoch, *minutes);
+        assert_eq!(state.minutes_since_epoch(), *minutes);
+        assert_eq!(state.datetime(), datetime);
         for axis in 0..3 {
             assert!(
-                (state.position[axis] - position[axis]).abs() < 1.0e-6,
+                (state.position().km()[axis] - position[axis]).abs() < 1.0e-6,
                 "t={minutes} min: position[{axis}] = {}, reference = {}",
-                state.position[axis],
+                state.position().km()[axis],
                 position[axis],
             );
             assert!(
-                (state.velocity[axis] - velocity[axis]).abs() < 1.0e-9,
+                (state.velocity()[axis] - velocity[axis]).abs() < 1.0e-9,
                 "t={minutes} min: velocity[{axis}] = {}, reference = {}",
-                state.velocity[axis],
+                state.velocity()[axis],
                 velocity[axis],
             );
         }
@@ -153,8 +154,14 @@ fn iss_fixture_propagates_to_plausible_leo_states() {
         let state = satellite
             .state_at(satellite.epoch() + TimeDelta::minutes(minutes))
             .expect("ISS fixture must propagate");
-        let radius = state.position.iter().map(|x| x * x).sum::<f64>().sqrt();
-        let speed = state.velocity.iter().map(|x| x * x).sum::<f64>().sqrt();
+        let radius = state
+            .position()
+            .km()
+            .iter()
+            .map(|x| x * x)
+            .sum::<f64>()
+            .sqrt();
+        let speed = state.velocity().iter().map(|x| x * x).sum::<f64>().sqrt();
         // ISS orbit: ~420 km altitude, ~7.66 km/s.
         assert!(
             (6700.0..6900.0).contains(&radius),

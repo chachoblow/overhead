@@ -106,7 +106,7 @@ fn twelve_cli_pipelines_match_independent_skyfield_references() {
             .map(|s| s.parse().unwrap())
             .collect();
         assert_eq!(printed.len(), 3);
-        for (actual, expected) in geo.to_ecef().unwrap().iter().zip(printed) {
+        for (actual, expected) in geo.to_ecef().unwrap().km().iter().zip(printed) {
             assert!((actual - expected).abs() < 1e-6);
         }
     }
@@ -135,6 +135,7 @@ fn invalid_times_and_observers_fail_without_reports() {
         "1956-12-31T23:59:59Z",
         "2101-01-01T00:00:00Z",
         "2016-12-31T23:59:60Z",
+        "2016-12-31T23:59:60.5Z",
         "garbageZ",
     ] {
         failure(&[&path, time, "0", "0", "0"], "UTC");
@@ -213,6 +214,20 @@ fn file_json_cardinality_and_element_errors_are_reported() {
     ] {
         let temp = TempFile::new(&data);
         failure(&[&temp.path, T0, "0", "0", "0"], error);
+    }
+}
+
+#[test]
+fn unsupported_element_epochs_fail_without_reports() {
+    for epoch in [
+        "1956-12-31T23:59:59.999999999",
+        "2101-01-01T00:00:00",
+        "2016-12-31T23:59:60.5",
+    ] {
+        let mut data: Value = serde_json::from_str(ISS).unwrap();
+        data[0]["EPOCH"] = json!(epoch);
+        let temp = TempFile::new(&data.to_string());
+        failure(&[&temp.path, T0, "0", "0", "0"], "invalid elements");
     }
 }
 

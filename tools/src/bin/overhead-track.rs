@@ -3,11 +3,8 @@ use std::{env, fmt::Write, fs, process::ExitCode};
 
 use overhead_core::{
     GeodeticPosition, LookAngles, Satellite, ecef_to_geodetic, ecef_to_look_angles,
-    sgp4::{
-        Elements,
-        chrono::{Datelike, NaiveDateTime, Timelike},
-    },
-    teme_to_ecef,
+    sgp4::{Elements, chrono::NaiveDateTime},
+    validate_utc_time,
 };
 
 const USAGE: &str = "Usage: overhead-track OMM.json UTC LAT_DEG LON_DEG HEIGHT_KM
@@ -37,9 +34,7 @@ impl Inputs {
         let utc = utc.strip_suffix('Z').ok_or("UTC must end in Z")?;
         let time = NaiveDateTime::parse_from_str(utc, "%Y-%m-%dT%H:%M:%S%.f")
             .map_err(|error| format!("invalid UTC timestamp: {error}"))?;
-        if !(1957..=2100).contains(&time.year()) || time.nanosecond() >= 1_000_000_000 {
-            return Err("UTC must be in 1957..=2100 and not a leap second".into());
-        }
+        validate_utc_time(time).map_err(|error| format!("invalid UTC timestamp: {error}"))?;
         let number = |text: &str, label: &str| -> Result<f64, String> {
             let value: f64 = text
                 .parse()
@@ -112,7 +107,8 @@ fn run(inputs: Inputs) -> Result<String, String> {
     let state = satellite
         .state_at(inputs.time)
         .map_err(|error| format!("propagation failed: {error}"))?;
-    let ecef = teme_to_ecef(state.position, inputs.time)
+    let ecef = state
+        .to_ecef()
         .map_err(|error| format!("TEME→ECEF failed: {error}"))?;
     let geodetic =
         ecef_to_geodetic(ecef).map_err(|error| format!("geodetic conversion failed: {error}"))?;
@@ -145,7 +141,7 @@ fn run(inputs: Inputs) -> Result<String, String> {
     writeln!(
         output,
         "Minutes since element epoch (min): {:.9}",
-        state.minutes_since_epoch
+        state.minutes_since_epoch()
     )
     .unwrap();
     writeln!(
@@ -157,9 +153,9 @@ fn run(inputs: Inputs) -> Result<String, String> {
     )
     .unwrap();
     for (label, vector) in [
-        ("TEME position (km)", state.position),
-        ("TEME velocity (km/s)", state.velocity),
-        ("ECEF position (km; GMST-only)", ecef),
+        ("TEME position (km)", state.position().km()),
+        ("TEME velocity (km/s)", state.velocity()),
+        ("ECEF position (km; GMST-only)", ecef.km()),
     ] {
         writeln!(
             output,

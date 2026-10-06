@@ -2,7 +2,7 @@
 
 use core::f64::consts::{FRAC_PI_2, TAU};
 
-use crate::{CoordinateError, GeodeticPosition};
+use crate::{CoordinateError, EcefPosition, GeodeticPosition};
 
 /// Direct line-of-sight measurements from an explicit WGS-84 observer.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -53,15 +53,16 @@ impl core::fmt::Display for ObservationError {
 /// A relative 1e-12 horizontal tolerance suppresses numerical azimuth noise
 /// on the vertical axis; it does not clip or alter elevation.
 ///
-/// For a propagated TEME position, first call [`crate::teme_to_ecef`] with
-/// the **propagation timestamp**, not the element epoch. This function has
+/// For a propagated TEME position, first call [`crate::TemeState::to_ecef`]
+/// to rotate it using its bound propagation timestamp. This function has
 /// no clock, propagation, atmospheric refraction, terrain, or occultation
 /// model; even targets below the horizon return geometric measurements.
 pub fn ecef_to_look_angles(
-    target_km: [f64; 3],
+    target_km: EcefPosition,
     observer: GeodeticPosition,
 ) -> Result<LookAngles, ObservationError> {
-    let site = observer.to_ecef()?;
+    let site = observer.to_ecef()?.km();
+    let target_km = target_km.km();
     if !target_km.iter().all(|value| value.is_finite()) {
         return Err(CoordinateError::NonFinite.into());
     }

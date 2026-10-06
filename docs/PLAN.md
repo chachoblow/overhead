@@ -3,8 +3,8 @@
 Build a tested headless tracking engine, then a real-data UI, then the
 standalone device. See decisions/0005-engine-first-implementation.md.
 
-M1 is complete. Later milestones are outcome-level scope, to refine before
-starting them; a small core API hardening follow-up comes before M2.
+M1 and the pre-M2 core API hardening follow-up are complete. M2 is next.
+Later milestones are outcome-level scope, to refine before starting them.
 An unchecked scope item in those milestones is not necessarily one session.
 
 ## M0 — Project setup (complete)
@@ -54,20 +54,24 @@ Ask before flashing hardware or changing toolchains. These are limited risk
 checks, not full firmware bring-up. Simulator work can proceed if hardware is
 unavailable; the S3 operating budget remains provisional until measured.
 
-## Pre-M2 — Core API hardening (next)
+## Pre-M2 — Core API hardening (complete)
 
 Agreed during the codebase walkthrough: address the time-validation gap and
 make frame/time misuse harder before adding catalogue consumers. No incorrect
 CLI calculation was demonstrated; distinguish API hazards from numerical bugs.
 
-- [ ] Clarify and consistently validate the time contract for element epochs
+- [x] Clarify and consistently validate the time contract for element epochs
   and requested times, including supported years and explicit leap seconds;
   add boundary tests before changing behavior.
-- [ ] Bind propagated state to its absolute timestamp and provide a normal
+- [x] Bind propagated state to its absolute timestamp and provide a normal
   Earth-fixed conversion path that cannot accidentally use a different time.
   Decide whether to retain the low-level explicit-time helper for synthetic cases.
-- [ ] Evaluate modest TEME/ECEF position types to prevent frame confusion;
+- [x] Evaluate modest TEME/ECEF position types to prevent frame confusion;
   settle the API before implementation rather than adding a generic units framework.
+
+→ decision 0009; shared UTC validator, read-only `TemeState::to_ecef()`, and
+`TemePosition`/`EcefPosition`. Explicit-time rotation retained for synthetic
+inputs; CLI and independent reference tests use the bound-state path.
 
 Preserve the physical conventions in decisions 0006–0008, default no_std /
 allocation-free operation, and existing independent reference tolerances.

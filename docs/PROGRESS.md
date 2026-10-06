@@ -53,3 +53,9 @@ Append-only. Newest entry at the bottom. 3â5 lines per session.
 - Agreed to address time-validation consistency, timestamp-bound conversion, and modest frame-type protection before M2; exact API choices remain open.
 - Workspace check, 45 tests, standalone default core check, and the T0 CLI example passed during the walkthrough; no numerical CLI bug was demonstrated.
 - Updated PLAN/HANDOFF; verified an ISS fixture change was formatting-only and restored its original bytes at the user's request. No simulator or hardware run.
+
+## 2026-10-06 (pre-M2 core API hardening)
+- Centralized UTC validation (1957–2100, no explicit leap seconds); a new boundary test reproduced unsupported requested-time acceptance before the fix.
+- Added read-only timestamp-bound TEME state and distinct TEME/ECEF position types; migrated CLI/reference pipelines and recorded decision 0009.
+- Workspace/default and all-feature tests pass: 50 tests plus 3 compile-fail doctests; standalone no_std core check, strict Clippy, formatting, and diff checks pass.
+- Pre-M2 complete; catalogue configuration and merge/conflict policy are next. No dependencies, fixtures, physical models, simulator launch, flashing, or toolchain changes.
