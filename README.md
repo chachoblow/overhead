@@ -8,3 +8,5 @@ integration still ahead.
 - [Current state](docs/HANDOFF.md)
 - [Roadmap](docs/PLAN.md)
 - [Product design](docs/DESIGN.md)
+- [Technical decisions and contracts](docs/decisions/)
+- [Reference fixtures and regeneration](core/tests/fixtures/README.md)

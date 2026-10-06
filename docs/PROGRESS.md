@@ -1,6 +1,6 @@
-# Overhead â Progress
+# Overhead — Progress
 
-Append-only. Newest entry at the bottom. 3â5 lines per session.
+Append-only. Newest entry at the bottom. 3–5 lines per session.
 
 ## 2026-10-04
 - Set up the Pi coding agent for this project: web search, permission gate.
@@ -65,3 +65,9 @@ Append-only. Newest entry at the bottom. 3â5 lines per session.
 - Added finite-output errors and reusable checked OMM deserialization; migrated the CLI and recorded decision 0010. Serde is now an optional direct dependency, with no new library/version.
 - Workspace/default and all-feature tests pass: 58 tests plus 3 compile-fail doctests; standalone core checks with/without OMM, strict Clippy, formatting, and diff checks pass.
 - M2 remains next; catalogue policy and target measurements are still open. No fixture/model changes, simulator launch, hardware flashing, or toolchain changes.
+
+## 2026-10-06 (documentation cleanup)
+- Shortened handoff, roadmap, design, decision records, and usage/reference docs; corrected the stale crate map in AGENTS.md.
+- Removed redundant historical notes; retained decision rationale, numerical contracts, fixture provenance, and this session history.
+- Added documentation ownership guidance and a short-handoff target to limit repetition. Milestone scope and technical choices are unchanged.
+- Local Markdown links and diff whitespace checked; documentation only, no code/fixture changes or build/test rerun.

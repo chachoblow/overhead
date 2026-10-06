@@ -1,161 +1,78 @@
 # Overhead — Plan
 
-Build a tested headless tracking engine, then a real-data UI, then the
-standalone device. See decisions/0005-engine-first-implementation.md.
+**Next: M2.** Build the headless engine, then the real-data UI, then the device
+([rationale](decisions/0005-engine-first-implementation.md)). Refine each
+milestone before starting; later checkboxes are scope, not session-sized tasks.
 
-M1 and the pre-M2 core API hardening follow-up are complete. M2 is next.
-Later milestones are outcome-level scope, to refine before starting them.
-An unchecked scope item in those milestones is not necessarily one session.
+## Complete
+- **M0 — Setup:** workspace, simulator window, project workflow.
+- **M1 — Verified tracking foundation:** OMM ingestion, timestamped SGP4,
+  Earth-fixed/geodetic and observer geometry, reproducible headless runner.
+- **Pre-M2 hardening:** shared UTC validation, timestamp-bound/frame-specific
+  positions, finite propagation outputs, checked OMM metadata.
 
-## M0 — Project setup (complete)
-- [x] Cargo workspace with a working simulator window
-- [x] Pi set up: web search, permission gate
-- [x] Docs scaffold; AGENTS.md TODOs filled in (/bootstrap)
-- [x] Open questions in DESIGN.md resolved enough to plan M1
+Conventions live in [decisions/](decisions/) (0006–0010);
+verification provenance in the [fixture README](../core/tests/fixtures/README.md).
 
-## M1 — Verified satellite calculation foundation (complete)
+## Early hardware checks (alongside M2)
+- [ ] Benchmark propagation on available ESP32 hardware; record board, build,
+  mixed LEO/GNSS/GEO workload, and timings. Confirm on the S3 if using another
+  board; include prediction cost once implemented.
+- [ ] Validate minimal Sharp output/refresh before full firmware integration.
 
-Build the physical calculation pipeline in `overhead-core`, exercised by a
-headless host runner. Keep host file I/O and reporting outside the no_std
-engine. No network fetching or display work required.
-
-- [x] Research SGP4/OMM support and no_std compatibility; propose dependencies
-  with rationale. Identify independent reference cases and document time,
-  coordinate-frame, unit, and accuracy conventions before implementation.
-  → decisions/0006-sgp4-crate-and-conventions.md
-- [x] Add a small checked-in OMM fixture with provenance and fixed test
-  timestamps; implement ingestion/validation into engine inputs, including
-  invalid-data tests. Do not assume parser placement until compatibility is
-  checked.
-- [x] Implement propagation at an explicit timestamp; validate against trusted
-  reference vectors with documented tolerances and error cases.
-- [x] Implement Earth-relative coordinate transformations and geodetic
-  position/altitude; test against documented reference cases and boundaries.
-  → core/src/coordinates.rs; ERFA/pymap3d fixtures; decision 0007
-- [x] Implement observer-relative range, azimuth, and elevation for an explicit
-  location; add independent reference and geometric edge-case tests.
-  → core/src/observer.rs; pymap3d/Skyfield fixtures; decision 0008
-- [x] Add a headless runner for fixture, time, and location inputs; print
-  satellite measurements and exercise the complete pipeline reproducibly.
-  → tools/src/bin/overhead-track.rs; tools/README.md; 12 CLI reference cases
-
-**Done when:** known elements, time, and location produce reproducible,
-independently checked measurements without a UI. Tests cover each calculation
-layer and the complete pipeline; workspace check and tests pass.
-
-### Early hardware checks (alongside M1–M2)
-- [ ] Once propagation works, benchmark it on available ESP32 hardware. Record
-  board, build settings, workload, and timings; confirm on the S3 if the first
-  board differs. Extend the benchmark to prediction workloads in M2.
-- [ ] Run a minimal Sharp display/refresh test when hardware is available;
-  establish the output path before full firmware integration.
-
-Ask before flashing hardware or changing toolchains. These are limited risk
-checks, not full firmware bring-up. Simulator work can proceed if hardware is
-unavailable; the S3 operating budget remains provisional until measured.
-
-## Pre-M2 — Core API hardening (complete)
-
-Agreed during the codebase walkthrough: address the time-validation gap and
-make frame/time misuse harder before adding catalogue consumers. No incorrect
-CLI calculation was demonstrated; distinguish API hazards from numerical bugs.
-
-- [x] Clarify and consistently validate the time contract for element epochs
-  and requested times, including supported years and explicit leap seconds;
-  add boundary tests before changing behavior.
-- [x] Bind propagated state to its absolute timestamp and provide a normal
-  Earth-fixed conversion path that cannot accidentally use a different time.
-  Decide whether to retain the low-level explicit-time helper for synthetic cases.
-- [x] Evaluate modest TEME/ECEF position types to prevent frame confusion;
-  settle the API before implementation rather than adding a generic units framework.
-
-→ decision 0009; shared UTC validator, read-only `TemeState::to_ecef()`, and
-`TemePosition`/`EcefPosition`. Explicit-time rotation retained for synthetic
-inputs; CLI and independent reference tests use the bound-state path.
-
-Preserve the physical conventions in decisions 0006–0008, default no_std /
-allocation-free operation, and existing independent reference tolerances.
-No geometry rewrite, dependency expansion, catalogue implementation, or UI work
-is part of this cleanup. Record any settled API decision during implementation.
-
-**Done when:** time boundaries have explicit, tested behavior; the ordinary
-propagation-to-ECEF path preserves its timestamp; frame-type protection has an
-explicit resolution; existing reference tests and standalone core checks pass.
-
-### Review follow-up (complete)
-- [x] Reject non-finite propagated position/velocity even when upstream SGP4 returns success.
-- [x] Validate explicit OMM center/frame/time/theory metadata before it is discarded; retain CelesTrak defaults for omitted fields.
-
-→ decision 0010; reusable `OmmElements` under the existing `omm` feature,
-CLI migration, and core/executable regressions. No physical-model or fixture changes.
+Ask before flashing or changing toolchains. Simulator work need not wait for
+hardware, but capacity and cadence remain provisional until measured on the S3.
 
 ## M2 — Catalogue, pass prediction, and operating budget
-- [ ] Configure catalogue group selection; merge and deduplicate objects by
-  catalogue ID. Use local datasets headlessly; live device fetching is M6.
-- [ ] Predict physical passes with configurable elevation threshold and
-  look-ahead. Define event semantics and accuracy; test ordinary passes,
-  no-pass cases, and objects already above the threshold.
-- [ ] Measure prediction cost as well as propagation cost on target hardware.
-- [ ] Establish catalogue limits, update scheduling, and explicit behavior
-  when the requested workload exceeds the supported budget.
+- [ ] Configure local catalogue groups; merge/deduplicate by NORAD ID. First
+  settle conflicts, invalid records, and provenance (element epoch ≠ fetch
+  timestamp). Use checked OMM ingestion; live fetching stays M6.
+- [ ] Predict physical passes with configurable elevation threshold/look-ahead.
+  Define event semantics and accuracy; test ordinary passes, no pass, and
+  objects already above threshold. Keep passes independent of screen traversal.
+- [ ] Measure propagation/prediction cost; set catalogue limits, scheduling,
+  and explicit over-budget behavior.
 
-**Done when:** a curated catalogue can be exercised headlessly, upcoming passes
-can be inspected and tested, and measured workloads justify the supported
-catalogue size and update cadence. Prediction accuracy and cost are evaluated
-together, not in isolation.
+**Done when:** a curated catalogue and upcoming passes are testable headlessly,
+with measured costs justifying supported size, cadence, and prediction accuracy.
 
 ## M3 — Minimal real-data radar
-- [ ] Add shared application state and renderer entry point, simulator frame
-  loop, and explicit clock handling.
-- [ ] Implement and test the location-centered projection, clipping, and zoom
-  from local scales to wider than Earth; settle spatial-view semantics here.
-- [ ] Show real satellite markers and basic identification; support scroll
-  wheel and up/down zoom controls.
-- [ ] Provide a convenient simulator configuration path for tuning.
+- [ ] Add shared app state, renderer entry point, simulator loop, explicit clock,
+  and convenient simulator configuration.
+- [ ] Implement/test location-centered projection, clipping, and zoom from
+  local scales to wider than Earth; settle spatial-view semantics.
+- [ ] Show real markers and basic identification; wire scroll wheel/up/down zoom.
 
-**Done when:** real satellites move through a zoomable view and displayed
-locations can be traced to verified engine outputs. Coastlines and visual
-slow-down are not prerequisites.
+**Done when:** satellites move through a zoomable view traceable to verified
+engine outputs. Coastlines and visual slow-down are not prerequisites.
 
 ## M4 — Useful display behavior
-- [ ] Add automatic satellite selection with stable switching behavior.
-- [ ] Show true selected-satellite measurements, time, orbit-data age, and zoom.
-- [ ] Connect next-pass prediction to a countdown and useful empty-sky behavior.
-- [ ] Prepare coastline data offline and render it legibly across zoom levels.
+- [ ] Add stable automatic selection and true satellite/time/data-age/zoom readouts.
+- [ ] Connect next-pass countdown and empty-sky behavior.
+- [ ] Prepare coastlines offline and render them legibly across zoom levels.
 
-**Done when:** the display is understandable and useful both during a pass and
-when the local sky is empty.
+**Done when:** the view is useful and understandable during passes and empty sky.
 
 ## M5 — Motion and visual refinement
-- [ ] Smooth marker motion between calculated updates.
-- [ ] Implement configurable minimum on-screen traversal time, with explicit
-  behavior for zoom and selection changes during slowed motion.
-- [ ] Keep presentation state separate from physical state; verify readouts
-  remain tied to true positions.
+- [ ] Smooth motion between calculation updates; add configurable minimum screen
+  traversal time with explicit zoom/selection-change behavior.
+- [ ] Keep presentation state separate; verify readouts use true positions.
 - [ ] Tune density, labels, transitions, and rendering performance.
 
-**Done when:** fast passes are watchable, transitions are coherent, and
-presentation state cannot contaminate physical calculations.
+**Done when:** fast passes are watchable without contaminating physical state.
 
 ## M6 — Standalone device
-- [ ] Run the shared engine and renderer on the S3 with Sharp display output
-  and BOOT-button zoom presets.
-- [ ] Add Wi-Fi credentials, HTTPS orbit-data retrieval, and SNTP.
-- [ ] Persist orbital elements and fetch timestamp; schedule refreshes per
-  decision 0002.
-- [ ] Handle network failures, missing/invalid time, missing data, and stale
-  data explicitly. Cached elements do not solve accurate offline cold boot.
-- [ ] Verify end-to-end performance and extended operation on hardware.
+- [ ] Run shared engine/renderer on S3 + Sharp, with BOOT-button zoom presets.
+- [ ] Add Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes
+  per [0002](decisions/0002-data-and-time-over-wifi.md).
+- [ ] Handle network failure, missing/invalid time or data, and stale elements.
+- [ ] Verify end-to-end performance and extended hardware operation.
 
-**Done when:** the dev-board prototype boots, obtains valid time and orbital
-data, tracks satellites, and continues operating between network connections.
+**Done when:** the prototype boots with valid time/data and tracks between
+connections. Cached elements alone do not enable accurate offline cold boot.
 
-## Configuration and boundaries
-
-Keep catalogue groups, observer location, prediction thresholds, workload
-limits, zoom, and motion parameters explicit and easy to tune. Configuration
-need not be user-facing or runtime-editable on the device. Keep uncertain
-presentation algorithms separate rather than building a generic plugin system.
-
-Physical controls beyond BOOT-button presets, enclosure, battery integration,
-RTC, and the optional Starlink/full-catalogue layer remain deferred.
+## Boundaries
+Keep tuning inputs explicit; they need not be device settings. Defer uncertain
+presentation policies rather than building a plugin system. Knob, enclosure,
+battery integration, RTC, real location source, and Starlink/full catalogue
+remain outside this roadmap.

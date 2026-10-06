@@ -1,44 +1,39 @@
-# 0010 — Reject non-finite propagation and incompatible OMM metadata
+# 0010 — Finite propagation and checked OMM metadata
 
 Date: 2026-10-06
 Status: accepted
 
 ## Decision
-`Satellite::state_at` returns `PropagateError::NonFinite` if any propagated
-position or velocity component is NaN or infinite, even if upstream returns
-success. Successful states guarantee finite components, not physical accuracy.
+`Satellite::state_at` returns `PropagateError::NonFinite` for any NaN/infinite
+position or velocity component, even after upstream success. Finite does not
+mean physically accurate.
 
-Use `OmmElements` (behind the existing `omm` feature) to deserialize OMM before
-numeric/epoch ingestion. Omitted physical metadata uses CelesTrak GP defaults;
-explicit `CENTER_NAME`, `REF_FRAME`, `TIME_SYSTEM`, and `MEAN_ELEMENT_THEORY`
-must be exactly `EARTH`, `TEME`, `UTC`, and `SGP4`, respectively. Reject nulls,
-non-strings, and duplicate declarations; unrelated extra fields remain allowed.
+Deserialize OMM through `OmmElements` under the existing `omm` feature:
+
+| Metadata | Required explicit value / default if omitted |
+|---|---|
+| `CENTER_NAME` | `EARTH` |
+| `REF_FRAME` | `TEME` |
+| `TIME_SYSTEM` | `UTC` |
+| `MEAN_ELEMENT_THEORY` | `SGP4` |
+
+Values must match exactly. Reject nulls, non-strings, duplicates, and conflicting
+values; allow unrelated extra fields. This is not full CCSDS schema validation.
 
 ## Why
-Review probes reproduced finite but corrupt elements producing successful
-SGP4 predictions containing NaNs. Checking only input finiteness is insufficient;
-rejecting output at the propagation boundary protects consumers that do not
-immediately perform the already-checked coordinate conversion.
-
-Direct deserialization into `sgp4::Elements` discards these OMM metadata fields.
-The CLI consequently accepted explicit TAI, GCRF, Mars, or DSST declarations
-while reporting UTC/TEME/Earth/SGP4 calculations. Missing CelesTrak defaults are
-valid; explicit contradictory metadata is not. Validation belongs in a reusable
-adapter, not a host-only JSON check or a new general OMM framework.
+Review probes found finite corrupt elements yielding successful NaN predictions.
+Raw `sgp4::Elements` also discards physical metadata, silently accepting TAI,
+GCRF, Mars, or DSST while consumers assume UTC/TEME/Earth/SGP4. Check both at
+reusable core boundaries, not only in host code or downstream geometry.
 
 ## Consequences
-- The adapter exposes borrowed/owned `sgp4::Elements`; callers still use
-  `Satellite::from_elements` for numeric and epoch validation. Direct raw
-  element construction remains available and cannot validate discarded metadata.
-- The CLI uses the adapter and preserves successful reports for existing data.
-  Errors still produce stderr/exit 1 with no partial report.
-- Add optional direct `serde` with alloc/derive, already transitive through
-  `sgp4/serde`. No new library/version; default core stays allocation-free.
-  OMM remains no_std + alloc, with file I/O outside core.
-- No arbitrary orbit limits, freshness policy, physical-model changes, fixture
-  changes, or catalogue conflict policy are introduced.
+- Pass `.elements()` (borrowed) or `.into_elements()` (owned) to numeric/epoch
+  ingestion. Raw element construction cannot validate discarded metadata.
+- CLI uses the adapter; successful reports stay unchanged.
+- Optional direct `serde` alloc/derive was already transitive: no new library
+  or version. OMM remains no_std + alloc; default core is allocation-free.
+- No freshness, catalogue conflict, or arbitrary orbit-limit policy is added.
 
-References:
-- https://celestrak.org/NORAD/documentation/gp-data-formats.php
-- https://serde.rs/container-attrs.html
-- https://serde.rs/field-attrs.html
+References: [CelesTrak GP formats](https://celestrak.org/NORAD/documentation/gp-data-formats.php),
+[Serde container](https://serde.rs/container-attrs.html) and
+[field attributes](https://serde.rs/field-attrs.html).

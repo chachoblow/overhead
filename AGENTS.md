@@ -1,8 +1,7 @@
 # Overhead
 
-Handheld satellite tracker: a realtime radar-style view of satellites passing
-over a set location, running on an ESP32-S3 with a Sharp memory LCD.
-Rust Cargo workspace.
+Rust workspace for a handheld satellite radar. Hardware and interface intent
+live in docs/DESIGN.md.
 
 ## Start here
 1. docs/HANDOFF.md — where the last session left off
@@ -13,20 +12,14 @@ docs/decisions/ holds settled choices. Don't reverse one silently; propose a
 new decision instead. docs/PROGRESS.md is history; read it only when you need
 past context.
 
-## Hardware
-- ESP32-S3-DevKitC-1-N8R8 (8 MB flash, 8 MB PSRAM)
-- Adafruit 2.7" Sharp Memory Display breakout (#4694): 400×240, 1-bit
-
 ## Workspace
-- `core/` → `overhead-core` — `no_std`; orbits, projection, app state. Currently a stub.
-- `render/` → `overhead-render` — `no_std`; draws into any embedded-graphics
-  `DrawTarget<BinaryColor>`. Depends on core. Currently a stub.
-- `sim/` → `overhead-sim` — macOS simulator: SDL2 window via
-  embedded-graphics-simulator, 400×240 at 2× (LcdWhite theme). Depends on render.
-- `tools/` → `overhead-tools` — offline data conversion (coastlines, later).
-  Currently hello-world.
-- `firmware/` — does not exist yet; excluded from the workspace; needs the
-  Espressif toolchain.
+- `core/` → `overhead-core`: ingestion, propagation, coordinates, observer geometry.
+  Default no_std/allocation-free; optional `omm` parsing requires alloc, not std.
+- `render/` → `overhead-render`: no_std, embedded-graphics `BinaryColor`; stub.
+- `sim/` → `overhead-sim`: static SDL2 simulator, 400×240 at 2×, LcdWhite theme.
+- `tools/` → `overhead-tools`: headless runner and offline fixture generators;
+  usage in tools/README.md. Default binary is still a placeholder.
+- `firmware/`: not created; excluded from workspace; needs Espressif toolchain.
 
 ## Commands
 - Check: `cargo check --workspace`
@@ -46,4 +39,7 @@ Never flash hardware or change the toolchain without asking first.
 - Explain why before adding a dependency.
 - Use web search for crate APIs and datasheets instead of guessing; esp-hal
   and related crates change quickly.
+- Keep each doc focused: HANDOFF = next-session context, PLAN = scope/status,
+  DESIGN = product intent, decisions = rationale/contracts, fixture README =
+  provenance/regeneration. Link rather than repeat; code/tests own API details.
 - End of session: follow the steps in .pi/prompts/handoff.md.

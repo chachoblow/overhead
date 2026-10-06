@@ -23,5 +23,5 @@ its clock via SNTP on each connection. No battery-backed RTC for now.
 - A freshly powered-on device needs Wi-Fi once before positions are accurate.
 - Firmware needs Wi-Fi credentials, HTTPS, and SNTP; elements and fetch
   timestamp persist in flash.
-- The simulator uses host time and a checked-in OMM snapshot in data/.
+- The planned simulator uses host time and a checked-in OMM snapshot.
 - Adding an RTC later remains open if offline boot matters.
