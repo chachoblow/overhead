@@ -300,6 +300,10 @@ dependencies = [
 [[package]]
 name = "overhead-tools"
 version = "0.1.0"
+dependencies = [
+ "overhead-core",
+ "serde_json",
+]
 
 [[package]]
 name = "png"

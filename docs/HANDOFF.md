@@ -1,74 +1,88 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-04. Status: M1 in progress; observer measurements implemented._
+_Last updated: 2026-10-05. Status: M1 complete; M2 is next._
 
 ## Current state
 
-- Engine-first roadmap remains agreed. docs/PLAN.md is the canonical task list;
-  M1's first five tasks are complete, through observer-relative geometry.
-  The reproducible headless runner is the remaining M1 task. No UI work yet.
-- `Satellite::state_at(time)` returns TEME position/velocity using AFSPC
-  propagation. Position-only `teme_to_ecef(position, time)`,
-  `ecef_to_geodetic(position)`, and `GeodeticPosition::to_ecef()` are available.
-- New API: `ecef_to_look_angles(target_km, observer)` returns `LookAngles`
-  with positive `range_km`, `azimuth_rad: Option<f64>`, and `elevation_rad`.
-  `ObservationError` wraps coordinate failures or reports coincident positions.
-- Decision 0008 defines vertical singularities and longitude-defined polar
-  axes. Existing AFSPC propagation, WGS-84, GMST-only rotation, UT1≈UTC, and
-  no-polar-motion conventions are unchanged.
-- Default core remains no_std/allocation-free; optional `omm` needs alloc.
-  No Rust dependencies were added. Render remains a stub, tools' Rust binary
-  remains hello-world, and sim remains static.
+- All six M1 tasks are complete. `docs/PLAN.md` remains canonical; no M2,
+  UI, or firmware implementation was started this session.
+- `overhead-track` in the tools crate composes local OMM ingestion → AFSPC
+  propagation → TEME/ECEF → WGS-84 geodetic and observer measurements.
+  Inputs are explicit: one-object JSON array, UTC ending in Z, observer
+  latitude/longitude in degrees and ellipsoidal height in km.
+- Reports name/NORAD ID, epoch/requested time, signed elapsed minutes,
+  TEME position/velocity, ECEF position, geodetic coordinates, range,
+  azimuth, and elevation with units. Undefined azimuth is explicit;
+  failures return exit code 1, stderr diagnostics, and no partial report.
+- Core APIs and physical conventions (decisions 0006–0008) are unchanged.
+  Core's standalone default build remains no_std/allocation-free; `omm`
+  needs alloc. Tools now depend on core with `omm` and existing serde_json;
+  no new external crate or version was introduced.
+- Render remains a stub, sim remains static, firmware does not exist.
+  The original `overhead-tools` binary remains hello-world; explicitly
+  select `--bin overhead-track` for the new runner.
 
 ## What changed this session (by file)
 
-- core/src/observer.rs — public look-angle types/errors and validated ECEF
-  observer geometry; SEZ rotation, canonical azimuth, explicit singularities.
-- core/src/lib.rs — exports the new API.
-- core/tests/observer.rs — 11 tests covering independent references, full ISS
-  pipeline, analytical geometry, poles, verticals, invalid values, and overflow.
-- core/tests/fixtures/observer.json — 27 pymap3d geometry references and
-  12 Skyfield pipeline references using the unchanged ISS OMM at T0/T1/T2.
-- tools/generate_observer_fixtures.py — pinned, independent offline generator.
-- core/tests/fixtures/README.md — provenance, versions, commands, tolerances,
-  and differences between Overhead and Skyfield Earth-orientation models.
-- docs/decisions/0008-observer-geometry-conventions.md — settled API/boundary
-  and validation choices; no existing physical conventions reversed.
-- docs/PLAN.md, docs/PROGRESS.md, docs/HANDOFF.md — task completion and handoff.
+- `tools/src/bin/overhead-track.rs` — host-only CLI, validation, pipeline,
+  unit-labelled reporting, and undefined-azimuth formatting test.
+- `tools/tests/track.rs` — six executable integration tests: all 12 Skyfield
+  ISS references, deterministic output, geodetic report consistency,
+  arguments/time/location validation, input-file/OMM/element errors,
+  boundary sites, pre-epoch time, and propagation failure.
+- `tools/Cargo.toml`, `Cargo.lock` — host dependencies, no new packages.
+- `tools/README.md` — usage, scope, reproducible T0/T1/T2 commands at four
+  reference sites, error contract, and verification instructions.
+- `README.md` — project description and documentation links.
+- `docs/PLAN.md`, `docs/PROGRESS.md`, `docs/HANDOFF.md` — M1 completion.
+  No new physical or architectural decision needed beyond existing plans.
 
 ## Verification
 
 All passed this session:
 - `cargo check --workspace`
-- `cargo test --workspace` — 38 tests total, including 11 new observer tests
+- `cargo test --workspace` — 45 tests total (seven new tests)
 - `cargo check -p overhead-core --no-default-features --lib`
 - `cargo test --workspace --all-features`
 - `cargo clippy --workspace --all-targets --all-features -- -D warnings`
 - `cargo fmt --all --check`
-- Independent observer fixture regeneration matches byte-for-byte.
-- `git diff --check`.
+- `git diff --check`
+- Manual CLI run at T0 / named Vallado site; all 12 reference pipelines
+  also exercised twice by executable tests for output repeatability.
 
-Skyfield pipeline maximum errors: 0.04110 km range, 0.004672° azimuth,
-0.004897° elevation, within the agreed 0.1 km / 0.01° gates. Isolated
-pymap3d geometry meets tighter 1e-8 km / 1e-9° gates.
-Simulator was not launched; no hardware flashing or toolchain changes.
+CLI Skyfield comparisons retain the 0.1 km / 0.01° gates. Existing fixture
+bytes and independent generators are unchanged; no regeneration was needed.
+Simulator was not launched; no flashing or toolchain changes.
+
+## Try it
+
+From the workspace root:
+
+```sh
+cargo run -p overhead-tools --bin overhead-track -- \
+  core/tests/fixtures/iss-25544.json 2026-10-04T12:43:41.833056Z \
+  39.007 -104.883 2.187
+```
+
+See `tools/README.md` for all T0/T1/T2 commands and input/output conventions.
 
 ## Next concrete step
 
-Add a reproducible headless host runner for fixture, explicit UTC timestamp,
-and WGS-84 observer location inputs. Keep file I/O and reporting outside core;
-use the optional `omm` feature. Compose ingestion → propagation → TEME/ECEF →
-geodetic and observer measurements. Print satellite identity and physical
-measurements with explicit units, and handle errors/undefined azimuth clearly.
-Exercise the checked-in ISS at documented T0/T1/T2 and known locations, with
-complete-pipeline checks and documented reproducible commands. This completes
-M1; no UI work or network fetching is needed.
+Refine M2's first task into session-sized work: explicit catalogue group
+configuration, local datasets, and merge/deduplication by NORAD ID. Settle
+conflicting/invalid record handling before implementing. Keep live network
+fetching in M6 and real-data UI in M3; do not silently expand the runner
+into pass prediction or presentation work.
+
+Confirm available ESP32 hardware for the early propagation benchmark and
+minimal Sharp refresh check. Ask before flashing or changing toolchains.
+Catalogue capacity, prediction workload, and update cadence remain
+provisional until measured; do not choose them from host timings alone.
 
 ## Open questions / deferred choices
 
-- Confirm available ESP32 benchmark hardware and final S3 operating budget.
-  Ask before flashing or changing toolchains.
-- Catalogue limits, prediction workload, and cadence await M2 measurement.
+- Available benchmark hardware and final S3 operating budget.
+- M2 catalogue limits, pass event semantics, prediction accuracy/cost.
 - Projection/zoom semantics and presentation policies await M3+ feedback.
 - Real location source (0004), Starlink layer (0003), and RTC (0002) deferred.
 
@@ -81,23 +95,26 @@ M1; no UI work or network fetching is needed.
   upstream propagation element-epoch handling remains unchanged.
 - Inverse geodetic conversion targets terrestrial/satellite positions, not
   ambiguous deep-interior normal coordinates; non-convergence is an error.
+- Runner has no freshness policy: the fixture is for reproducible historical
+  measurements, not live tracking. Printed precision is not orbit accuracy.
 - Minimal Sharp refresh validation stays early; full firmware is M6.
   Target 20 Hz and handle the scarce panel/ribbon gently.
-- Cached elements do not provide accurate time after a cold boot without Wi-Fi.
+- Cached elements do not provide accurate time after cold boot without Wi-Fi.
 
 ## Gotchas worth remembering
 
-- Pass the propagation timestamp, not the element epoch, to `teme_to_ecef`.
-  It supports 1957–2100, rejects explicit leap seconds, and converts positions
-  only: velocity conversion needs an additional Earth-rotation term.
-- Engine units are km/radians; observer height is WGS-84 ellipsoidal, not MSL.
-  Negative elevations are valid geometry, not a visibility decision.
-- Azimuth is `None` when horizontal/slant range <= 1e-12 (zenith/nadir);
-  exactly coincident positions are errors. At a pole the supplied longitude
-  defines the local compass basis. Inverse geodetic longitude on the exact
-  polar axis is still conventionally zero, per 0007.
-- Fixture tests need no Python/network. Regenerate only via pinned independent
-  tools; Skyfield's bundled DUT1 estimate intentionally differs from UT1≈UTC.
+- Pass propagation time, not element epoch, to `teme_to_ecef`. It supports
+  1957–2100, rejects explicit leap seconds, and converts positions only;
+  Earth-fixed velocity needs an additional Earth-rotation term.
+- Engine units are km/radians; CLI angles are degrees. Observer height is
+  WGS-84 ellipsoidal, not MSL. Negative elevations are valid geometry.
+- Azimuth is `None` for horizontal/slant range <= 1e-12 (zenith/nadir);
+  coincident positions are errors. At poles, supplied longitude defines
+  the local compass basis. Inverse longitude on the exact polar axis is zero.
+- Fixture tests need no Python/network. Regenerate only with pinned
+  independent tools; Skyfield's bundled DUT1 differs intentionally from UT1≈UTC.
+- Chrono's general `.format()` needs its alloc feature; the host runner uses
+  date/time Display instead, without changing Chrono feature configuration.
 - Crates use overhead-* names to avoid the Rust core library name collision.
-- SDL2 on Apple Silicon needs -L /opt/homebrew/lib (.cargo/config.toml).
+  SDL2 on Apple Silicon needs -L /opt/homebrew/lib (.cargo/config.toml).
 - Keep host I/O out of core/render and presentation state out of physical math.

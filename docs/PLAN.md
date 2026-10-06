@@ -3,8 +3,8 @@
 Build a tested headless tracking engine, then a real-data UI, then the
 standalone device. See decisions/0005-engine-first-implementation.md.
 
-M1 is broken into intended session-sized tasks; split further if needed.
-Later milestones are outcome-level scope, to refine before starting them.
+M1 is complete. Later milestones are outcome-level scope, to refine before
+starting them; M2 is next.
 An unchecked scope item in those milestones is not necessarily one session.
 
 ## M0 — Project setup (complete)
@@ -13,7 +13,7 @@ An unchecked scope item in those milestones is not necessarily one session.
 - [x] Docs scaffold; AGENTS.md TODOs filled in (/bootstrap)
 - [x] Open questions in DESIGN.md resolved enough to plan M1
 
-## M1 — Verified satellite calculation foundation (current)
+## M1 — Verified satellite calculation foundation (complete)
 
 Build the physical calculation pipeline in `overhead-core`, exercised by a
 headless host runner. Keep host file I/O and reporting outside the no_std
@@ -35,8 +35,9 @@ engine. No network fetching or display work required.
 - [x] Implement observer-relative range, azimuth, and elevation for an explicit
   location; add independent reference and geometric edge-case tests.
   → core/src/observer.rs; pymap3d/Skyfield fixtures; decision 0008
-- [ ] Add a headless runner for fixture, time, and location inputs; print
+- [x] Add a headless runner for fixture, time, and location inputs; print
   satellite measurements and exercise the complete pipeline reproducibly.
+  → tools/src/bin/overhead-track.rs; tools/README.md; 12 CLI reference cases
 
 **Done when:** known elements, time, and location produce reproducible,
 independently checked measurements without a UI. Tests cover each calculation
@@ -53,7 +54,7 @@ Ask before flashing hardware or changing toolchains. These are limited risk
 checks, not full firmware bring-up. Simulator work can proceed if hardware is
 unavailable; the S3 operating budget remains provisional until measured.
 
-## M2 — Catalogue, pass prediction, and operating budget
+## M2 — Catalogue, pass prediction, and operating budget (next)
 - [ ] Configure catalogue group selection; merge and deduplicate objects by
   catalogue ID. Use local datasets headlessly; live device fetching is M6.
 - [ ] Predict physical passes with configurable elevation threshold and

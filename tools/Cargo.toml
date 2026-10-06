@@ -4,3 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+# Host-only OMM file ingestion; the engine's default build stays allocation-free.
+overhead-core = { path = "../core", features = ["omm"] }
+serde_json = "1"
