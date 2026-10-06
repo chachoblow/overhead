@@ -59,3 +59,9 @@ Append-only. Newest entry at the bottom. 3â5 lines per session.
 - Added read-only timestamp-bound TEME state and distinct TEME/ECEF position types; migrated CLI/reference pipelines and recorded decision 0009.
 - Workspace/default and all-feature tests pass: 50 tests plus 3 compile-fail doctests; standalone no_std core check, strict Clippy, formatting, and diff checks pass.
 - Pre-M2 complete; catalogue configuration and merge/conflict policy are next. No dependencies, fixtures, physical models, simulator launch, flashing, or toolchain changes.
+
+## 2026-10-06 (M1 review and validation fixes)
+- Reviewed M1 against the product direction; added failing regressions for successful NaN propagation and silently ignored contradictory OMM metadata.
+- Added finite-output errors and reusable checked OMM deserialization; migrated the CLI and recorded decision 0010. Serde is now an optional direct dependency, with no new library/version.
+- Workspace/default and all-feature tests pass: 58 tests plus 3 compile-fail doctests; standalone core checks with/without OMM, strict Clippy, formatting, and diff checks pass.
+- M2 remains next; catalogue policy and target measurements are still open. No fixture/model changes, simulator launch, hardware flashing, or toolchain changes.

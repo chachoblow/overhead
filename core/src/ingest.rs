@@ -1,7 +1,8 @@
 //! Validation of parsed orbital element sets into engine inputs.
 //!
-//! The `sgp4` crate handles the parsing (TLE always; OMM behind the `omm`
-//! feature). This module owns the gate between "parsed data" and "data the
+//! The `sgp4` crate handles TLE parsing. For OMM, use `crate::OmmElements`
+//! behind the `omm` feature to check physical metadata before ingestion.
+//! This module owns the gate between "parsed data" and "data the
 //! engine will propagate": structural sanity checks first, then SGP4
 //! initialization. See docs/decisions/0006-sgp4-crate-and-conventions.md.
 
@@ -52,6 +53,8 @@ impl Satellite {
     ///
     /// The epoch must satisfy [`validate_utc_time`]. This does not enforce
     /// freshness or change the upstream SGP4 epoch calendar approximation.
+    /// For OMM inputs, deserialize with `crate::OmmElements` (`omm` feature)
+    /// first: raw `sgp4::Elements` cannot retain or validate frame/time metadata.
     pub fn from_elements(elements: &sgp4::Elements) -> Result<Self, IngestError> {
         let finite_fields = [
             elements.mean_motion,

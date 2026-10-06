@@ -26,6 +26,15 @@ local-time conversion, or UI is involved. The tool enables core's optional
 `omm` feature; file I/O, argument parsing, and reporting stay in `tools/`.
 Core's standalone default build remains no_std/allocation-free.
 
+The runner deserializes through core's reusable `OmmElements` adapter before
+numeric/epoch validation. Omitted OMM metadata uses CelesTrak GP defaults:
+`CENTER_NAME=EARTH`, `REF_FRAME=TEME`, `TIME_SYSTEM=UTC`, and
+`MEAN_ELEMENT_THEORY=SGP4`. Explicit values must match these strings exactly;
+contradictory values, nulls, non-strings, and duplicate declarations are errors.
+Unrelated extra fields remain allowed. Successful propagation also requires
+finite position and velocity components, even if upstream SGP4 returns success.
+See [decision 0010](../docs/decisions/0010-propagation-and-omm-validation.md).
+
 Output includes name/NORAD ID, element epoch, requested UTC, signed elapsed
 minutes, observer coordinates, TEME position/velocity, ECEF position,
 satellite WGS-84 latitude/longitude/ellipsoidal altitude, slant range,
@@ -99,7 +108,8 @@ cargo check -p overhead-core --no-default-features --lib
 Skyfield cases and gates printed range within 0.1 km and angles within
 0.01°. It checks deterministic reports, identity/timestamps, geodetic
 report consistency, help, invalid/missing inputs, JSON/element errors,
-pre-epoch time, boundary sites, and propagation failure. A unit test covers
+pre-epoch time, boundary sites, propagation failure, non-finite upstream output,
+and explicit OMM metadata acceptance/rejection. A unit test covers
 undefined-azimuth formatting. Existing core tests independently verify each
 calculation layer. Tests need no Python, network, SDL window, or hardware.
 

@@ -82,6 +82,13 @@ is part of this cleanup. Record any settled API decision during implementation.
 propagation-to-ECEF path preserves its timestamp; frame-type protection has an
 explicit resolution; existing reference tests and standalone core checks pass.
 
+### Review follow-up (complete)
+- [x] Reject non-finite propagated position/velocity even when upstream SGP4 returns success.
+- [x] Validate explicit OMM center/frame/time/theory metadata before it is discarded; retain CelesTrak defaults for omitted fields.
+
+→ decision 0010; reusable `OmmElements` under the existing `omm` feature,
+CLI migration, and core/executable regressions. No physical-model or fixture changes.
+
 ## M2 — Catalogue, pass prediction, and operating budget
 - [ ] Configure catalogue group selection; merge and deduplicate objects by
   catalogue ID. Use local datasets headlessly; live device fetching is M6.

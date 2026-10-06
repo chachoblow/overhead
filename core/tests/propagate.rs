@@ -143,6 +143,23 @@ fn reports_divergence_at_epoch() {
     );
 }
 
+/// Finite but corrupt inputs can overflow inside SGP4 without an upstream error.
+#[test]
+fn non_finite_predictions_are_errors() {
+    let sets: Vec<sgp4::Elements> =
+        serde_json::from_str(include_str!("fixtures/iss-25544.json")).unwrap();
+    for field in ["mean_motion", "drag_term"] {
+        let mut elements = sets[0].clone();
+        match field {
+            "mean_motion" => elements.mean_motion = 1e300,
+            _ => elements.drag_term = 1e300,
+        }
+        let satellite = Satellite::from_elements(&elements).unwrap();
+        let result = satellite.state_at(satellite.epoch());
+        assert_eq!(result, Err(PropagateError::NonFinite), "{field}");
+    }
+}
+
 /// The checked-in ISS fixture must propagate to physically plausible LEO
 /// states at the fixed test timestamps (see tests/fixtures/README.md).
 #[test]

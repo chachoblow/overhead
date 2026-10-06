@@ -9,11 +9,13 @@ edition = "2024"
 sgp4 = { version = "2.4", default-features = false, features = ["libm"] }
 # no_std coordinate math; already a transitive dependency of sgp4.
 libm = "0.2"
+# Checked OMM metadata adapter; already transitive through sgp4/serde.
+serde = { version = "1", default-features = false, features = ["alloc", "derive"], optional = true }
 
 [features]
-# OMM (JSON) parsing via sgp4's serde support; requires an allocator.
+# OMM (JSON) parsing with checked metadata; requires an allocator.
 # Off by default so the bare no_std build stays allocation-free.
-omm = ["sgp4/serde"]
+omm = ["sgp4/serde", "dep:serde"]
 
 [dev-dependencies]
 # Tests parse the checked-in OMM fixture; enabling sgp4's serde feature here

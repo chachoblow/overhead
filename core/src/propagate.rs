@@ -67,6 +67,8 @@ pub enum PropagateError {
     /// The interval between the element epoch and the requested time
     /// overflows datetime arithmetic.
     TimeOutOfRange,
+    /// SGP4 returned a NaN or infinite position/velocity component.
+    NonFinite,
     /// The orbital elements diverged during propagation (for example a
     /// decayed orbit or runaway perturbed eccentricity).
     Sgp4(sgp4::Error),
@@ -79,6 +81,9 @@ impl core::fmt::Display for PropagateError {
             Self::TimeOutOfRange => {
                 write!(f, "requested time is out of range of the element epoch")
             }
+            Self::NonFinite => {
+                f.write_str("propagation returned a non-finite position or velocity")
+            }
             Self::Sgp4(error) => write!(f, "propagation diverged: {error}"),
         }
     }
@@ -90,7 +95,8 @@ impl Satellite {
     /// Validates the requested time with [`validate_utc_time`]. Leap seconds
     /// are not modelled: elapsed time is the naive UTC timestamp difference.
     /// Supported years do not imply accurate propagation far from the epoch;
-    /// no freshness policy is applied, and SGP4 divergence remains an error.
+    /// no freshness policy is applied. SGP4 divergence and non-finite output
+    /// are errors; successful states contain only finite position/velocity components.
     pub fn state_at(&self, datetime: NaiveDateTime) -> Result<TemeState, PropagateError> {
         validate_utc_time(datetime).map_err(PropagateError::UnsupportedTime)?;
         let minutes_since_epoch = (datetime - self.epoch())
@@ -101,6 +107,15 @@ impl Satellite {
             .constants()
             .propagate_afspc_compatibility_mode(sgp4::MinutesSinceEpoch(minutes_since_epoch))
             .map_err(PropagateError::Sgp4)?;
+        // Upstream can return Ok with NaNs after finite inputs overflow internally.
+        if !prediction
+            .position
+            .iter()
+            .chain(prediction.velocity.iter())
+            .all(|component| component.is_finite())
+        {
+            return Err(PropagateError::NonFinite);
+        }
         Ok(TemeState {
             position: TemePosition::from_km(prediction.position),
             velocity: prediction.velocity,

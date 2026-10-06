@@ -218,6 +218,47 @@ fn file_json_cardinality_and_element_errors_are_reported() {
 }
 
 #[test]
+fn incompatible_omm_metadata_fails_without_reports() {
+    for (field, unsupported) in [
+        ("CENTER_NAME", "MARS"),
+        ("REF_FRAME", "GCRF"),
+        ("TIME_SYSTEM", "TAI"),
+        ("MEAN_ELEMENT_THEORY", "DSST"),
+    ] {
+        let mut data: Value = serde_json::from_str(ISS).unwrap();
+        data[0][field] = json!(unsupported);
+        let temp = TempFile::new(&data.to_string());
+        failure(&[&temp.path, T0, "0", "0", "0"], field);
+    }
+}
+
+#[test]
+fn explicit_supported_omm_metadata_preserves_the_report() {
+    let baseline = success(invoke(&[&fixture(), T0, "0", "0", "0"]));
+    let mut data: Value = serde_json::from_str(ISS).unwrap();
+    for (field, value) in [
+        ("CENTER_NAME", "EARTH"),
+        ("REF_FRAME", "TEME"),
+        ("TIME_SYSTEM", "UTC"),
+        ("MEAN_ELEMENT_THEORY", "SGP4"),
+    ] {
+        data[0][field] = json!(value);
+    }
+    let temp = TempFile::new(&data.to_string());
+    assert_eq!(success(invoke(&[&temp.path, T0, "0", "0", "0"])), baseline);
+}
+
+#[test]
+fn non_finite_propagation_fails_before_coordinate_conversion() {
+    for field in ["MEAN_MOTION", "BSTAR"] {
+        let mut data: Value = serde_json::from_str(ISS).unwrap();
+        data[0][field] = json!(1e300);
+        let temp = TempFile::new(&data.to_string());
+        failure(&[&temp.path, T0, "0", "0", "0"], "propagation failed");
+    }
+}
+
+#[test]
 fn unsupported_element_epochs_fail_without_reports() {
     for epoch in [
         "1956-12-31T23:59:59.999999999",

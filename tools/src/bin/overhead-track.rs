@@ -2,9 +2,8 @@
 use std::{env, fmt::Write, fs, process::ExitCode};
 
 use overhead_core::{
-    GeodeticPosition, LookAngles, Satellite, ecef_to_geodetic, ecef_to_look_angles,
-    sgp4::{Elements, chrono::NaiveDateTime},
-    validate_utc_time,
+    GeodeticPosition, LookAngles, OmmElements, Satellite, ecef_to_geodetic, ecef_to_look_angles,
+    sgp4::chrono::NaiveDateTime, validate_utc_time,
 };
 
 const USAGE: &str = "Usage: overhead-track OMM.json UTC LAT_DEG LON_DEG HEIGHT_KM
@@ -94,7 +93,7 @@ fn report_look_angles(output: &mut String, angles: LookAngles) {
 fn run(inputs: Inputs) -> Result<String, String> {
     let data = fs::read_to_string(&inputs.path)
         .map_err(|error| format!("cannot read {}: {error}", inputs.path))?;
-    let elements: Vec<Elements> = serde_json::from_str(&data)
+    let elements: Vec<OmmElements> = serde_json::from_str(&data)
         .map_err(|error| format!("invalid OMM JSON in {}: {error}", inputs.path))?;
     let [elements] = elements.as_slice() else {
         return Err(format!(
@@ -102,6 +101,7 @@ fn run(inputs: Inputs) -> Result<String, String> {
             elements.len()
         ));
     };
+    let elements = elements.elements();
     let satellite =
         Satellite::from_elements(elements).map_err(|error| format!("invalid elements: {error}"))?;
     let state = satellite
