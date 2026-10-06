@@ -47,3 +47,9 @@ Append-only. Newest entry at the bottom. 3â5 lines per session.
 - Added seven tests, including real-executable comparisons against all 12 existing Skyfield cases; documented reproducible T0/T1/T2 commands.
 - Workspace check/tests (45 tests), no-default-feature core check, all-feature tests, strict Clippy, and formatting pass; no new external crates or core changes.
 - M1 complete; refine M2 catalogue work next and confirm hardware for early benchmarks. No simulator launch, flashing, or toolchain changes.
+
+## 2026-10-05 (codebase walkthrough and pre-M2 hardening plan)
+- Walked through ingestion, propagation, coordinate/observer geometry, CLI, tests, and the static simulator; no implementation changes.
+- Agreed to address time-validation consistency, timestamp-bound conversion, and modest frame-type protection before M2; exact API choices remain open.
+- Workspace check, 45 tests, standalone default core check, and the T0 CLI example passed during the walkthrough; no numerical CLI bug was demonstrated.
+- Updated PLAN/HANDOFF; verified an ISS fixture change was formatting-only and restored its original bytes at the user's request. No simulator or hardware run.

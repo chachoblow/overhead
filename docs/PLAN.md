@@ -4,7 +4,7 @@ Build a tested headless tracking engine, then a real-data UI, then the
 standalone device. See decisions/0005-engine-first-implementation.md.
 
 M1 is complete. Later milestones are outcome-level scope, to refine before
-starting them; M2 is next.
+starting them; a small core API hardening follow-up comes before M2.
 An unchecked scope item in those milestones is not necessarily one session.
 
 ## M0 — Project setup (complete)
@@ -54,7 +54,31 @@ Ask before flashing hardware or changing toolchains. These are limited risk
 checks, not full firmware bring-up. Simulator work can proceed if hardware is
 unavailable; the S3 operating budget remains provisional until measured.
 
-## M2 — Catalogue, pass prediction, and operating budget (next)
+## Pre-M2 — Core API hardening (next)
+
+Agreed during the codebase walkthrough: address the time-validation gap and
+make frame/time misuse harder before adding catalogue consumers. No incorrect
+CLI calculation was demonstrated; distinguish API hazards from numerical bugs.
+
+- [ ] Clarify and consistently validate the time contract for element epochs
+  and requested times, including supported years and explicit leap seconds;
+  add boundary tests before changing behavior.
+- [ ] Bind propagated state to its absolute timestamp and provide a normal
+  Earth-fixed conversion path that cannot accidentally use a different time.
+  Decide whether to retain the low-level explicit-time helper for synthetic cases.
+- [ ] Evaluate modest TEME/ECEF position types to prevent frame confusion;
+  settle the API before implementation rather than adding a generic units framework.
+
+Preserve the physical conventions in decisions 0006–0008, default no_std /
+allocation-free operation, and existing independent reference tolerances.
+No geometry rewrite, dependency expansion, catalogue implementation, or UI work
+is part of this cleanup. Record any settled API decision during implementation.
+
+**Done when:** time boundaries have explicit, tested behavior; the ordinary
+propagation-to-ECEF path preserves its timestamp; frame-type protection has an
+explicit resolution; existing reference tests and standalone core checks pass.
+
+## M2 — Catalogue, pass prediction, and operating budget
 - [ ] Configure catalogue group selection; merge and deduplicate objects by
   catalogue ID. Use local datasets headlessly; live device fetching is M6.
 - [ ] Predict physical passes with configurable elevation threshold and
