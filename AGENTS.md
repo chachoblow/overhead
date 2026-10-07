@@ -13,11 +13,12 @@ new decision instead. docs/PROGRESS.md is history; read it only when you need
 past context.
 
 ## Workspace
-- `core/` → `overhead-core`: ingestion, propagation, coordinates, observer geometry.
-  Default no_std/allocation-free; optional `omm` parsing requires alloc, not std.
+- `core/` → `overhead-core`: ingestion, propagation, coordinates, observer geometry,
+  and catalogue assembly. Default no_std/allocation-free; optional `omm` parsing
+  and `catalogue` (implies `omm`) require alloc, not std.
 - `render/` → `overhead-render`: no_std, embedded-graphics `BinaryColor`; stub.
 - `sim/` → `overhead-sim`: static SDL2 simulator, 400×240 at 2×, LcdWhite theme.
-- `tools/` → `overhead-tools`: headless runner and offline fixture generators;
+- `tools/` → `overhead-tools`: headless tracking/catalogue tools and offline fixture generators;
   usage in tools/README.md. Default binary is still a placeholder.
 - `firmware/`: not created; excluded from workspace; needs Espressif toolchain.
 

@@ -16,6 +16,8 @@ serde = { version = "1", default-features = false, features = ["alloc", "derive"
 # OMM (JSON) parsing with checked metadata; requires an allocator.
 # Off by default so the bare no_std build stays allocation-free.
 omm = ["sgp4/serde", "dep:serde"]
+# Checked catalogue merge and diagnostics; no_std + alloc, no file I/O.
+catalogue = ["omm"]
 
 [dev-dependencies]
 # Tests parse the checked-in OMM fixture; enabling sgp4's serde feature here

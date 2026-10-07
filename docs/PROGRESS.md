@@ -71,3 +71,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Removed redundant historical notes; retained decision rationale, numerical contracts, fixture provenance, and this session history.
 - Added documentation ownership guidance and a short-handoff target to limit repetition. Milestone scope and technical choices are unchanged.
 - Local Markdown links and diff whitespace checked; documentation only, no code/fixture changes or build/test rerun.
+
+## 2026-10-07 (M2 local catalogue)
+- Settled catalogue merge, conflict, invalid-record, provenance, and nonempty acceptance policies in decision 0011.
+- Added opt-in no_std + alloc catalogue assembly, an offline manifest-driven tool/example, and 20 policy/CLI tests; M2 catalogue slice complete.
+- Workspace check/tests (78 + 3 compile-fail doctests), all-feature tests, core feature checks, strict Clippy, fmt, and the offline example passed; no new crate/version or fixture changes.
+- Next: refine physical pass prediction and measure operating budgets. No simulator launch, firmware/hardware run, flashing, or toolchain changes.

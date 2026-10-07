@@ -1,0 +1,8 @@
+{
+  "groups": [
+    {
+      "name": "iss-fixture",
+      "path": "../../core/tests/fixtures/iss-25544.json"
+    }
+  ]
+}

@@ -1,8 +1,9 @@
 //! Platform-agnostic satellite tracking engine: element ingestion, orbit
 //! propagation, coordinate transforms, and application state.
 //!
-//! `no_std`; no allocation unless the `omm` feature (OMM/JSON parsing) is
-//! enabled. Conventions (time, frames, units, tolerances) are documented in
+//! `no_std`; no allocation unless `omm` (OMM/JSON parsing) or `catalogue`
+//! (checked catalogue assembly, implies `omm`) is enabled. Conventions (time,
+//! frames, units, tolerances) are documented in
 //! docs/decisions/0006-sgp4-crate-and-conventions.md.
 #![no_std]
 
@@ -11,6 +12,8 @@ extern crate alloc;
 
 pub use sgp4;
 
+#[cfg(feature = "catalogue")]
+pub mod catalogue;
 mod coordinates;
 mod ingest;
 mod observer;

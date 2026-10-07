@@ -303,6 +303,7 @@ name = "overhead-tools"
 version = "0.1.0"
 dependencies = [
  "overhead-core",
+ "serde",
  "serde_json",
 ]
 

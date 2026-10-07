@@ -1,8 +1,9 @@
 # Overhead — Plan
 
-**Next: M2.** Build the headless engine, then the real-data UI, then the device
+**Current: M2; next, refine pass prediction.** Build the headless engine, then
+the real-data UI, then the device
 ([rationale](decisions/0005-engine-first-implementation.md)). Refine each
-milestone before starting; later checkboxes are scope, not session-sized tasks.
+slice before starting; later checkboxes are scope, not session-sized tasks.
 
 ## Complete
 - **M0 — Setup:** workspace, simulator window, project workflow.
@@ -24,9 +25,11 @@ Ask before flashing or changing toolchains. Simulator work need not wait for
 hardware, but capacity and cadence remain provisional until measured on the S3.
 
 ## M2 — Catalogue, pass prediction, and operating budget
-- [ ] Configure local catalogue groups; merge/deduplicate by NORAD ID. First
-  settle conflicts, invalid records, and provenance (element epoch ≠ fetch
-  timestamp). Use checked OMM ingestion; live fetching stays M6.
+- [x] Settle catalogue conflicts, invalid records, provenance, and nonempty
+  acceptance ([0011](decisions/0011-catalogue-ingestion-and-provenance.md)).
+- [x] Implement/test local group configuration and checked NORAD-ID merge in
+  shared core plus the [headless catalogue tool](../tools/README.md).
+  Live fetching and active-catalogue refresh remain M6.
 - [ ] Predict physical passes with configurable elevation threshold/look-ahead.
   Define event semantics and accuracy; test ordinary passes, no pass, and
   objects already above threshold. Keep passes independent of screen traversal.

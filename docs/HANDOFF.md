@@ -1,40 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-06. Next: refine M2; implementation has not started._
+_Last updated: 2026-10-07. Next: refine M2 physical pass prediction._
 
 ## State
-M1 and pre-M2 hardening are complete: local OMM → propagation → Earth-fixed/
-geodetic → observer measurements. Render is a stub; sim is static; no firmware.
-See [PLAN](PLAN.md) for scope and [tools usage](../tools/README.md) to try it.
+M1/hardening and M2's first local catalogue slice are complete. Shared core now
+merges checked OMM records; the offline tool loads configured groups and reports
+selected provenance. Render remains a stub, sim static, and firmware absent.
+M2 is not complete: prediction and operating budgets remain open in [PLAN](PLAN.md).
 
 ## This session
-Documentation only: shortened `PLAN.md`, `DESIGN.md`, decisions 0005–0010,
-`tools/README.md`, and the fixture README; corrected `AGENTS.md`'s crate map.
-Removed redundant `docs/notes/` (rationale/checks retained in decisions,
-fixtures, and progress). Updated navigation and the handoff prompt to discourage
-repetition. No milestone, contract, code, dependency, or fixture changes.
+Settled catalogue policy in [0011](decisions/0011-catalogue-ingestion-and-provenance.md).
+Implemented opt-in `core/src/catalogue.rs`, `tools/src/bin/overhead-catalogue.rs`,
+a historical example manifest, and 20 tests. Updated crate features, AGENTS,
+PLAN, and [tools usage](../tools/README.md). No new crate/version or fixture changes;
+Serde is now direct in tools and serde_json's raw_value feature preserves keys.
 
 ## Next step
-Refine M2's first headless slice: local group configuration, NORAD-ID merge,
-conflict/invalid-record policy, and provenance. Do not silently choose policy;
-element epoch and fetch time are distinct. Use checked OMM ingestion
-([0010](decisions/0010-propagation-and-omm-validation.md)).
+Refine pass-event semantics before coding: elevation threshold, look-ahead,
+already-above-threshold behavior, no pass, event accuracy, and search cost.
+Keep physical passes independent of screen traversal. Catalogue APIs/tests own
+merge details; firmware refresh/cache/logging are not implemented.
 
-Confirm hardware availability for propagation benchmarks and minimal Sharp
-refresh testing; ask before flashing or changing toolchains. Capacity,
-scheduling, and prediction accuracy/cost remain unmeasured (see PLAN).
+Confirm available hardware for propagation benchmarks and minimal Sharp refresh
+checks. Ask before flashing or changing toolchains. Capacity, allocation and
+diagnostic budgets, scheduling, and prediction cost remain unmeasured.
 
 ## Risks / follow-ups
+- No freshness cutoff or active-catalogue fallback is implemented; unknown fetch
+  time stays unknown. SGP4 initialization does not guarantee propagation success.
 - Broaden independent references to resonant/low-inclination GEO, applicable
-  half-day resonances, negative propagation times, and a non-LEO observer
-  pipeline. These are coverage recommendations, not known pipeline failures.
-- sgp4 2.4's epoch helper mishandles dates after February 2100; only our rotation
+  half-day resonances, negative times, and a non-LEO observer pipeline.
+- sgp4's epoch helper mishandles dates after February 2100; only our rotation
   avoids it ([0007](decisions/0007-coordinate-implementation-conventions.md)).
-- Prefer timestamp-bound `state.to_ecef()`; low-level time/frame escape hatches
-  remain caller responsibilities ([0009](decisions/0009-core-time-and-frame-api.md)).
+- Prefer timestamp-bound `state.to_ecef()` ([0009](decisions/0009-core-time-and-frame-api.md)).
 
 ## Verification
-This session: local Markdown links and `git diff --check`; no build/test rerun.
-Last implementation session: workspace/default/all-feature tests (58 + 3
-compile-fail doctests), standalone core with/without OMM, Clippy, and fmt passed.
-No known failing checks; hardware performance is still unverified.
+Workspace check, default/all-feature tests (78 + 3 compile-fail doctests), core
+checks with no features/OMM/catalogue, strict Clippy, fmt, and the offline example
+passed. No simulator launch, hardware run, flashing, or toolchain changes.
