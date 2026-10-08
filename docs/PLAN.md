@@ -1,7 +1,7 @@
 # Overhead — Plan
 
-**Current: M2; next, refine pass prediction.** Build the headless engine, then
-the real-data UI, then the device
+**Current: M2; next, design pass search strategy, API, and tests.**
+Build the headless engine, then the real-data UI, then the device
 ([rationale](decisions/0005-engine-first-implementation.md)). Refine each
 slice before starting; later checkboxes are scope, not session-sized tasks.
 
@@ -30,9 +30,14 @@ hardware, but capacity and cadence remain provisional until measured on the S3.
 - [x] Implement/test local group configuration and checked NORAD-ID merge in
   shared core plus the [headless catalogue tool](../tools/README.md).
   Live fetching and active-catalogue refresh remain M6.
-- [ ] Predict physical passes with configurable elevation threshold/look-ahead.
-  Define event semantics and accuracy; test ordinary passes, no pass, and
-  objects already above threshold. Keep passes independent of screen traversal.
+- [x] Settle physical-pass product semantics and configurable defaults
+  ([0012](decisions/0012-physical-pass-semantics.md)); keep passes independent of
+  screen traversal.
+- [ ] Design search strategy, API, and tests: short-pass detection, crossing
+  refinement, threshold/window boundaries, validation, and incomplete results.
+- [ ] Implement headless physical pass prediction per 0012; test ordinary and
+  short passes, no upcoming pass, already-above-threshold/window-spanning cases,
+  and prediction failures.
 - [ ] Measure propagation/prediction cost; set catalogue limits, scheduling,
   and explicit over-budget behavior.
 

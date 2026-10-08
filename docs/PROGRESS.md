@@ -77,3 +77,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Added opt-in no_std + alloc catalogue assembly, an offline manifest-driven tool/example, and 20 policy/CLI tests; M2 catalogue slice complete.
 - Workspace check/tests (78 + 3 compile-fail doctests), all-feature tests, core feature checks, strict Clippy, fmt, and the offline example passed; no new crate/version or fixture changes.
 - Next: refine physical pass prediction and measure operating budgets. No simulator launch, firmware/hardware run, flashing, or toolchain changes.
+
+## 2026-10-08 (M2 pass semantics)
+- Accepted decision 0012: physical passes, configurable 10°/24-hour/5-second defaults, in-progress/window-limited results, and explicit incomplete searches; peak prediction deferred.
+- Clarified above-horizon radar eligibility independently of the pass threshold and zoom; updated DESIGN and checked off product semantics in PLAN.
+- Prepared HANDOFF for a new context focused on search strategy, API, and tests, including short-pass detection and boundary cases; implementation and cost measurements remain open.
+- Documentation links and diff whitespace checked; no code changes, builds/tests, simulator/hardware runs, flashing, or toolchain changes.

@@ -15,10 +15,16 @@ Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 fast markers have a minimum on-screen traversal time. **Readouts always use
 true positions, never visually slowed markers.**
 
+Only satellites above the local geometric horizon are eligible for markers,
+then clipped to the current view—even at whole-Earth zoom. This is the observer's
+sky, not a global satellite tracker. Physical passes use a separate configurable
+elevation threshold, independent of zoom
+([pass semantics](decisions/0012-physical-pass-semantics.md)).
+
 The panel reflects the radar, with no menus or pages:
 - Local time and orbit-data age.
 - Auto-selected satellite: name, altitude, range, elevation, travel direction.
-- Next satellite overhead and countdown, especially when the local sky is empty.
+- Next pass and countdown to its start, especially when the local sky is empty.
 - View radius (e.g. `R 500 KM`).
 
 No pass lists, radio information, or battery indicator. Layout, selection, and
