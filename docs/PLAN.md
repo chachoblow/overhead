@@ -31,11 +31,12 @@ hardware, but capacity and cadence remain provisional until measured on the S3.
   shared core plus the [headless catalogue tool](../tools/README.md).
   Live fetching and active-catalogue refresh remain M6.
 - [x] Settle physical-pass product semantics and configurable defaults
-  ([0012](decisions/0012-physical-pass-semantics.md)); keep passes independent of
-  screen traversal.
-- [ ] Design search strategy, API, and tests: short-pass detection, crossing
+  ([0012](decisions/0012-physical-pass-semantics.md), detection limits clarified
+  by [0013](decisions/0013-pass-detection-resolution.md)); keep passes independent
+  of screen traversal.
+- [ ] Design search strategy, API, and tests: detection resolution/limits, crossing
   refinement, threshold/window boundaries, validation, and incomplete results.
-- [ ] Implement headless physical pass prediction per 0012; test ordinary and
+- [ ] Implement headless physical pass prediction per 0012/0013; test ordinary and
   short passes, no upcoming pass, already-above-threshold/window-spanning cases,
   and prediction failures.
 - [ ] Measure propagation/prediction cost; set catalogue limits, scheduling,

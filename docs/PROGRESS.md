@@ -83,3 +83,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Clarified above-horizon radar eligibility independently of the pass threshold and zoom; updated DESIGN and checked off product semantics in PLAN.
 - Prepared HANDOFF for a new context focused on search strategy, API, and tests, including short-pass detection and boundary cases; implementation and cost measurements remain open.
 - Documentation links and diff whitespace checked; no code changes, builds/tests, simulator/hardware runs, flashing, or toolchain changes.
+
+## 2026-10-08 (M2 detection limits)
+- Accepted decision 0013: explicit numerical detection limits may miss brief threshold excursions/gaps; retain detected short passes rather than imposing a duration filter.
+- Kept radar eligibility and fast-transit presentation independent of prediction; linked the clarification from 0012 and PLAN and refreshed HANDOFF.
+- Search algorithm, API, tests, detection resolution, and work budgets remain open; the discussed 10-second limit is not an accepted default.
+- Documentation links and diff whitespace checked; no code changes, build/test runs, simulator/hardware runs, flashing, dependencies, or toolchain changes.

@@ -1,7 +1,7 @@
 # 0012 — Physical pass semantics
 
 Date: 2026-10-08
-Status: accepted
+Status: accepted (detection/completeness clarified by [0013](0013-pass-detection-resolution.md))
 
 ## Decision
 A physical pass is a continuous interval when a satellite is above a configured
@@ -17,7 +17,9 @@ independently of radar projection, zoom, clipping, and visually slowed motion.
 All three are configurable tuning inputs, not necessarily device settings.
 The tolerance is relative to the crossing predicted by the orbital model, not
 a guarantee of real-world timing accuracy. Defaults remain subject to measured
-search cost on the target hardware.
+search cost on the target hardware. Detection resolution is separate; complete
+search and earliest-arrival claims are subject to the numerical detection limits
+clarified in [0013](0013-pass-detection-resolution.md).
 
 ### Events and results
 - A pass starts at an upward threshold crossing and ends at a downward crossing.
