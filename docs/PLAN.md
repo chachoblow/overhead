@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: M2; first S3 kernel costs measured; broader measurements and operating budgets next.**
+**Current: M2; S3 baseline and 16-slot costs measured; remaining target suites and memory budgets next.**
 Build the headless engine, then the real-data UI, then the device
 ([rationale](decisions/0005-engine-first-implementation.md)). Refine each
 slice before starting; later checkboxes are scope, not session-sized tasks.
@@ -53,6 +53,9 @@ hardware; the first S3 kernel baseline alone does not justify capacity or cadenc
   kernel throughput only, not catalogue capacity or device limits.
 - [x] Establish the first S3 propagation/prediction baseline: 14 workloads with
   matching host work counts; no display/PSRAM dependency ([results](evaluations/s3-costs.md)).
+- [x] Prepare separately runnable age/search/scaling suites and capture the first
+  16-slot S3 workload ([results](evaluations/s3-scaling-16.md)); repeated slots
+  remain compute evidence, not catalogue capacity. Other new target suites pending.
 - [ ] Broaden S3 age/orbit/workload coverage and measure distinct-catalogue storage,
   aggregation, and peak memory; set catalogue limits, cadence, scheduling, and
   explicit over-budget behavior.

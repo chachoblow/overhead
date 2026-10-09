@@ -131,3 +131,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Added firmware/ with generated original fixture inputs, bounded serial capture, and five offline tests; target dependencies/lock/toolchain isolated from the unchanged host workspace. Usage in firmware/README.md.
 - Recorded 14 workloads × 5 samples in docs/evaluations/s3-costs.md: 24h/60s searches ~1.18–2.14s per fixture, four-slot prediction ~6.54s, full tracking ~4.77ms per four-slot tick. All work counts match host; no capacity/accuracy/worst-case claim.
 - Workspace check/default/all-feature tests, core feature checks, host Clippy/fmt, new tests, and target check/build/flash/capture pass; embedded linker retains an RWX warning. Next: broaden ages/orbits, measure catalogue/peak memory, then choose scheduling and operating limits; no production defaults selected.
+
+## 2026-10-09 (M2 expanded S3 harness and 16-slot capture)
+- Added separately runnable age/search/16–64-slot suites in firmware/, host expected-work manifests, and strict V2 capture validation; all 122 workloads complete/repeat on the host. Core, fixtures, dependencies, and toolchain unchanged.
+- With explicit approval, flashed/captured only scaling-16: three samples each, all host counts match. Tracking averages 19.19ms per tick; 24h prediction median 27.34s. Evidence/build hashes in docs/evaluations/s3-scaling-16.md; not catalogue capacity or a controlled same-build comparison with the old baseline.
+- Workspace check/tests (145 + 6 doctests), six firmware host tests, seven Python tests, strict firmware-host Clippy, fmt/diff checks, host manifest round trips, target builds, and approved flash/capture pass; existing RWX linker warning remains.
+- Next: remaining target suites/V2 baseline, broader orbit samples, numeric checks, and distinct-catalogue/peak-memory measurements before operating policy. All seven age grids remain in flash; no peak-memory measurement or production default chosen.

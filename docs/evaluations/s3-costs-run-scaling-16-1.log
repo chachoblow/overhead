@@ -1,0 +1,57 @@
+[2026-10-09T13:52:52Z INFO ] Serial port: '/dev/cu.usbserial-110'
+[2026-10-09T13:52:52Z INFO ] Connecting...
+[2026-10-09T13:52:52Z INFO ] Using flash stub
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x1 (POWERON),boot:0x8 (SPI_FAST_FLASH_BOOT)
+SPIWP:0xee
+mode:DIO, clock div:2
+load:0x3fce2820,len:0x14d0
+load:0x403c8700,len:0xdcc
+load:0x403cb700,len:0x2f54
+entry 0x403c8900
+I (29) boot: ESP-IDF v6.1-beta1-497-g14f663f003e 2nd stage bootloader
+I (30) boot: Multicore bootloader
+I (30) boot: chip revision: v0.2
+I (30) boot: efuse block revision: v1.4
+I (34) boot.esp32s3: Boot SPI Speed : 40MHz
+I (38) boot.esp32s3: SPI Mode       : DIO
+I (42) boot.esp32s3: SPI Flash Size : 8MB
+I (45) boot: Enabling RNG early entropy source...
+I (50) boot: Partition Table:
+I (52) boot: ## Label            Usage          Type ST Offset   Length
+I (59) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (65) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (72) boot:  2 factory          factory app      00 00 00010000 007f0000
+I (78) boot: End of partition table
+I (82) esp_image: segment 0: paddr=00010020 vaddr=3c000020 size=7cdfch (511484) map
+I (218) esp_image: segment 1: paddr=0008ce24 vaddr=3fc8b060 size=00b88h (  2952) load
+I (219) esp_image: segment 2: paddr=0008d9b4 vaddr=40378000 size=02664h (  9828) load
+I (225) esp_image: segment 3: paddr=00090020 vaddr=42080020 size=1f444h (128068) map
+I (261) esp_image: segment 4: paddr=000af46c vaddr=4037a664 size=009f8h (  2552) load
+I (264) boot: Loaded app from partition at offset 0x10000
+I (264) boot: Disabling RNG early entropy source...
+OVERHEAD_S3_BENCHMARK_V2
+SUITE,scaling-16,3,2
+compiler=rustc 1.97.0-nightly (8ea53bcd7 2026-07-08) (1.97.0.0)
+cpu_mhz=240,cores_used=1,psram=unused,allocator=none,math=f64_libm,debug_assertions=false
+age_days=grid_center_relative_to_epoch; start=center_minus12h; tracking=1441_ticks_60s; threshold_deg=10
+warmups=1,iterations_per_sample=1,timer=esp_hal_Instant_us
+sizeof_satellite=512,sizeof_one_age_time_grid=69168,sizeof_prepared=560
+INPUT,LEO,25544,2026-10-04 12:43:41.833056
+INPUT,resonant-HEO,8195,2006-06-25 07:58:18.143616001
+INPUT,GEO,24208,2006-06-26 00:58:29.343360
+INPUT,GNSS,28129,2006-06-24 13:41:49.461503999
+case_fields=id,operation,class,slots,age_days,window_s,detection_s,tolerance_ms
+row_fields=id,sample,elapsed_us,state_evaluations,searches,passes
+CASE,0,state_at+ecef+look_angles,mixed-repeated-fixtures,16,0,86400,0,0
+BEGIN,0
+ROW,0,0,27659121,23056,0,0
+ROW,0,1,27671874,23056,0,0
+ROW,0,2,27659558,23056,0,0
+CASE,1,search_satellite,mixed-repeated-fixtures,16,0,86400,60,5000
+BEGIN,1
+ROW,1,0,27345529,23344,16,36
+ROW,1,1,27343044,23344,16,36
+ROW,1,2,27341320,23344,16,36
+OVERHEAD_S3_BENCHMARK_DONE

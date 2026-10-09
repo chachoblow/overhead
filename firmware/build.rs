@@ -5,6 +5,9 @@ use sgp4::{
     chrono::{Datelike, NaiveDateTime, TimeDelta, Timelike},
 };
 
+#[path = "src/selection.rs"]
+mod selection;
+
 fn datetime(time: NaiveDateTime) -> String {
     format!(
         "NaiveDate::from_ymd_opt({}, {}, {}).unwrap().and_hms_nano_opt({}, {}, {}, {}).unwrap()",
@@ -24,6 +27,7 @@ fn main() {
     println!("cargo:rerun-if-changed={iss_path}");
     println!("cargo:rerun-if-changed={tle_path}");
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=src/selection.rs");
     let mut elements: Vec<Elements> =
         serde_json::from_str(&fs::read_to_string(iss_path).unwrap()).unwrap();
     assert_eq!(elements.len(), 1);
@@ -62,27 +66,70 @@ fn main() {
         source.push_str("},\n");
     }
     source.push_str("] }\n");
-    // Match the host benchmark's precomputed timestamp grid, but store it in
-    // flash rodata rather than allocating 69 KiB of target heap/stack.
-    source.push_str("pub static TIMES: [[NaiveDateTime; TRACK_STEPS]; 4] = [\n");
-    for e in &elements {
-        source.push_str("[\n");
-        for i in 0..1441 {
-            writeln!(
-                source,
-                "{},",
-                datetime(e.datetime - TimeDelta::hours(12) + TimeDelta::seconds(i * 60))
-            )
-            .unwrap();
+    // Prepare age-shifted grids on the host, never inside target timing or on
+    // its stack. Zero age preserves the original host/target workload.
+    for (index, days) in selection::AGE_DAYS.into_iter().enumerate() {
+        let name = if days == 0 {
+            "TIMES".into()
+        } else {
+            format!("TIMES_{index}")
+        };
+        writeln!(
+            source,
+            "pub static {name}: [[NaiveDateTime; TRACK_STEPS]; 4] = ["
+        )
+        .unwrap();
+        for e in &elements {
+            source.push_str("[\n");
+            for i in 0..1441 {
+                writeln!(
+                    source,
+                    "{},",
+                    datetime(
+                        e.datetime + TimeDelta::days(days) - TimeDelta::hours(12)
+                            + TimeDelta::seconds(i * 60)
+                    )
+                )
+                .unwrap();
+            }
+            source.push_str("],\n");
         }
-        source.push_str("],\n");
+        source.push_str("];\n");
     }
-    source.push_str("];\n");
+    // Each grid is a separate static so unused ages can be linker-collected.
+    source.push_str(
+        "fn age_times(days: i64) -> &'static [[NaiveDateTime; TRACK_STEPS]; 4] { match days {\n",
+    );
+    for (index, days) in selection::AGE_DAYS.into_iter().enumerate() {
+        let name = if days == 0 {
+            "TIMES".into()
+        } else {
+            format!("TIMES_{index}")
+        };
+        writeln!(source, "{days} => &{name},").unwrap();
+    }
+    source.push_str("_ => panic!(\"unsupported experimental age\"), } }\n");
     fs::write(
         PathBuf::from(env::var_os("OUT_DIR").unwrap()).join("fixtures.rs"),
         source,
     )
     .unwrap();
+    for (name, default) in [("BENCH_SUITE", "baseline"), ("BENCH_SAMPLES", "5")] {
+        println!("cargo:rerun-if-env-changed={name}");
+        let value = env::var(name).unwrap_or_else(|_| default.into());
+        if name == "BENCH_SAMPLES" {
+            assert!(
+                selection::sample_count(&value).is_some(),
+                "BENCH_SAMPLES must be 1..5"
+            );
+        } else {
+            assert!(
+                selection::SUITE_NAMES.contains(&value.as_str()),
+                "unknown BENCH_SUITE: {value}"
+            );
+        }
+        println!("cargo:rustc-env={name}={value}");
+    }
     let compiler = Command::new(env::var_os("RUSTC").unwrap())
         .arg("--version")
         .output()

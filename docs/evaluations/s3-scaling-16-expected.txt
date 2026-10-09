@@ -1,0 +1,7 @@
+OVERHEAD_S3_EXPECTED_V2
+SUITE,scaling-16,3,2
+CASE,0,state_at+ecef+look_angles,mixed-repeated-fixtures,16,0,86400,0,0
+WORK,0,23056,0,0
+CASE,1,search_satellite,mixed-repeated-fixtures,16,0,86400,60,5000
+WORK,1,23344,16,36
+OVERHEAD_S3_EXPECTED_DONE

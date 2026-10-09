@@ -8,6 +8,8 @@ use overhead_core::{
     sgp4::chrono::{NaiveDateTime, TimeDelta},
 };
 
+pub mod suites;
+
 pub const TRACK_STEPS: usize = 1441;
 pub const SEARCH_LIMIT: u64 = 200_000;
 pub const CLASSES: [&str; 4] = ["LEO", "resonant-HEO", "GEO", "GNSS"];
@@ -33,13 +35,22 @@ pub struct Work {
 }
 
 /// Indices repeat references to four fixtures; never distinct catalogue entries.
-#[allow(clippy::needless_range_loop)] // Time-major indexing matches the host workload.
 pub fn track(satellites: &[Satellite; 4], slots: &[usize], geometry: bool) -> Work {
+    track_grid(satellites, slots, geometry, &TIMES)
+}
+
+#[allow(clippy::needless_range_loop)] // Time-major indexing matches the host workload.
+fn track_grid(
+    satellites: &[Satellite; 4],
+    slots: &[usize],
+    geometry: bool,
+    times: &[[NaiveDateTime; TRACK_STEPS]; 4],
+) -> Work {
     let observer = black_box(observer());
     for step in 0..TRACK_STEPS {
         for &i in slots {
             let state = black_box(&satellites[i])
-                .state_at(black_box(TIMES[i][step]))
+                .state_at(black_box(times[i][step]))
                 .expect("tracking propagation");
             if geometry {
                 let ecef = state.to_ecef().expect("tracking ECEF");
@@ -57,13 +68,22 @@ pub fn track(satellites: &[Satellite; 4], slots: &[usize], geometry: bool) -> Wo
 }
 
 pub fn configs() -> [SearchConfig; 4] {
+    search_configs(0, 86400, 60, 5000)
+}
+
+fn search_configs(
+    age_days: i64,
+    window_s: i64,
+    detection_s: i64,
+    tolerance_ms: i64,
+) -> [SearchConfig; 4] {
     core::array::from_fn(|i| {
         SearchConfig::new(
-            TIMES[i][0],
-            TimeDelta::seconds(86400),
+            age_times(age_days)[i][0],
+            TimeDelta::seconds(window_s),
             10_f64.to_radians(),
-            TimeDelta::seconds(60),
-            TimeDelta::milliseconds(5000),
+            TimeDelta::seconds(detection_s),
+            TimeDelta::milliseconds(tolerance_ms),
         )
         .expect("experimental configuration")
     })
