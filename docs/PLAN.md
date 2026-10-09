@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: M2; next, design pass search strategy, API, and tests.**
+**Current: M2; next, finalize pass-search API and tests.**
 Build the headless engine, then the real-data UI, then the device
 ([rationale](decisions/0005-engine-first-implementation.md)). Refine each
 slice before starting; later checkboxes are scope, not session-sized tasks.
@@ -34,9 +34,11 @@ hardware, but capacity and cadence remain provisional until measured on the S3.
   ([0012](decisions/0012-physical-pass-semantics.md), detection limits clarified
   by [0013](decisions/0013-pass-detection-resolution.md)); keep passes independent
   of screen traversal.
-- [ ] Design search strategy, API, and tests: detection resolution/limits, crossing
-  refinement, threshold/window boundaries, validation, and incomplete results.
-- [ ] Implement headless physical pass prediction per 0012/0013; test ordinary and
+- [x] Settle the bounded search baseline, boundary handling, and partial-result
+  behavior ([0014](decisions/0014-pass-search-baseline.md)).
+- [ ] Finalize the shared-core API, configuration validation, and test matrix;
+  evaluate detection intervals separately from crossing tolerance.
+- [ ] Implement headless physical pass prediction per 0012–0014; test ordinary and
   short passes, no upcoming pass, already-above-threshold/window-spanning cases,
   and prediction failures.
 - [ ] Measure propagation/prediction cost; set catalogue limits, scheduling,

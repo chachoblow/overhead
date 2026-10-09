@@ -32,11 +32,12 @@ add a product rule and require duration classification without a demonstrated
 need.
 
 ## Consequences
-- Search strategy, shared-core API, boundary/tangency handling, tests, detection
-  resolution, and work limits remain open M2 design work in [PLAN](../PLAN.md).
+- The search baseline, boundary/tangency handling, and work-limit behavior are
+  subsequently settled in [0014](0014-pass-search-baseline.md). Shared-core API,
+  tests, detection resolution, and numeric budgets remain M2 work in [PLAN](../PLAN.md).
 - Choose resolution and budgets through representative tests and measurements.
-  The discussed 10-second detection limit is not an accepted default; neither
-  fixed-step sampling nor a particular sample interval is settled.
+  The discussed 10-second detection limit is not an accepted default; a particular
+  sample interval remains unsettled.
 - The existing 0012 defaults remain unchanged. Crossing refinement alone does
   not establish detection coverage; document and test those limits separately.
 - No UI implementation, prediction-based marker filter, or change to the

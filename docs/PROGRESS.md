@@ -89,3 +89,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Kept radar eligibility and fast-transit presentation independent of prediction; linked the clarification from 0012 and PLAN and refreshed HANDOFF.
 - Search algorithm, API, tests, detection resolution, and work budgets remain open; the discussed 10-second limit is not an accepted default.
 - Documentation links and diff whitespace checked; no code changes, build/test runs, simulator/hardware runs, flashing, dependencies, or toolchain changes.
+
+## 2026-10-08 (M2 pass-search baseline)
+- Accepted fixed-step sampling plus crossing bisection, with no detection default.
+- Settled threshold/window boundary behavior and work-exhaustion/partial-result policy in 0014; linked from 0012/0013 and updated PLAN/HANDOFF.
+- Kept prediction independent of radar zoom; API, validation, tests, and numeric budgets remain open.
+- Documentation links and diff whitespace checked; no implementation, build/test runs, dependencies, or hardware changes.

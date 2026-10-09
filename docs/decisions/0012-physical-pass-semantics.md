@@ -61,11 +61,11 @@ allowing a higher threshold for meaningful arrivals. Bounded searches and
 explicit unknown/incomplete results avoid false promises and unbounded work.
 
 ## Consequences
-- Product semantics are settled; prediction is not implemented. Search strategy,
-  API, tests, and operating budgets are the next M2 work in [PLAN](../PLAN.md).
+- Product semantics are settled; prediction is not implemented. The search
+  baseline, boundary/tangency handling, and over-budget behavior are subsequently
+  settled in [0014](0014-pass-search-baseline.md). API, configuration validation,
+  tests, and numeric operating budgets remain M2 work in [PLAN](../PLAN.md).
 - Technical design must address short-pass detection as well as crossing
   refinement; a 5-second refinement target alone does not prevent missed passes.
-- Exact threshold/window boundary rules, tangencies, configuration validation,
-  search limits, and over-budget behavior still require technical design.
 - Radar projection, selection policy, display wording/layout, and scheduling
   remain future work. This decision does not bring UI implementation into M2.

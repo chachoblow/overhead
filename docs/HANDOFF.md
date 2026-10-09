@@ -1,40 +1,37 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-08. Next: M2 pass search strategy, API, and tests._
+_Last updated: 2026-10-08. Next: M2 pass-search API and tests._
 
 ## State
-M1/hardening and M2's local catalogue slice are complete. Physical-pass semantics
-are accepted in [0012](decisions/0012-physical-pass-semantics.md), with practical
-detection limits clarified by [0013](decisions/0013-pass-detection-resolution.md).
-Prediction is not implemented. Render remains a stub, sim static, firmware absent.
-M2 prediction and operating budgets remain open in [PLAN](PLAN.md).
+M1/hardening and M2's local catalogue slice are complete. Prediction remains
+unimplemented; render is a stub, sim static, firmware absent. Scope: [PLAN](PLAN.md).
 
 ## This session
-Accepted 0013: bounded search may miss brief threshold excursions/gaps; detected
-short passes are not deliberately filtered. Prediction does not gate radar
-markers or reverse visual-slowing intent. Linked the clarification from 0012
-and PLAN. No algorithm, API, detection default, or work budget was settled.
+Accepted the bounded search baseline in
+[0014](decisions/0014-pass-search-baseline.md): regular elevation sampling,
+crossing bisection, explicit boundary uncertainty, and preserved partial results.
+Linked it from 0012/0013 and updated PLAN. Physical-pass semantics and detection
+limits remain in 0012/0013. Prediction supports next-pass information, not entry
+into the zoomed radar view.
 
 ## Next step
-Read 0012/0013, then design the shared-core search, API, and tests before coding.
-Fixed-step sampling plus crossing bisection was discussed as a headless baseline,
-not accepted as the algorithm. The suggested 10-second detection limit is not a
-default. Choose/test detection resolution separately from crossing tolerance;
-settle threshold/window boundaries, tangencies, validation, and failure reporting.
-Keep physical prediction independent of projection, selection, and rendering.
-
-Confirm available hardware for propagation/prediction benchmarks and minimal
-Sharp refresh checks. Ask before flashing or changing toolchains. Capacity,
-budgets, scheduling, and search cost remain unmeasured; define over-budget behavior.
+Read 0012–0014, then finalize the allocation-free shared-core API, validation,
+and test matrix before coding. Then implement synthetic search tests and the
+predictor before orbital integration and headless catalogue reporting.
+Detection interval must initially be explicit; no numeric work budget or
+detection default is settled.
 
 ## Risks / follow-ups
-- Completed numerical searches do not prove absence of arbitrarily short events.
-- No freshness cutoff or active-catalogue fallback is implemented; unknown fetch
-  time stays unknown. Initialization does not assure propagation.
-- Broaden references to resonant/low-inclination GEO, applicable half-day
-  resonances, negative times, and a non-LEO observer pipeline.
-- sgp4 epoch dates after February 2100: see 0007. Use `state.to_ecef()` per 0009.
+Completed numerical searches can miss brief events. Refinement does not prove
+unique crossings. Work limits do not provide background scheduling.
+Confirm available hardware for benchmarks and minimal Sharp refresh checks;
+ask before flashing or changing toolchains. Capacity and cadence remain unmeasured.
+No freshness cutoff or active-catalogue fallback exists; unknown fetch time stays
+unknown. Initialization does not assure propagation. Broaden references to
+resonant/low-inclination GEO, applicable half-day resonances, negative times,
+and a non-LEO observer pipeline. See 0007 for the sgp4 epoch-date issue after
+February 2100; use `state.to_ecef()` per 0009.
 
 ## Verification
-Documentation links and diff whitespace checked. No builds/tests rerun;
-no code, dependency, toolchain, simulator, hardware, or flashing changes.
+Documentation links and diff whitespace checked. No code changes, builds/tests,
+dependencies, toolchain changes, simulator runs, or hardware operations.
