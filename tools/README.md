@@ -149,6 +149,54 @@ interpretation; [fixture provenance](fixtures/README.md) owns the historical
 inputs. `cargo test -p overhead-tools` includes the complete suite plus matching,
 equality, uncertainty, short-event/phase, tolerance-independence, and CLI tests.
 
+## `overhead-benchmark`
+
+Measure offline **host kernel throughput** using the same embedded historical
+LEO, resonant HEO, GNSS, and GEO inputs as the interval experiment. No dependencies,
+network, input files, or hardware are required beyond the existing workspace.
+
+```sh
+cargo run --release -p overhead-tools --bin overhead-benchmark -- \
+  --samples 5 --min-sample-ms 20 --label 'record CPU, OS, rustc, build/revision here' \
+  > /tmp/overhead-benchmark.json
+```
+
+Options are optional, order-independent, and cannot repeat. `--samples` accepts
+1–50 (default 5); `--min-sample-ms` accepts 1–1000 (default 20); `--label` is an
+unverified descriptive string. These are measurement settings, not device policy.
+`--help`/`-h` exits 0 without running. Unknown/missing/invalid options exit 1.
+
+The 62 fixed workloads cover propagation alone, propagation plus ECEF/observer
+geometry, 1h/24h pass searches at 5/30/60-second detection intervals and independent
+250ms/5s crossing tolerances, and equally mixed 4/16/64-slot tracking/search batches.
+Slots repeat four fixtures at their **own epoch-relative times**, not distinct
+catalogue entries at a common UTC. They measure compute scaling, not supported size.
+
+Timing uses `std::time::Instant`: one untimed warm-up, discarded doubling-batch
+calibration to the minimum target, then fixed-size samples. The target is not a
+maximum runtime or a promise every subsequent sample lasts that long. JSON retains
+raw elapsed nanoseconds, batch iteration counts, min/median/max per invocation,
+work counts, inputs/configurations, target OS/architecture, debug-assertion status,
+and label. `black_box` consumes inputs/outputs; work counts must remain stable.
+There are no outlier exclusions or machine-dependent speed assertions in tests.
+
+Use release builds for measurements; debug builds are allowed for test coverage.
+Record compiler version, CPU, OS, revision, Cargo.lock, profile and flags alongside
+results: debug-assertion status alone cannot identify optimization settings.
+Timing includes kernel validation, loops, error checks, budgets, and streamed pass
+counting; it excludes ingestion/initialization, prepared timestamps/configurations,
+JSON, pass storage/catalogue aggregation, UI, and network. No peak-memory measure,
+worst-case latency bound, or scheduler is supplied.
+
+All searches must complete under the experimental 200,000-evaluation per-slot
+guard. Any failure, incomplete search, inconsistent work count, or calibration
+failure exits 1 with stderr and no partial stdout JSON. Success exits 0. Timing
+values are inherently variable; workloads/counts are reproducible on this host.
+
+[Method, measured results, and device follow-up](../docs/evaluations/host-costs.md).
+[Fixture provenance](fixtures/README.md). Tests cover the complete matrix, mixed
+accounting, batch normalization, workload failures, and CLI validation.
+
 ## `overhead-track`
 
 Single-satellite measurements from explicit local inputs; no network, wall

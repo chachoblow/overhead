@@ -2,13 +2,11 @@
 use std::{env, process::ExitCode};
 
 use overhead_core::{
-    GeodeticPosition, Satellite, ecef_to_look_angles,
+    GeodeticPosition, ecef_to_look_angles,
     passes::{EvaluationBudget, PassEnd, PassStart, SearchConfig, search_satellite},
-    sgp4::{
-        Elements,
-        chrono::{NaiveDateTime, TimeDelta},
-    },
+    sgp4::chrono::{NaiveDateTime, TimeDelta},
 };
+use overhead_tools::historical_orbits::{HistoricalOrbit as Orbit, historical_orbits as orbits};
 use serde::Serialize;
 
 const USAGE: &str = "Usage: overhead-evaluate-intervals\n\nRun the fixed historical orbital detection-interval experiment and print JSON.\nNo inputs, network, clock, hardware, or production defaults. See tools/README.md.\nExit 0: experiment finished (detection misses are data); 1: invalid arguments or\nfailed/incomplete evaluation. --help/-h prints this help.";
@@ -25,40 +23,6 @@ fn site(lat: f64, lon: f64, height: f64) -> GeodeticPosition {
         longitude_rad: lon.to_radians(),
         altitude_km: height,
     }
-}
-
-struct Orbit {
-    name: &'static str,
-    class: &'static str,
-    satellite: Satellite,
-}
-
-fn orbits() -> Result<Vec<Orbit>> {
-    let elements: Vec<Elements> =
-        serde_json::from_str(include_str!("../../../core/tests/fixtures/iss-25544.json"))
-            .map_err(|e| e.to_string())?;
-    let mut result = vec![Orbit {
-        name: "ISS",
-        class: "LEO",
-        satellite: Satellite::from_elements(&elements[0]).map_err(|e| e.to_string())?,
-    }];
-    let lines: Vec<_> = include_str!("../../fixtures/pass-intervals.tle")
-        .lines()
-        .collect();
-    let (records, remainder) = lines.as_chunks::<3>();
-    if records.len() != 3 || !remainder.is_empty() {
-        return Err("expected three named TLE records in the interval fixture".into());
-    }
-    for (lines, class) in records.iter().zip(["resonant-HEO", "GEO", "GNSS"]) {
-        let elements = Elements::from_tle(None, lines[1].as_bytes(), lines[2].as_bytes())
-            .map_err(|e| e.to_string())?;
-        result.push(Orbit {
-            name: lines[0],
-            class,
-            satellite: Satellite::from_elements(&elements).map_err(|e| e.to_string())?,
-        });
-    }
-    Ok(result)
 }
 
 struct Case<'a> {

@@ -1,0 +1,1728 @@
+{
+  "schema_version": 1,
+  "scope": "host kernel throughput only; not ESP32 cost, catalogue capacity, scheduling, memory bounds, detection accuracy, or operating defaults",
+  "timing_method": "std::time::Instant wall time; one untimed warm-up; double batch iterations to minimum target; discard calibration; fixed-size repeated samples; black_box inputs/outputs; raw ns and min/median/max per invocation; no outlier removal",
+  "workload_method": "one fixture per class; starts at each own epoch -12h (not a common-UTC catalogue); tracking uses 1441 precomputed times spaced 60s through epoch +12h; mixed slots repeat LEO/HEO/GEO/GNSS equally; searches count/consume streamed passes without storing them; loading, initialization, time/config preparation, JSON, catalogue allocation/aggregation, UI and network excluded",
+  "os": "macos",
+  "arch": "aarch64",
+  "debug_assertions": false,
+  "package_version": "0.1.0",
+  "options": {
+    "samples": 5,
+    "min_sample_ms": 20,
+    "label": "Apple M1 Pro; macOS 26.6.2 (25G83); rustc 1.99.0 b940084d7; default release; base 9c87b3e + benchmark changes"
+  },
+  "search_evaluation_guard_per_slot": 200000,
+  "observer_lat_lon_height_deg_km": [
+    39.007,
+    -104.883,
+    2.187
+  ],
+  "threshold_deg": 10.0,
+  "inputs": [
+    {
+      "name": "ISS",
+      "orbit_class": "LEO",
+      "norad_id": 25544,
+      "epoch_utc": "2026-10-04 12:43:41.833056Z",
+      "start_utc": "2026-10-04 00:43:41.833056Z"
+    },
+    {
+      "name": "MOLNIYA 2-14",
+      "orbit_class": "resonant-HEO",
+      "norad_id": 8195,
+      "epoch_utc": "2006-06-25 07:58:18.143616001Z",
+      "start_utc": "2006-06-24 19:58:18.143616001Z"
+    },
+    {
+      "name": "ITALSAT 2",
+      "orbit_class": "GEO",
+      "norad_id": 24208,
+      "epoch_utc": "2006-06-26 00:58:29.343360Z",
+      "start_utc": "2006-06-25 12:58:29.343360Z"
+    },
+    {
+      "name": "NAVSTAR 53 (USA 175)",
+      "orbit_class": "GNSS",
+      "norad_id": 28129,
+      "epoch_utc": "2006-06-24 13:41:49.461503999Z",
+      "start_utc": "2006-06-24 01:41:49.461503999Z"
+    }
+  ],
+  "rows": [
+    {
+      "operation": "state_at",
+      "orbit_class": "LEO",
+      "slots": 1,
+      "tracking_ticks": 1441,
+      "window_s": null,
+      "detection_s": null,
+      "tolerance_ms": null,
+      "timing": {
+        "iterations_per_sample": 64,
+        "elapsed_ns": [
+          23989458,
+          24270500,
+          24489917,
+          24299458,
+          24348458
+        ],
+        "min_ns_per_invocation": 374835.28125,
+        "median_ns_per_invocation": 379679.03125,
+        "max_ns_per_invocation": 382654.953125,
+        "work_per_invocation": {
+          "state_evaluations": 1441,
+          "searches": 0,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "state_at+ecef+look_angles",
+      "orbit_class": "LEO",
+      "slots": 1,
+      "tracking_ticks": 1441,
+      "window_s": null,
+      "detection_s": null,
+      "tolerance_ms": null,
+      "timing": {
+        "iterations_per_sample": 32,
+        "elapsed_ns": [
+          20809917,
+          21043458,
+          20878416,
+          20932583,
+          20927583
+        ],
+        "min_ns_per_invocation": 650309.90625,
+        "median_ns_per_invocation": 653986.96875,
+        "max_ns_per_invocation": 657608.0625,
+        "work_per_invocation": {
+          "state_evaluations": 1441,
+          "searches": 0,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "LEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 5,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 128,
+        "elapsed_ns": [
+          39376208,
+          39026125,
+          39528333,
+          39384458,
+          39359375
+        ],
+        "min_ns_per_invocation": 304891.6015625,
+        "median_ns_per_invocation": 307626.625,
+        "max_ns_per_invocation": 308815.1015625,
+        "work_per_invocation": {
+          "state_evaluations": 731,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "LEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 5,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 128,
+        "elapsed_ns": [
+          38552084,
+          38552208,
+          38551208,
+          38742042,
+          38494625
+        ],
+        "min_ns_per_invocation": 300739.2578125,
+        "median_ns_per_invocation": 301188.15625,
+        "max_ns_per_invocation": 302672.203125,
+        "work_per_invocation": {
+          "state_evaluations": 721,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "LEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 30,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 512,
+        "elapsed_ns": [
+          31576875,
+          31473334,
+          31540667,
+          31273375,
+          31515250
+        ],
+        "min_ns_per_invocation": 61080.810546875,
+        "median_ns_per_invocation": 61553.22265625,
+        "max_ns_per_invocation": 61673.583984375,
+        "work_per_invocation": {
+          "state_evaluations": 135,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "LEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 30,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 512,
+        "elapsed_ns": [
+          29994583,
+          29442166,
+          29297667,
+          29464459,
+          29235250
+        ],
+        "min_ns_per_invocation": 57100.09765625,
+        "median_ns_per_invocation": 57504.23046875,
+        "max_ns_per_invocation": 58583.169921875,
+        "work_per_invocation": {
+          "state_evaluations": 127,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "LEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 60,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 1024,
+        "elapsed_ns": [
+          35967917,
+          36024208,
+          36316292,
+          35899083,
+          35674250
+        ],
+        "min_ns_per_invocation": 34838.134765625,
+        "median_ns_per_invocation": 35124.9189453125,
+        "max_ns_per_invocation": 35465.12890625,
+        "work_per_invocation": {
+          "state_evaluations": 77,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "LEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 60,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 1024,
+        "elapsed_ns": [
+          32395708,
+          32233167,
+          32831875,
+          33232208,
+          32971750
+        ],
+        "min_ns_per_invocation": 31477.7021484375,
+        "median_ns_per_invocation": 32062.3779296875,
+        "max_ns_per_invocation": 32453.328125,
+        "work_per_invocation": {
+          "state_evaluations": 69,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "LEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 5,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 4,
+        "elapsed_ns": [
+          29780667,
+          29455667,
+          29207667,
+          30110250,
+          29342875
+        ],
+        "min_ns_per_invocation": 7301916.75,
+        "median_ns_per_invocation": 7363916.75,
+        "max_ns_per_invocation": 7527562.5,
+        "work_per_invocation": {
+          "state_evaluations": 17351,
+          "searches": 1,
+          "passes": 7
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "LEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 5,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 4,
+        "elapsed_ns": [
+          29239625,
+          29289166,
+          29252458,
+          29407208,
+          29027125
+        ],
+        "min_ns_per_invocation": 7256781.25,
+        "median_ns_per_invocation": 7313114.5,
+        "max_ns_per_invocation": 7351802.0,
+        "work_per_invocation": {
+          "state_evaluations": 17281,
+          "searches": 1,
+          "passes": 7
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "LEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 30,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 16,
+        "elapsed_ns": [
+          21924583,
+          21990667,
+          22051500,
+          21874250,
+          21807792
+        ],
+        "min_ns_per_invocation": 1362987.0,
+        "median_ns_per_invocation": 1370286.4375,
+        "max_ns_per_invocation": 1378218.75,
+        "work_per_invocation": {
+          "state_evaluations": 2979,
+          "searches": 1,
+          "passes": 7
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "LEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 30,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 16,
+        "elapsed_ns": [
+          21471625,
+          21443583,
+          21465958,
+          21516625,
+          21480292
+        ],
+        "min_ns_per_invocation": 1340223.9375,
+        "median_ns_per_invocation": 1341976.5625,
+        "max_ns_per_invocation": 1344789.0625,
+        "work_per_invocation": {
+          "state_evaluations": 2923,
+          "searches": 1,
+          "passes": 7
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "LEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 60,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 32,
+        "elapsed_ns": [
+          23525125,
+          23582334,
+          23664667,
+          23747792,
+          23722291
+        ],
+        "min_ns_per_invocation": 735160.15625,
+        "median_ns_per_invocation": 739520.84375,
+        "max_ns_per_invocation": 742118.5,
+        "work_per_invocation": {
+          "state_evaluations": 1553,
+          "searches": 1,
+          "passes": 7
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "LEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 60,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 32,
+        "elapsed_ns": [
+          22809291,
+          22719250,
+          23005833,
+          22752292,
+          22765834
+        ],
+        "min_ns_per_invocation": 709976.5625,
+        "median_ns_per_invocation": 711432.3125,
+        "max_ns_per_invocation": 718932.28125,
+        "work_per_invocation": {
+          "state_evaluations": 1497,
+          "searches": 1,
+          "passes": 7
+        }
+      }
+    },
+    {
+      "operation": "state_at",
+      "orbit_class": "resonant-HEO",
+      "slots": 1,
+      "tracking_ticks": 1441,
+      "window_s": null,
+      "detection_s": null,
+      "tolerance_ms": null,
+      "timing": {
+        "iterations_per_sample": 32,
+        "elapsed_ns": [
+          20046709,
+          19919125,
+          20106250,
+          20129292,
+          19818792
+        ],
+        "min_ns_per_invocation": 619337.25,
+        "median_ns_per_invocation": 626459.65625,
+        "max_ns_per_invocation": 629040.375,
+        "work_per_invocation": {
+          "state_evaluations": 1441,
+          "searches": 0,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "state_at+ecef+look_angles",
+      "orbit_class": "resonant-HEO",
+      "slots": 1,
+      "tracking_ticks": 1441,
+      "window_s": null,
+      "detection_s": null,
+      "tolerance_ms": null,
+      "timing": {
+        "iterations_per_sample": 32,
+        "elapsed_ns": [
+          27998375,
+          27672500,
+          27476250,
+          27316250,
+          27742041
+        ],
+        "min_ns_per_invocation": 853632.8125,
+        "median_ns_per_invocation": 864765.625,
+        "max_ns_per_invocation": 874949.21875,
+        "work_per_invocation": {
+          "state_evaluations": 1441,
+          "searches": 0,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "resonant-HEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 5,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 64,
+        "elapsed_ns": [
+          27429000,
+          27684375,
+          27415708,
+          27416333,
+          27538459
+        ],
+        "min_ns_per_invocation": 428370.4375,
+        "median_ns_per_invocation": 428578.125,
+        "max_ns_per_invocation": 432568.359375,
+        "work_per_invocation": {
+          "state_evaluations": 721,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "resonant-HEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 5,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 64,
+        "elapsed_ns": [
+          27587875,
+          27441459,
+          27415833,
+          27475208,
+          27803542
+        ],
+        "min_ns_per_invocation": 428372.390625,
+        "median_ns_per_invocation": 429300.125,
+        "max_ns_per_invocation": 434430.34375,
+        "work_per_invocation": {
+          "state_evaluations": 721,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "resonant-HEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 30,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 512,
+        "elapsed_ns": [
+          37514166,
+          37579916,
+          37591500,
+          37706875,
+          37563166
+        ],
+        "min_ns_per_invocation": 73269.85546875,
+        "median_ns_per_invocation": 73398.2734375,
+        "max_ns_per_invocation": 73646.240234375,
+        "work_per_invocation": {
+          "state_evaluations": 121,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "resonant-HEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 30,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 512,
+        "elapsed_ns": [
+          37763375,
+          37735750,
+          37509208,
+          37629458,
+          37466375
+        ],
+        "min_ns_per_invocation": 73176.513671875,
+        "median_ns_per_invocation": 73495.03515625,
+        "max_ns_per_invocation": 73756.591796875,
+        "work_per_invocation": {
+          "state_evaluations": 121,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "resonant-HEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 60,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 1024,
+        "elapsed_ns": [
+          39060125,
+          38470791,
+          38523125,
+          38513833,
+          38445042
+        ],
+        "min_ns_per_invocation": 37543.986328125,
+        "median_ns_per_invocation": 37611.1650390625,
+        "max_ns_per_invocation": 38144.6533203125,
+        "work_per_invocation": {
+          "state_evaluations": 61,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "resonant-HEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 60,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 1024,
+        "elapsed_ns": [
+          38219666,
+          38479167,
+          38997542,
+          38597875,
+          38471167
+        ],
+        "min_ns_per_invocation": 37323.892578125,
+        "median_ns_per_invocation": 37577.3115234375,
+        "max_ns_per_invocation": 38083.537109375,
+        "work_per_invocation": {
+          "state_evaluations": 61,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "resonant-HEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 5,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 2,
+        "elapsed_ns": [
+          20460709,
+          20424542,
+          20481500,
+          20722958,
+          20534167
+        ],
+        "min_ns_per_invocation": 10212271.0,
+        "median_ns_per_invocation": 10240750.0,
+        "max_ns_per_invocation": 10361479.0,
+        "work_per_invocation": {
+          "state_evaluations": 17291,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "resonant-HEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 5,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 2,
+        "elapsed_ns": [
+          21120542,
+          21070250,
+          21133292,
+          21403458,
+          21119875
+        ],
+        "min_ns_per_invocation": 10535125.0,
+        "median_ns_per_invocation": 10560271.0,
+        "max_ns_per_invocation": 10701729.0,
+        "work_per_invocation": {
+          "state_evaluations": 17281,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "resonant-HEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 30,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 16,
+        "elapsed_ns": [
+          28058833,
+          27952250,
+          28444250,
+          27789792,
+          27941750
+        ],
+        "min_ns_per_invocation": 1736862.0,
+        "median_ns_per_invocation": 1747015.625,
+        "max_ns_per_invocation": 1777765.625,
+        "work_per_invocation": {
+          "state_evaluations": 2895,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "resonant-HEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 30,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 16,
+        "elapsed_ns": [
+          27913083,
+          27828917,
+          27802916,
+          27750500,
+          28078750
+        ],
+        "min_ns_per_invocation": 1734406.25,
+        "median_ns_per_invocation": 1739307.3125,
+        "max_ns_per_invocation": 1754921.875,
+        "work_per_invocation": {
+          "state_evaluations": 2887,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "resonant-HEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 60,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 32,
+        "elapsed_ns": [
+          28404791,
+          28246334,
+          28309458,
+          28583084,
+          28321500
+        ],
+        "min_ns_per_invocation": 882697.9375,
+        "median_ns_per_invocation": 885046.875,
+        "max_ns_per_invocation": 893221.375,
+        "work_per_invocation": {
+          "state_evaluations": 1457,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "resonant-HEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 60,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 32,
+        "elapsed_ns": [
+          28227333,
+          28905375,
+          28508584,
+          28150084,
+          28421292
+        ],
+        "min_ns_per_invocation": 879690.125,
+        "median_ns_per_invocation": 888165.375,
+        "max_ns_per_invocation": 903292.96875,
+        "work_per_invocation": {
+          "state_evaluations": 1449,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "state_at",
+      "orbit_class": "GEO",
+      "slots": 1,
+      "tracking_ticks": 1441,
+      "window_s": null,
+      "detection_s": null,
+      "tolerance_ms": null,
+      "timing": {
+        "iterations_per_sample": 64,
+        "elapsed_ns": [
+          30414041,
+          30364083,
+          30602458,
+          30614083,
+          30408250
+        ],
+        "min_ns_per_invocation": 474438.796875,
+        "median_ns_per_invocation": 475219.390625,
+        "max_ns_per_invocation": 478345.046875,
+        "work_per_invocation": {
+          "state_evaluations": 1441,
+          "searches": 0,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "state_at+ecef+look_angles",
+      "orbit_class": "GEO",
+      "slots": 1,
+      "tracking_ticks": 1441,
+      "window_s": null,
+      "detection_s": null,
+      "tolerance_ms": null,
+      "timing": {
+        "iterations_per_sample": 32,
+        "elapsed_ns": [
+          22818959,
+          22719542,
+          22890792,
+          22973209,
+          22853125
+        ],
+        "min_ns_per_invocation": 709985.6875,
+        "median_ns_per_invocation": 714160.15625,
+        "max_ns_per_invocation": 717912.78125,
+        "work_per_invocation": {
+          "state_evaluations": 1441,
+          "searches": 0,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 5,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 64,
+        "elapsed_ns": [
+          24043833,
+          23470916,
+          23775583,
+          23826375,
+          23766500
+        ],
+        "min_ns_per_invocation": 366733.0625,
+        "median_ns_per_invocation": 371493.484375,
+        "max_ns_per_invocation": 375684.890625,
+        "work_per_invocation": {
+          "state_evaluations": 721,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 5,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 64,
+        "elapsed_ns": [
+          23890166,
+          23541292,
+          23779292,
+          23451542,
+          23505709
+        ],
+        "min_ns_per_invocation": 366430.34375,
+        "median_ns_per_invocation": 367832.6875,
+        "max_ns_per_invocation": 373283.84375,
+        "work_per_invocation": {
+          "state_evaluations": 721,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 30,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 512,
+        "elapsed_ns": [
+          31639917,
+          32082458,
+          31822000,
+          31844834,
+          31614125
+        ],
+        "min_ns_per_invocation": 61746.337890625,
+        "median_ns_per_invocation": 62152.34375,
+        "max_ns_per_invocation": 62661.05078125,
+        "work_per_invocation": {
+          "state_evaluations": 121,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 30,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 512,
+        "elapsed_ns": [
+          31533125,
+          31563083,
+          31768584,
+          31482291,
+          31669334
+        ],
+        "min_ns_per_invocation": 61488.849609375,
+        "median_ns_per_invocation": 61646.646484375,
+        "max_ns_per_invocation": 62048.015625,
+        "work_per_invocation": {
+          "state_evaluations": 121,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 60,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 1024,
+        "elapsed_ns": [
+          32171000,
+          31906375,
+          31907250,
+          32077042,
+          31869166
+        ],
+        "min_ns_per_invocation": 31122.232421875,
+        "median_ns_per_invocation": 31159.423828125,
+        "max_ns_per_invocation": 31416.9921875,
+        "work_per_invocation": {
+          "state_evaluations": 61,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 60,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 1024,
+        "elapsed_ns": [
+          32291959,
+          31903709,
+          32135709,
+          32230083,
+          32145417
+        ],
+        "min_ns_per_invocation": 31155.9658203125,
+        "median_ns_per_invocation": 31392.0087890625,
+        "max_ns_per_invocation": 31535.1162109375,
+        "work_per_invocation": {
+          "state_evaluations": 61,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 5,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 4,
+        "elapsed_ns": [
+          35102791,
+          35046500,
+          35231084,
+          35360042,
+          35607167
+        ],
+        "min_ns_per_invocation": 8761625.0,
+        "median_ns_per_invocation": 8807771.0,
+        "max_ns_per_invocation": 8901791.75,
+        "work_per_invocation": {
+          "state_evaluations": 17281,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 5,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 4,
+        "elapsed_ns": [
+          35282833,
+          35133792,
+          35262500,
+          35058333,
+          35036125
+        ],
+        "min_ns_per_invocation": 8759031.25,
+        "median_ns_per_invocation": 8783448.0,
+        "max_ns_per_invocation": 8820708.25,
+        "work_per_invocation": {
+          "state_evaluations": 17281,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 30,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 16,
+        "elapsed_ns": [
+          23925250,
+          23974417,
+          24149250,
+          24096583,
+          24226750
+        ],
+        "min_ns_per_invocation": 1495328.125,
+        "median_ns_per_invocation": 1506036.4375,
+        "max_ns_per_invocation": 1514171.875,
+        "work_per_invocation": {
+          "state_evaluations": 2881,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 30,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 16,
+        "elapsed_ns": [
+          23515583,
+          23764000,
+          23402375,
+          23313583,
+          23925916
+        ],
+        "min_ns_per_invocation": 1457098.9375,
+        "median_ns_per_invocation": 1469723.9375,
+        "max_ns_per_invocation": 1495369.75,
+        "work_per_invocation": {
+          "state_evaluations": 2881,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 60,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 32,
+        "elapsed_ns": [
+          23616125,
+          23724583,
+          23629208,
+          23593000,
+          23763583
+        ],
+        "min_ns_per_invocation": 737281.25,
+        "median_ns_per_invocation": 738412.75,
+        "max_ns_per_invocation": 742611.96875,
+        "work_per_invocation": {
+          "state_evaluations": 1441,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GEO",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 60,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 32,
+        "elapsed_ns": [
+          23684000,
+          23908959,
+          23473666,
+          23470000,
+          23667916
+        ],
+        "min_ns_per_invocation": 733437.5,
+        "median_ns_per_invocation": 739622.375,
+        "max_ns_per_invocation": 747154.96875,
+        "work_per_invocation": {
+          "state_evaluations": 1441,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "state_at",
+      "orbit_class": "GNSS",
+      "slots": 1,
+      "tracking_ticks": 1441,
+      "window_s": null,
+      "detection_s": null,
+      "tolerance_ms": null,
+      "timing": {
+        "iterations_per_sample": 64,
+        "elapsed_ns": [
+          26224583,
+          26477833,
+          26292334,
+          26393125,
+          26157459
+        ],
+        "min_ns_per_invocation": 408710.296875,
+        "median_ns_per_invocation": 410817.71875,
+        "max_ns_per_invocation": 413716.140625,
+        "work_per_invocation": {
+          "state_evaluations": 1441,
+          "searches": 0,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "state_at+ecef+look_angles",
+      "orbit_class": "GNSS",
+      "slots": 1,
+      "tracking_ticks": 1441,
+      "window_s": null,
+      "detection_s": null,
+      "tolerance_ms": null,
+      "timing": {
+        "iterations_per_sample": 32,
+        "elapsed_ns": [
+          21131208,
+          21125584,
+          21145542,
+          21042958,
+          21227458
+        ],
+        "min_ns_per_invocation": 657592.4375,
+        "median_ns_per_invocation": 660350.25,
+        "max_ns_per_invocation": 663358.0625,
+        "work_per_invocation": {
+          "state_evaluations": 1441,
+          "searches": 0,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GNSS",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 5,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 64,
+        "elapsed_ns": [
+          20035083,
+          20108583,
+          20059584,
+          19972959,
+          20276666
+        ],
+        "min_ns_per_invocation": 312077.484375,
+        "median_ns_per_invocation": 313431.0,
+        "max_ns_per_invocation": 316822.90625,
+        "work_per_invocation": {
+          "state_evaluations": 721,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GNSS",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 5,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 64,
+        "elapsed_ns": [
+          20125958,
+          20042125,
+          20017583,
+          20168459,
+          20174917
+        ],
+        "min_ns_per_invocation": 312774.734375,
+        "median_ns_per_invocation": 314468.09375,
+        "max_ns_per_invocation": 315233.078125,
+        "work_per_invocation": {
+          "state_evaluations": 721,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GNSS",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 30,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 512,
+        "elapsed_ns": [
+          27361041,
+          27603833,
+          27341708,
+          27192166,
+          27511083
+        ],
+        "min_ns_per_invocation": 53109.69921875,
+        "median_ns_per_invocation": 53439.533203125,
+        "max_ns_per_invocation": 53913.736328125,
+        "work_per_invocation": {
+          "state_evaluations": 121,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GNSS",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 30,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 512,
+        "elapsed_ns": [
+          27403167,
+          27529542,
+          27285708,
+          27539333,
+          27639667
+        ],
+        "min_ns_per_invocation": 53292.3984375,
+        "median_ns_per_invocation": 53768.63671875,
+        "max_ns_per_invocation": 53983.724609375,
+        "work_per_invocation": {
+          "state_evaluations": 121,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GNSS",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 60,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 1024,
+        "elapsed_ns": [
+          31430458,
+          28873625,
+          28379875,
+          28348917,
+          28364666
+        ],
+        "min_ns_per_invocation": 27684.4892578125,
+        "median_ns_per_invocation": 27714.7216796875,
+        "max_ns_per_invocation": 30693.806640625,
+        "work_per_invocation": {
+          "state_evaluations": 61,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GNSS",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 3600,
+      "detection_s": 60,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 1024,
+        "elapsed_ns": [
+          28410667,
+          28617916,
+          28820500,
+          28792083,
+          28863875
+        ],
+        "min_ns_per_invocation": 27744.7919921875,
+        "median_ns_per_invocation": 28117.2685546875,
+        "max_ns_per_invocation": 28187.3779296875,
+        "work_per_invocation": {
+          "state_evaluations": 61,
+          "searches": 1,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GNSS",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 5,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 4,
+        "elapsed_ns": [
+          32498125,
+          32538834,
+          32963000,
+          32938125,
+          32324583
+        ],
+        "min_ns_per_invocation": 8081145.75,
+        "median_ns_per_invocation": 8134708.5,
+        "max_ns_per_invocation": 8240750.0,
+        "work_per_invocation": {
+          "state_evaluations": 17291,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GNSS",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 5,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 4,
+        "elapsed_ns": [
+          33286500,
+          32545125,
+          32512666,
+          32430750,
+          32480125
+        ],
+        "min_ns_per_invocation": 8107687.5,
+        "median_ns_per_invocation": 8128166.5,
+        "max_ns_per_invocation": 8321625.0,
+        "work_per_invocation": {
+          "state_evaluations": 17281,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GNSS",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 30,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 16,
+        "elapsed_ns": [
+          21807666,
+          22202250,
+          22095417,
+          22961458,
+          22116333
+        ],
+        "min_ns_per_invocation": 1362979.125,
+        "median_ns_per_invocation": 1382270.8125,
+        "max_ns_per_invocation": 1435091.125,
+        "work_per_invocation": {
+          "state_evaluations": 2895,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GNSS",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 30,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 16,
+        "elapsed_ns": [
+          22467083,
+          22259250,
+          21966417,
+          21928833,
+          21839500
+        ],
+        "min_ns_per_invocation": 1364968.75,
+        "median_ns_per_invocation": 1372901.0625,
+        "max_ns_per_invocation": 1404192.6875,
+        "work_per_invocation": {
+          "state_evaluations": 2887,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GNSS",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 60,
+      "tolerance_ms": 250,
+      "timing": {
+        "iterations_per_sample": 32,
+        "elapsed_ns": [
+          22614292,
+          22633625,
+          22823792,
+          22662416,
+          22712250
+        ],
+        "min_ns_per_invocation": 706696.625,
+        "median_ns_per_invocation": 708200.5,
+        "max_ns_per_invocation": 713243.5,
+        "work_per_invocation": {
+          "state_evaluations": 1457,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "GNSS",
+      "slots": 1,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 60,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 32,
+        "elapsed_ns": [
+          22730459,
+          22455834,
+          22471333,
+          22701375,
+          22596417
+        ],
+        "min_ns_per_invocation": 701744.8125,
+        "median_ns_per_invocation": 706138.03125,
+        "max_ns_per_invocation": 710326.84375,
+        "work_per_invocation": {
+          "state_evaluations": 1449,
+          "searches": 1,
+          "passes": 1
+        }
+      }
+    },
+    {
+      "operation": "state_at+ecef+look_angles",
+      "orbit_class": "mixed-repeated-fixtures",
+      "slots": 4,
+      "tracking_ticks": 1441,
+      "window_s": null,
+      "detection_s": null,
+      "tolerance_ms": null,
+      "timing": {
+        "iterations_per_sample": 8,
+        "elapsed_ns": [
+          23058834,
+          23534709,
+          23086083,
+          23094458,
+          22964917
+        ],
+        "min_ns_per_invocation": 2870614.625,
+        "median_ns_per_invocation": 2885760.375,
+        "max_ns_per_invocation": 2941838.625,
+        "work_per_invocation": {
+          "state_evaluations": 5764,
+          "searches": 0,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "mixed-repeated-fixtures",
+      "slots": 4,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 60,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 8,
+        "elapsed_ns": [
+          24204416,
+          24277875,
+          24275750,
+          24613458,
+          24350042
+        ],
+        "min_ns_per_invocation": 3025552.0,
+        "median_ns_per_invocation": 3034734.375,
+        "max_ns_per_invocation": 3076682.25,
+        "work_per_invocation": {
+          "state_evaluations": 5836,
+          "searches": 4,
+          "passes": 9
+        }
+      }
+    },
+    {
+      "operation": "state_at+ecef+look_angles",
+      "orbit_class": "mixed-repeated-fixtures",
+      "slots": 16,
+      "tracking_ticks": 1441,
+      "window_s": null,
+      "detection_s": null,
+      "tolerance_ms": null,
+      "timing": {
+        "iterations_per_sample": 2,
+        "elapsed_ns": [
+          22330292,
+          22486250,
+          22591541,
+          22200583,
+          22760833
+        ],
+        "min_ns_per_invocation": 11100291.5,
+        "median_ns_per_invocation": 11243125.0,
+        "max_ns_per_invocation": 11380416.5,
+        "work_per_invocation": {
+          "state_evaluations": 23056,
+          "searches": 0,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "mixed-repeated-fixtures",
+      "slots": 16,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 60,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 2,
+        "elapsed_ns": [
+          24672792,
+          24597125,
+          24439417,
+          24201084,
+          24560875
+        ],
+        "min_ns_per_invocation": 12100542.0,
+        "median_ns_per_invocation": 12280437.5,
+        "max_ns_per_invocation": 12336396.0,
+        "work_per_invocation": {
+          "state_evaluations": 23344,
+          "searches": 16,
+          "passes": 36
+        }
+      }
+    },
+    {
+      "operation": "state_at+ecef+look_angles",
+      "orbit_class": "mixed-repeated-fixtures",
+      "slots": 64,
+      "tracking_ticks": 1441,
+      "window_s": null,
+      "detection_s": null,
+      "tolerance_ms": null,
+      "timing": {
+        "iterations_per_sample": 1,
+        "elapsed_ns": [
+          43896291,
+          44574083,
+          44467459,
+          44925250,
+          44086417
+        ],
+        "min_ns_per_invocation": 43896291.0,
+        "median_ns_per_invocation": 44467459.0,
+        "max_ns_per_invocation": 44925250.0,
+        "work_per_invocation": {
+          "state_evaluations": 92224,
+          "searches": 0,
+          "passes": 0
+        }
+      }
+    },
+    {
+      "operation": "search_satellite",
+      "orbit_class": "mixed-repeated-fixtures",
+      "slots": 64,
+      "tracking_ticks": 0,
+      "window_s": 86400,
+      "detection_s": 60,
+      "tolerance_ms": 5000,
+      "timing": {
+        "iterations_per_sample": 1,
+        "elapsed_ns": [
+          48464000,
+          48878709,
+          48616625,
+          48607625,
+          48999667
+        ],
+        "min_ns_per_invocation": 48464000.0,
+        "median_ns_per_invocation": 48616625.0,
+        "max_ns_per_invocation": 48999667.0,
+        "work_per_invocation": {
+          "state_evaluations": 93376,
+          "searches": 64,
+          "passes": 144
+        }
+      }
+    }
+  ]
+}

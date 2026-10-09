@@ -119,3 +119,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Added pinned Vallado HEO/GNSS/GEO input records and six tests. Ordinary sampled cases agree; constructed ~4s excursions/gaps expose misses that tighter crossing tolerance cannot recover. No independent timing-accuracy or completeness claim.
 - Workspace check/default/all-feature tests pass (141 tests + 6 doctests); core feature checks, strict Clippy, fmt, rustdoc, and repeatable release output verified.
 - Next: measured operating budgets. No production detection default, numeric allowance, dependency/toolchain changes, simulator launch, or hardware operations; existing ISS fixture unchanged.
+
+## 2026-10-09 (M2 host cost baseline)
+- Added `overhead-benchmark`: 62 propagation/geometry/prediction and mixed scaling workloads, calibrated wall-time samples, explicit work accounting, and four tests; shared historical input loading without changing fixtures.
+- Recorded two release runs and host/build context in docs/evaluations/host-costs.md: M1 Pro 24h/60s searches ~0.7–0.9ms per fixture, ~48.6ms for 64 repeated mixed slots; not device or catalogue-capacity evidence.
+- Workspace check/default/all-feature tests pass (145 tests + 6 doctests); core feature checks, strict Clippy, fmt, rustdoc, and diff checks pass. Work counts agree across runs; timings vary.
+- Next: confirm hardware, measure S3 costs and real catalogue memory/aggregation, then choose operating policy. No defaults, dependencies, toolchains, simulator, or hardware changed.

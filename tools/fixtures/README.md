@@ -21,9 +21,13 @@ the order above, retain the first 69 characters of each element line, and prepen
 the listed name plus newline. Do not update elements to current epochs. These
 are experiment inputs, not new independent expected-state or timing fixtures.
 
-The interval tool also embeds the existing ISS OMM unchanged; its separate
+The interval and host benchmark tools share these inputs through
+[historical_orbits.rs](../src/historical_orbits.rs) and also embed the existing
+ISS OMM unchanged; its separate
 [provenance](../../core/tests/fixtures/README.md#iss-25544json) remains authoritative.
 All runs/tests are offline after Cargo dependencies are installed. No Python
-packages, live fetch, current clock, or hardware are needed. Tool usage lives in
-[tools/README.md](../README.md#overhead-evaluate-intervals); method and measured
-results in [the evaluation](../../docs/evaluations/detection-intervals.md).
+packages, live fetch, current UTC, or hardware are needed; only the benchmark
+uses a monotonic clock for elapsed host timing. Usage lives in
+[tools/README.md](../README.md); methods and results in the
+[detection evaluation](../../docs/evaluations/detection-intervals.md) and
+[host cost evaluation](../../docs/evaluations/host-costs.md).
