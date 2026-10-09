@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: M2; next, finalize pass-search API and tests.**
+**Current: M2; next, orbital pass integration and catalogue reporting.**
 Build the headless engine, then the real-data UI, then the device
 ([rationale](decisions/0005-engine-first-implementation.md)). Refine each
 slice before starting; later checkboxes are scope, not session-sized tasks.
@@ -36,11 +36,14 @@ hardware, but capacity and cadence remain provisional until measured on the S3.
   of screen traversal.
 - [x] Settle the bounded search baseline, boundary handling, and partial-result
   behavior ([0014](decisions/0014-pass-search-baseline.md)).
-- [ ] Finalize the shared-core API, configuration validation, and test matrix;
-  evaluate detection intervals separately from crossing tolerance.
-- [ ] Implement headless physical pass prediction per 0012–0014; test ordinary and
-  short passes, no upcoming pass, already-above-threshold/window-spanning cases,
-  and prediction failures.
+- [x] Finalize the allocation-free shared-core API, configuration validation,
+  and synthetic test matrix ([0015](decisions/0015-pass-search-api.md)).
+- [x] Implement/test the synthetic elevation search kernel, including boundaries,
+  short-event detection limits, refinement, failures, and evaluation budgets.
+- [ ] Integrate orbital elevation evaluation and headless catalogue pass reporting
+  per 0012–0015, preserving partial results and unsearched satellite details.
+- [ ] Evaluate representative orbital detection intervals separately from
+  crossing tolerance.
 - [ ] Measure propagation/prediction cost; set catalogue limits, scheduling,
   and explicit over-budget behavior.
 

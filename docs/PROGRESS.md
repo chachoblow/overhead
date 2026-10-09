@@ -95,3 +95,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Settled threshold/window boundary behavior and work-exhaustion/partial-result policy in 0014; linked from 0012/0013 and updated PLAN/HANDOFF.
 - Kept prediction independent of radar zoom; API, validation, tests, and numeric budgets remain open.
 - Documentation links and diff whitespace checked; no implementation, build/test runs, dependencies, or hardware changes.
+
+## 2026-10-08 (M2 synthetic pass-search kernel)
+- Accepted API decision 0015; added allocation-free callback search, checked configuration, streamed pass records, and explicit local/shared evaluation budgets.
+- Added 30 synthetic tests plus API doctests, including equality boundaries, detection misses, nanosecond refinement, and interruption at every evaluation point.
+- Workspace check/default and all-feature tests pass (108 tests + 5 doctests); core feature checks, strict Clippy, fmt, and rustdoc checks pass.
+- Next: orbital integration, catalogue reporting, representative interval evaluation, and measured budgets. No dependencies, fixture changes, toolchain changes, or hardware operations.

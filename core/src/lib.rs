@@ -19,6 +19,7 @@ mod ingest;
 mod observer;
 #[cfg(feature = "omm")]
 mod omm;
+pub mod passes;
 mod position;
 mod propagate;
 mod time;
