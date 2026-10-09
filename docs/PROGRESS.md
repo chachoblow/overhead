@@ -107,3 +107,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Added 10 integration tests: existing Skyfield elevations, ISS/deep-space brackets against same-model fine scans, negative times, boundaries, failures, and budget interruptions; no independent pass-time oracle or detection default is claimed.
 - Workspace check/default and all-feature tests pass (118 tests + 6 doctests); standalone core feature checks, strict Clippy, fmt, and rustdoc checks pass.
 - Next: catalogue aggregation/reporting, then representative detection intervals and measured budgets. No dependency, fixture, toolchain, simulator, or hardware changes.
+
+## 2026-10-08 (M2 catalogue pass reporting)
+- Added alloc-enabled core catalogue aggregation and decision 0016 for uncertain earliest-arrival ordering, preserving every satellite's partial/unsearched report and retained brackets.
+- Added `overhead-passes` with explicit observer/time/detection/allowance inputs and incomplete-result exit code 2; reused the extracted local catalogue loader and documented usage in tools/README.md.
+- Added 17 tests; workspace check/default and all-feature tests pass (135 tests + 6 doctests), as do standalone core feature checks, strict Clippy, fmt, and rustdoc checks.
+- Next: representative detection intervals and measured operating budgets. No dependency, fixture, toolchain, simulator, or hardware changes.

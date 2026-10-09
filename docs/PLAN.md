@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: M2; next, catalogue pass aggregation and reporting.**
+**Current: M2; next, representative orbital detection-interval evaluation.**
 Build the headless engine, then the real-data UI, then the device
 ([rationale](decisions/0005-engine-first-implementation.md)). Refine each
 slice before starting; later checkboxes are scope, not session-sized tasks.
@@ -42,8 +42,9 @@ hardware, but capacity and cadence remain provisional until measured on the S3.
   short-event detection limits, refinement, failures, and evaluation budgets.
 - [x] Integrate orbital elevation evaluation with orbital pipeline, pass-bracket,
   failure, and budget tests.
-- [ ] Add headless catalogue pass aggregation/reporting per 0012–0015,
-  preserving partial results and unsearched satellite details.
+- [x] Add headless catalogue pass aggregation/reporting per 0012–0015,
+  preserving partial results and unsearched satellite details; uncertain
+  arrival ordering follows [0016](decisions/0016-catalogue-pass-aggregation.md).
 - [ ] Evaluate representative orbital detection intervals separately from
   crossing tolerance.
 - [ ] Measure propagation/prediction cost; set catalogue limits, scheduling,

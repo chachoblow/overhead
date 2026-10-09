@@ -14,6 +14,8 @@ pub use sgp4;
 
 #[cfg(feature = "catalogue")]
 pub mod catalogue;
+#[cfg(feature = "catalogue")]
+pub mod catalogue_passes;
 mod coordinates;
 mod ingest;
 mod observer;

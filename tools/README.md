@@ -61,6 +61,63 @@ JSON preserves duplicate keys for checked OMM ingestion; converting through a
 JSON object map first could silently discard them. Successful ingestion means
 validation and SGP4 initialization, not guaranteed propagation or accuracy.
 
+## `overhead-passes`
+
+Search the accepted local catalogue for physical passes at an explicit observer
+and UTC. Uses the same manifest, atomic loading, provenance, and ingestion
+warnings as `overhead-catalogue`; no network, wall clock, or freshness cutoff.
+
+```sh
+cargo run -p overhead-tools --bin overhead-passes -- \
+  tools/examples/catalogue.json 2026-10-04T12:43:41.833056Z \
+  39.007 -104.883 2.187 60 3000 3000
+```
+
+This historical-fixture example uses **illustrative**, not measured operating
+defaults, for the detection interval and allowances. Do not use it as live data.
+
+```text
+MANIFEST.json UTC LAT_DEG LON_DEG HEIGHT_KM DETECTION_S SAT_LIMIT TOTAL_LIMIT
+  [LOOK_AHEAD_S MIN_ELEVATION_DEG TOLERANCE_S]
+```
+
+- UTC and observer conventions match `overhead-track` below.
+- Durations are positive integer seconds. Detection interval is required and
+  independent of crossing tolerance; no detection default is selected.
+- Both evaluation allowances are required unsigned integers; zero is valid.
+  Counts include failed evaluations and refinement, not denied calls. They are
+  not wall-time, memory, or scheduling budgets.
+- The optional tuning trio must be supplied together; otherwise it uses the
+  accepted 24-hour look-ahead, 10° threshold, and 5-second crossing tolerance.
+
+### Results and incomplete work
+
+The report includes the catalogue/provenance, observer, search window, tuning,
+allowances, aggregate completion, evaluation counts, and every satellite's pass
+records/status. Stop details retain UTC, sampling/refinement phase, and cause;
+progress is the last successful regular sample. Traversal is ascending NORAD ID,
+not a fairness or background scheduling policy.
+
+Arrival times remain brackets, including whether tolerance was met. Earliest
+candidates follow [0016](../docs/decisions/0016-catalogue-pass-aggregation.md):
+overlapping/touching timing uncertainty is not resolved by midpoint or NORAD ID.
+Candidates are displayed by NORAD ID/pass number, not claimed arrival order.
+In-progress and equality-boundary starts are not upcoming arrivals. Unknown ends
+distinguish completed-window limits, boundary equality, and interruptions.
+
+Incomplete searches retain usable/coarse records and identify every partial or
+unsearched satellite. They cannot establish a catalogue-wide next arrival or a
+complete no-pass result. Completion covers only the **accepted** catalogue and
+configured procedure: ingestion warnings identify omitted records, and brief
+excursions/gaps or extra crossings inside brackets can still be missed. Printed
+brackets are model timing, not a guarantee of real-world orbit accuracy.
+
+| Exit | Meaning |
+|---|---|
+| 0 | Complete search (subject to detection limits), or help |
+| 2 | Incomplete search; **stdout contains retained results and stop details** |
+| 1 | Invalid inputs or catalogue-load failure; no partial stdout report |
+
 ## `overhead-track`
 
 Single-satellite measurements from explicit local inputs; no network, wall
@@ -117,6 +174,10 @@ Tracking tests launch the executable for all 12 Skyfield cases (range within
 0.1 km, angles within 0.01°), deterministic output, and invalid-input/error paths.
 Catalogue tests cover manifests, relative paths, provenance, merge/conflict
 behavior, raw-key preservation, invalid records, and whole-load failure.
-Synthetic record mutations test catalogue policy, not physical accuracy.
+Pass-reporting tests cover deterministic ambiguous arrivals, configurable tuning,
+no-arrival/in-progress distinctions, coarse refinement brackets, orbital failures,
+local/shared allowances, unsearched satellites, exit codes, and input/load errors.
+Shared-core tests additionally cover interval ordering and retained typed reports.
+Synthetic record mutations test catalogue/aggregation policy, not physical accuracy.
 Tests need no Python, network, SDL window, or hardware. Workspace commands are
 in [AGENTS.md](../AGENTS.md).
