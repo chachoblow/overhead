@@ -1,8 +1,9 @@
 # Build artifacts
 target/
 
-# Per-crate lock files (workspace root Cargo.lock is the real one)
+# Host member locks are redundant; firmware is an isolated workspace.
 /*/Cargo.lock
+!/firmware/Cargo.lock
 
 # macOS
 .DS_Store

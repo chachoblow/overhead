@@ -125,3 +125,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Recorded two release runs and host/build context in docs/evaluations/host-costs.md: M1 Pro 24h/60s searches ~0.7–0.9ms per fixture, ~48.6ms for 64 repeated mixed slots; not device or catalogue-capacity evidence.
 - Workspace check/default/all-feature tests pass (145 tests + 6 doctests); core feature checks, strict Clippy, fmt, rustdoc, and diff checks pass. Work counts agree across runs; timings vary.
 - Next: confirm hardware, measure S3 costs and real catalogue memory/aggregation, then choose operating policy. No defaults, dependencies, toolchains, simulator, or hardware changed.
+
+## 2026-10-09 (M2 first S3 cost baseline)
+- With user approval, installed ESP tooling and flashed an isolated no_std benchmark on the S3-DevKitC-1/WROOM-1: revision v0.2, 8 MB flash, PSRAM unconfirmed/unused. UART works directly; dock path did not enumerate. Display untouched.
+- Added firmware/ with generated original fixture inputs, bounded serial capture, and five offline tests; target dependencies/lock/toolchain isolated from the unchanged host workspace. Usage in firmware/README.md.
+- Recorded 14 workloads × 5 samples in docs/evaluations/s3-costs.md: 24h/60s searches ~1.18–2.14s per fixture, four-slot prediction ~6.54s, full tracking ~4.77ms per four-slot tick. All work counts match host; no capacity/accuracy/worst-case claim.
+- Workspace check/default/all-feature tests, core feature checks, host Clippy/fmt, new tests, and target check/build/flash/capture pass; embedded linker retains an RWX warning. Next: broaden ages/orbits, measure catalogue/peak memory, then choose scheduling and operating limits; no production defaults selected.

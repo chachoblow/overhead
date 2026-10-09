@@ -5,6 +5,7 @@ Rust workspace; verified headless tracking foundation complete, UI/device
 integration still ahead.
 
 - [Headless runner: usage and reproducible ISS examples](tools/README.md)
+- [ESP32-S3 benchmark: build, flash, and capture](firmware/README.md)
 - [Current state](docs/HANDOFF.md)
 - [Roadmap](docs/PLAN.md)
 - [Product design](docs/DESIGN.md)

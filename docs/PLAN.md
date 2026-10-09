@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: M2; host costs measured; next, S3 measurements and operating budgets.**
+**Current: M2; first S3 kernel costs measured; broader measurements and operating budgets next.**
 Build the headless engine, then the real-data UI, then the device
 ([rationale](decisions/0005-engine-first-implementation.md)). Refine each
 slice before starting; later checkboxes are scope, not session-sized tasks.
@@ -16,13 +16,13 @@ Conventions live in [decisions/](decisions/) (0006–0010);
 verification provenance in the [fixture README](../core/tests/fixtures/README.md).
 
 ## Early hardware checks (alongside M2)
-- [ ] Benchmark propagation on available ESP32 hardware; record board, build,
-  mixed LEO/GNSS/GEO workload, and timings. Confirm on the S3 if using another
-  board; include prediction cost once implemented.
+- [x] Benchmark propagation and prediction on confirmed S3 hardware; record board,
+  build, mixed LEO/HEO/GNSS/GEO workloads, and timings
+  ([first target baseline](evaluations/s3-costs.md)).
 - [ ] Validate minimal Sharp output/refresh before full firmware integration.
 
 Ask before flashing or changing toolchains. Simulator work need not wait for
-hardware, but capacity and cadence remain provisional until measured on the S3.
+hardware; the first S3 kernel baseline alone does not justify capacity or cadence.
 
 ## M2 — Catalogue, pass prediction, and operating budget
 - [x] Settle catalogue conflicts, invalid records, provenance, and nonempty
@@ -51,8 +51,11 @@ hardware, but capacity and cadence remain provisional until measured on the S3.
 - [x] Add reproducible host propagation/geometry/prediction benchmarks by orbit
   class and repeated mixed workload size ([results](evaluations/host-costs.md));
   kernel throughput only, not catalogue capacity or device limits.
-- [ ] Measure propagation/prediction cost on confirmed S3 hardware; set catalogue
-  limits, scheduling, and explicit over-budget behavior.
+- [x] Establish the first S3 propagation/prediction baseline: 14 workloads with
+  matching host work counts; no display/PSRAM dependency ([results](evaluations/s3-costs.md)).
+- [ ] Broaden S3 age/orbit/workload coverage and measure distinct-catalogue storage,
+  aggregation, and peak memory; set catalogue limits, cadence, scheduling, and
+  explicit over-budget behavior.
 
 **Done when:** a curated catalogue and upcoming passes are testable headlessly,
 with measured costs justifying supported size, cadence, and prediction accuracy.

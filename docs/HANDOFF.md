@@ -1,39 +1,41 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-09. Next: confirmed S3 measurements and operating budgets._
+_Last updated: 2026-10-09. Next: broader target measurements and operating policy._
 
 ## State
-M1/hardening, catalogue ingestion/reporting, orbital pass search, interval
-evaluation, and host kernel cost measurements are complete. M2 still needs
-S3 measurements and operating policy. Render stub, sim static, firmware absent.
-Scope: [PLAN](PLAN.md).
+Headless engine and host benchmarks complete; first S3 kernel baseline now runs
+on hardware. M2 remains open for supported limits/cadence/scheduling. Render stub,
+sim static; `firmware/` is measurement-only, not the device app. [PLAN](PLAN.md).
 
 ## This session
-Added [overhead-benchmark](../tools/src/bin/overhead-benchmark.rs): 62 workloads
-covering propagation/geometry, prediction interval/window/tolerance sweeps, and
-4/16/64 repeated mixed-fixture slots. Shared embedded inputs via
-[historical_orbits.rs](../tools/src/historical_orbits.rs); fixtures unchanged.
-[Results/raw runs](evaluations/host-costs.md): M1 Pro 24h/60s searches ~0.7–0.9ms
-per fixture; 64-slot batch ~48.6ms. These are kernel costs, not catalogue capacity,
-memory bounds, or ESP32 timings. Four new tests; [usage](../tools/README.md).
-No production interval, capacity, cadence, scheduling, or numeric allowance chosen.
+Added [S3 benchmark firmware](../firmware/README.md), host-generated original
+fixtures, and bounded capture/validation. No core/fixture changes.
+[Results/raw capture](evaluations/s3-costs.md): 14 workloads × 5 samples; all work
+counts match host baseline. 24h/60s searches ~1.18–2.14s per fixture; four-slot
+search ~6.54s; full tracking ~4.77ms per four-slot tick (amortized). No defaults chosen.
 
-## Next step
-Confirm available board/display and permission before flashing or toolchain
-changes. Measure equivalent propagation/prediction workloads on the S3; broaden
-ages/orbits and measure distinct-catalogue storage/aggregation and peak memory.
-Use target evidence to choose limits, cadence, scheduling, and over-budget behavior.
+## Hardware / local setup
+User approved toolchain installation and benchmark flashing this session.
+S3-DevKitC-1/WROOM-1, revision v0.2, 8 MB flash confirmed; PSRAM/N8R8 unconfirmed.
+UART/CP2102N works at `/dev/cu.usbserial-110` directly connected to laptop; dock
+path did not enumerate. Display untouched, not wired; no soldering needed yet.
+Installed espup 0.18.0, espflash 4.6.0, Xtensa Rust 1.97.0.0; stable stays default.
+Source `$HOME/export-esp.sh`, build from `firmware/`; own lock/config/toolchain.
+Benchmark replaced the preloaded demo and reruns on reset. No monitor left running.
 
-## Risks / follow-ups
-Host samples are not worst-case/device bounds; repeated fixtures omit larger
-working sets. ±12h does not bound older-element resonant costs. Synchronous search
-is not background scheduling. [Detection limits](evaluations/detection-intervals.md)
-remain: short excursions/gaps can be missed even at 5s; tolerance cannot fix this.
-Broader natural grazes/phases and independent orbital references remain follow-ups.
-Accepted-catalogue completion omits rejected inputs; no freshness cutoff/fallback.
+## Next step / risks
+First explain the results/product implications; user deferred that discussion.
+Then broaden ages/orbits/search settings and measure catalogue/peak memory;
+choose cadence/scheduling/over-budget policy after that evidence. Current searches
+are synchronous and cannot share a responsive display loop.
+One recorded final-build run is not a worst-case bound; four fixture slots are
+not catalogue capacity. f64 uses software math; no precision/model changes made.
+16/64-slot target timings, independent target numeric checks, stack watermark,
+and PSRAM capacity remain pending. [Detection limits](evaluations/detection-intervals.md)
+still apply. Minimal Sharp output remains a separate early hardware check.
 
 ## Verification
-Workspace check/default/all-feature tests pass: 145 tests plus 6 doctests.
-Standalone core feature checks, strict Clippy, fmt, rustdoc, and diff checks pass.
-Two release runs have identical work counts, variable timings; raw samples saved.
-No dependency/toolchain changes, simulator launch, flashing, or hardware operations.
+Workspace check/default/all-feature tests pass (145 tests + 6 doctests); standalone
+core feature checks, strict host Clippy, fmt, and diff checks pass. Two new firmware
+host tests and three capture tests pass; target check/release build/flash and
+complete 70-sample capture pass. Embedded release linker emits an RWX LOAD warning.

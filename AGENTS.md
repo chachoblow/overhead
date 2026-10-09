@@ -20,14 +20,17 @@ past context.
 - `sim/` → `overhead-sim`: static SDL2 simulator, 400×240 at 2×, LcdWhite theme.
 - `tools/` → `overhead-tools`: headless tracking/catalogue tools and offline fixture generators;
   usage in tools/README.md. Default binary is still a placeholder.
-- `firmware/`: not created; excluded from workspace; needs Espressif toolchain.
+- `firmware/` → `overhead-s3-benchmark`: isolated no_std S3 kernel benchmark,
+  not the device app; excluded from host workspace. Own lockfile and local
+  Espressif toolchain; build/capture instructions in firmware/README.md.
 
 ## Commands
 - Check: `cargo check --workspace`
 - Test: `cargo test --workspace`
 - Simulator: `cargo run -p overhead-sim` (opens an SDL2 window; needs Homebrew
   SDL2, linker path set in .cargo/config.toml)
-- Firmware build: none yet (firmware crate not created)
+- Firmware build: `cd firmware && . "$HOME/export-esp.sh" && cargo build --release --locked`
+- Firmware host tests (from repo root): `cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked`
 
 Never flash hardware or change the toolchain without asking first.
 
