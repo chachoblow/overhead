@@ -113,3 +113,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Added `overhead-passes` with explicit observer/time/detection/allowance inputs and incomplete-result exit code 2; reused the extracted local catalogue loader and documented usage in tools/README.md.
 - Added 17 tests; workspace check/default and all-feature tests pass (135 tests + 6 doctests), as do standalone core feature checks, strict Clippy, fmt, and rustdoc checks.
 - Next: representative detection intervals and measured operating budgets. No dependency, fixture, toolchain, simulator, or hardware changes.
+
+## 2026-10-09 (M2 detection-interval evaluation)
+- Added offline `overhead-evaluate-intervals`: 15 historical/constructed orbital cases, 630 interval/phase/tolerance searches, same-model reference-grid comparisons, and evaluation counts; results in docs/evaluations/detection-intervals.md.
+- Added pinned Vallado HEO/GNSS/GEO input records and six tests. Ordinary sampled cases agree; constructed ~4s excursions/gaps expose misses that tighter crossing tolerance cannot recover. No independent timing-accuracy or completeness claim.
+- Workspace check/default/all-feature tests pass (141 tests + 6 doctests); core feature checks, strict Clippy, fmt, rustdoc, and repeatable release output verified.
+- Next: measured operating budgets. No production detection default, numeric allowance, dependency/toolchain changes, simulator launch, or hardware operations; existing ISS fixture unchanged.

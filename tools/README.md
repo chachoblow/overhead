@@ -118,6 +118,37 @@ brackets are model timing, not a guarantee of real-world orbit accuracy.
 | 2 | Incomplete search; **stdout contains retained results and stop details** |
 | 1 | Invalid inputs or catalogue-load failure; no partial stdout report |
 
+## `overhead-evaluate-intervals`
+
+Run a fixed, offline detection-interval experiment over historical LEO, resonant
+HEO, GNSS, and GEO inputs plus constructed short excursions/gaps and a no-pass
+graze control. This is **same-model integration/detection evidence**, not an
+independent timing oracle, a coverage guarantee, or a selected operating default.
+
+```sh
+cargo run --release -p overhead-tools --bin overhead-evaluate-intervals \
+  > /tmp/overhead-intervals.json
+```
+
+No arguments (other than `--help`/`-h`), file loading, network, clock, or hardware.
+Inputs are embedded; run from any working directory after building. JSON contains
+case/observer/epoch/threshold metadata, fine-grid stability comparisons, event
+bounds, and 630 search rows: explicit intervals/phases/tolerances, evaluation
+counts, matched/missed/unmatched/ambiguous crossings, and missed excursions/gaps.
+Evaluation counts are not device cost measurements. The 200,000-call per-search
+guard is an experimental safety allowance, not an operating budget.
+
+Exit 0 means the experiment finished, **including reported detection misses**;
+exit 1 means invalid arguments, failed/incomplete evaluation, or reference-grid
+instability, with stderr and no partial stdout JSON. Finite reference-grid
+agreement cannot prove completeness. Precise floating-point JSON is not a
+cross-platform bitwise contract.
+
+[Method and results](../docs/evaluations/detection-intervals.md) own the experiment
+interpretation; [fixture provenance](fixtures/README.md) owns the historical
+inputs. `cargo test -p overhead-tools` includes the complete suite plus matching,
+equality, uncertainty, short-event/phase, tolerance-independence, and CLI tests.
+
 ## `overhead-track`
 
 Single-satellite measurements from explicit local inputs; no network, wall
