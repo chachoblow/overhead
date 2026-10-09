@@ -7,6 +7,8 @@
 //! `Complete` means the procedure finished, not proof of event completeness or a
 //! unique crossing. See decisions 0012–0015 for the product/numerical contracts.
 //!
+//! [`search_satellite`] composes the kernel with timestamp-bound propagation,
+//! Earth-fixed rotation, and geometric elevation at an explicit observer.
 //! No orbit, observer, clock, catalogue, allocation, or scheduler is implicit.
 //! Records are streamed once their end is known or search stops. Callbacks own
 //! their storage and must return normally; budgets count elevation evaluations,
@@ -16,7 +18,10 @@ use core::f64::consts::{FRAC_PI_2, PI};
 
 use sgp4::chrono::{NaiveDateTime, TimeDelta};
 
-use crate::{TimeError, validate_utc_time};
+use crate::{
+    CoordinateError, GeodeticPosition, ObservationError, PropagateError, Satellite, TimeError,
+    ecef_to_look_angles, validate_utc_time,
+};
 
 pub const DEFAULT_MIN_ELEVATION_RAD: f64 = PI / 18.0;
 pub const DEFAULT_LOOK_AHEAD: TimeDelta = TimeDelta::hours(24);
@@ -304,6 +309,80 @@ impl<E> SearchReport<E> {
     pub fn is_complete(&self) -> bool {
         matches!(self.status, SearchStatus::Complete)
     }
+}
+
+/// Failure while evaluating orbital elevation. The containing [`SearchStop`]
+/// retains the requested UTC and search phase; failed evaluations consume budget.
+#[derive(Debug, Clone, PartialEq)]
+pub enum OrbitalEvaluationError {
+    Propagation(PropagateError),
+    Rotation(CoordinateError),
+    Observation(ObservationError),
+}
+
+impl core::fmt::Display for OrbitalEvaluationError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Propagation(error) => write!(f, "orbital propagation: {error}"),
+            Self::Rotation(error) => write!(f, "Earth-fixed rotation: {error}"),
+            Self::Observation(error) => write!(f, "observer geometry: {error}"),
+        }
+    }
+}
+
+/// Search physical passes for one satellite at an explicit WGS-84 observer.
+///
+/// Each budgeted evaluation composes [`Satellite::state_at`],
+/// [`crate::TemeState::to_ecef`], and [`ecef_to_look_angles`]. Rotation uses the
+/// propagated state's own timestamp, including during nonmonotonic refinement.
+/// No refraction, terrain, freshness, radar visibility, or presentation policy
+/// is applied. Negative geometric elevations are retained.
+///
+/// Configuration, detection limits, streaming, and interruptions are those of
+/// [`search_elevations`]. Observer validation occurs inside budgeted evaluations,
+/// after propagation/rotation: invalid geometry produces an incomplete report,
+/// not a no-pass result. With zero available allowance no orbital work or observer
+/// validation runs, and the report is unsearched. No allocation is required.
+///
+/// ```
+/// use overhead_core::{GeodeticPosition, Satellite};
+/// use overhead_core::passes::{EvaluationBudget, SearchConfig, search_satellite};
+/// use overhead_core::sgp4::chrono::{NaiveDateTime, TimeDelta};
+/// fn predict(satellite: &Satellite, observer: GeodeticPosition, start: NaiveDateTime) {
+///     // Illustrative interval/allowance, not measured operating defaults.
+///     let config = SearchConfig::with_defaults(start, TimeDelta::seconds(60)).unwrap();
+///     let mut budget = EvaluationBudget::new(2000);
+///     let report = search_satellite(satellite, observer, &config, 2000, &mut budget, |pass| {
+///         // Store or report each pass, including partial records.
+///         let _ = pass;
+///     });
+///     // Always retain this status alongside any streamed records.
+///     let _ = report.status;
+/// }
+/// ```
+pub fn search_satellite(
+    satellite: &Satellite,
+    observer: GeodeticPosition,
+    config: &SearchConfig,
+    satellite_limit: u64,
+    total_budget: &mut EvaluationBudget,
+    on_pass: impl FnMut(PredictedPass),
+) -> SearchReport<OrbitalEvaluationError> {
+    search_elevations(
+        config,
+        satellite_limit,
+        total_budget,
+        |at| {
+            let state = satellite
+                .state_at(at)
+                .map_err(OrbitalEvaluationError::Propagation)?;
+            let target = state.to_ecef().map_err(OrbitalEvaluationError::Rotation)?;
+            let angles = ecef_to_look_angles(target, observer)
+                .map_err(OrbitalEvaluationError::Observation)?;
+            Ok(angles.elevation_rad)
+        },
+        on_pass,
+    )
 }
 
 /// Search one elevation function, streaming passes in detected time order.

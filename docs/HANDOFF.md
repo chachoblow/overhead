@@ -1,40 +1,39 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-08. Next: orbital pass integration and catalogue reporting._
+_Last updated: 2026-10-08. Next: catalogue pass aggregation and reporting._
 
 ## State
 M1/hardening and local catalogue ingestion are complete. The allocation-free
-synthetic pass-search kernel is implemented and tested; orbital integration and
-catalogue pass reporting remain pending. Render is a stub, sim static, firmware
-absent. Scope: [PLAN](PLAN.md).
+pass-search kernel now composes with orbital elevation; catalogue pass reporting
+remains pending. Render is a stub, sim static, firmware absent. Scope: [PLAN](PLAN.md).
 
 ## This session
-Accepted [0015](decisions/0015-pass-search-api.md). Added the public kernel in
-[core/src/passes.rs](../core/src/passes.rs), exported from core/src/lib.rs.
-[core/tests/passes.rs](../core/tests/passes.rs) owns the synthetic test matrix:
-boundaries, detection limits, refinement, failures, and shared/local budgets.
-Interrupted refinement retains established coarse brackets and partial records.
+Added `search_satellite` and typed orbital evaluation errors in
+[core/src/passes.rs](../core/src/passes.rs), preserving [0015](decisions/0015-pass-search-api.md).
+[core/tests/orbital_passes.rs](../core/tests/orbital_passes.rs) covers existing
+Skyfield elevation samples, ISS/deep-space brackets against same-model fine scans,
+negative times, window boundaries, failures, and local/shared budget interruptions.
+No new product policy or detection/allowance default was selected.
 
 ## Next step
-Compose orbital elevation evaluation using state_at() → state.to_ecef() →
-observer geometry; add orbital integration tests, then catalogue aggregation
-and headless reporting. Resolve overlapping arrival-bracket ordering without
-claiming unsupported precision; preserve incomplete/unsearched satellite details.
-Evaluate representative orbital detection intervals independently of tolerance.
-No detection default or numeric operating allowance is settled.
+Add catalogue aggregation and headless reporting using `search_satellite`.
+Resolve overlapping arrival-bracket ordering without claiming unsupported
+precision; preserve incomplete/unsearched satellite details. Then evaluate
+representative orbital detection intervals independently of crossing tolerance
+and measure operating costs. No detection default or numeric allowance is settled.
 
 ## Risks / follow-ups
-Synthetic tests are not independent orbital pass references. Completed searches
-can miss brief events; refinement does not prove unique crossings. Work limits
-do not provide background scheduling. Capacity/cadence remain unmeasured.
-Confirm hardware for ESP32 benchmarks and minimal Sharp refresh checks; ask
-before flashing or changing toolchains. No freshness cutoff or active-catalogue
-fallback exists; unknown fetch time stays unknown. Initialization does not assure
-propagation. Broaden references to resonant/low-inclination GEO, applicable
-half-day resonances, negative times, and non-LEO observer geometry. See 0007 for
-the sgp4 epoch-date issue after February 2100; use bound rotation per 0009.
+Fine scans check integration, not independent pass-time accuracy or detection
+coverage. Completed searches can miss brief events; refinement does not prove
+unique crossings. Work limits do not provide scheduling. Capacity/cadence remain
+unmeasured. Confirm hardware for ESP32 benchmarks and minimal Sharp refresh
+checks; ask before flashing or changing toolchains. No freshness cutoff or
+active-catalogue fallback exists; unknown fetch time stays unknown. Initialization
+does not assure propagation. Broaden independent references to resonant/GEO,
+negative times, and non-LEO observer geometry. See 0007 for the sgp4 epoch-date
+issue after February 2100; use bound rotation per 0009.
 
 ## Verification
-Workspace check and default/all-feature tests pass: 108 tests plus 5 doctests.
+Workspace check and default/all-feature tests pass: 118 tests plus 6 doctests.
 Standalone core feature checks, strict Clippy, fmt, and rustdoc checks pass.
 No dependency/fixture/toolchain changes, simulator launch, or hardware operations.

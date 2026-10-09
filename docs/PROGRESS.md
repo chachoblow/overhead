@@ -101,3 +101,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Added 30 synthetic tests plus API doctests, including equality boundaries, detection misses, nanosecond refinement, and interruption at every evaluation point.
 - Workspace check/default and all-feature tests pass (108 tests + 5 doctests); core feature checks, strict Clippy, fmt, and rustdoc checks pass.
 - Next: orbital integration, catalogue reporting, representative interval evaluation, and measured budgets. No dependencies, fixture changes, toolchain changes, or hardware operations.
+
+## 2026-10-08 (M2 orbital pass integration)
+- Added allocation-free `search_satellite` in core/src/passes.rs, composing bound propagation/rotation/observer geometry while preserving typed failures, budgets, and partial records.
+- Added 10 integration tests: existing Skyfield elevations, ISS/deep-space brackets against same-model fine scans, negative times, boundaries, failures, and budget interruptions; no independent pass-time oracle or detection default is claimed.
+- Workspace check/default and all-feature tests pass (118 tests + 6 doctests); standalone core feature checks, strict Clippy, fmt, and rustdoc checks pass.
+- Next: catalogue aggregation/reporting, then representative detection intervals and measured budgets. No dependency, fixture, toolchain, simulator, or hardware changes.
