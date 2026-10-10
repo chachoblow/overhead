@@ -1,9 +1,11 @@
 # M2 next evidence — bounded preparation contract
 
 Preparation scope accepted 2026-10-10 UTC in [0019](../decisions/0019-bounded-m2-evidence-preparation.md).
-**The separate snapshot and initial source-suitability gate are prepared;
-full host preflight, exact capture manifest and expanded target suite are not.**
-[Initial evidence and remaining preparation](m2-pool-suitability.md).
+**The separate snapshot/source-suitability gate and 20 candidate host ingestion/
+work/requested-memory cases are prepared; numerical preparation, final contract
+review, exact capture manifest and expanded target suite are not.**
+[Source suitability](m2-pool-suitability.md),
+[candidate host evidence/remaining gates](m2-host-preflight.md).
 This contract freezes scope, not a capture-ready matrix, production policy, or
 supported catalogue size. [PLAN](../PLAN.md) owns status;
 decisions 0011–0018 remain authoritative for existing behavior and evidence.
@@ -155,9 +157,12 @@ preflight annex with exact IDs/order/epochs/UTC/sites, group/record/byte counts,
 mutations, expected diagnostics/failure phases, work/completion counts, collection
 observations and input lifetimes. Freeze numerical reference values/tolerances too.
 Any subsequent change invalidates that manifest and requires renewed preflight.
-This full annex is **not yet available**. The [source-suitability subset](m2-pool-suitability.md)
-passes, but does not establish collection/input-memory behavior, error outcomes,
-numerical references or a frozen capture manifest.
+The final frozen annex is **not yet available**. The [source-suitability subset](m2-pool-suitability.md)
+and [candidate host annex](m2-host-preflight.md) cover source paths/searches, retained
+error/partial outcomes, collection observations and requested input-memory overlap/
+release. Numerical references and identical host/target check selection, final target
+metadata/representation review, and manifest freeze remain required. Host requested
+bytes do not substitute for future target backend occupancy, timings or stack gates.
 
 Extend strict capture validation to that manifest, including retained/released
 storage and all expected outcomes. Keep protocol versions distinguishable from

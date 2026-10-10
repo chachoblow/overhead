@@ -220,3 +220,14 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Exported staged source without ignored artifacts; offline workspace check/default/all-feature tests, no_std core check, strict all-target/all-feature Clippy and formatting pass using cached dependencies and the installed toolchain/SDL2.
 - Offline pool hash/raw-byte regeneration, all 34 published host searches and exact report comparison pass; firmware default/feature host tests/Clippy and 28 Python tests pass. No target images rebuilt or hardware accessed.
 - Clarified fresh-checkout prerequisites/commands, preserved raw-response CRLF through scoped Git attributes, ignored host-tool Python caches, and refreshed HANDOFF. Full preflight/manifest freeze remains next; no new product or preparation-contract decision.
+
+## 2026-10-10 UTC (candidate M2 host ingestion/work/requested-memory preflight)
+- Added `overhead-m2-preflight` and deterministic `tools/fixtures/m2-cases/` input archive; all 20 candidate cases pass retained diagnostic/error/partial outcomes and full-report/pass consistency checks. Historical fixtures/pool unchanged.
+- Published `evaluations/m2-host-preflight.{md,json}` with capacities/per-record allocation changes, independently counted allocate-copy-free/input overlap, dropped/retained RAM endpoints, repeatability and full requested-memory release. No backend/S3-fit, timing, stack or numerical claim.
+- Offline workspace check/default/all-feature tests, no_std core check, strict Clippy, fmt, eight pool/case Python tests and exact debug/release/input regeneration pass. No dependency, core API, toolchain, firmware or hardware changes.
+- Numerical references/identical host-target check selection and final contract review/manifest freeze remain next; no target implementation or new policy decision.
+
+## 2026-10-10 UTC (candidate-host fresh-context verification)
+- Exported staged source without ignored artifacts; offline workspace check/default/all-feature tests, no_std core, strict Clippy and formatting pass with the installed toolchain/cached dependencies and SDL2.
+- Firmware default/feature host tests/Clippy, all 31 Python tests, candidate/pool input integrity checks, and exact candidate debug/release plus pool release reports pass. No hardware accessed or target images rebuilt.
+- Added fresh-context startup/check commands and refreshed HANDOFF. Numerical preparation/final manifest freeze remains next; no new policy or dependency/toolchain change.

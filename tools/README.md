@@ -264,9 +264,10 @@ case. Every retained report/pass is cross-checked against a direct streaming sea
 The 34 suitability searches are not an expanded 34-case target matrix.
 
 **Not the full M2 preflight or capture manifest.** No allocations/capacities, RAM
-lifetimes, stack, timing or independent numerical checks are measured. Historical
-reference/error/partial/RAM cases remain to be preflighted. No supported size or
-production policy is selected. Source integrity is verified by the Python check;
+lifetimes, stack, timing or independent numerical checks are measured by this tool.
+The separate [candidate-case runner](#overhead-m2-preflight) covers historical,
+error/partial/RAM and requested-memory observations. No supported size or production
+policy is selected. Source integrity is verified by the Python check;
 the Rust binary embeds the selected pool and publishes its recorded hash, rather
 than implementing another hash function. Run both checks for evidence regeneration.
 
@@ -274,6 +275,32 @@ than implementing another hash function. Run both checks for evidence regenerati
 [results and remaining gate](../docs/evaluations/m2-pool-suitability.md).
 Tests: `cargo test -p overhead-tools --bin overhead-m2-pool-preflight --test m2_pool_preflight`
 and `python3 -m unittest discover -s tools -p 'test_prepare_m2_pool.py'`.
+
+## `overhead-m2-preflight`
+
+Run the 20 candidate cases from the bounded M2 contract: historical/growth/density
+controls, partial budgets, ingestion variants, and dropped/retained RAM inputs.
+
+```sh
+python3 tools/prepare_m2_cases.py --check
+cargo run --offline --release --locked -p overhead-tools --bin overhead-m2-preflight \
+  > /tmp/m2-host-preflight.json
+cmp /tmp/m2-host-preflight.json docs/evaluations/m2-host-preflight.json
+```
+
+No runtime files/network/clock/hardware. `--inputs` emits deterministic source
+strings for the offline archive tool; `--help`/`-h` prints usage. Other arguments
+fail with exit 1 and no stdout. Successful JSON contains exact group/input metadata,
+accepted identities/provenance, retained diagnostics and work/status, collection
+observations, and repeated single-threaded requested-heap accounting with input-copy
+and allocate-copy-free overlap. Every case must restore its allocation baseline.
+
+**Not a frozen manifest or S3 RAM claim.** Prepared input/source metadata is outside
+the measured baseline; the borrowed control models flash lifetime on host. No backend
+footprint, phase timing, stack, or independent numerical accuracy is reported. Exact
+memory observations depend on the host/compiler. [Method/results/remaining gates](../docs/evaluations/m2-host-preflight.md);
+[fixture provenance and offline tests](fixtures/m2-cases/README.md).
+No core API, firmware, dependency, toolchain, or production default changes.
 
 ## `overhead-track`
 

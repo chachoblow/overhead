@@ -1,0 +1,7936 @@
+{
+  "cases": [
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2006-06-25T19:46:43.980095999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 6251,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T07:58:18.143616001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 8195,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T13:28:40.058400Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 9880,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T00:40:57.987552Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 14128,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T00:58:29.343360Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 24208,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T18:52:04.079712001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28057,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2006-06-24T13:41:49.461503999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28129,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T11:12:14.455008001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28626,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "historical"
+        ],
+        "id": 1,
+        "lifetime": "flash-control",
+        "shared_allowance": 1600000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 3600
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-1-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 3331,
+      "input_records": 8,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 74,
+            "failures": 0,
+            "live": 7815,
+            "requested": 49991
+          },
+          "before": {
+            "calls": 69,
+            "failures": 0,
+            "live": 5927,
+            "requested": 48103
+          },
+          "peak": 7815
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 74,
+            "failures": 0,
+            "live": 0,
+            "requested": 49991
+          },
+          "before": {
+            "calls": 74,
+            "failures": 0,
+            "live": 7815,
+            "requested": 49991
+          },
+          "peak": 7815
+        },
+        "entries_capacity": 8,
+        "initialization": {
+          "after": {
+            "calls": 69,
+            "failures": 0,
+            "live": 5927,
+            "requested": 48103
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 17127
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 69,
+            "failures": 0,
+            "live": 5927,
+            "requested": 48103
+          },
+          "before": {
+            "calls": 69,
+            "failures": 0,
+            "live": 5927,
+            "requested": 48103
+          },
+          "peak": 5927
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          4,
+          0,
+          4,
+          0,
+          0,
+          0,
+          0,
+          4
+        ],
+        "pipeline_peak": 17127,
+        "raw_array_capacities": [
+          8
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8460,
+            "record": 0,
+            "requested_bytes": 12172
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8505,
+            "record": 1,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8558,
+            "record": 2,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8600,
+            "record": 3,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8640,
+            "record": 4,
+            "requested_bytes": 3880
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8685,
+            "record": 5,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8738,
+            "record": 6,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8775,
+            "record": 7,
+            "requested_bytes": 3877
+          }
+        ],
+        "satellite_reports_capacity": 8
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 500,
+        "satellites": [
+          {
+            "evaluations": 69,
+            "norad_id": 6251,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 61,
+            "norad_id": 8195,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 65,
+            "norad_id": 9880,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 61,
+            "norad_id": 14128,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 61,
+            "norad_id": 24208,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 61,
+            "norad_id": 28057,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 61,
+            "norad_id": 28129,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 61,
+            "norad_id": 28626,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 3
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2006-06-25T19:46:43.980095999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 6251,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T07:58:18.143616001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 8195,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T13:28:40.058400Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 9880,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T00:40:57.987552Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 14128,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T00:58:29.343360Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 24208,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T18:52:04.079712001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28057,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2006-06-24T13:41:49.461503999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28129,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T11:12:14.455008001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28626,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "historical"
+        ],
+        "id": 2,
+        "lifetime": "flash-control",
+        "shared_allowance": 1600000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-2-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 3331,
+      "input_records": 8,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 77,
+            "failures": 0,
+            "live": 8487,
+            "requested": 50663
+          },
+          "before": {
+            "calls": 69,
+            "failures": 0,
+            "live": 5927,
+            "requested": 48103
+          },
+          "peak": 8487
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 77,
+            "failures": 0,
+            "live": 0,
+            "requested": 50663
+          },
+          "before": {
+            "calls": 77,
+            "failures": 0,
+            "live": 8487,
+            "requested": 50663
+          },
+          "peak": 8487
+        },
+        "entries_capacity": 8,
+        "initialization": {
+          "after": {
+            "calls": 69,
+            "failures": 0,
+            "live": 5927,
+            "requested": 48103
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 17127
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 69,
+            "failures": 0,
+            "live": 5927,
+            "requested": 48103
+          },
+          "before": {
+            "calls": 69,
+            "failures": 0,
+            "live": 5927,
+            "requested": 48103
+          },
+          "peak": 5927
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          4,
+          4,
+          4,
+          0,
+          0,
+          4,
+          4,
+          4
+        ],
+        "pipeline_peak": 17127,
+        "raw_array_capacities": [
+          8
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8460,
+            "record": 0,
+            "requested_bytes": 12172
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8505,
+            "record": 1,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8558,
+            "record": 2,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8600,
+            "record": 3,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8640,
+            "record": 4,
+            "requested_bytes": 3880
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8685,
+            "record": 5,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8738,
+            "record": 6,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8775,
+            "record": 7,
+            "requested_bytes": 3877
+          }
+        ],
+        "satellite_reports_capacity": 8
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 11616,
+        "satellites": [
+          {
+            "evaluations": 1473,
+            "norad_id": 6251,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 8195,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 9880,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 14128,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 24208,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28057,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 28129,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 28626,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 13
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "mixed-5"
+        ],
+        "id": 3,
+        "lifetime": "flash-control",
+        "shared_allowance": 1000000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 2111,
+          "document": "mixed-5",
+          "index": 0,
+          "name": "m2-3-group-0",
+          "records": 5,
+          "sha256": "bfc7bcfb9842e0ab0ae8f12dfeb928674eb55bacea683e0f67c4787a88e0ebdf",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 2111,
+      "input_records": 5,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 53,
+            "failures": 0,
+            "live": 8045,
+            "requested": 38877
+          },
+          "before": {
+            "calls": 45,
+            "failures": 0,
+            "live": 5869,
+            "requested": 36477
+          },
+          "peak": 8045
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 53,
+            "failures": 0,
+            "live": 0,
+            "requested": 38877
+          },
+          "before": {
+            "calls": 53,
+            "failures": 0,
+            "live": 8045,
+            "requested": 38877
+          },
+          "peak": 8045
+        },
+        "entries_capacity": 8,
+        "initialization": {
+          "after": {
+            "calls": 45,
+            "failures": 0,
+            "live": 5869,
+            "requested": 36477
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 17021
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 45,
+            "failures": 0,
+            "live": 5869,
+            "requested": 36477
+          },
+          "before": {
+            "calls": 45,
+            "failures": 0,
+            "live": 5869,
+            "requested": 36477
+          },
+          "peak": 5869
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          4,
+          4,
+          4,
+          8,
+          4
+        ],
+        "pipeline_peak": 17021,
+        "raw_array_capacities": [
+          8
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8472,
+            "record": 0,
+            "requested_bytes": 12184
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8517,
+            "record": 1,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8573,
+            "record": 2,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8626,
+            "record": 3,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8669,
+            "record": 4,
+            "requested_bytes": 3883
+          }
+        ],
+        "satellite_reports_capacity": 5
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 7321,
+        "satellites": [
+          {
+            "evaluations": 1449,
+            "norad_id": 7376,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28054,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1477,
+            "norad_id": 29522,
+            "passes": 5,
+            "status": "Complete",
+            "upcoming_passes": 5
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 32958,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          }
+        ],
+        "stored_passes": 16
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-08T09:33:14.856768Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7780,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:48:29.993760Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 19548,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "mixed-9"
+        ],
+        "id": 4,
+        "lifetime": "flash-control",
+        "shared_allowance": 1800000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3784,
+          "document": "mixed-9",
+          "index": 0,
+          "name": "m2-4-group-0",
+          "records": 9,
+          "sha256": "0143a70260821a6ecd81c7146c1b765083962790da91a2b03a1b6226d4367737",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 3784,
+      "input_records": 9,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 91,
+            "failures": 0,
+            "live": 15268,
+            "requested": 67476
+          },
+          "before": {
+            "calls": 79,
+            "failures": 0,
+            "live": 11684,
+            "requested": 63668
+          },
+          "peak": 15268
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 91,
+            "failures": 0,
+            "live": 0,
+            "requested": 67476
+          },
+          "before": {
+            "calls": 91,
+            "failures": 0,
+            "live": 15268,
+            "requested": 67476
+          },
+          "peak": 15268
+        },
+        "entries_capacity": 16,
+        "initialization": {
+          "after": {
+            "calls": 79,
+            "failures": 0,
+            "live": 11684,
+            "requested": 63668
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 25684
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 79,
+            "failures": 0,
+            "live": 11684,
+            "requested": 63668
+          },
+          "before": {
+            "calls": 79,
+            "failures": 0,
+            "live": 11684,
+            "requested": 63668
+          },
+          "peak": 11684
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          8,
+          4,
+          4,
+          4
+        ],
+        "pipeline_peak": 25684,
+        "raw_array_capacities": [
+          16
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8600,
+            "record": 0,
+            "requested_bytes": 12184
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8645,
+            "record": 1,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8701,
+            "record": 2,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8754,
+            "record": 3,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8797,
+            "record": 4,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8836,
+            "record": 5,
+            "requested_bytes": 3879
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8892,
+            "record": 6,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8937,
+            "record": 7,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8980,
+            "record": 8,
+            "requested_bytes": 3883
+          }
+        ],
+        "satellite_reports_capacity": 9
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 13165,
+        "satellites": [
+          {
+            "evaluations": 1449,
+            "norad_id": 7376,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 7780,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 19548,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28054,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1477,
+            "norad_id": 29522,
+            "passes": 5,
+            "status": "Complete",
+            "upcoming_passes": 5
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 32958,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 35951,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 37214,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          }
+        ],
+        "stored_passes": 27
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-08T09:33:14.856768Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7780,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:48:29.993760Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 19548,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T11:32:02.779008Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 20253,
+          "selected_from": {
+            "group": 0,
+            "record": 11
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T19:11:32.077248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 27663,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 10
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "mixed-12"
+        ],
+        "id": 5,
+        "lifetime": "flash-control",
+        "shared_allowance": 2400000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 5036,
+          "document": "mixed-12",
+          "index": 0,
+          "name": "m2-5-group-0",
+          "records": 12,
+          "sha256": "67fa95119f7d8f6fa349b510b94a96ae5b4c7e80e7551b31a941218e172a0d6b",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 5036,
+      "input_records": 12,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 119,
+            "failures": 0,
+            "live": 16200,
+            "requested": 96648
+          },
+          "before": {
+            "calls": 105,
+            "failures": 0,
+            "live": 11784,
+            "requested": 92008
+          },
+          "peak": 16200
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 119,
+            "failures": 0,
+            "live": 0,
+            "requested": 96648
+          },
+          "before": {
+            "calls": 119,
+            "failures": 0,
+            "live": 16200,
+            "requested": 96648
+          },
+          "peak": 16200
+        },
+        "entries_capacity": 16,
+        "initialization": {
+          "after": {
+            "calls": 105,
+            "failures": 0,
+            "live": 11784,
+            "requested": 92008
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 34216
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 105,
+            "failures": 0,
+            "live": 11784,
+            "requested": 92008
+          },
+          "before": {
+            "calls": 105,
+            "failures": 0,
+            "live": 11784,
+            "requested": 92008
+          },
+          "peak": 11784
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          4,
+          4,
+          4,
+          0,
+          4,
+          4,
+          4,
+          8,
+          4,
+          4,
+          4,
+          4
+        ],
+        "pipeline_peak": 34216,
+        "raw_array_capacities": [
+          16
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8600,
+            "record": 0,
+            "requested_bytes": 12184
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8645,
+            "record": 1,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8701,
+            "record": 2,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8754,
+            "record": 3,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8797,
+            "record": 4,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8836,
+            "record": 5,
+            "requested_bytes": 3879
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8892,
+            "record": 6,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8937,
+            "record": 7,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8980,
+            "record": 8,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 9033,
+            "record": 9,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 9075,
+            "record": 10,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 10,
+            "group": 0,
+            "live": 25800,
+            "record": 11,
+            "requested_bytes": 20565
+          }
+        ],
+        "satellite_reports_capacity": 12
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 17536,
+        "satellites": [
+          {
+            "evaluations": 1449,
+            "norad_id": 7376,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 7780,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 19548,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 20253,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 27663,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28054,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1477,
+            "norad_id": 29522,
+            "passes": 5,
+            "status": "Complete",
+            "upcoming_passes": 5
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 32958,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 35951,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 37214,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 37849,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          }
+        ],
+        "stored_passes": 33
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-08T09:33:14.856768Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7780,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:48:29.993760Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 19548,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T11:32:02.779008Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 20253,
+          "selected_from": {
+            "group": 0,
+            "record": 11
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:14:22.200Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 21639,
+          "selected_from": {
+            "group": 0,
+            "record": 13
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:37:37.784640Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 22314,
+          "selected_from": {
+            "group": 0,
+            "record": 15
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T19:11:32.077248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 27663,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 10
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:40:10.134048Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 38771,
+          "selected_from": {
+            "group": 0,
+            "record": 12
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:46:52.945248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 39260,
+          "selected_from": {
+            "group": 0,
+            "record": 14
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "mixed-16"
+        ],
+        "id": 6,
+        "lifetime": "flash-control",
+        "shared_allowance": 3200000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 6672,
+          "document": "mixed-16",
+          "index": 0,
+          "name": "m2-6-group-0",
+          "records": 16,
+          "sha256": "64197cca475768a0d1030c504c2084fad3b865feccacb66d682a43ed36fdcec2",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 6672,
+      "input_records": 16,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 155,
+            "failures": 0,
+            "live": 17705,
+            "requested": 113577
+          },
+          "before": {
+            "calls": 137,
+            "failures": 0,
+            "live": 11881,
+            "requested": 107529
+          },
+          "peak": 17705
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 155,
+            "failures": 0,
+            "live": 0,
+            "requested": 113577
+          },
+          "before": {
+            "calls": 155,
+            "failures": 0,
+            "live": 17705,
+            "requested": 113577
+          },
+          "peak": 17705
+        },
+        "entries_capacity": 16,
+        "initialization": {
+          "after": {
+            "calls": 137,
+            "failures": 0,
+            "live": 11881,
+            "requested": 107529
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 34377
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 137,
+            "failures": 0,
+            "live": 11881,
+            "requested": 107529
+          },
+          "before": {
+            "calls": 137,
+            "failures": 0,
+            "live": 11881,
+            "requested": 107529
+          },
+          "peak": 11881
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          4,
+          4,
+          4,
+          0,
+          4,
+          4,
+          4,
+          4,
+          4,
+          8,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "pipeline_peak": 34377,
+        "raw_array_capacities": [
+          16
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8600,
+            "record": 0,
+            "requested_bytes": 12184
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8645,
+            "record": 1,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8701,
+            "record": 2,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8754,
+            "record": 3,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8797,
+            "record": 4,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8836,
+            "record": 5,
+            "requested_bytes": 3879
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8892,
+            "record": 6,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8937,
+            "record": 7,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8980,
+            "record": 8,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 9033,
+            "record": 9,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 9075,
+            "record": 10,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 10,
+            "group": 0,
+            "live": 25800,
+            "record": 11,
+            "requested_bytes": 20565
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 25840,
+            "record": 12,
+            "requested_bytes": 3880
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 25879,
+            "record": 13,
+            "requested_bytes": 3879
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 25922,
+            "record": 14,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 25961,
+            "record": 15,
+            "requested_bytes": 3879
+          }
+        ],
+        "satellite_reports_capacity": 16
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 23380,
+        "satellites": [
+          {
+            "evaluations": 1449,
+            "norad_id": 7376,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 7780,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 19548,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 20253,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 21639,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 22314,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 27663,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28054,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1477,
+            "norad_id": 29522,
+            "passes": 5,
+            "status": "Complete",
+            "upcoming_passes": 5
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 32958,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 35951,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 37214,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 37849,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 38771,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 39260,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          }
+        ],
+        "stored_passes": 44
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:40:10.134048Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 38771,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:46:52.945248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 39260,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "leo-heavy"
+        ],
+        "id": 7,
+        "lifetime": "flash-control",
+        "shared_allowance": 2000000,
+        "site_deg_km": [
+          -60.0,
+          120.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4212,
+          "document": "leo-heavy",
+          "index": 0,
+          "name": "m2-7-group-0",
+          "records": 10,
+          "sha256": "04c6b118b670b35b70a3b6a6a67a6a6f458cde19d1936c868c890a3055ceb100",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4212,
+      "input_records": 10,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 108,
+            "failures": 0,
+            "live": 17661,
+            "requested": 75741
+          },
+          "before": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "peak": 17693
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 108,
+            "failures": 0,
+            "live": 0,
+            "requested": 75741
+          },
+          "before": {
+            "calls": 108,
+            "failures": 0,
+            "live": 17661,
+            "requested": 75741
+          },
+          "peak": 17661
+        },
+        "entries_capacity": 16,
+        "initialization": {
+          "after": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 25725
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "before": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "peak": 11709
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          4,
+          4,
+          16,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "pipeline_peak": 25725,
+        "raw_array_capacities": [
+          16
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8600,
+            "record": 0,
+            "requested_bytes": 12184
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8656,
+            "record": 1,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8699,
+            "record": 2,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8755,
+            "record": 3,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8798,
+            "record": 4,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8840,
+            "record": 5,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8880,
+            "record": 6,
+            "requested_bytes": 3880
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8923,
+            "record": 7,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8968,
+            "record": 8,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 9021,
+            "record": 9,
+            "requested_bytes": 3893
+          }
+        ],
+        "satellite_reports_capacity": 10
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 14946,
+        "satellites": [
+          {
+            "evaluations": 1457,
+            "norad_id": 7376,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1513,
+            "norad_id": 28054,
+            "passes": 9,
+            "status": "Complete",
+            "upcoming_passes": 9
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 29522,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 32958,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 35951,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1497,
+            "norad_id": 37214,
+            "passes": 7,
+            "status": "Complete",
+            "upcoming_passes": 7
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 37849,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1497,
+            "norad_id": 38771,
+            "passes": 7,
+            "status": "Complete",
+            "upcoming_passes": 7
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 39260,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          }
+        ],
+        "stored_passes": 68
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:40:10.134048Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 38771,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:46:52.945248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 39260,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "leo-heavy"
+        ],
+        "id": 8,
+        "lifetime": "flash-control",
+        "shared_allowance": 2000000,
+        "site_deg_km": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4212,
+          "document": "leo-heavy",
+          "index": 0,
+          "name": "m2-8-group-0",
+          "records": 10,
+          "sha256": "04c6b118b670b35b70a3b6a6a67a6a6f458cde19d1936c868c890a3055ceb100",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4212,
+      "input_records": 10,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 98,
+            "failures": 0,
+            "live": 15197,
+            "requested": 71037
+          },
+          "before": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "peak": 15197
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 98,
+            "failures": 0,
+            "live": 0,
+            "requested": 71037
+          },
+          "before": {
+            "calls": 98,
+            "failures": 0,
+            "live": 15197,
+            "requested": 71037
+          },
+          "peak": 15197
+        },
+        "entries_capacity": 16,
+        "initialization": {
+          "after": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 25725
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "before": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "peak": 11709
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          0,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "pipeline_peak": 25725,
+        "raw_array_capacities": [
+          16
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8600,
+            "record": 0,
+            "requested_bytes": 12184
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8656,
+            "record": 1,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8699,
+            "record": 2,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8755,
+            "record": 3,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8798,
+            "record": 4,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8840,
+            "record": 5,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8880,
+            "record": 6,
+            "requested_bytes": 3880
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8923,
+            "record": 7,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8968,
+            "record": 8,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 9021,
+            "record": 9,
+            "requested_bytes": 3893
+          }
+        ],
+        "satellite_reports_capacity": 10
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 14618,
+        "satellites": [
+          {
+            "evaluations": 1441,
+            "norad_id": 7376,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 26407,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 28054,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 29522,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 32958,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 35951,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 37214,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 37849,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 38771,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 39260,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          }
+        ],
+        "stored_passes": 26
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-08T09:33:14.856768Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7780,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:48:29.993760Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 19548,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T11:32:02.779008Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 20253,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:14:22.200Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 21639,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:37:37.784640Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 22314,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T19:11:32.077248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 27663,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "deep-space-heavy"
+        ],
+        "id": 9,
+        "lifetime": "flash-control",
+        "shared_allowance": 2000000,
+        "site_deg_km": [
+          -60.0,
+          -120.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4152,
+          "document": "deep-space-heavy",
+          "index": 0,
+          "name": "m2-9-group-0",
+          "records": 10,
+          "sha256": "02e48191c6b86fcaeaab3e8059e6adb73e54a3ffcc9895e8c582f3c0fcfbb2bd",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4152,
+      "input_records": 10,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 100,
+            "failures": 0,
+            "live": 15646,
+            "requested": 71934
+          },
+          "before": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11710,
+            "requested": 67550
+          },
+          "peak": 15678
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 100,
+            "failures": 0,
+            "live": 0,
+            "requested": 71934
+          },
+          "before": {
+            "calls": 100,
+            "failures": 0,
+            "live": 15646,
+            "requested": 71934
+          },
+          "peak": 15646
+        },
+        "entries_capacity": 16,
+        "initialization": {
+          "after": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11710,
+            "requested": 67550
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 25726
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11710,
+            "requested": 67550
+          },
+          "before": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11710,
+            "requested": 67550
+          },
+          "peak": 11710
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          4,
+          4,
+          4,
+          0,
+          4,
+          4,
+          4,
+          4,
+          8,
+          8
+        ],
+        "pipeline_peak": 25726,
+        "raw_array_capacities": [
+          16
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8589,
+            "record": 0,
+            "requested_bytes": 12173
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8642,
+            "record": 1,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8681,
+            "record": 2,
+            "requested_bytes": 3879
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8726,
+            "record": 3,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8779,
+            "record": 4,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8832,
+            "record": 5,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8871,
+            "record": 6,
+            "requested_bytes": 3879
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8910,
+            "record": 7,
+            "requested_bytes": 3879
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8966,
+            "record": 8,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 9022,
+            "record": 9,
+            "requested_bytes": 3896
+          }
+        ],
+        "satellite_reports_capacity": 10
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 14626,
+        "satellites": [
+          {
+            "evaluations": 1457,
+            "norad_id": 7376,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 7780,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 19548,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 20253,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 21639,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 22314,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 27663,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 28054,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 29522,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          }
+        ],
+        "stored_passes": 28
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-08T09:33:14.856768Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7780,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:48:29.993760Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 19548,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T11:32:02.779008Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 20253,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:14:22.200Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 21639,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:37:37.784640Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 22314,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T19:11:32.077248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 27663,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "deep-space-heavy"
+        ],
+        "id": 10,
+        "lifetime": "flash-control",
+        "shared_allowance": 2000000,
+        "site_deg_km": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4152,
+          "document": "deep-space-heavy",
+          "index": 0,
+          "name": "m2-10-group-0",
+          "records": 10,
+          "sha256": "02e48191c6b86fcaeaab3e8059e6adb73e54a3ffcc9895e8c582f3c0fcfbb2bd",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4152,
+      "input_records": 10,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 95,
+            "failures": 0,
+            "live": 14526,
+            "requested": 70366
+          },
+          "before": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11710,
+            "requested": 67550
+          },
+          "peak": 14526
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 95,
+            "failures": 0,
+            "live": 0,
+            "requested": 70366
+          },
+          "before": {
+            "calls": 95,
+            "failures": 0,
+            "live": 14526,
+            "requested": 70366
+          },
+          "peak": 14526
+        },
+        "entries_capacity": 16,
+        "initialization": {
+          "after": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11710,
+            "requested": 67550
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 25726
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11710,
+            "requested": 67550
+          },
+          "before": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11710,
+            "requested": 67550
+          },
+          "peak": 11710
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          0,
+          0,
+          4,
+          0,
+          0,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "pipeline_peak": 25726,
+        "raw_array_capacities": [
+          16
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8589,
+            "record": 0,
+            "requested_bytes": 12173
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8642,
+            "record": 1,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8681,
+            "record": 2,
+            "requested_bytes": 3879
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8726,
+            "record": 3,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8779,
+            "record": 4,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8832,
+            "record": 5,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8871,
+            "record": 6,
+            "requested_bytes": 3879
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8910,
+            "record": 7,
+            "requested_bytes": 3879
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8966,
+            "record": 8,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 9022,
+            "record": 9,
+            "requested_bytes": 3896
+          }
+        ],
+        "satellite_reports_capacity": 10
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 14474,
+        "satellites": [
+          {
+            "evaluations": 1441,
+            "norad_id": 7376,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 7780,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 19548,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 20253,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 21639,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 22314,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 26407,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 27663,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 28054,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 29522,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          }
+        ],
+        "stored_passes": 11
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:40:10.134048Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 38771,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:46:52.945248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 39260,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": 7,
+        "groups": [
+          "leo-heavy"
+        ],
+        "id": 11,
+        "lifetime": "flash-control",
+        "shared_allowance": 1000,
+        "site_deg_km": [
+          -60.0,
+          120.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4212,
+          "document": "leo-heavy",
+          "index": 0,
+          "name": "m2-11-group-0",
+          "records": 10,
+          "sha256": "04c6b118b670b35b70a3b6a6a67a6a6f458cde19d1936c868c890a3055ceb100",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4212,
+      "input_records": 10,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 90,
+            "failures": 0,
+            "live": 13405,
+            "requested": 69245
+          },
+          "before": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "peak": 13405
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 90,
+            "failures": 0,
+            "live": 0,
+            "requested": 69245
+          },
+          "before": {
+            "calls": 90,
+            "failures": 0,
+            "live": 13405,
+            "requested": 69245
+          },
+          "peak": 13405
+        },
+        "entries_capacity": 16,
+        "initialization": {
+          "after": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 25725
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "before": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "peak": 11709
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          4,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "pipeline_peak": 25725,
+        "raw_array_capacities": [
+          16
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8600,
+            "record": 0,
+            "requested_bytes": 12184
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8656,
+            "record": 1,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8699,
+            "record": 2,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8755,
+            "record": 3,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8798,
+            "record": 4,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8840,
+            "record": 5,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8880,
+            "record": 6,
+            "requested_bytes": 3880
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8923,
+            "record": 7,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8968,
+            "record": 8,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 9021,
+            "record": 9,
+            "requested_bytes": 3893
+          }
+        ],
+        "satellite_reports_capacity": 10
+      },
+      "search": {
+        "complete": false,
+        "earliest_candidates": 1,
+        "evaluations": 1000,
+        "satellites": [
+          {
+            "evaluations": 1000,
+            "norad_id": 7376,
+            "passes": 2,
+            "status": "Incomplete(SearchStop { at: 2026-10-10T16:28:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 26407,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 28054,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 29522,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 32958,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 35951,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 37214,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 37849,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 38771,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 39260,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 2
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:40:10.134048Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 38771,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:46:52.945248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 39260,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": 7,
+        "groups": [
+          "leo-heavy"
+        ],
+        "id": 12,
+        "lifetime": "flash-control",
+        "shared_allowance": 0,
+        "site_deg_km": [
+          -60.0,
+          120.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4212,
+          "document": "leo-heavy",
+          "index": 0,
+          "name": "m2-12-group-0",
+          "records": 10,
+          "sha256": "04c6b118b670b35b70a3b6a6a67a6a6f458cde19d1936c868c890a3055ceb100",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4212,
+      "input_records": 10,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 88,
+            "failures": 0,
+            "live": 12989,
+            "requested": 68829
+          },
+          "before": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "peak": 12989
+        },
+        "arrival_candidates_capacity": 0,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 88,
+            "failures": 0,
+            "live": 0,
+            "requested": 68829
+          },
+          "before": {
+            "calls": 88,
+            "failures": 0,
+            "live": 12989,
+            "requested": 68829
+          },
+          "peak": 12989
+        },
+        "entries_capacity": 16,
+        "initialization": {
+          "after": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 25725
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "before": {
+            "calls": 87,
+            "failures": 0,
+            "live": 11709,
+            "requested": 67549
+          },
+          "peak": 11709
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "pipeline_peak": 25725,
+        "raw_array_capacities": [
+          16
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8600,
+            "record": 0,
+            "requested_bytes": 12184
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8656,
+            "record": 1,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8699,
+            "record": 2,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8755,
+            "record": 3,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8798,
+            "record": 4,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8840,
+            "record": 5,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8880,
+            "record": 6,
+            "requested_bytes": 3880
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8923,
+            "record": 7,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8968,
+            "record": 8,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 9021,
+            "record": 9,
+            "requested_bytes": 3893
+          }
+        ],
+        "satellite_reports_capacity": 10
+      },
+      "search": {
+        "complete": false,
+        "earliest_candidates": 0,
+        "evaluations": 0,
+        "satellites": [
+          {
+            "evaluations": 0,
+            "norad_id": 7376,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 26407,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 28054,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 29522,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 32958,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 35951,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 37214,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 37849,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 38771,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 39260,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 0
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2006-06-25T19:46:43.980095999Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 6251,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T07:58:18.143616001Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 8195,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T13:28:40.058400Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 9880,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T00:40:57.987552Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 14128,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T00:58:29.343360Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 24208,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T18:52:04.079712001Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 28057,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2006-06-24T13:41:49.461503999Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 28129,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T11:12:14.455008001Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 28626,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "historical",
+          "historical",
+          "historical",
+          "historical"
+        ],
+        "id": 13,
+        "lifetime": "flash-control",
+        "shared_allowance": 1600000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-13-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        },
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 1,
+          "name": "m2-13-group-1",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        },
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 2,
+          "name": "m2-13-group-2",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        },
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 3,
+          "name": "m2-13-group-3",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 13324,
+      "input_records": 32,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 243,
+            "failures": 0,
+            "live": 8679,
+            "requested": 144668
+          },
+          "before": {
+            "calls": 235,
+            "failures": 0,
+            "live": 6119,
+            "requested": 142108
+          },
+          "peak": 8679
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 243,
+            "failures": 0,
+            "live": 0,
+            "requested": 144668
+          },
+          "before": {
+            "calls": 243,
+            "failures": 0,
+            "live": 8679,
+            "requested": 144668
+          },
+          "peak": 8679
+        },
+        "entries_capacity": 8,
+        "initialization": {
+          "after": {
+            "calls": 235,
+            "failures": 0,
+            "live": 6119,
+            "requested": 142108
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 17511
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 235,
+            "failures": 0,
+            "live": 6119,
+            "requested": 142108
+          },
+          "before": {
+            "calls": 235,
+            "failures": 0,
+            "live": 6119,
+            "requested": 142108
+          },
+          "peak": 6119
+        },
+        "memberships_capacities": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          4,
+          4,
+          4,
+          0,
+          0,
+          4,
+          4,
+          4
+        ],
+        "pipeline_peak": 17511,
+        "raw_array_capacities": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8460,
+            "record": 0,
+            "requested_bytes": 12172
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8505,
+            "record": 1,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8558,
+            "record": 2,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8600,
+            "record": 3,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8640,
+            "record": 4,
+            "requested_bytes": 3880
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8685,
+            "record": 5,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8738,
+            "record": 6,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8775,
+            "record": 7,
+            "requested_bytes": 3877
+          },
+          {
+            "allocation_calls": 8,
+            "group": 1,
+            "live": 8847,
+            "record": 0,
+            "requested_bytes": 3956
+          },
+          {
+            "allocation_calls": 8,
+            "group": 1,
+            "live": 8919,
+            "record": 1,
+            "requested_bytes": 3957
+          },
+          {
+            "allocation_calls": 8,
+            "group": 1,
+            "live": 8991,
+            "record": 2,
+            "requested_bytes": 3965
+          },
+          {
+            "allocation_calls": 8,
+            "group": 1,
+            "live": 9063,
+            "record": 3,
+            "requested_bytes": 3954
+          },
+          {
+            "allocation_calls": 8,
+            "group": 1,
+            "live": 9135,
+            "record": 4,
+            "requested_bytes": 3952
+          },
+          {
+            "allocation_calls": 8,
+            "group": 1,
+            "live": 9207,
+            "record": 5,
+            "requested_bytes": 3957
+          },
+          {
+            "allocation_calls": 8,
+            "group": 1,
+            "live": 9279,
+            "record": 6,
+            "requested_bytes": 3965
+          },
+          {
+            "allocation_calls": 8,
+            "group": 1,
+            "live": 9351,
+            "record": 7,
+            "requested_bytes": 3949
+          },
+          {
+            "allocation_calls": 6,
+            "group": 2,
+            "live": 9351,
+            "record": 0,
+            "requested_bytes": 3860
+          },
+          {
+            "allocation_calls": 6,
+            "group": 2,
+            "live": 9351,
+            "record": 1,
+            "requested_bytes": 3861
+          },
+          {
+            "allocation_calls": 6,
+            "group": 2,
+            "live": 9351,
+            "record": 2,
+            "requested_bytes": 3869
+          },
+          {
+            "allocation_calls": 6,
+            "group": 2,
+            "live": 9351,
+            "record": 3,
+            "requested_bytes": 3858
+          },
+          {
+            "allocation_calls": 6,
+            "group": 2,
+            "live": 9351,
+            "record": 4,
+            "requested_bytes": 3856
+          },
+          {
+            "allocation_calls": 6,
+            "group": 2,
+            "live": 9351,
+            "record": 5,
+            "requested_bytes": 3861
+          },
+          {
+            "allocation_calls": 6,
+            "group": 2,
+            "live": 9351,
+            "record": 6,
+            "requested_bytes": 3869
+          },
+          {
+            "allocation_calls": 6,
+            "group": 2,
+            "live": 9351,
+            "record": 7,
+            "requested_bytes": 3853
+          },
+          {
+            "allocation_calls": 6,
+            "group": 3,
+            "live": 9351,
+            "record": 0,
+            "requested_bytes": 3860
+          },
+          {
+            "allocation_calls": 6,
+            "group": 3,
+            "live": 9351,
+            "record": 1,
+            "requested_bytes": 3861
+          },
+          {
+            "allocation_calls": 6,
+            "group": 3,
+            "live": 9351,
+            "record": 2,
+            "requested_bytes": 3869
+          },
+          {
+            "allocation_calls": 6,
+            "group": 3,
+            "live": 9351,
+            "record": 3,
+            "requested_bytes": 3858
+          },
+          {
+            "allocation_calls": 6,
+            "group": 3,
+            "live": 9351,
+            "record": 4,
+            "requested_bytes": 3856
+          },
+          {
+            "allocation_calls": 6,
+            "group": 3,
+            "live": 9351,
+            "record": 5,
+            "requested_bytes": 3861
+          },
+          {
+            "allocation_calls": 6,
+            "group": 3,
+            "live": 9351,
+            "record": 6,
+            "requested_bytes": 3869
+          },
+          {
+            "allocation_calls": 6,
+            "group": 3,
+            "live": 9351,
+            "record": 7,
+            "requested_bytes": 3853
+          }
+        ],
+        "satellite_reports_capacity": 8
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 11616,
+        "satellites": [
+          {
+            "evaluations": 1473,
+            "norad_id": 6251,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 8195,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 9880,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 14128,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 24208,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28057,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 28129,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 28626,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 13
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2006-06-25T07:58:18.143616001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 8195,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T13:28:40.058400Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 9880,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T00:40:57.987552Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 14128,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T00:58:29.343360Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 24208,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T18:52:04.079712001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28057,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2006-06-24T13:41:49.461503999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28129,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T11:12:14.455008001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28626,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "historical",
+          "conflict"
+        ],
+        "id": 14,
+        "lifetime": "flash-control",
+        "shared_allowance": 1400000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [
+          {
+            "epoch_utc": "2006-06-25T19:46:43.980095999Z",
+            "kind": "epoch-conflict",
+            "norad_id": 6251,
+            "origins": [
+              {
+                "group": 0,
+                "record": 0
+              },
+              {
+                "group": 1,
+                "record": 1
+              }
+            ]
+          }
+        ],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-14-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        },
+        {
+          "bytes": 843,
+          "document": "conflict",
+          "index": 1,
+          "name": "m2-14-group-1",
+          "records": 2,
+          "sha256": "6796634ecf8d12d56abcfbd005fbc526d2e3a91bb193a10bb7d9a583ea2cc43e",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4174,
+      "input_records": 10,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 92,
+            "failures": 0,
+            "live": 8363,
+            "requested": 58383
+          },
+          "before": {
+            "calls": 85,
+            "failures": 0,
+            "live": 6155,
+            "requested": 56175
+          },
+          "peak": 8363
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 4,
+        "core_diagnostics_capacity": 4,
+        "destruction": {
+          "after": {
+            "calls": 92,
+            "failures": 0,
+            "live": 0,
+            "requested": 58383
+          },
+          "before": {
+            "calls": 92,
+            "failures": 0,
+            "live": 8363,
+            "requested": 58383
+          },
+          "peak": 8363
+        },
+        "entries_capacity": 8,
+        "initialization": {
+          "after": {
+            "calls": 85,
+            "failures": 0,
+            "live": 6155,
+            "requested": 56175
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 17339
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 85,
+            "failures": 0,
+            "live": 6155,
+            "requested": 56175
+          },
+          "before": {
+            "calls": 85,
+            "failures": 0,
+            "live": 6155,
+            "requested": 56175
+          },
+          "peak": 6155
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          4,
+          4,
+          0,
+          0,
+          4,
+          4,
+          4
+        ],
+        "pipeline_peak": 17339,
+        "raw_array_capacities": [
+          8,
+          4
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8460,
+            "record": 0,
+            "requested_bytes": 12172
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8505,
+            "record": 1,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8558,
+            "record": 2,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8600,
+            "record": 3,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8640,
+            "record": 4,
+            "requested_bytes": 3880
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8685,
+            "record": 5,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8738,
+            "record": 6,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8775,
+            "record": 7,
+            "requested_bytes": 3877
+          },
+          {
+            "allocation_calls": 7,
+            "group": 1,
+            "live": 8735,
+            "record": 0,
+            "requested_bytes": 3892
+          },
+          {
+            "allocation_calls": 7,
+            "group": 1,
+            "live": 8783,
+            "record": 1,
+            "requested_bytes": 3924
+          }
+        ],
+        "satellite_reports_capacity": 7
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 10143,
+        "satellites": [
+          {
+            "evaluations": 1449,
+            "norad_id": 8195,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 9880,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 14128,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 24208,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28057,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 28129,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 28626,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 9
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2006-06-25T19:46:43.980095999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 6251,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T07:58:18.143616001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 8195,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T13:28:40.058400Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 9880,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T00:40:57.987552Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 14128,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T00:58:29.343360Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 24208,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T18:52:04.079712001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28057,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2006-06-24T13:41:49.461503999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28129,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T11:12:14.455008001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28626,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "historical",
+          "invalid"
+        ],
+        "id": 15,
+        "lifetime": "flash-control",
+        "shared_allowance": 1600000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [
+          {
+            "error": "EccentricityOutOfRange(1.0)",
+            "kind": "invalid-record",
+            "norad_id": 6251,
+            "origin": {
+              "group": 1,
+              "record": 1
+            }
+          }
+        ],
+        "failure": null,
+        "parse": [
+          {
+            "message": "unsupported OMM CENTER_NAME \"MARS\"; expected EARTH",
+            "origin": {
+              "group": 1,
+              "record": 0
+            }
+          }
+        ]
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-15-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        },
+        {
+          "bytes": 858,
+          "document": "invalid",
+          "index": 1,
+          "name": "m2-15-group-1",
+          "records": 2,
+          "sha256": "6e3e2dcfeb3bcc9500087fa7283cb32ecb31f89ce107ec8a6999dcd265f3634c",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4189,
+      "input_records": 10,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 97,
+            "failures": 0,
+            "live": 8889,
+            "requested": 58999
+          },
+          "before": {
+            "calls": 89,
+            "failures": 0,
+            "live": 6329,
+            "requested": 56439
+          },
+          "peak": 8889
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 4,
+        "destruction": {
+          "after": {
+            "calls": 97,
+            "failures": 0,
+            "live": 0,
+            "requested": 58999
+          },
+          "before": {
+            "calls": 97,
+            "failures": 0,
+            "live": 8889,
+            "requested": 58999
+          },
+          "peak": 8889
+        },
+        "entries_capacity": 8,
+        "initialization": {
+          "after": {
+            "calls": 89,
+            "failures": 0,
+            "live": 6329,
+            "requested": 56439
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 17529
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 89,
+            "failures": 0,
+            "live": 6329,
+            "requested": 56439
+          },
+          "before": {
+            "calls": 89,
+            "failures": 0,
+            "live": 6329,
+            "requested": 56439
+          },
+          "peak": 6329
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 4,
+        "pass_capacities": [
+          4,
+          4,
+          4,
+          0,
+          0,
+          4,
+          4,
+          4
+        ],
+        "pipeline_peak": 17529,
+        "raw_array_capacities": [
+          8,
+          4
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8460,
+            "record": 0,
+            "requested_bytes": 12172
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8505,
+            "record": 1,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8558,
+            "record": 2,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8600,
+            "record": 3,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8640,
+            "record": 4,
+            "requested_bytes": 3880
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8685,
+            "record": 5,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8738,
+            "record": 6,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8775,
+            "record": 7,
+            "requested_bytes": 3877
+          },
+          {
+            "allocation_calls": 12,
+            "group": 1,
+            "live": 8921,
+            "record": 0,
+            "requested_bytes": 4220
+          },
+          {
+            "allocation_calls": 7,
+            "group": 1,
+            "live": 9113,
+            "record": 1,
+            "requested_bytes": 4052
+          }
+        ],
+        "satellite_reports_capacity": 8
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 11616,
+        "satellites": [
+          {
+            "evaluations": 1473,
+            "norad_id": 6251,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 8195,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 9880,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 14128,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 24208,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28057,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 28129,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 28626,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 13
+      }
+    },
+    {
+      "accepted": null,
+      "case": {
+        "control": null,
+        "groups": [
+          "historical",
+          "malformed"
+        ],
+        "id": 16,
+        "lifetime": "flash-control",
+        "shared_allowance": 0,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": {
+          "group": 1,
+          "message": "EOF while parsing a list at line 1 column 1",
+          "phase": "document"
+        },
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-16-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        },
+        {
+          "bytes": 1,
+          "document": "malformed",
+          "index": 1,
+          "name": "m2-16-group-1",
+          "records": null,
+          "sha256": "245843abef9e72e7efac30138a994bf6301e7e1d7d7042a33d42e863d2638811",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 3332,
+      "input_records": 8,
+      "requested_memory": {
+        "aggregation": null,
+        "arrival_candidates_capacity": 0,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 71,
+            "failures": 0,
+            "live": 0,
+            "requested": 39711
+          },
+          "before": {
+            "calls": 71,
+            "failures": 0,
+            "live": 48,
+            "requested": 39711
+          },
+          "peak": 48
+        },
+        "entries_capacity": 0,
+        "initialization": {
+          "after": {
+            "calls": 71,
+            "failures": 0,
+            "live": 48,
+            "requested": 39711
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 11810
+        },
+        "input_copy": {
+          "after": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 0
+        },
+        "input_release": {
+          "after": {
+            "calls": 71,
+            "failures": 0,
+            "live": 48,
+            "requested": 39711
+          },
+          "before": {
+            "calls": 71,
+            "failures": 0,
+            "live": 48,
+            "requested": 39711
+          },
+          "peak": 48
+        },
+        "memberships_capacities": [],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [],
+        "pipeline_peak": 11810,
+        "raw_array_capacities": [
+          8,
+          0
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8460,
+            "record": 0,
+            "requested_bytes": 12172
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8505,
+            "record": 1,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8558,
+            "record": 2,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8600,
+            "record": 3,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8640,
+            "record": 4,
+            "requested_bytes": 3880
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8685,
+            "record": 5,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8738,
+            "record": 6,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8775,
+            "record": 7,
+            "requested_bytes": 3877
+          }
+        ],
+        "satellite_reports_capacity": 0
+      },
+      "search": null
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2006-06-25T19:46:43.980095999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 6251,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T07:58:18.143616001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 8195,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T13:28:40.058400Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 9880,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T00:40:57.987552Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 14128,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T00:58:29.343360Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 24208,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T18:52:04.079712001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28057,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2006-06-24T13:41:49.461503999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28129,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T11:12:14.455008001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28626,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": 2,
+        "groups": [
+          "historical"
+        ],
+        "id": 17,
+        "lifetime": "ram-dropped",
+        "shared_allowance": 1600000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-17-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 3331,
+      "input_records": 8,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 78,
+            "failures": 0,
+            "live": 8487,
+            "requested": 53994
+          },
+          "before": {
+            "calls": 70,
+            "failures": 0,
+            "live": 5927,
+            "requested": 51434
+          },
+          "peak": 8487
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 78,
+            "failures": 0,
+            "live": 0,
+            "requested": 53994
+          },
+          "before": {
+            "calls": 78,
+            "failures": 0,
+            "live": 8487,
+            "requested": 53994
+          },
+          "peak": 8487
+        },
+        "entries_capacity": 8,
+        "initialization": {
+          "after": {
+            "calls": 70,
+            "failures": 0,
+            "live": 9258,
+            "requested": 51434
+          },
+          "before": {
+            "calls": 1,
+            "failures": 0,
+            "live": 3331,
+            "requested": 3331
+          },
+          "peak": 20458
+        },
+        "input_copy": {
+          "after": {
+            "calls": 1,
+            "failures": 0,
+            "live": 3331,
+            "requested": 3331
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 3331
+        },
+        "input_release": {
+          "after": {
+            "calls": 70,
+            "failures": 0,
+            "live": 5927,
+            "requested": 51434
+          },
+          "before": {
+            "calls": 70,
+            "failures": 0,
+            "live": 9258,
+            "requested": 51434
+          },
+          "peak": 9258
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          4,
+          4,
+          4,
+          0,
+          0,
+          4,
+          4,
+          4
+        ],
+        "pipeline_peak": 20458,
+        "raw_array_capacities": [
+          8
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8460,
+            "record": 0,
+            "requested_bytes": 12172
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8505,
+            "record": 1,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8558,
+            "record": 2,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8600,
+            "record": 3,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8640,
+            "record": 4,
+            "requested_bytes": 3880
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8685,
+            "record": 5,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8738,
+            "record": 6,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8775,
+            "record": 7,
+            "requested_bytes": 3877
+          }
+        ],
+        "satellite_reports_capacity": 8
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 11616,
+        "satellites": [
+          {
+            "evaluations": 1473,
+            "norad_id": 6251,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 8195,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 9880,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 14128,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 24208,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28057,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 28129,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 28626,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 13
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2006-06-25T19:46:43.980095999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 6251,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T07:58:18.143616001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 8195,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T13:28:40.058400Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 9880,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T00:40:57.987552Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 14128,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T00:58:29.343360Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 24208,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T18:52:04.079712001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28057,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2006-06-24T13:41:49.461503999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28129,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T11:12:14.455008001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28626,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": 2,
+        "groups": [
+          "historical"
+        ],
+        "id": 18,
+        "lifetime": "ram-retained",
+        "shared_allowance": 1600000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-18-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 3331,
+      "input_records": 8,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 78,
+            "failures": 0,
+            "live": 11818,
+            "requested": 53994
+          },
+          "before": {
+            "calls": 70,
+            "failures": 0,
+            "live": 9258,
+            "requested": 51434
+          },
+          "peak": 11818
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 78,
+            "failures": 0,
+            "live": 0,
+            "requested": 53994
+          },
+          "before": {
+            "calls": 78,
+            "failures": 0,
+            "live": 11818,
+            "requested": 53994
+          },
+          "peak": 11818
+        },
+        "entries_capacity": 8,
+        "initialization": {
+          "after": {
+            "calls": 70,
+            "failures": 0,
+            "live": 9258,
+            "requested": 51434
+          },
+          "before": {
+            "calls": 1,
+            "failures": 0,
+            "live": 3331,
+            "requested": 3331
+          },
+          "peak": 20458
+        },
+        "input_copy": {
+          "after": {
+            "calls": 1,
+            "failures": 0,
+            "live": 3331,
+            "requested": 3331
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 3331
+        },
+        "input_release": {
+          "after": {
+            "calls": 70,
+            "failures": 0,
+            "live": 9258,
+            "requested": 51434
+          },
+          "before": {
+            "calls": 70,
+            "failures": 0,
+            "live": 9258,
+            "requested": 51434
+          },
+          "peak": 9258
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          4,
+          4,
+          4,
+          0,
+          0,
+          4,
+          4,
+          4
+        ],
+        "pipeline_peak": 20458,
+        "raw_array_capacities": [
+          8
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8460,
+            "record": 0,
+            "requested_bytes": 12172
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8505,
+            "record": 1,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8558,
+            "record": 2,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8600,
+            "record": 3,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8640,
+            "record": 4,
+            "requested_bytes": 3880
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8685,
+            "record": 5,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8738,
+            "record": 6,
+            "requested_bytes": 3893
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8775,
+            "record": 7,
+            "requested_bytes": 3877
+          }
+        ],
+        "satellite_reports_capacity": 8
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 11616,
+        "satellites": [
+          {
+            "evaluations": 1473,
+            "norad_id": 6251,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 8195,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 9880,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 14128,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 24208,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28057,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 28129,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 28626,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 13
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:40:10.134048Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 38771,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:46:52.945248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 39260,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": 7,
+        "groups": [
+          "leo-heavy"
+        ],
+        "id": 19,
+        "lifetime": "ram-dropped",
+        "shared_allowance": 2000000,
+        "site_deg_km": [
+          -60.0,
+          120.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4212,
+          "document": "leo-heavy",
+          "index": 0,
+          "name": "m2-19-group-0",
+          "records": 10,
+          "sha256": "04c6b118b670b35b70a3b6a6a67a6a6f458cde19d1936c868c890a3055ceb100",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4212,
+      "input_records": 10,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 109,
+            "failures": 0,
+            "live": 17661,
+            "requested": 79953
+          },
+          "before": {
+            "calls": 88,
+            "failures": 0,
+            "live": 11709,
+            "requested": 71761
+          },
+          "peak": 17693
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 109,
+            "failures": 0,
+            "live": 0,
+            "requested": 79953
+          },
+          "before": {
+            "calls": 109,
+            "failures": 0,
+            "live": 17661,
+            "requested": 79953
+          },
+          "peak": 17661
+        },
+        "entries_capacity": 16,
+        "initialization": {
+          "after": {
+            "calls": 88,
+            "failures": 0,
+            "live": 15921,
+            "requested": 71761
+          },
+          "before": {
+            "calls": 1,
+            "failures": 0,
+            "live": 4212,
+            "requested": 4212
+          },
+          "peak": 29937
+        },
+        "input_copy": {
+          "after": {
+            "calls": 1,
+            "failures": 0,
+            "live": 4212,
+            "requested": 4212
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 4212
+        },
+        "input_release": {
+          "after": {
+            "calls": 88,
+            "failures": 0,
+            "live": 11709,
+            "requested": 71761
+          },
+          "before": {
+            "calls": 88,
+            "failures": 0,
+            "live": 15921,
+            "requested": 71761
+          },
+          "peak": 15921
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          4,
+          4,
+          16,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "pipeline_peak": 29937,
+        "raw_array_capacities": [
+          16
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8600,
+            "record": 0,
+            "requested_bytes": 12184
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8656,
+            "record": 1,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8699,
+            "record": 2,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8755,
+            "record": 3,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8798,
+            "record": 4,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8840,
+            "record": 5,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8880,
+            "record": 6,
+            "requested_bytes": 3880
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8923,
+            "record": 7,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8968,
+            "record": 8,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 9021,
+            "record": 9,
+            "requested_bytes": 3893
+          }
+        ],
+        "satellite_reports_capacity": 10
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 14946,
+        "satellites": [
+          {
+            "evaluations": 1457,
+            "norad_id": 7376,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1513,
+            "norad_id": 28054,
+            "passes": 9,
+            "status": "Complete",
+            "upcoming_passes": 9
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 29522,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 32958,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 35951,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1497,
+            "norad_id": 37214,
+            "passes": 7,
+            "status": "Complete",
+            "upcoming_passes": 7
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 37849,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1497,
+            "norad_id": 38771,
+            "passes": 7,
+            "status": "Complete",
+            "upcoming_passes": 7
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 39260,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          }
+        ],
+        "stored_passes": 68
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:40:10.134048Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 38771,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:46:52.945248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 39260,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": 7,
+        "groups": [
+          "leo-heavy"
+        ],
+        "id": 20,
+        "lifetime": "ram-retained",
+        "shared_allowance": 2000000,
+        "site_deg_km": [
+          -60.0,
+          120.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4212,
+          "document": "leo-heavy",
+          "index": 0,
+          "name": "m2-20-group-0",
+          "records": 10,
+          "sha256": "04c6b118b670b35b70a3b6a6a67a6a6f458cde19d1936c868c890a3055ceb100",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4212,
+      "input_records": 10,
+      "requested_memory": {
+        "aggregation": {
+          "after": {
+            "calls": 109,
+            "failures": 0,
+            "live": 21873,
+            "requested": 79953
+          },
+          "before": {
+            "calls": 88,
+            "failures": 0,
+            "live": 15921,
+            "requested": 71761
+          },
+          "peak": 21905
+        },
+        "arrival_candidates_capacity": 4,
+        "conflict_origins_capacity": 0,
+        "core_diagnostics_capacity": 0,
+        "destruction": {
+          "after": {
+            "calls": 109,
+            "failures": 0,
+            "live": 0,
+            "requested": 79953
+          },
+          "before": {
+            "calls": 109,
+            "failures": 0,
+            "live": 21873,
+            "requested": 79953
+          },
+          "peak": 21873
+        },
+        "entries_capacity": 16,
+        "initialization": {
+          "after": {
+            "calls": 88,
+            "failures": 0,
+            "live": 15921,
+            "requested": 71761
+          },
+          "before": {
+            "calls": 1,
+            "failures": 0,
+            "live": 4212,
+            "requested": 4212
+          },
+          "peak": 29937
+        },
+        "input_copy": {
+          "after": {
+            "calls": 1,
+            "failures": 0,
+            "live": 4212,
+            "requested": 4212
+          },
+          "before": {
+            "calls": 0,
+            "failures": 0,
+            "live": 0,
+            "requested": 0
+          },
+          "peak": 4212
+        },
+        "input_release": {
+          "after": {
+            "calls": 88,
+            "failures": 0,
+            "live": 15921,
+            "requested": 71761
+          },
+          "before": {
+            "calls": 88,
+            "failures": 0,
+            "live": 15921,
+            "requested": 71761
+          },
+          "peak": 15921
+        },
+        "memberships_capacities": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "parse_diagnostics_capacity": 0,
+        "pass_capacities": [
+          4,
+          4,
+          16,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "pipeline_peak": 29937,
+        "raw_array_capacities": [
+          16
+        ],
+        "record_observations": [
+          {
+            "allocation_calls": 9,
+            "group": 0,
+            "live": 8600,
+            "record": 0,
+            "requested_bytes": 12184
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8656,
+            "record": 1,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8699,
+            "record": 2,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8755,
+            "record": 3,
+            "requested_bytes": 3896
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8798,
+            "record": 4,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8840,
+            "record": 5,
+            "requested_bytes": 3882
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8880,
+            "record": 6,
+            "requested_bytes": 3880
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8923,
+            "record": 7,
+            "requested_bytes": 3883
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 8968,
+            "record": 8,
+            "requested_bytes": 3885
+          },
+          {
+            "allocation_calls": 8,
+            "group": 0,
+            "live": 9021,
+            "record": 9,
+            "requested_bytes": 3893
+          }
+        ],
+        "satellite_reports_capacity": 10
+      },
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 14946,
+        "satellites": [
+          {
+            "evaluations": 1457,
+            "norad_id": 7376,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1513,
+            "norad_id": 28054,
+            "passes": 9,
+            "status": "Complete",
+            "upcoming_passes": 9
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 29522,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 32958,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 35951,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1497,
+            "norad_id": 37214,
+            "passes": 7,
+            "status": "Complete",
+            "upcoming_passes": 7
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 37849,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1497,
+            "norad_id": 38771,
+            "passes": 7,
+            "status": "Complete",
+            "upcoming_passes": 7
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 39260,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          }
+        ],
+        "stored_passes": 68
+      }
+    }
+  ],
+  "crossing_tolerance_s": 5,
+  "detection_s": 60,
+  "host_arch": "aarch64",
+  "host_os": "macos",
+  "measurement": "requested bytes with allocate-copy-free overlap; occupancies relative to one process baseline, not per-phase deltas; no backend footprint/timing/stack",
+  "per_satellite_allowance": 200000,
+  "pointer_bits": 64,
+  "schema_version": 1,
+  "status": "candidate-host-preflight-not-frozen-manifest",
+  "threshold_deg": 10
+}

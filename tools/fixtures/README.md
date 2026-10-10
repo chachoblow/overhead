@@ -7,6 +7,13 @@ offline regeneration live in its [fixture README](m2-pool/README.md). Initial
 [source suitability](../../docs/evaluations/m2-pool-suitability.md) passes; the full
 host preflight/capture manifest is not frozen. Historical files below are unchanged.
 
+## `m2-cases/`
+Candidate document archive for all 20 bounded M2 host cases, including explicitly
+synthetic historical ingestion variants. Exact bytes/hashes/order and offline
+regeneration live in its [README](m2-cases/README.md); [host evidence](../../docs/evaluations/m2-host-preflight.md)
+covers retained diagnostics, work, collection capacities, RAM lifetimes, requested
+peaks and full release. Numerical preparation/final manifest freeze remain open.
+
 ## `catalogue-costs.tle`
 Eight distinct historical records from the same pinned [Vallado/CelesTrak
 SGP4 verification source](https://github.com/CelesTrak/fundamentals-of-astrodynamics/blob/98e731d390150d31defc205eff84615a5ff894f0/datalib/SGP4-VER.TLE),

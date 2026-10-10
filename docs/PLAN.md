@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: M2; pinned real-orbit pool/source suitability pass; full host preflight and exact manifest freeze next.**
+**Current: M2; 20 candidate host ingestion/work/requested-memory cases pass; numerical preparation and exact manifest freeze next.**
 Build the headless engine, then the real-data UI, then the device
 ([rationale](decisions/0005-engine-first-implementation.md)). Refine each
 slice before starting; later checkboxes are scope, not session-sized tasks.
@@ -83,8 +83,11 @@ hardware; the first S3 kernel baseline alone does not justify capacity or cadenc
 - [x] Pin the separate 16-object source pool and verify initialized paths, epochs,
   growth searches and all density-site candidates on host
   ([initial suitability evidence](evaluations/m2-pool-suitability.md)); not full preflight.
-- [ ] Complete host preflight (collection/input-memory behavior, diagnostics/error/
-  partial/RAM cases); pin numerical references and freeze the exact ≤20-case manifest
+- [x] Preflight all 20 candidate host ingestion/work cases with retained diagnostics,
+  collection observations, RAM-input overlap/lifetimes and full requested-memory
+  release ([evidence/limits](evaluations/m2-host-preflight.md)); not a frozen manifest.
+- [ ] Pin numerical references and identical host/target check selection, finish
+  target metadata/representation review, and freeze the exact ≤20-case manifest
   under the [preparation contract](evaluations/m2-next-evidence.md) before target-harness implementation.
 - [ ] Implement/capture the frozen suite: broader distinct populations/pass densities,
   collection/input-memory samples, stronger stack observations and independent target

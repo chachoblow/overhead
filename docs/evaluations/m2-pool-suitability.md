@@ -77,17 +77,14 @@ No elapsed-time or allocation measurements are reported. Debug tests and release
 regeneration match the published report. Commands and integrity tests live in the
 [fixture README](../../tools/fixtures/m2-pool/README.md#offline-regeneration-and-checks).
 
-Before manifest freeze/target implementation, still required:
+Subsequent [candidate host preflight](m2-host-preflight.md) now covers historical
+controls, partial/zero budgets, ingestion variants/retained diagnostics, collection
+observations, and requested-memory input overlap/lifetimes/full release for all 20
+candidate cases. This source-suitability report remains the unchanged subset.
 
-- Preflight historical controls, partial/zero budgets, all ingestion variants and
-  exact retained parse/core diagnostics, including whole-document failure.
-- Observe collection capacities/allocation changes and explain each growth sample;
-  review redundancy rather than assuming these sizes cross meaningful boundaries.
-- Measure host input-copy/parse/catalogue/report overlap, dropped/retained RAM
-  lifetimes, independent pipeline peaks and full release. Host fit is not S3 fit.
-- Pin the 12 original TEME reference vectors and existing independent coordinate/
-  observer checks with unchanged tolerances.
-- Publish the full ≤20-case annex: exact group metadata, bytes/hashes, accepted
-  identities/order, diagnostics, completion/work counts, storage lifetimes and
-  numerical expectations. Only then extend/gate target harnesses and request flash
-  approval. The fixed 64 KiB heap and separate stack/numerical gates remain binding.
+Before manifest freeze/target implementation, still required: pin the 12 original
+TEME vectors and existing independent coordinate/observer checks with unchanged
+tolerances; finish target metadata/representation review and freeze the complete
+≤20-case annex. Host requested bytes are not S3 fit or backend occupancy. Only then
+extend/gate target harnesses and request flash approval. The fixed 64 KiB heap and
+separate stack/numerical gates remain binding.
