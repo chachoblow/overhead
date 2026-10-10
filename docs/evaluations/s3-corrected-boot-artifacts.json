@@ -1,0 +1,337 @@
+{
+  "purpose": "Corrected normal-build boot verification; unchanged eight-case experiment, not expanded operating-budget evidence",
+  "source_revision": "496137bbae252b835b30e4bd066d1e4fc06b9e05",
+  "source_clean_before_build": true,
+  "local_artifacts": "firmware/target/corrected-boot-20261010T141219Z",
+  "compiler": "rustc 1.97.0-nightly (8ea53bcd7 2026-07-08) (1.97.0.0)\nbinary: rustc\ncommit-hash: 8ea53bcd7257011cbf96f6398551bdc650b04334\ncommit-date: 2026-07-08\nhost: aarch64-apple-darwin\nrelease: 1.97.0-nightly\nLLVM version: 21.1.3\n",
+  "espflash": "espflash 4.6.0",
+  "build": {
+    "suite": "baseline",
+    "samples": 3,
+    "features": "catalogue-memory",
+    "binary": "overhead-s3-catalogue-memory",
+    "profile": "release",
+    "locked": true,
+    "target_directory": "fresh isolated normal build"
+  },
+  "flash": {
+    "port": "/dev/cu.usbserial-110",
+    "chip": "esp32s3",
+    "size": "8mb",
+    "mode": "dio",
+    "frequency": "40mhz",
+    "explicit_approval": true,
+    "capture_timeout_seconds": 900
+  },
+  "image_gate": {
+    "elf_sha256": "317c98b1ef70d3273808b347daa3805fb45e3f0616522bf4b53eee21ef20e850",
+    "image_sha256": "bd88836cf032ee6dea8a256c77d0089ac002924e753a78c8321fdb3ac7d4e4e9",
+    "image_bytes": 368848,
+    "app_offset": 65536,
+    "rodata_alignment": 64,
+    "merge_bytes": 32,
+    "checked_sections": 10,
+    "checked_elf_bytes": 337123,
+    "segments": [
+      {
+        "address": "0x3c000020",
+        "bytes": 83572,
+        "file_offset": 32
+      },
+      {
+        "address": "0x3fc8b148",
+        "bytes": 3244,
+        "file_offset": 83612
+      },
+      {
+        "address": "0x40378000",
+        "bytes": 12612,
+        "file_offset": 86864
+      },
+      {
+        "address": "0x00000000",
+        "bytes": 31612,
+        "file_offset": 99484
+      },
+      {
+        "address": "0x42020020",
+        "bytes": 237700,
+        "file_offset": 131104
+      }
+    ]
+  },
+  "elf_sections": "/Users/wesleyklein/Code/Overhead/firmware/target/corrected-boot-20261010T141219Z/overhead-s3-catalogue-memory  :\nsection                    size         addr\n.rwtext                   11588   1077380096\n.rwtext.wifi                  0   1077391684\n.rwdata_dummy             12612   1070104576\n.data                      3244   1070117192\n.data.wifi                    0   1070120436\n.bss                      65704   1070120448\n.noinit                       0   1070186152\n.flash.appdesc              256   1006632992\n.rodata_merge                32   1006633248\n.rodata                   83256   1006633280\n.eh_frame_hdr                28   1006716536\n.rodata.wifi                  0   1006716564\n.vectors                   1024   1077379072\n.rotext_dummy            131072   1107296288\n.text                    237689   1107427360\n.init                         3   1107665052\n.fini                         3   1107665056\n.rtc_fast.text                0   1611653120\n.rtc_fast.data                0   1611653120\n.rtc_fast.bss                 0   1611653120\n.rtc_fast.persistent          0   1611653120\n.rtc_slow.text                0   1342177280\n.rtc_slow.data                0   1342177280\n.rtc_slow.bss                 0   1342177280\n.rtc_slow.persistent          0   1342177280\n.stack                   260184   1070186152\n.espressif.metadata          21            0\n.eh_frame                    64            0\n.xtensa.info                 56            0\n.xt.prop                     48            0\n.comment                    110            0\n.xt.lit                       0            0\n.debug_loc              2500571            0\n.debug_abbrev            116262            0\n.debug_info             5134140            0\n.debug_aranges            33160            0\n.debug_ranges            590800            0\n.debug_str              3015577            0\n.debug_frame              74160            0\n.debug_line              962248            0\nTotal                  13233912\n\n\n",
+  "runs": [
+    {
+      "file": "s3-corrected-boot-run-1.log",
+      "sha256": "774dbd823e135ac3259926ea54fb69ec29918396870df4dc177d8155868387ea",
+      "validated_workloads": 8,
+      "samples_per_case": 3,
+      "boot_segments_match_gated_image": true,
+      "multiple_drom_diagnostic_absent": true,
+      "work_heap_stack_records_match_historical_run_1": true,
+      "phase_median_us_by_case": {
+        "0": {
+          "init": 19874,
+          "aggregate": 291554
+        },
+        "1": {
+          "init": 19901,
+          "aggregate": 7126651
+        },
+        "2": {
+          "init": 19785,
+          "aggregate": 817618
+        },
+        "3": {
+          "init": 19880,
+          "aggregate": 190
+        },
+        "4": {
+          "init": 38801,
+          "aggregate": 585946
+        },
+        "5": {
+          "init": 38894,
+          "aggregate": 14527805
+        },
+        "6": {
+          "init": 38696,
+          "aggregate": 817568
+        },
+        "7": {
+          "init": 38725,
+          "aggregate": 195
+        }
+      }
+    },
+    {
+      "file": "s3-corrected-boot-run-2.log",
+      "sha256": "e91441d9544a2f42e5ad11c8cbee3f5a36c3aae62f542167de6e507472bfb9e0",
+      "validated_workloads": 8,
+      "samples_per_case": 3,
+      "boot_segments_match_gated_image": true,
+      "multiple_drom_diagnostic_absent": true,
+      "work_heap_stack_records_match_historical_run_1": true,
+      "phase_median_us_by_case": {
+        "0": {
+          "init": 19874,
+          "aggregate": 291554
+        },
+        "1": {
+          "init": 19901,
+          "aggregate": 7126651
+        },
+        "2": {
+          "init": 19785,
+          "aggregate": 817618
+        },
+        "3": {
+          "init": 19880,
+          "aggregate": 190
+        },
+        "4": {
+          "init": 38801,
+          "aggregate": 585946
+        },
+        "5": {
+          "init": 38894,
+          "aggregate": 14527805
+        },
+        "6": {
+          "init": 38696,
+          "aggregate": 817568
+        },
+        "7": {
+          "init": 38725,
+          "aggregate": 195
+        }
+      }
+    }
+  ],
+  "generated_inputs": [
+    {
+      "name": "catalogue-4.json",
+      "bytes": 1679,
+      "sha256": "09c9289ca7173b6e78897bb1d054e069b641294541e5b2d09b864a0bd53869de",
+      "exact_bytes_present_in_elf": true
+    },
+    {
+      "name": "catalogue-8.json",
+      "bytes": 3331,
+      "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+      "exact_bytes_present_in_elf": true
+    }
+  ],
+  "source_sha256": {
+    ".cargo/config.toml": "73ee54c7dc40476e4d265a934effa1390262f18b87570fe75891a8e85e019f09",
+    ".gitattributes": "77a704e9333a64a9b45e2bfc7208131657a160910b51e959f0926ac80b852e20",
+    ".gitignore": "1326a12540efa47006fc4308ea085697e587340234c930c57e791bc066a3b7f4",
+    ".pi/prompts/bootstrap.md": "d462ad81538802f0ad11ab6fcd1225fb49866f04f86fa38f8896bccffb43e15d",
+    ".pi/prompts/handoff.md": "e9d4b885add59aca9c8d5b4040a00faadaad586d6efa058c288ec59e4cf422cf",
+    ".pi/prompts/resume.md": "6455d066e1d67ecd32e0d333b340d18a77675d3c352486bb9cef451a3ae18ff8",
+    "AGENTS.md": "382da6df420c33ac66e26427047c6fa6c3583cb6ab8637047e1071adb5a35122",
+    "Cargo.lock": "58f907720e3e528a3881fb3c884150111e41e843be6ef309123af44150beaa47",
+    "Cargo.toml": "5483d1ad983b43b4f27c9b3190056b56304d9b948803d154f78cf051de677ca6",
+    "README.md": "d250455b3270dda61fc4a38d10f6ce24d27ad039dd6181160ca4cf58b276bfba",
+    "core/Cargo.toml": "6e970dd75b79ca48d0c9817f1a80e3149b7e84390b08118a2d6f78d7e3f08aa2",
+    "core/src/catalogue.rs": "84e00e1057ac1275978226169ad99fe26593a024934f76fcc1f194591851149f",
+    "core/src/catalogue_passes.rs": "0b2c627a723ca2afa164d6131de6510bdfe857bc01b5d85258de5e2a85cace53",
+    "core/src/catalogue_passes/tests.rs": "10ab85422a8dd2bc74edd44ead067f03dadc4f4b142a28f90811aa6dcfd761fa",
+    "core/src/coordinates.rs": "f2327712946ae3bfa441b765c796dc528f1a2765debff3793b9797fa2fa3ef3c",
+    "core/src/ingest.rs": "001950a3be89f379796ed67c3c319c463f149e6deeeaef5e710ff3f19d083116",
+    "core/src/lib.rs": "832659c3a62404b108ca66b40b5ae98feacba277086eb483631b647045069fc8",
+    "core/src/observer.rs": "5d8e6d1bd9f87f282805bd71fad3f5ad4f3fe62c60f805c898a52d3ad942b4d7",
+    "core/src/omm.rs": "cd8b25aca0e0d5b8272a5c2a4c1afe008d2d230a1789c37401feea654e3b7a2c",
+    "core/src/passes.rs": "394e462a48742a482e451dd5e57e860184d8e411c19088201312149d5d65d5f1",
+    "core/src/position.rs": "3bb847aa419c4f1f544993004d218fe794cd7287f1bbced34d4afa8ddd7bbb76",
+    "core/src/propagate.rs": "68e28fed9d8b3cc5fc98a838e07328b52a032af1f8c01f3d384ad28406381659",
+    "core/src/time.rs": "7672d11cacbb593d15c6258778d40fcc30f845a474a087f8e712ea2e55f33dcc",
+    "core/tests/catalogue.rs": "c4a2103fb92ebe39ea07525e73c0984887cecb3509f176111e4be88944533b26",
+    "core/tests/catalogue_passes.rs": "3760ba343f66ea7f92360cf8b4ae9f8e16983776a5b46ae6b77faf6a3be8d7fe",
+    "core/tests/coordinates.rs": "799ae529b0394e912b7ea337e91ec122b7b3c620d82924a4a8dc74f74cfa528d",
+    "core/tests/fixtures/README.md": "01291a82a09a5024abd62190a0046c051c5573911b5e641de1766f6f8c9ad444",
+    "core/tests/fixtures/coordinates.json": "fe6218a9bff5489758ad1f33c9ceaf3eed0dcdfeb466ed67252f244fd2e59464",
+    "core/tests/fixtures/iss-25544.json": "8eb6107b6481e52043171cc793279df3cbf287b1e40a190acd298097a71669ac",
+    "core/tests/fixtures/observer.json": "29e12233b4c846d6df58074ea4ec94c9676e18214aedb7bfd9a9a0f5b879bd8d",
+    "core/tests/ingest.rs": "d1e94a056f561559f495b2f59797926c08cf9058e873d1e036f2ee7cb4b1446a",
+    "core/tests/observer.rs": "7f1081cb90277e9d0de19aec616947b18dd22f0fe09604798e291c052d12bd30",
+    "core/tests/omm.rs": "10d3249f2b41a2f2bbf64545ec19bd51ead1c051a1b2885aefbcc29d2fda1323",
+    "core/tests/orbital_passes.rs": "812842ad125db1e838f1ece89569afade519aca24d5e1c9f731548849b9f2c3e",
+    "core/tests/passes.rs": "708b7f4f998b356f5bafa82867b2be5616f0f7c293cf81caa7e9a5a9a4f958a8",
+    "core/tests/propagate.rs": "a6960b9023db061185dc1f21e24c28ebb7f73f7d17b687160eefc63174ac0eb6",
+    "core/tests/time_contract.rs": "f6c5214e42db595760b19762489dfa72d440a9bd507bd311b4823db3c6f29dd1",
+    "docs/DESIGN.md": "0962440c7e84a23bd958ab544e43657f0a5ae55a5b7a63f73ff20f8c3e390e13",
+    "docs/HANDOFF.md": "d275bdb6b19a14ea1e6e6c1bd62ba0eaa54eff9c862beaa0a7ed49a9102ee083",
+    "docs/PLAN.md": "0209d775cdf99b8d6119600bc40dace80561ce8dd9d58298a69cc7f7ab515c53",
+    "docs/PROGRESS.md": "6ef7ed7ba4075769b2ce41382e355d7715041f14a851b8a87dc679e7786fda81",
+    "docs/decisions/0000-template.md": "cff9ff6a176c2e8df2d3bb253d8b27ae0a4fec06e35f3c3d5e18abff72945390",
+    "docs/decisions/0001-on-device-sgp4.md": "8cbcebb37f457f0675cc00d7cb1546a217a7b1f2b650df5cc3c463584aa69f4a",
+    "docs/decisions/0002-data-and-time-over-wifi.md": "e7af76fbdae3f4fbc093debc00a7404995ad447cbaff328299b9b69cce8fad83",
+    "docs/decisions/0003-curated-catalogue.md": "a497decb5647c03afac960bbfcda98ec7397bd110a212da3f39e16d5baaa2f66",
+    "docs/decisions/0004-hardcoded-location.md": "1dea76c165cbe61890247ac602b1aa628fe736baeb6f71d193affb088cde8fcc",
+    "docs/decisions/0005-engine-first-implementation.md": "9a856c210a944a9d54ceee0745f8f53a0bca149b1ea26c2e50d651b771be3694",
+    "docs/decisions/0006-sgp4-crate-and-conventions.md": "a4cf26d2dc3a3910d536a600466076e4a6381b5c932e91c7442173bcabbfdf4a",
+    "docs/decisions/0007-coordinate-implementation-conventions.md": "b3e2f17547c3d34be2871d3c49b59e6efbeaa57e874656b6e58feb09fe327aab",
+    "docs/decisions/0008-observer-geometry-conventions.md": "3e38b301edf5fcc1536360410152cc0becb5f1153f38c2f19bb1e15b64262e8c",
+    "docs/decisions/0009-core-time-and-frame-api.md": "c19f1696e60c053248728ab5355fbe20a0f671e45f7d6f2306fe20ad7747fd0b",
+    "docs/decisions/0010-propagation-and-omm-validation.md": "a018796e8e139afeeaadb733ae604eabb26d9928b7d1b442d854a87fb488eada",
+    "docs/decisions/0011-catalogue-ingestion-and-provenance.md": "5df5bb600168133b60194d209e19b1f4f51ad5ac0ac843b3e9cd50cb187b7d98",
+    "docs/decisions/0012-physical-pass-semantics.md": "7af48ba8b7839c738ec447cd262cef1201b7a3d6091280cc6bfb779074f7ab91",
+    "docs/decisions/0013-pass-detection-resolution.md": "cf052dde4c5d5281cf4be4defd1a81056f1d13f41fef6cd1380ad5a7f4404f54",
+    "docs/decisions/0014-pass-search-baseline.md": "356acc7f9ef92d80cd04750549ac4089a5a73ce6a1c7dd2c816521f54f243c46",
+    "docs/decisions/0015-pass-search-api.md": "154965d304cd37b920d8f2572bbfbd75ee575dc4cfebf9f705080ba85d833fbb",
+    "docs/decisions/0016-catalogue-pass-aggregation.md": "14c3bb8bfec2ac13c004ef124d273ce8007f2fd760a7046e68bd3be018f735dc",
+    "docs/decisions/0017-target-catalogue-memory-experiment.md": "e6611bae0441f992053c00cee9573e818090d58d1309a6670eb441786acf3659",
+    "docs/decisions/0018-source-level-drom-remedy-and-image-gate.md": "8b0b7a49105ddac097b8c58555fc1a24504a934dd07ed062d4016c47933b920e",
+    "docs/evaluations/catalogue-costs-run-1.json": "9a9224c2876db86f5adad743da5eee69191c41aff731deae92c64976c4f986bd",
+    "docs/evaluations/catalogue-costs-run-2.json": "60f75e762ac72954cc563b0c1afa11423e59fc406cc301cb182de3600b9856b1",
+    "docs/evaluations/catalogue-costs.md": "755412efc4dfe26063ed9aaddd78cc98d035551c4506cd18eeecb49aa3c97b1c",
+    "docs/evaluations/detection-intervals.md": "ea76738efbd6e504e768d1019a27b2ee1afe7df231a9b99d782394f63373c704",
+    "docs/evaluations/host-costs-run-1.json": "be586d82d7703c96156c399ee8e392498af2a5f418fc00f166d341a07da0049a",
+    "docs/evaluations/host-costs-run-2.json": "8719a88be579af7d8c015f29589feb11dad50643d53614cebea80849e57d9e11",
+    "docs/evaluations/host-costs.md": "6b35d4beffdd40c2c253c5db40288dd2c99de347d4b4820893befc8195e2d096",
+    "docs/evaluations/m2-next-evidence.md": "b21bb372901a3fce6fd95ef5be3abdf1547c644e4535c7b0d01af12b3d99edae",
+    "docs/evaluations/s3-catalogue-memory-artifacts.json": "f7751ab2105c3453fc3548cdcae20ee7b1f2b541d9e377e634adb85a8bfe2837",
+    "docs/evaluations/s3-catalogue-memory-expected.txt": "b793ca5cf695f446ca5a817106435eed4daf3d8249bcc04f63436bb31fdc9ee1",
+    "docs/evaluations/s3-catalogue-memory-run-1.log": "7d793b3ecef9f04ff89777e06299333197bb3b4164683c80d1c6b10dbbce3311",
+    "docs/evaluations/s3-catalogue-memory-run-2.log": "9ea504925edc46cf63706dff55a1c9180f2f8d054c6fa851d1b526cac6a87ae9",
+    "docs/evaluations/s3-catalogue-memory-summary.csv": "d3a75fe968bac239ec7e44f45750b29a250c521fa4db8007d5a99f1e49f8fe71",
+    "docs/evaluations/s3-catalogue-memory.md": "3839c25ed9d3992992790f1ab3c241f19db56ede3a52a909faec99812aee5a9e",
+    "docs/evaluations/s3-costs-run-1.log": "8718998f95d9851d53cf6b7978a0300f7d0b212cbd1e7a50119d6845ff2f943a",
+    "docs/evaluations/s3-costs-run-scaling-16-1.log": "b269bd2c5ad5ad8d2a192d207a1b8171de9e9a661306d408b809c68d33bcaac7",
+    "docs/evaluations/s3-costs-run-v2-ages-geo-1.log": "2fd50cf53f0163471ca515b57657f0014e92f6d9ee3b969f21d01f468b650b33",
+    "docs/evaluations/s3-costs-run-v2-ages-gnss-1.log": "5bb39c3534c768eb2c9c31d89d4052664439687e18010a7c92c837be18460ded",
+    "docs/evaluations/s3-costs-run-v2-ages-heo-1.log": "04cbf2c40745a89e4b9f2b3ad2aa5cb565ff0bab8a30eec0a8a64c2e6e06a66b",
+    "docs/evaluations/s3-costs-run-v2-ages-leo-1.log": "a3ebd3c407004a4a1555a569cbeb21de1f302c2de6f7b95bb95437a66db9870b",
+    "docs/evaluations/s3-costs-run-v2-baseline-1.log": "28b8a8787883a311b32dd0b6dd1a600d3b639d12bcd2f52e2a47466a439f05cc",
+    "docs/evaluations/s3-costs-run-v2-scaling-64-1.log": "1ba133cd4076a5988e519f1cbe802354016ea913a502af379707cd01c49f6a5a",
+    "docs/evaluations/s3-costs-run-v2-search-geo-1.log": "03a290f26e6438bf07bf82b919491ead9b29cf3b4886eff2bb7ac6863b4f64d1",
+    "docs/evaluations/s3-costs-run-v2-search-gnss-1.log": "de2c2c0f1ce1ffb0e03e5518290c2a57b45ec079b54f76b26266a7b73f493839",
+    "docs/evaluations/s3-costs-run-v2-search-heo-1.log": "c5475b0f7c341fbc57c9494cdd69581e6ec93352bc767a084da9a65a24406ced",
+    "docs/evaluations/s3-costs-run-v2-search-leo-1.log": "c97b82634b856c0ba1f85844517e1d3da89b274d2a02c8a0ef00cd73004fbf5c",
+    "docs/evaluations/s3-costs.md": "b9b8024d7d4d9f2c2049bbf99e27d38664fa997b87d1ffa2f4a3f84b1643e229",
+    "docs/evaluations/s3-drom-diagnostic.md": "8998d2cff7c4b1f20f9e156d9076d3b30c80b221b2a1aea538604153dc1fe94f",
+    "docs/evaluations/s3-expanded-artifacts.json": "41a2ba52e71f66df52b82d40439ef50dfe3468a4189019fd72d7c8032152ecf4",
+    "docs/evaluations/s3-expanded-summary.csv": "75aa948ce2ec02203352bd82144415c78e70420383626bcd146ffe8396d986b6",
+    "docs/evaluations/s3-expanded.md": "0365b8d1f8b72a368c07140163538350ba7ee5a42a06222c3e0d515a133212c8",
+    "docs/evaluations/s3-image-gate-report.json": "a43fdc20d09f51315be98d82959dccb48217ffb29be01b864592d23fb6354959",
+    "docs/evaluations/s3-scaling-16-expected.txt": "ea4b1beacafd5c24d1e0d9d63471be4a703b30eec6fe666488c702fb02f46b40",
+    "docs/evaluations/s3-scaling-16.md": "ef1fab6954e87993559bb7e94456b063f6f67168b070330d3f009cdc960223e9",
+    "docs/evaluations/s3-v2-ages-geo-expected.txt": "8baa5357e7876dcade9c84c45290f186d5664f44ccbfada39977221c00b6762e",
+    "docs/evaluations/s3-v2-ages-gnss-expected.txt": "2aa7311b060b54596befb84f69837ff8557d70e2a5849d078667be630d96e78e",
+    "docs/evaluations/s3-v2-ages-heo-expected.txt": "63c20d0564d2ca103d4c5e933d2c5d1429e1d1a50fe9c75f8d77ee252e8d1384",
+    "docs/evaluations/s3-v2-ages-leo-expected.txt": "71b3da83de32e0d531d5382c7296113b7a536e853f2ba971e85ecb76b0679954",
+    "docs/evaluations/s3-v2-baseline-expected.txt": "81204ef7642d72bc03e88d3779840195d55c66c8849f13c223fee9555db816ec",
+    "docs/evaluations/s3-v2-scaling-64-expected.txt": "6034330f8c813ed8673f7d6779d764110b254e587948ad19e0d86313897a8e03",
+    "docs/evaluations/s3-v2-search-geo-expected.txt": "cd57eff1062f690550451c9b599362ed8899aff32ddf2f6f37caf91b85ab836a",
+    "docs/evaluations/s3-v2-search-gnss-expected.txt": "7d9755054bfed2820e1720c4bf50ee95c0973b62d40fa24bdf32d96255d5f819",
+    "docs/evaluations/s3-v2-search-heo-expected.txt": "3aea58131e7055befbc1bb27b57fef60ecddf07841beb2aaa8e89836ad20a34c",
+    "docs/evaluations/s3-v2-search-leo-expected.txt": "cee29cb8725356f456b2a6ba563f1fb5ad9abbc91363659512d47cc38de6107a",
+    "firmware/.cargo/config.toml": "88c6fc9e0cac3fb47cc1e3e47f605340f8caa5f337cdb040ce0595c608c8558c",
+    "firmware/.gitignore": "32dae3052f331ee34d628ef535709b301259a45df7c7522c4d35dcf49873f00b",
+    "firmware/CATALOGUE_MEMORY.md": "34050da4f32089090a5187eea908fcff5dbcac5ab70a5837b36af8fbe46d3ad9",
+    "firmware/Cargo.lock": "e689539ef7d048890dc8ad4c8a399827338a511a0eea1824f09067e8d8d546e5",
+    "firmware/Cargo.toml": "a3903f2641941d5a6949aa8ea76bd5c6959f26452102a02477c2e86110f1d9e8",
+    "firmware/IMAGE_GATE.md": "60ee02e8b58fac6a546ba9fe55b01e91e3a1c0333f0a857a513c2ac2c1d7e0f8",
+    "firmware/README.md": "b4a1f1f4f9173a0eda5d97db5bfc1e18c8bd0f7805bcbe5b9148b1ec9d4138ec",
+    "firmware/build.rs": "fa72dddc37231cab9e267d8a78fc833d934c444a8b77160d949ca59f1b435c46",
+    "firmware/capture.py": "1dbd94015cc7d99077b113ca33ef98be1f8ec674de017cdbde6d6a3f43008b12",
+    "firmware/catalogue_capture.py": "339399ce7f3256193dff8530e2097c5eda8299b394d8ae8617f653c66f3769fa",
+    "firmware/check_images.py": "f2507d59f42cc6397f541cbbe9209a1fd148d07f3d67a6730152e8c75e95dbce",
+    "firmware/examples/catalogue_expected.rs": "205e9e38c376259198ec01f01fbaf047e38294f6402f1927521f06174dcfce89",
+    "firmware/examples/expected.rs": "521758a726d6f63ecd7526e7bc41db3fe86ff2896c6abb09fb32c39c161fa8e8",
+    "firmware/image_gate.py": "95e94c48ab231e2f1fe4775711f74b9d43060bb5e39103f43d1abca573fd0fb0",
+    "firmware/rodata.x": "91872657834f02052639cf8f1d5dcc2ddef6fde837bfcc40a050b84b076e0f22",
+    "firmware/rust-toolchain.toml": "6cf0a2df390965b31e8fb2ef2a15cdf5811ddc7f6dfa50f8ba0f749a618cc1ca",
+    "firmware/src/catalogue_main.rs": "64a6229f2e4535d16b9a3b698fff15c2d6d3a4919466764dd065f78da914f26c",
+    "firmware/src/catalogue_memory.rs": "85f652aeeeb50485cfc9cd6c012cdcf5db9616c7a51b04352d939685c8f880f7",
+    "firmware/src/heap_meter.rs": "1d76f68faced359c006470ebc2d78609d4a1fc2874598ac106d81113c5704234",
+    "firmware/src/lib.rs": "f450337d5b724bd44206906c75e23296d0fb7929bd09ba0adcb23c50939d1332",
+    "firmware/src/main.rs": "bc16cd7157e177a224fd3352e74cae8e241329b7d1545deb259b86e470ef332b",
+    "firmware/src/selection.rs": "ddb5355c4da582e033de9ce726aec6cad574596ddf9f653c25bb9405405e395f",
+    "firmware/src/stack_watermark.rs": "66822adfb1f4ac9bdfa775af9ee2974c21b32a2255ebcbab29012548bfbf7496",
+    "firmware/src/suites.rs": "87beae54bcd43689dbf7d0feae0c9fd17481efb7086d08e5ea37062e0ac799c7",
+    "firmware/test_capture.py": "d6f08ecc980ec8f650c4df35139636a6adab79ed4552f8aa60806263ea4baf5b",
+    "firmware/test_catalogue_capture.py": "e85437e410a7604544c65579ba434e355630c855adb5b316528e3c105fef3dea",
+    "firmware/test_image_gate.py": "45b953032159b2986a8cf4d74ee55206b2e30e9b55795d068d633be86f49b76c",
+    "render/Cargo.toml": "d9e5a4ba410acdb65369b1ef7d166ca8c242cb1e491d666d171d70aa8a0cb9b4",
+    "render/src/lib.rs": "78cb1fe79833b84ef892958decefca940bcd55b5572185114bb7837b02a89856",
+    "sim/Cargo.toml": "b8a7fa87ffd7ae99439f5ff47ff70d59dfdcd3c5ae5fc560b7ff0c4c6ffa0e25",
+    "sim/src/main.rs": "fece5381745244b73a5cf276f12bab36df47f1e28f5dd395eba910f8dba8cd8d",
+    "tools/Cargo.toml": "294f99bb94ed455c9d8dcee33a241c3d2b483dfc690211d7c04d34dd1faf10d5",
+    "tools/README.md": "e842bbc89176b14d4ad469118eeff9111469a14b970b54e81096edbf5b7cd4e8",
+    "tools/examples/catalogue.json": "fb3e43abdad526c0c3e54571cd65537c90e9cbdb6e3392cd16ce6833f8eb2e7a",
+    "tools/fixtures/README.md": "65204d65ad1199d8eeca3caac15f7dea6fa07df60fd125286826121eb63fc339",
+    "tools/fixtures/catalogue-costs.tle": "2cb96da57983e5d6f2f145be410bdab9919caec417b6cba5535edb939ae55b99",
+    "tools/fixtures/pass-intervals.tle": "e2e27b0eb631dd4e172e661cfc7aea04797cabc2ee25f7d814a7caf8e697eced",
+    "tools/generate_coordinate_fixtures.py": "6e5170917514c06ff3c6f63c9637e253528dc52891384af381396b205c55693e",
+    "tools/generate_observer_fixtures.py": "1df4598e78a30eae78f1e37a390f40864b04ee8b524c37547fbcd29b117f222b",
+    "tools/src/bin/catalogue_benchmark/memory.rs": "caeda5f28fcca59e25d4a2942345fad75bc5c982559b5c30e484b838ff734768",
+    "tools/src/bin/overhead-benchmark.rs": "f6c2c097b8d60e3b21d9af3a63531a6151ad13083a2ee88c0ea812bd8c5a20c7",
+    "tools/src/bin/overhead-catalogue-benchmark.rs": "4fcfe811fad5ccdaae8314215ae5ce685190709ebb5945d3311cad782d3f6b19",
+    "tools/src/bin/overhead-catalogue.rs": "8c86d516fc22e2444b54bcd8545accb61711909fa6e42398de6f85b03daa5434",
+    "tools/src/bin/overhead-evaluate-intervals.rs": "023a5fde9c07f6f60babb4d572593a1a3c3cad53ecb11fba9b0da2cd10f71583",
+    "tools/src/bin/overhead-passes.rs": "ab8202ade56cbdcfb530125b4f63042b9570c734d69ba8f8d2dd331f095e46fd",
+    "tools/src/bin/overhead-track.rs": "ec21c8b9c4c44b67296f17430e256531535f4a3a316b52f89f2ff86cb89472b4",
+    "tools/src/catalogue.rs": "729471cabbea2ec9efdebea605eb0d4a1cd53f2206f9bf2275102d2b5aeeca5b",
+    "tools/src/historical_orbits.rs": "76f61e9a33229ddef3f24360c4cd6370a8d2295736cb91dc3a25125c040ba8a4",
+    "tools/src/lib.rs": "ae252e4450676eb94f6ce4a8164f7326f8c5ae10edeb1b450ceac1493a968fbf",
+    "tools/src/main.rs": "c8e0583694bb1e0188dbe28fe0d65ac1130723c55f968b6262b906c147f72549",
+    "tools/tests/benchmark.rs": "86615946a0a2ebd6acf489d22f9d8fba925faa0cc9fbe3419123d33173efa6cf",
+    "tools/tests/catalogue.rs": "b82fc33d4c1ddf7fb0f99e75f9c20d9ee5c00428f6ed0dee2c63d57520dc661f",
+    "tools/tests/catalogue_benchmark.rs": "1ad9bfdc6597f5438b8f150dddfb6728993ed8f162a35f3941cbe40cdcdb4b05",
+    "tools/tests/intervals.rs": "ffcc3e543125a77b868116960f200047e55e5807dfb60f302d971fc0eb2d2d8e",
+    "tools/tests/passes.rs": "92f51962b82740be8756dc185d1743ef6260294448332ee0a350221e9c97509f",
+    "tools/tests/track.rs": "4e29b70ebba801f81a2b8fefc5a6b012e673f228c0d72ae270d60d3833375b1f"
+  },
+  "expected_manifest_sha256": "b793ca5cf695f446ca5a817106435eed4daf3d8249bcc04f63436bb31fdc9ee1",
+  "verification": {
+    "workspace_check": true,
+    "python_tests": 23,
+    "paint_loop_disassembly_reviewed": true,
+    "known_8k_local_disassembly_reviewed": true,
+    "rwx_linker_warning": "remains unsuppressed",
+    "no_monitor_left_running": true
+  }
+}

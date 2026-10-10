@@ -3,7 +3,9 @@
 Source-level DROM remedy and pre-flash check for the two measurement binaries,
 not a boot test or device-memory/capacity measurement. Rationale:
 [0018](../docs/decisions/0018-source-level-drom-remedy-and-image-gate.md).
-[Diagnosis and offline results](../docs/evaluations/s3-drom-diagnostic.md).
+[Diagnosis, offline results and corrected catalogue-memory boots](../docs/evaluations/s3-drom-diagnostic.md).
+Two approved corrected target captures now pass; this gate remains an offline
+check and does not authorize any future flash.
 
 ## Remedy
 
@@ -85,4 +87,4 @@ This is not a general ESP/secure-boot/merged-image validator, a provenance proof
 or a runtime MMU/boot/stack test. It checks image contents against the supplied
 ELF, not binary equivalence with earlier builds. Build paths/metadata and legitimate
 relocation can change hashes and sizes. The independent LOAD-segment RWX warning
-remains visible. Corrected target boot/capture still requires approval.
+remains visible. Any future target flash/capture still requires approval.

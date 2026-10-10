@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: M2; DROM source remedy/image gate pass offline; approved corrected boot and bounded evidence preparation next.**
+**Current: M2; corrected catalogue-memory boot/captures pass; bounded evidence proposal refinement next.**
 Build the headless engine, then the real-data UI, then the device
 ([rationale](decisions/0005-engine-first-implementation.md)). Refine each
 slice before starting; later checkboxes are scope, not session-sized tasks.
@@ -70,12 +70,13 @@ hardware; the first S3 kernel baseline alone does not justify capacity or cadenc
   ([results and limits](evaluations/s3-catalogue-memory.md)); not whole-device peak RAM.
 - [x] Investigate the multiple-DROM boot diagnostic offline: section-gap cause
   reproduced and this image's mapping explained ([findings](evaluations/s3-drom-diagnostic.md));
-  source remedy below; no corrected target capture yet.
+  source remedy and corrected target verification below.
 - [x] Prepare a source-level DROM remedy/image gate: both firmware binaries,
   64 KiB stress builds, four alignment fixtures and a NOBITS negative control
   pass offline ([method](../firmware/IMAGE_GATE.md), [0018](decisions/0018-source-level-drom-remedy-and-image-gate.md)).
-- [ ] Verify a corrected normal-build boot/capture with approval; the separate
-  RWX warning remains.
+- [x] Verify a corrected normal-build boot/capture with approval: two complete
+  catalogue-memory runs, no multiple-DROM diagnostic ([evidence](evaluations/s3-drom-diagnostic.md#corrected-normal-build-target-verification)).
+  The separate RWX warning remains.
 - [ ] Refine/freeze the [bounded next-evidence proposal](evaluations/m2-next-evidence.md),
   then broaden distinct orbital/pass-density and collection/input-memory samples,
   strengthen stack evidence, and add independent target numeric checks. Set catalogue

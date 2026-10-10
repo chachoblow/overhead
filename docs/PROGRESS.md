@@ -188,3 +188,14 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Exported staged source to a fresh directory without ignored artifacts; workspace check/default/all-feature tests, firmware host tests (6/10), default/feature strict host Clippy, formatting and 23 Python tests pass.
 - Rebuilt both firmware binaries and both 64 KiB stress variants; all eight positive image cases and the source-generated NOBITS negative control pass without historical ELFs. Existing RWX warning remains.
 - Fresh-session docs link both image regression and host checks. No hardware access, dependency/toolchain change, or corrected target boot claim; historical report remains unchanged.
+
+## 2026-10-10 UTC (approved corrected catalogue-memory boot verification)
+- Fresh normal three-sample build passes the exact ELF/image gate; explicit approval obtained before flash and two reset-separated captures. Both boots map one DROM segment without the historical diagnostic; all boot segment addresses/sizes match the gated image.
+- Both eight-case matrices validate (48 samples); work/heap/stack records match the historical experiment, excluding timings. Raw logs and artifact report linked from docs/evaluations/s3-drom-diagnostic.md; original captures unchanged, new UART logs byte-preserved in Git.
+- Workspace check, 23 Python tests, locked target build, regenerated host manifest, input-byte/hash and compiled stack-probe checks pass. No application source/dependency/toolchain changes; separate RWX warning remains.
+- Board now holds the corrected catalogue-memory build; no monitor left running. M2 remains open: refine/freeze the bounded evidence proposal before broader measurements, supported limits or scheduling decisions.
+
+## 2026-10-10 UTC (corrected-boot fresh-context verification)
+- Exported staged source without ignored artifacts: workspace check/default/all-feature tests, firmware host tests (6/10), strict default/feature firmware host Clippy, formatting and 23 Python tests pass.
+- Rebuilt both normal firmware binaries and both 64 KiB stress variants; all eight positive image cases and the NOBITS negative control pass. Existing RWX warning remains; no hardware accessed during this verification.
+- Fresh snapshot validates saved capture hashes/matrices/boot inventories, measured code/input hashes, regenerated host manifest and Markdown file links. HANDOFF links offline commands; historical ignored binaries are not prerequisites.

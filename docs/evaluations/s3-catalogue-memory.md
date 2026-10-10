@@ -3,7 +3,8 @@
 Measured 2026-10-10 UTC, with explicit flash approval. **Initial bounded target
 costs, not whole-device peak RAM, a supported catalogue size, or completion of M2.**
 The prepared experiment ran unchanged; no source, dependency, or toolchain changes
-were made during capture. Firmware now contains this three-sample experiment.
+were made during capture. The board now holds a subsequent corrected build of this
+same three-sample experiment; see [corrected-boot evidence](s3-drom-diagnostic.md#corrected-normal-build-target-verification).
 
 ## Evidence and method
 
@@ -115,7 +116,8 @@ is context, not an independent diagnosis of this build.
 
 Subsequent [offline investigation](s3-drom-diagnostic.md) reproduces the section-gap
 cause and explains mapping coverage for this exact layout. The historical capture
-above remains unchanged; no source remedy or corrected target boot is validated.
+above remains unchanged. A subsequent source remedy and two corrected target boots
+are now validated in that follow-up; this section describes the original captures.
 
 ## Verification and next
 
@@ -125,7 +127,8 @@ cross-checks, and the approved flash/captures pass. Earlier preparation owns the
 strict Clippy/fmt checks; source code was unchanged for these runs. No monitor is
 left running; resetting the board reruns this three-sample catalogue experiment.
 
-M2 remains open. Investigate the boot image-mapping diagnostic; broaden distinct
+M2 remains open. The boot image-mapping diagnostic is resolved for the corrected
+build; refine/freeze the [bounded proposal](m2-next-evidence.md) before broadening distinct
 populations, observer/pass densities, duplicate/conflict diagnostics, collection
 growth and input RAM lifetimes; add independent target numerical checks and stronger
 stack evidence. Only then select supported catalogue size, cadence, scheduling/

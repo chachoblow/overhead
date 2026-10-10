@@ -1,8 +1,9 @@
-# S3 multiple-DROM diagnostic — offline investigation
+# S3 multiple-DROM diagnostic — investigation and corrected boot
 
-Investigated 2026-10-10 UTC. **Source remedy and image gate now pass offline;
-corrected target boot/capture still pending approval.** Original captures, hashes
-and measured costs remain unchanged.
+Investigated and verified on target 2026-10-10 UTC. **Source remedy/image gate
+pass offline; two approved corrected catalogue-memory boots/captures now pass
+without the multiple-DROM diagnostic.** Original captures, hashes and measured
+costs remain unchanged.
 This is a follow-up to [the catalogue-memory capture](s3-catalogue-memory.md),
 not grounds to treat arbitrary multiple-DROM images as safe.
 
@@ -143,9 +144,50 @@ may differ in paths/metadata/hashes and should use the reproducible source check
 not expect byte-identical historical output. No hardware was accessed, port opened,
 reset or flash performed. Stress/minimal/negative fixtures are not flash candidates.
 
-Next: prepare and gate an ordinary corrected measurement build, obtain explicit
-flash approval, then capture its boot and bounded workload before calling the
-multiple-DROM diagnostic fixed on target. Do not broaden the evidence suite yet.
+## Corrected normal-build target verification
+
+With explicit approval, built and gated an ordinary three-sample
+`overhead-s3-catalogue-memory` image in a fresh isolated target directory, flashed
+that exact ELF, then captured two reset-separated runs. No stress/minimal/negative
+fixture was flashed. No application source, dependency, registry or toolchain
+changes were made. DIO/40 MHz, 8 MB flash and application offset `0x10000` match
+the historical setup; display/PSRAM remain unused.
+
+- Raw boot/workload output: [run 1](s3-corrected-boot-run-1.log),
+  [run 2](s3-corrected-boot-run-2.log).
+- [Artifact, gate and verification report](s3-corrected-boot-artifacts.json)
+  records source revision/hashes, compiler, input hashes, ELF sections, image
+  inventory, capture hashes and per-case timing medians.
+- Regenerated host expectations exactly match the existing
+  [manifest](s3-catalogue-memory-expected.txt).
+- Local ELF/image, build/flash logs, full disassembly and source hash inventory:
+  `firmware/target/corrected-boot-20261010T141219Z`. Binaries remain ignored,
+  not a durable archive; use [normal-build/gate commands](../../firmware/IMAGE_GATE.md)
+  for fresh preparation and request approval again before any future flash.
+
+ELF SHA-256: `317c98b1ef70d3273808b347daa3805fb45e3f0616522bf4b53eee21ef20e850`.
+Application image SHA-256: `bd88836cf032ee6dea8a256c77d0089ac002924e753a78c8321fdb3ac7d4e4e9`.
+The 368,848-byte image passes the full gate, including 32 file-backed zero merge
+bytes. Both boot logs exactly match all five gated segment addresses/sizes and
+physical offsets. Each maps one DROM segment at `0x3c000020`, 83,572 bytes;
+**neither reports the multiple-DROM diagnostic**. This verifies the remedy for
+this normal catalogue-memory build, not a runtime MMU readback or a target boot
+of the corrected kernel binary.
+
+Both eight-case × three-sample matrices validate against host work expectations
+(48 recorded samples, plus warm-ups). All case/work/heap/stack/probe records match
+the historical first run exactly after excluding phase timings; there are no
+reported allocation failures or firmware failures. Eight-object/24h aggregation
+median is 14,527,805 µs in both runs. The written-stack observation remains 5,824
+bytes, **not a safe stack size**. No new catalogue-capacity, numeric-accuracy,
+whole-device RAM or scheduling claim follows from this repeat experiment.
+
+Workspace check and 23 Python tests pass. The compiled paint loop and known 8 KiB
+written local were reviewed; generated input bytes were found in the exact ELF.
+No monitor remains running. The board now holds the corrected three-sample
+catalogue-memory experiment; reset reruns it. The separate linker RWX warning
+remains unsuppressed. Next: refine/freeze the [bounded evidence proposal](m2-next-evidence.md)
+before broadening measurements; M2 stays open.
 
 ## Pinned source references
 

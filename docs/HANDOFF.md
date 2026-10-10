@@ -1,40 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-10 UTC. Next: approved corrected boot/capture; refine bounded M2 evidence proposal._
+_Last updated: 2026-10-10 UTC. Next: refine/freeze bounded M2 evidence proposal._
 
 ## State
-M2 remains open for operating limits/cadence/scheduling. DROM source remedy and
-image gate pass offline; no corrected target boot yet. Historical heap/stack
-captures unchanged; no production defaults. Render stub/static simulator unchanged.
-[PLAN](PLAN.md).
+M2 remains open for operating limits/cadence/scheduling. DROM remedy/image gate
+pass offline; two approved corrected catalogue-memory boots/captures now pass
+without the multiple-DROM diagnostic. Separate RWX warning remains. No production
+defaults; render stub/static simulator unchanged. [PLAN](PLAN.md).
 
 ## This session
-`firmware/rodata.x` emits file-backed alignment padding; `build.rs` tracks edits.
-`firmware/image_gate.py` checks ELF/image contents, descriptor/hash and single DROM.
-`firmware/check_images.py` passes both binaries, their 64 KiB stress builds, four
-alignment fixtures and a source-generated NOBITS negative control. Twelve new
-Python tests. [Usage](../firmware/IMAGE_GATE.md),
-[decision 0018](decisions/0018-source-level-drom-remedy-and-image-gate.md),
-[evidence/report](evaluations/s3-drom-diagnostic.md#source-remedy-and-gate--subsequent-offline-validation).
-No dependencies, registry files or toolchain changed; RWX warning unsuppressed.
+Gated a normal build, then flashed/captured twice with explicit approval: 48 samples
+validate; boot segments match the gate, work/heap/stack match historical records.
+[Evidence, raw logs and artifact report](evaluations/s3-drom-diagnostic.md#corrected-normal-build-target-verification).
+No code/dependency/toolchain changes. Corrected kernel binary not boot-tested.
 
 ## Hardware / local setup
-No hardware accessed, port opened, reset or flash. Board remains on the historical
-three-sample catalogue-memory matrix; ask before flashing. S3-DevKitC-1 UART
-`/dev/cu.usbserial-110`; display disconnected, PSRAM unconfirmed/unused.
-New ignored artifacts/logs: `firmware/target/image-gate-final-20261010`.
-Stress/minimal/negative fixtures and the runner's final Cargo outputs are NOT flash
-candidates. Prepare an ordinary build and gate that exact ELF before approval.
+Board now holds the corrected three-sample catalogue-memory experiment; reset
+reruns it. No monitor left running. S3-DevKitC-1 UART `/dev/cu.usbserial-110`;
+display/PSRAM unused, PSRAM capacity unconfirmed. Ask before any future flash.
+Ignored ELF/image/build/flash logs/disassembly:
+`firmware/target/corrected-boot-20261010T141219Z`. Binaries are not archived.
+Prepare and gate the exact normal ELF again for any future build/flash;
+stress/minimal/negative fixtures are never flash candidates. [Usage](../firmware/IMAGE_GATE.md).
 
 ## Next / risks
-Obtain approval for corrected normal-build flash and bounded boot/capture.
-Then refine/freeze the [next-evidence proposal](evaluations/m2-next-evidence.md)
-before broadening measurements; it remains unaccepted/unimplemented. No supported
-catalogue size, safe stack size or whole-device peak RAM established. Sharp bring-up
-remains separate; scheduling requires latency evidence. Review local override on upgrades.
+Refine/freeze the [next-evidence proposal](evaluations/m2-next-evidence.md) before
+implementation or broader captures; it remains unaccepted/unimplemented. No
+supported catalogue size, safe stack size or whole-device peak RAM established.
+Independent target numeric checks and bounded scheduling latency remain pending.
+Sharp bring-up stays separate. Review the local linker override on upgrades.
 
-## Verification
-Clean source snapshot without ignored artifacts: workspace check/default/all-feature
-tests, firmware host tests (6/10), strict host Clippy, formatting, 23 Python tests,
-four full target builds and all image cases pass. No target execution this session.
-[Fresh-session commands](../firmware/IMAGE_GATE.md); binaries are not archived.
+## Verification / fresh-session commands
+Source snapshot without ignored artifacts passes workspace check/default/all-feature
+tests, firmware host tests (6/10), strict firmware host Clippy, formatting, 23 Python
+tests and all image regression cases. Saved capture hashes/matrices/boot inventories,
+measured code/input hashes, regenerated host manifest and doc links validate.
+[Offline commands](../firmware/README.md#offline-checks), [feature checks](../firmware/CATALOGUE_MEMORY.md#offline-verification--next-step),
+[image regression](../firmware/IMAGE_GATE.md#complete-regression-run--no-hardware).
+Use installed toolchain/SDL2; no historical ignored artifacts or hardware needed.

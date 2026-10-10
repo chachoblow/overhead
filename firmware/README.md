@@ -67,8 +67,9 @@ embedded image; build/flash/boot succeed. No warning suppression is configured.
 
 Before any future approved flash, run the [offline image gate](IMAGE_GATE.md)
 on the exact normal-build ELF/application image. The local DROM linker remedy
-passes offline; corrected target boot/capture is still pending. Stress-test
-artifacts are not flash candidates. The gate does not itself authorize flashing.
+passes offline and in [two corrected catalogue-memory captures](../docs/evaluations/s3-drom-diagnostic.md#corrected-normal-build-target-verification);
+the corrected kernel binary has not been boot-tested. Stress-test artifacts are
+not flash candidates. The gate does not itself authorize flashing.
 
 First generate expected work counts on the **host**, from repository root.
 Use the same revision, suite, and sample count as the target build; retain the

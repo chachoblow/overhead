@@ -7,8 +7,10 @@ remain authoritative; [PLAN](../PLAN.md) owns milestone status.
 The goal is to decide an initial supported catalogue and prediction operating
 budget, not benchmark an unbounded set of combinations. Keep hardware unchanged:
 internal RAM, no PSRAM/display/network, installed toolchain, explicit flash approval.
-First prepare the [DROM remedy/image gate](s3-drom-diagnostic.md); do not broaden
-captures while treating the mapping diagnostic as unexplained or silently waived.
+The [DROM remedy/image gate and corrected catalogue-memory boots](s3-drom-diagnostic.md#corrected-normal-build-target-verification)
+now pass; the mapping diagnostic is resolved for that normal build, not waived.
+Refine/freeze this proposal before broadening captures; the separate RWX warning
+remains open.
 
 ## Proposed ceiling: 20 memory/work cases, not a Cartesian product
 
