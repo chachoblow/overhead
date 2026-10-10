@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: M2; prepared S3 target sweeps complete; distinct-catalogue and peak-memory budgets next.**
+**Current: M2; initial distinct-catalogue host heap measured; target peak-memory budgets next.**
 Build the headless engine, then the real-data UI, then the device
 ([rationale](decisions/0005-engine-first-implementation.md)). Refine each
 slice before starting; later checkboxes are scope, not session-sized tasks.
@@ -59,9 +59,12 @@ hardware; the first S3 kernel baseline alone does not justify capacity or cadenc
 - [x] Capture V2 baseline, 64-slot scaling, and all prepared signed-age/search-setting
   suites: 120 workloads × three samples, matching host counts
   ([results and evidence](evaluations/s3-expanded.md)).
-- [ ] Measure distinct-catalogue initialization/storage, aggregation, and peak memory;
-  broaden orbital samples and independent target numeric checks. Set catalogue
-  limits, cadence, scheduling, and explicit over-budget behavior.
+- [x] Measure 4/8 distinct historical catalogues at common UTC on host: checked
+  initialization, retained aggregation, and requested heap peaks, including
+  partial/unsearched work ([results](evaluations/catalogue-costs.md)); not target RAM.
+- [ ] Measure target catalogue initialization/storage, aggregation, and peak RAM/stack;
+  broaden distinct orbital/pass-density samples and independent target numeric checks.
+  Set catalogue limits, cadence, scheduling, and explicit over-budget behavior.
 
 **Done when:** a curated catalogue and upcoming passes are testable headlessly,
 with measured costs justifying supported size, cadence, and prediction accuracy.

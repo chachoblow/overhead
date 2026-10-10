@@ -197,6 +197,47 @@ values are inherently variable; workloads/counts are reproducible on this host.
 [Fixture provenance](fixtures/README.md). Tests cover the complete matrix, mixed
 accounting, batch normalization, workload failures, and CLI validation.
 
+## `overhead-catalogue-benchmark`
+
+Measure offline **distinct-catalogue host initialization, retained pass aggregation,
+and requested heap**. Eight embedded historical satellites, 4/8-entry subsets,
+one common UTC. No files, network, hardware, new dependencies, or implicit clock.
+
+```sh
+cargo run --release --locked -p overhead-tools --bin overhead-catalogue-benchmark -- \
+  --samples 5 --label 'record CPU, OS, rustc, revision/profile/flags here' \
+  > /tmp/overhead-catalogue-costs.json
+```
+
+Optional order-independent options cannot repeat: `--samples` is 1–50 (default
+5), `--label` is unverified descriptive context. `--help`/`-h` exits 0. Invalid
+options or failed validation exit 1 with stderr and no partial stdout JSON.
+Successful experiments exit 0 **including deliberately incomplete budget cases**.
+
+Eight rows: each size × complete 1h/24h, plus 24h with 1,000/zero shared
+allowance. Fixed UTC/observer/tuning and input identities/epochs/ages are in JSON.
+These are experimental settings, not defaults. No duplicated/fabricated IDs.
+One discarded warm-up, then one invocation per sample (no calibration/batching).
+Two phases retain separate elapsed nanoseconds and requested-heap accounting:
+checked OMM array ingestion/SGP4 initialization/merge; catalogue pass search plus
+earliest-candidate collection. Catalogue remains live during aggregation.
+Untimed streaming searches validate every retained report/pass, and work/heap
+counts must match warm-up. All measured objects must release their allocations.
+
+The binary's single-threaded counting allocator reports logical requested-byte
+peaks, retained bytes, successful allocation/reallocation calls, and requested
+traffic. It does not measure allocator overhead/fragmentation, internal realloc
+transients, stack, RSS, static memory, or S3 RAM. Timing includes instrumentation.
+Prepared input JSON (length reported), TLE-to-OMM conversion, configs, I/O,
+manifest/provenance reporting, validation, destruction, and JSON output are
+excluded. Existing Serde float parsing is not a bitwise TLE-to-OMM round-trip
+contract; tests bound conversion rounding without changing dependency features.
+
+[Method, evidence, limitations, and target follow-up](../docs/evaluations/catalogue-costs.md).
+[Fixture provenance](fixtures/README.md#catalogue-coststle). Tests cover allocation
+hooks, conversion/ingestion, CLI validation, complete/partial/unsearched work,
+stable heap accounting, and phase arithmetic—not machine-dependent speed.
+
 ## `overhead-track`
 
 Single-satellite measurements from explicit local inputs; no network, wall

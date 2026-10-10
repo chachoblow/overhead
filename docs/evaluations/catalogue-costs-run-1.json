@@ -1,0 +1,1410 @@
+{
+  "schema_version": 1,
+  "measurement": "single-threaded-host-requested-heap-and-instrumented-time",
+  "host_os": "macos",
+  "host_arch": "aarch64",
+  "pointer_bits": 64,
+  "debug_assertions": false,
+  "options": {
+    "samples": 5,
+    "label": "Apple M1 Pro; Darwin 25.6.0 arm64; rustc 1.99.0 (b940084d7 2026-09-28); Cargo release defaults; base 86e9d37c6580fe8700e414d6204e0d5739c7dfb4 + catalogue benchmark changes; see catalogue-costs.md for hashes"
+  },
+  "start_utc": "2006-06-26T00:00:00Z",
+  "observer_lat_lon_deg_height_km": [
+    39.007,
+    -104.883,
+    2.187
+  ],
+  "detection_s": 60,
+  "tolerance_s": 5,
+  "min_elevation_deg": 10.0,
+  "satellite_evaluation_limit": 200000,
+  "inputs": [
+    {
+      "norad_id": 6251,
+      "name": "DELTA 1 DEB",
+      "orbit_class": "LEO",
+      "epoch_utc": "2006-06-25T19:46:43.980095999Z",
+      "age_at_start_s": 15196.019904
+    },
+    {
+      "norad_id": 8195,
+      "name": "MOLNIYA 2-14",
+      "orbit_class": "resonant-HEO",
+      "epoch_utc": "2006-06-25T07:58:18.143616001Z",
+      "age_at_start_s": 57701.856383
+    },
+    {
+      "norad_id": 28129,
+      "name": "NAVSTAR 53 (USA 175)",
+      "orbit_class": "GNSS",
+      "epoch_utc": "2006-06-24T13:41:49.461503999Z",
+      "age_at_start_s": 123490.538496
+    },
+    {
+      "norad_id": 24208,
+      "name": "ITALSAT 2",
+      "orbit_class": "GEO",
+      "epoch_utc": "2006-06-26T00:58:29.343360Z",
+      "age_at_start_s": -3509.34336
+    },
+    {
+      "norad_id": 28057,
+      "name": "CBERS 2",
+      "orbit_class": "LEO",
+      "epoch_utc": "2006-06-26T18:52:04.079712001Z",
+      "age_at_start_s": -67924.079712
+    },
+    {
+      "norad_id": 9880,
+      "name": "MOLNIYA 1-36",
+      "orbit_class": "resonant-HEO",
+      "epoch_utc": "2006-06-25T13:28:40.058400Z",
+      "age_at_start_s": 37879.9416
+    },
+    {
+      "norad_id": 14128,
+      "name": "EUTELSAT 1-F1 (ECS1)",
+      "orbit_class": "GEO",
+      "epoch_utc": "2006-06-25T00:40:57.987552Z",
+      "age_at_start_s": 83942.012448
+    },
+    {
+      "norad_id": 28626,
+      "name": "XM-3",
+      "orbit_class": "GEO",
+      "epoch_utc": "2006-06-25T11:12:14.455008001Z",
+      "age_at_start_s": 46065.544991
+    }
+  ],
+  "rows": [
+    {
+      "satellites": 4,
+      "norad_ids": [
+        6251,
+        8195,
+        28129,
+        24208
+      ],
+      "input_json_bytes": 1679,
+      "window_s": 3600,
+      "total_evaluation_limit": 800000,
+      "samples": [
+        {
+          "initialization": {
+            "elapsed_ns": 16542,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 136500,
+            "heap": {
+              "peak_extra_bytes": 928,
+              "retained_extra_bytes": 928,
+              "allocation_calls": 3,
+              "requested_bytes": 928
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 3896,
+          "work": {
+            "satellites": 4,
+            "evaluations": 252,
+            "passes": 1,
+            "earliest_candidates": 1,
+            "searched": 4,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 12291,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 130750,
+            "heap": {
+              "peak_extra_bytes": 928,
+              "retained_extra_bytes": 928,
+              "allocation_calls": 3,
+              "requested_bytes": 928
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 3896,
+          "work": {
+            "satellites": 4,
+            "evaluations": 252,
+            "passes": 1,
+            "earliest_candidates": 1,
+            "searched": 4,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 10334,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 134750,
+            "heap": {
+              "peak_extra_bytes": 928,
+              "retained_extra_bytes": 928,
+              "allocation_calls": 3,
+              "requested_bytes": 928
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 3896,
+          "work": {
+            "satellites": 4,
+            "evaluations": 252,
+            "passes": 1,
+            "earliest_candidates": 1,
+            "searched": 4,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 10166,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 135292,
+            "heap": {
+              "peak_extra_bytes": 928,
+              "retained_extra_bytes": 928,
+              "allocation_calls": 3,
+              "requested_bytes": 928
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 3896,
+          "work": {
+            "satellites": 4,
+            "evaluations": 252,
+            "passes": 1,
+            "earliest_candidates": 1,
+            "searched": 4,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 10125,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 133416,
+            "heap": {
+              "peak_extra_bytes": 928,
+              "retained_extra_bytes": 928,
+              "allocation_calls": 3,
+              "requested_bytes": 928
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 3896,
+          "work": {
+            "satellites": 4,
+            "evaluations": 252,
+            "passes": 1,
+            "earliest_candidates": 1,
+            "searched": 4,
+            "complete": true
+          }
+        }
+      ]
+    },
+    {
+      "satellites": 4,
+      "norad_ids": [
+        6251,
+        8195,
+        28129,
+        24208
+      ],
+      "input_json_bytes": 1679,
+      "window_s": 86400,
+      "total_evaluation_limit": 800000,
+      "samples": [
+        {
+          "initialization": {
+            "elapsed_ns": 27167,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 7346125,
+            "heap": {
+              "peak_extra_bytes": 1376,
+              "retained_extra_bytes": 1376,
+              "allocation_calls": 5,
+              "requested_bytes": 1376
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 4344,
+          "work": {
+            "satellites": 4,
+            "evaluations": 5812,
+            "passes": 6,
+            "earliest_candidates": 1,
+            "searched": 4,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 37667,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 5950750,
+            "heap": {
+              "peak_extra_bytes": 1376,
+              "retained_extra_bytes": 1376,
+              "allocation_calls": 5,
+              "requested_bytes": 1376
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 4344,
+          "work": {
+            "satellites": 4,
+            "evaluations": 5812,
+            "passes": 6,
+            "earliest_candidates": 1,
+            "searched": 4,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 21750,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 5013833,
+            "heap": {
+              "peak_extra_bytes": 1376,
+              "retained_extra_bytes": 1376,
+              "allocation_calls": 5,
+              "requested_bytes": 1376
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 4344,
+          "work": {
+            "satellites": 4,
+            "evaluations": 5812,
+            "passes": 6,
+            "earliest_candidates": 1,
+            "searched": 4,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 15667,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 4361083,
+            "heap": {
+              "peak_extra_bytes": 1376,
+              "retained_extra_bytes": 1376,
+              "allocation_calls": 5,
+              "requested_bytes": 1376
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 4344,
+          "work": {
+            "satellites": 4,
+            "evaluations": 5812,
+            "passes": 6,
+            "earliest_candidates": 1,
+            "searched": 4,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 14375,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 3913959,
+            "heap": {
+              "peak_extra_bytes": 1376,
+              "retained_extra_bytes": 1376,
+              "allocation_calls": 5,
+              "requested_bytes": 1376
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 4344,
+          "work": {
+            "satellites": 4,
+            "evaluations": 5812,
+            "passes": 6,
+            "earliest_candidates": 1,
+            "searched": 4,
+            "complete": true
+          }
+        }
+      ]
+    },
+    {
+      "satellites": 4,
+      "norad_ids": [
+        6251,
+        8195,
+        28129,
+        24208
+      ],
+      "input_json_bytes": 1679,
+      "window_s": 86400,
+      "total_evaluation_limit": 1000,
+      "samples": [
+        {
+          "initialization": {
+            "elapsed_ns": 11458,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 526458,
+            "heap": {
+              "peak_extra_bytes": 928,
+              "retained_extra_bytes": 928,
+              "allocation_calls": 3,
+              "requested_bytes": 928
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 3896,
+          "work": {
+            "satellites": 4,
+            "evaluations": 1000,
+            "passes": 2,
+            "earliest_candidates": 1,
+            "searched": 1,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 11375,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 524958,
+            "heap": {
+              "peak_extra_bytes": 928,
+              "retained_extra_bytes": 928,
+              "allocation_calls": 3,
+              "requested_bytes": 928
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 3896,
+          "work": {
+            "satellites": 4,
+            "evaluations": 1000,
+            "passes": 2,
+            "earliest_candidates": 1,
+            "searched": 1,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 11250,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 527708,
+            "heap": {
+              "peak_extra_bytes": 928,
+              "retained_extra_bytes": 928,
+              "allocation_calls": 3,
+              "requested_bytes": 928
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 3896,
+          "work": {
+            "satellites": 4,
+            "evaluations": 1000,
+            "passes": 2,
+            "earliest_candidates": 1,
+            "searched": 1,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 11167,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 506875,
+            "heap": {
+              "peak_extra_bytes": 928,
+              "retained_extra_bytes": 928,
+              "allocation_calls": 3,
+              "requested_bytes": 928
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 3896,
+          "work": {
+            "satellites": 4,
+            "evaluations": 1000,
+            "passes": 2,
+            "earliest_candidates": 1,
+            "searched": 1,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 12250,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 505417,
+            "heap": {
+              "peak_extra_bytes": 928,
+              "retained_extra_bytes": 928,
+              "allocation_calls": 3,
+              "requested_bytes": 928
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 3896,
+          "work": {
+            "satellites": 4,
+            "evaluations": 1000,
+            "passes": 2,
+            "earliest_candidates": 1,
+            "searched": 1,
+            "complete": false
+          }
+        }
+      ]
+    },
+    {
+      "satellites": 4,
+      "norad_ids": [
+        6251,
+        8195,
+        28129,
+        24208
+      ],
+      "input_json_bytes": 1679,
+      "window_s": 86400,
+      "total_evaluation_limit": 0,
+      "samples": [
+        {
+          "initialization": {
+            "elapsed_ns": 10417,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 84,
+            "heap": {
+              "peak_extra_bytes": 512,
+              "retained_extra_bytes": 512,
+              "allocation_calls": 1,
+              "requested_bytes": 512
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 3480,
+          "work": {
+            "satellites": 4,
+            "evaluations": 0,
+            "passes": 0,
+            "earliest_candidates": 0,
+            "searched": 0,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 10208,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 83,
+            "heap": {
+              "peak_extra_bytes": 512,
+              "retained_extra_bytes": 512,
+              "allocation_calls": 1,
+              "requested_bytes": 512
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 3480,
+          "work": {
+            "satellites": 4,
+            "evaluations": 0,
+            "passes": 0,
+            "earliest_candidates": 0,
+            "searched": 0,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 10291,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 83,
+            "heap": {
+              "peak_extra_bytes": 512,
+              "retained_extra_bytes": 512,
+              "allocation_calls": 1,
+              "requested_bytes": 512
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 3480,
+          "work": {
+            "satellites": 4,
+            "evaluations": 0,
+            "passes": 0,
+            "earliest_candidates": 0,
+            "searched": 0,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 10083,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 125,
+            "heap": {
+              "peak_extra_bytes": 512,
+              "retained_extra_bytes": 512,
+              "allocation_calls": 1,
+              "requested_bytes": 512
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 3480,
+          "work": {
+            "satellites": 4,
+            "evaluations": 0,
+            "passes": 0,
+            "earliest_candidates": 0,
+            "searched": 0,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 10042,
+            "heap": {
+              "peak_extra_bytes": 11320,
+              "retained_extra_bytes": 2968,
+              "allocation_calls": 35,
+              "requested_bytes": 26744
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 83,
+            "heap": {
+              "peak_extra_bytes": 512,
+              "retained_extra_bytes": 512,
+              "allocation_calls": 1,
+              "requested_bytes": 512
+            }
+          },
+          "pipeline_peak_extra_bytes": 11320,
+          "combined_retained_bytes": 3480,
+          "work": {
+            "satellites": 4,
+            "evaluations": 0,
+            "passes": 0,
+            "earliest_candidates": 0,
+            "searched": 0,
+            "complete": false
+          }
+        }
+      ]
+    },
+    {
+      "satellites": 8,
+      "norad_ids": [
+        6251,
+        8195,
+        28129,
+        24208,
+        28057,
+        9880,
+        14128,
+        28626
+      ],
+      "input_json_bytes": 3331,
+      "window_s": 3600,
+      "total_evaluation_limit": 1600000,
+      "samples": [
+        {
+          "initialization": {
+            "elapsed_ns": 25583,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 281417,
+            "heap": {
+              "peak_extra_bytes": 1888,
+              "retained_extra_bytes": 1888,
+              "allocation_calls": 5,
+              "requested_bytes": 1888
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 7815,
+          "work": {
+            "satellites": 8,
+            "evaluations": 500,
+            "passes": 3,
+            "earliest_candidates": 1,
+            "searched": 8,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 20792,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 281125,
+            "heap": {
+              "peak_extra_bytes": 1888,
+              "retained_extra_bytes": 1888,
+              "allocation_calls": 5,
+              "requested_bytes": 1888
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 7815,
+          "work": {
+            "satellites": 8,
+            "evaluations": 500,
+            "passes": 3,
+            "earliest_candidates": 1,
+            "searched": 8,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 20583,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 277083,
+            "heap": {
+              "peak_extra_bytes": 1888,
+              "retained_extra_bytes": 1888,
+              "allocation_calls": 5,
+              "requested_bytes": 1888
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 7815,
+          "work": {
+            "satellites": 8,
+            "evaluations": 500,
+            "passes": 3,
+            "earliest_candidates": 1,
+            "searched": 8,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 19833,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 274875,
+            "heap": {
+              "peak_extra_bytes": 1888,
+              "retained_extra_bytes": 1888,
+              "allocation_calls": 5,
+              "requested_bytes": 1888
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 7815,
+          "work": {
+            "satellites": 8,
+            "evaluations": 500,
+            "passes": 3,
+            "earliest_candidates": 1,
+            "searched": 8,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 19667,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 274875,
+            "heap": {
+              "peak_extra_bytes": 1888,
+              "retained_extra_bytes": 1888,
+              "allocation_calls": 5,
+              "requested_bytes": 1888
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 7815,
+          "work": {
+            "satellites": 8,
+            "evaluations": 500,
+            "passes": 3,
+            "earliest_candidates": 1,
+            "searched": 8,
+            "complete": true
+          }
+        }
+      ]
+    },
+    {
+      "satellites": 8,
+      "norad_ids": [
+        6251,
+        8195,
+        28129,
+        24208,
+        28057,
+        9880,
+        14128,
+        28626
+      ],
+      "input_json_bytes": 3331,
+      "window_s": 86400,
+      "total_evaluation_limit": 1600000,
+      "samples": [
+        {
+          "initialization": {
+            "elapsed_ns": 21500,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 6514958,
+            "heap": {
+              "peak_extra_bytes": 2560,
+              "retained_extra_bytes": 2560,
+              "allocation_calls": 8,
+              "requested_bytes": 2560
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 8487,
+          "work": {
+            "satellites": 8,
+            "evaluations": 11616,
+            "passes": 13,
+            "earliest_candidates": 1,
+            "searched": 8,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 20625,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 6501875,
+            "heap": {
+              "peak_extra_bytes": 2560,
+              "retained_extra_bytes": 2560,
+              "allocation_calls": 8,
+              "requested_bytes": 2560
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 8487,
+          "work": {
+            "satellites": 8,
+            "evaluations": 11616,
+            "passes": 13,
+            "earliest_candidates": 1,
+            "searched": 8,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 21125,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 6501000,
+            "heap": {
+              "peak_extra_bytes": 2560,
+              "retained_extra_bytes": 2560,
+              "allocation_calls": 8,
+              "requested_bytes": 2560
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 8487,
+          "work": {
+            "satellites": 8,
+            "evaluations": 11616,
+            "passes": 13,
+            "earliest_candidates": 1,
+            "searched": 8,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 20333,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 6525583,
+            "heap": {
+              "peak_extra_bytes": 2560,
+              "retained_extra_bytes": 2560,
+              "allocation_calls": 8,
+              "requested_bytes": 2560
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 8487,
+          "work": {
+            "satellites": 8,
+            "evaluations": 11616,
+            "passes": 13,
+            "earliest_candidates": 1,
+            "searched": 8,
+            "complete": true
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 20583,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 6504625,
+            "heap": {
+              "peak_extra_bytes": 2560,
+              "retained_extra_bytes": 2560,
+              "allocation_calls": 8,
+              "requested_bytes": 2560
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 8487,
+          "work": {
+            "satellites": 8,
+            "evaluations": 11616,
+            "passes": 13,
+            "earliest_candidates": 1,
+            "searched": 8,
+            "complete": true
+          }
+        }
+      ]
+    },
+    {
+      "satellites": 8,
+      "norad_ids": [
+        6251,
+        8195,
+        28129,
+        24208,
+        28057,
+        9880,
+        14128,
+        28626
+      ],
+      "input_json_bytes": 3331,
+      "window_s": 86400,
+      "total_evaluation_limit": 1000,
+      "samples": [
+        {
+          "initialization": {
+            "elapsed_ns": 24000,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 485959,
+            "heap": {
+              "peak_extra_bytes": 1440,
+              "retained_extra_bytes": 1440,
+              "allocation_calls": 3,
+              "requested_bytes": 1440
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 7367,
+          "work": {
+            "satellites": 8,
+            "evaluations": 1000,
+            "passes": 2,
+            "earliest_candidates": 1,
+            "searched": 1,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 19875,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 486209,
+            "heap": {
+              "peak_extra_bytes": 1440,
+              "retained_extra_bytes": 1440,
+              "allocation_calls": 3,
+              "requested_bytes": 1440
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 7367,
+          "work": {
+            "satellites": 8,
+            "evaluations": 1000,
+            "passes": 2,
+            "earliest_candidates": 1,
+            "searched": 1,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 23125,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 482750,
+            "heap": {
+              "peak_extra_bytes": 1440,
+              "retained_extra_bytes": 1440,
+              "allocation_calls": 3,
+              "requested_bytes": 1440
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 7367,
+          "work": {
+            "satellites": 8,
+            "evaluations": 1000,
+            "passes": 2,
+            "earliest_candidates": 1,
+            "searched": 1,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 19541,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 473250,
+            "heap": {
+              "peak_extra_bytes": 1440,
+              "retained_extra_bytes": 1440,
+              "allocation_calls": 3,
+              "requested_bytes": 1440
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 7367,
+          "work": {
+            "satellites": 8,
+            "evaluations": 1000,
+            "passes": 2,
+            "earliest_candidates": 1,
+            "searched": 1,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 19250,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 481459,
+            "heap": {
+              "peak_extra_bytes": 1440,
+              "retained_extra_bytes": 1440,
+              "allocation_calls": 3,
+              "requested_bytes": 1440
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 7367,
+          "work": {
+            "satellites": 8,
+            "evaluations": 1000,
+            "passes": 2,
+            "earliest_candidates": 1,
+            "searched": 1,
+            "complete": false
+          }
+        }
+      ]
+    },
+    {
+      "satellites": 8,
+      "norad_ids": [
+        6251,
+        8195,
+        28129,
+        24208,
+        28057,
+        9880,
+        14128,
+        28626
+      ],
+      "input_json_bytes": 3331,
+      "window_s": 86400,
+      "total_evaluation_limit": 0,
+      "samples": [
+        {
+          "initialization": {
+            "elapsed_ns": 19166,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 125,
+            "heap": {
+              "peak_extra_bytes": 1024,
+              "retained_extra_bytes": 1024,
+              "allocation_calls": 1,
+              "requested_bytes": 1024
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 6951,
+          "work": {
+            "satellites": 8,
+            "evaluations": 0,
+            "passes": 0,
+            "earliest_candidates": 0,
+            "searched": 0,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 19000,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 125,
+            "heap": {
+              "peak_extra_bytes": 1024,
+              "retained_extra_bytes": 1024,
+              "allocation_calls": 1,
+              "requested_bytes": 1024
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 6951,
+          "work": {
+            "satellites": 8,
+            "evaluations": 0,
+            "passes": 0,
+            "earliest_candidates": 0,
+            "searched": 0,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 18917,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 125,
+            "heap": {
+              "peak_extra_bytes": 1024,
+              "retained_extra_bytes": 1024,
+              "allocation_calls": 1,
+              "requested_bytes": 1024
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 6951,
+          "work": {
+            "satellites": 8,
+            "evaluations": 0,
+            "passes": 0,
+            "earliest_candidates": 0,
+            "searched": 0,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 19042,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 125,
+            "heap": {
+              "peak_extra_bytes": 1024,
+              "retained_extra_bytes": 1024,
+              "allocation_calls": 1,
+              "requested_bytes": 1024
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 6951,
+          "work": {
+            "satellites": 8,
+            "evaluations": 0,
+            "passes": 0,
+            "earliest_candidates": 0,
+            "searched": 0,
+            "complete": false
+          }
+        },
+        {
+          "initialization": {
+            "elapsed_ns": 18834,
+            "heap": {
+              "peak_extra_bytes": 14279,
+              "retained_extra_bytes": 5927,
+              "allocation_calls": 69,
+              "requested_bytes": 48103
+            }
+          },
+          "aggregation": {
+            "elapsed_ns": 125,
+            "heap": {
+              "peak_extra_bytes": 1024,
+              "retained_extra_bytes": 1024,
+              "allocation_calls": 1,
+              "requested_bytes": 1024
+            }
+          },
+          "pipeline_peak_extra_bytes": 14279,
+          "combined_retained_bytes": 6951,
+          "work": {
+            "satellites": 8,
+            "evaluations": 0,
+            "passes": 0,
+            "earliest_candidates": 0,
+            "searched": 0,
+            "complete": false
+          }
+        }
+      ]
+    }
+  ]
+}
