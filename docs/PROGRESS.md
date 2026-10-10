@@ -199,3 +199,13 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Exported staged source without ignored artifacts: workspace check/default/all-feature tests, firmware host tests (6/10), strict default/feature firmware host Clippy, formatting and 23 Python tests pass.
 - Rebuilt both normal firmware binaries and both 64 KiB stress variants; all eight positive image cases and the NOBITS negative control pass. Existing RWX warning remains; no hardware accessed during this verification.
 - Fresh snapshot validates saved capture hashes/matrices/boot inventories, measured code/input hashes, regenerated host manifest and Markdown file links. HANDOFF links offline commands; historical ignored binaries are not prerequisites.
+
+## 2026-10-10 UTC (bounded M2 evidence preparation scope)
+- Accepted 0019 and refined `evaluations/m2-next-evidence.md`: ≤20 cases, explicit input/population caps, deterministic density selection, ingestion outcomes and separate numeric/stack gates.
+- User chose a separately pinned real-orbit cohort while preserving historical controls; no new snapshot or exact capture manifest is claimed. Host fixture preparation/preflight and manifest freeze precede target-harness work.
+- Updated PLAN/HANDOFF and the firmware guide's next step. Docs-only: workspace check, whitespace and changed-doc local file links pass; no code/dependency/toolchain/hardware change.
+
+## 2026-10-10 UTC (preparation-contract fresh-context verification)
+- Exported staged source without ignored artifacts; with cached dependencies and installed toolchain/SDL2, offline workspace check/default/all-feature tests, no_std core check, firmware host tests/strict Clippy, formatting and 23 Python tests pass.
+- Rebuilt normal/stress firmware images; all eight positive image-gate cases and the NOBITS negative control pass. Regenerated host catalogue manifest matches saved evidence; Markdown file links resolve.
+- HANDOFF now records reproducible verification and links the offline commands. No hardware accessed; fixture preparation and exact expanded-manifest freeze remain next.

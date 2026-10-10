@@ -147,5 +147,7 @@ completing. The [source remedy and image gate](IMAGE_GATE.md) now pass offline a
 in two approved corrected target captures without that diagnostic; historical
 results are unchanged. See the linked corrected-boot evidence above.
 
-Next: refine/freeze the [bounded evidence proposal](../docs/evaluations/m2-next-evidence.md)
-before broader measurements or selecting M2 capacity/cadence/scheduling policies.
+Next: prepare pinned fixtures/host preflight and freeze the exact expanded manifest
+under the accepted [preparation contract](../docs/evaluations/m2-next-evidence.md).
+The existing eight-case implementation above is unchanged; the expanded suite is
+not implemented. Broader measurements and M2 operating policies remain pending.

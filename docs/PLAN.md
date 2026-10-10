@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: M2; corrected catalogue-memory boot/captures pass; bounded evidence proposal refinement next.**
+**Current: M2; bounded evidence preparation scope accepted; pinned fixtures/host preflight and exact manifest freeze next.**
 Build the headless engine, then the real-data UI, then the device
 ([rationale](decisions/0005-engine-first-implementation.md)). Refine each
 slice before starting; later checkboxes are scope, not session-sized tasks.
@@ -77,10 +77,16 @@ hardware; the first S3 kernel baseline alone does not justify capacity or cadenc
 - [x] Verify a corrected normal-build boot/capture with approval: two complete
   catalogue-memory runs, no multiple-DROM diagnostic ([evidence](evaluations/s3-drom-diagnostic.md#corrected-normal-build-target-verification)).
   The separate RWX warning remains.
-- [ ] Refine/freeze the [bounded next-evidence proposal](evaluations/m2-next-evidence.md),
-  then broaden distinct orbital/pass-density and collection/input-memory samples,
-  strengthen stack evidence, and add independent target numeric checks. Set catalogue
-  limits, cadence, scheduling, and explicit over-budget behavior.
+- [x] Refine/freeze the bounded evidence **preparation scope**, preserving historical
+  controls and adding a separately pinned real-orbit cohort
+  ([0019](decisions/0019-bounded-m2-evidence-preparation.md)); not a capture-ready manifest.
+- [ ] Prepare pinned fixtures and host preflight; freeze the exact ≤20-case manifest,
+  numerical references and expected outcomes under the
+  [preparation contract](evaluations/m2-next-evidence.md) before target-harness implementation.
+- [ ] Implement/capture the frozen suite: broader distinct populations/pass densities,
+  collection/input-memory samples, stronger stack observations and independent target
+  numerical checks. Set catalogue limits, cadence, scheduling and explicit over-budget
+  behavior; verify bounded scheduling latency separately.
 
 **Done when:** a curated catalogue and upcoming passes are testable headlessly,
 with measured costs justifying supported size, cadence, and prediction accuracy.
