@@ -113,6 +113,10 @@ not been fixed or suppressed, and no linker/toolchain change was attempted.
 [Upstream discussion of similar splitting](https://github.com/esp-rs/espflash/issues/927)
 is context, not an independent diagnosis of this build.
 
+Subsequent [offline investigation](s3-drom-diagnostic.md) reproduces the section-gap
+cause and explains mapping coverage for this exact layout. The historical capture
+above remains unchanged; no source remedy or corrected target boot is validated.
+
 ## Verification and next
 
 Workspace check/tests (150 + 6 doctests), ten feature-enabled firmware host tests,

@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: M2; first S3 catalogue heap/write-watermark captures complete; broader target evidence next.**
+**Current: M2; DROM cause reproduced offline; source remedy and bounded evidence preparation next.**
 Build the headless engine, then the real-data UI, then the device
 ([rationale](decisions/0005-engine-first-implementation.md)). Refine each
 slice before starting; later checkboxes are scope, not session-sized tasks.
@@ -68,10 +68,15 @@ hardware; the first S3 kernel baseline alone does not justify capacity or cadenc
 - [x] Capture first 4/8-object S3 initialization/aggregation heap costs and observed
   stack writes: two runs × eight cases × three samples, matching host counts
   ([results and limits](evaluations/s3-catalogue-memory.md)); not whole-device peak RAM.
-- [ ] Broaden distinct orbital/pass-density and collection/input-memory samples,
-  strengthen stack evidence, and add independent target numeric checks. Investigate
-  the new image-mapping boot diagnostic. Set catalogue limits, cadence, scheduling,
-  and explicit over-budget behavior.
+- [x] Investigate the multiple-DROM boot diagnostic offline: section-gap cause
+  reproduced and this image's mapping explained ([findings](evaluations/s3-drom-diagnostic.md));
+  no source fix or corrected target capture yet.
+- [ ] Prepare a source-level DROM remedy/image gate and verify a corrected boot
+  with approval; the separate RWX warning remains.
+- [ ] Refine/freeze the [bounded next-evidence proposal](evaluations/m2-next-evidence.md),
+  then broaden distinct orbital/pass-density and collection/input-memory samples,
+  strengthen stack evidence, and add independent target numeric checks. Set catalogue
+  limits, cadence, scheduling, and explicit over-budget behavior.
 
 **Done when:** a curated catalogue and upcoming passes are testable headlessly,
 with measured costs justifying supported size, cadence, and prediction accuracy.

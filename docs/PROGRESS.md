@@ -166,3 +166,14 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Verified the staged source in a clean directory without ignored artifacts: workspace check/tests (150 + 6 doctests), firmware tests (6/10), 11 Python tests, strict host/target Clippy, formatting, and both target builds pass.
 - Regenerated release host manifest matches the saved one; source/evidence hashes, both captured matrices, summary medians/counters, and documentation links revalidate without local measurement artifacts. Handoff points to fresh-session commands.
 - Extended Git's byte-preservation rule to the new UART logs so line-ending conversion cannot invalidate recorded hashes. No hardware access or measured-source changes; M2 scope and unresolved boot diagnostic unchanged.
+
+## 2026-10-10 UTC (M2 offline DROM investigation and next-evidence proposal)
+- Reproduced the multiple-DROM cause from the hash-verified saved ELF: a 32-byte NOBITS alignment gap is skipped by espflash. A disposable section-type counterfactual yields one DROM segment; no source fix or corrected target boot claimed. Evidence in docs/evaluations/s3-drom-diagnostic.md.
+- Bootloader source and image addresses explain why the captured layout maps both DROM sections through page alignment, not general safety. Original captures/costs remain unchanged; RWX warning remains.
+- Proposed at most 20 targeted memory/work cases plus independent numeric and stronger stack gates in docs/evaluations/m2-next-evidence.md; not an accepted contract or operating policy. Next: source remedy/image gate, then refine/freeze evidence scope.
+- Workspace check, diff checks, saved ELF hash, regenerated image checksum/hash and both boot inventories validate; counterfactual preserves original address contents except descriptor ELF SHA. No hardware, application source, dependency or toolchain changes; no fresh target build/tests.
+
+## 2026-10-10 UTC (DROM investigation clean-snapshot verification)
+- Verified the staged source without ignored artifacts: workspace check/default/all-feature tests, firmware host tests (6/10), 11 Python tests, formatting, strict host/catalogue-target Clippy and both target release builds pass; existing RWX warning remains.
+- Regenerated catalogue manifest matches; checked-in source/evidence hashes, both saved capture matrices and documentation links validate. No hardware access, source/dependency/toolchain changes, or claim of a corrected target boot.
+- Restored fresh-session commands in HANDOFF and documented rebuilding for structural investigation when the historical ELF is unavailable. Historical binary hashes are not promised for new build paths; scratch files are not prerequisites.

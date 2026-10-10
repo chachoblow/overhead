@@ -1,40 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-10 UTC. Next: broaden target evidence; inspect boot diagnostic._
+_Last updated: 2026-10-10 UTC. Next: source-level DROM remedy/image gate; refine bounded M2 evidence proposal._
 
 ## State
 M2 remains open for operating limits/cadence/scheduling. First distinct-catalogue
-S3 heap and written-stack captures now exist; no production defaults selected.
+S3 heap and written-stack captures exist; no production defaults selected.
 Headless engine works; render stub/static simulator unchanged. [PLAN](PLAN.md).
 
 ## This session
-With explicit approval, flashed the prepared `overhead-s3-catalogue-memory` binary
-and captured two runs, each eight cases × three samples. All work/heap counters
-and stack marks agree. Eight-entry initialization peaks at 16,024 occupied bytes;
-24h catalogue/results retain 8,088; prediction takes ~14.53s. Observed stack write
-depth is 5,824 bytes, not a safe stack size or maximum reserved stack.
-[Raw evidence, hashes, summary and limits](evaluations/s3-catalogue-memory.md);
-[method/build/capture](../firmware/CATALOGUE_MEMORY.md). No code/dependency/toolchain
-changes during capture; evidence/docs only after the prepared implementation.
+Offline investigation reproduced the multiple-DROM cause: a 32-byte NOBITS
+alignment gap is skipped by espflash. A disposable ELF section-type counterfactual
+produces one DROM segment; it is not a source fix or flash candidate. Page mapping
+explains why this particular captured layout completes, not arbitrary-image safety.
+[Evidence, source references and next validation](evaluations/s3-drom-diagnostic.md).
+[Proposed bounded follow-up](evaluations/m2-next-evidence.md): at most 20 memory/work
+cases plus separate independent numeric and stronger stack gates; not yet accepted
+or implemented. Existing decisions/contracts and historical measurements unchanged.
 
 ## Hardware / local setup
-Same S3-DevKitC-1/WROOM-1 v0.2, 8 MB flash, UART `/dev/cu.usbserial-110`.
-PSRAM unconfirmed/unused; display disconnected. Board now runs the catalogue-memory
-matrix with three samples; reset reruns it. No monitor left running. Ask before
-another flash. Measured ELF/source snapshot/build logs are ignored local artifacts
-under `firmware/target/catalogue-memory-capture.r3l6jk`, not a durable binary archive.
+No hardware accessed, port opened, reset or flash this session. Board remains on
+the three-sample catalogue-memory matrix; ask before flashing. Same S3-DevKitC-1,
+UART `/dev/cu.usbserial-110`; display disconnected, PSRAM unconfirmed/unused.
+Measured ELF remains under ignored `firmware/target/catalogue-memory-capture.r3l6jk`;
+forensic images under `/tmp/overhead-drom-investigation` are disposable, not archived.
 
 ## Next / risks
-Both boots report multiple DROM segments; both complete, but the diagnostic is
-unresolved and must not be assumed harmless. Existing linker RWX warning remains.
-Broaden distinct populations/pass densities, duplicate/conflict cases, collection
-growth and RAM input lifetimes; add independent target numeric checks and stronger
-stack evidence before capacity/cadence/scheduling/over-budget choices. Flash-only
-input and written-stack observations do not establish whole-device peak RAM.
-Sharp remains a separate early check; no display/PSRAM work performed.
+Prepare a source-level remedy and single-DROM image gate for both firmware binaries
+and alignment stress; no registry/toolchain patch or warning suppression adopted.
+A corrected build still needs approved target boot/capture. RWX warning remains.
+Refine/freeze the proposed evidence contract before broadening measurements.
+No supported catalogue size, safe stack size or whole-device peak RAM established.
+Sharp validation remains a separate early check; scheduling requires latency evidence.
 
 ## Verification
-Clean snapshot: workspace tests (150 + 6 doctests), firmware tests (6/10), 11 Python
-tests, strict host/target Clippy, fmt, both target builds and regenerated manifest
-pass. Saved captures/source/evidence hashes revalidate without ignored artifacts.
-[Fresh-session commands](../firmware/CATALOGUE_MEMORY.md). No hardware access this check.
+Clean snapshot without ignored artifacts: workspace/default/all-feature tests,
+firmware host tests (6/10), 11 Python tests, strict host/catalogue-target Clippy,
+fmt, both target builds, regenerated manifest and saved capture/hash checks pass.
+Original-ELF forensic checks are in the linked investigation; binaries are not archived.
+[Fresh-session build/test commands](../firmware/CATALOGUE_MEMORY.md). No hardware access.
