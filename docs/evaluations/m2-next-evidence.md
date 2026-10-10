@@ -1,9 +1,11 @@
 # M2 next evidence — bounded preparation contract
 
 Preparation scope accepted 2026-10-10 UTC in [0019](../decisions/0019-bounded-m2-evidence-preparation.md).
-**The new snapshot, host preflight, exact capture manifest and expanded target suite
-are not prepared.** This contract freezes their scope, not a capture-ready matrix,
-production policy, or supported catalogue size. [PLAN](../PLAN.md) owns status;
+**The separate snapshot and initial source-suitability gate are prepared;
+full host preflight, exact capture manifest and expanded target suite are not.**
+[Initial evidence and remaining preparation](m2-pool-suitability.md).
+This contract freezes scope, not a capture-ready matrix, production policy, or
+supported catalogue size. [PLAN](../PLAN.md) owns status;
 decisions 0011–0018 remain authoritative for existing behavior and evidence.
 
 The goal is an initial supported catalogue and prediction operating budget, not
@@ -153,7 +155,9 @@ preflight annex with exact IDs/order/epochs/UTC/sites, group/record/byte counts,
 mutations, expected diagnostics/failure phases, work/completion counts, collection
 observations and input lifetimes. Freeze numerical reference values/tolerances too.
 Any subsequent change invalidates that manifest and requires renewed preflight.
-This annex is **not yet available**; source suitability must be demonstrated first.
+This full annex is **not yet available**. The [source-suitability subset](m2-pool-suitability.md)
+passes, but does not establish collection/input-memory behavior, error outcomes,
+numerical references or a frozen capture manifest.
 
 Extend strict capture validation to that manifest, including retained/released
 storage and all expected outcomes. Keep protocol versions distinguishable from

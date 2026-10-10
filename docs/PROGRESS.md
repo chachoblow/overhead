@@ -209,3 +209,14 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Exported staged source without ignored artifacts; with cached dependencies and installed toolchain/SDL2, offline workspace check/default/all-feature tests, no_std core check, firmware host tests/strict Clippy, formatting and 23 Python tests pass.
 - Rebuilt normal/stress firmware images; all eight positive image-gate cases and the NOBITS negative control pass. Regenerated host catalogue manifest matches saved evidence; Markdown file links resolve.
 - HANDOFF now records reproducible verification and links the offline commands. No hardware accessed; fixture preparation and exact expanded-manifest freeze remain next.
+
+## 2026-10-10 UTC (pinned M2 pool and initial source suitability)
+- Archived four CelesTrak response bodies/provenance in `tools/fixtures/m2-pool/`; deterministic offline extraction preserves 16 distinct source objects verbatim, with all epochs within 48h of the new cohort UTC. Historical fixtures unchanged.
+- Added `overhead-m2-pool-preflight` and published `evaluations/m2-pool-suitability.{md,json}`: initialized paths and all 34 growth/density searches pass; case 07 is densest at 68 stored passes. No full preflight/manifest freeze or target fit claimed.
+- Workspace check/default/all-feature tests, no_std core check, strict all-target/all-feature Clippy, fmt, five Python integrity tests, exact offline regeneration and changed-doc links/whitespace pass. No dependencies/toolchain/firmware/hardware changed.
+- Full diagnostic/error/partial/RAM and collection/input-memory preflight plus independent numerical references remain next, before the ≤20-case manifest freeze and target implementation.
+
+## 2026-10-10 UTC (pinned-pool fresh-context verification)
+- Exported staged source without ignored artifacts; offline workspace check/default/all-feature tests, no_std core check, strict all-target/all-feature Clippy and formatting pass using cached dependencies and the installed toolchain/SDL2.
+- Offline pool hash/raw-byte regeneration, all 34 published host searches and exact report comparison pass; firmware default/feature host tests/Clippy and 28 Python tests pass. No target images rebuilt or hardware accessed.
+- Clarified fresh-checkout prerequisites/commands, preserved raw-response CRLF through scoped Git attributes, ignored host-tool Python caches, and refreshed HANDOFF. Full preflight/manifest freeze remains next; no new product or preparation-contract decision.

@@ -1,5 +1,12 @@
 # Host experiment fixtures
 
+## `m2-pool/`
+Separate pinned 16-object real-orbit acquisition set for bounded M2 preparation.
+Source bytes/URLs/retrieval timestamps/hashes, deterministic selection rules and
+offline regeneration live in its [fixture README](m2-pool/README.md). Initial
+[source suitability](../../docs/evaluations/m2-pool-suitability.md) passes; the full
+host preflight/capture manifest is not frozen. Historical files below are unchanged.
+
 ## `catalogue-costs.tle`
 Eight distinct historical records from the same pinned [Vallado/CelesTrak
 SGP4 verification source](https://github.com/CelesTrak/fundamentals-of-astrodynamics/blob/98e731d390150d31defc205eff84615a5ff894f0/datalib/SGP4-VER.TLE),

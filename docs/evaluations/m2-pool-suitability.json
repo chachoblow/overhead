@@ -1,0 +1,2400 @@
+{
+  "schema_version": 1,
+  "status": "source-suitability-only-not-frozen-manifest",
+  "pool_sha256": "64197cca475768a0d1030c504c2084fad3b865feccacb66d682a43ed36fdcec2",
+  "start_utc": "2026-10-10T00:00:00Z",
+  "lookahead_s": 86400,
+  "threshold_deg": 10,
+  "detection_s": 60,
+  "crossing_tolerance_s": 5,
+  "per_satellite_allowance": 200000,
+  "inputs": [
+    {
+      "norad_id": 28054,
+      "epoch_utc": "2026-10-10T07:30:06.549120Z",
+      "age_at_start_microseconds": -27006549120,
+      "initialized_path": "near-earth"
+    },
+    {
+      "norad_id": 7376,
+      "epoch_utc": "2026-10-09T01:03:29.357856Z",
+      "age_at_start_microseconds": 82590642144,
+      "initialized_path": "deep-space-half-day-resonant"
+    },
+    {
+      "norad_id": 29522,
+      "epoch_utc": "2026-10-10T06:53:22.930944Z",
+      "age_at_start_microseconds": -24802930944,
+      "initialized_path": "near-earth"
+    },
+    {
+      "norad_id": 26407,
+      "epoch_utc": "2026-10-10T01:38:11.603040Z",
+      "age_at_start_microseconds": -5891603040,
+      "initialized_path": "deep-space-nonresonant"
+    },
+    {
+      "norad_id": 32958,
+      "epoch_utc": "2026-10-09T07:12:26.644896Z",
+      "age_at_start_microseconds": 60453355104,
+      "initialized_path": "near-earth"
+    },
+    {
+      "norad_id": 19548,
+      "epoch_utc": "2026-10-10T01:48:29.993760Z",
+      "age_at_start_microseconds": -6509993760,
+      "initialized_path": "deep-space-one-day-resonant"
+    },
+    {
+      "norad_id": 35951,
+      "epoch_utc": "2026-10-10T06:20:35.445696Z",
+      "age_at_start_microseconds": -22835445696,
+      "initialized_path": "near-earth"
+    },
+    {
+      "norad_id": 7780,
+      "epoch_utc": "2026-10-08T09:33:14.856768Z",
+      "age_at_start_microseconds": 138405143232,
+      "initialized_path": "deep-space-half-day-resonant"
+    },
+    {
+      "norad_id": 37214,
+      "epoch_utc": "2026-10-10T07:19:45.607872Z",
+      "age_at_start_microseconds": -26385607872,
+      "initialized_path": "near-earth"
+    },
+    {
+      "norad_id": 27663,
+      "epoch_utc": "2026-10-09T19:11:32.077248Z",
+      "age_at_start_microseconds": 17307922752,
+      "initialized_path": "deep-space-nonresonant"
+    },
+    {
+      "norad_id": 37849,
+      "epoch_utc": "2026-10-10T05:34:05.928384Z",
+      "age_at_start_microseconds": -20045928384,
+      "initialized_path": "near-earth"
+    },
+    {
+      "norad_id": 20253,
+      "epoch_utc": "2026-10-09T11:32:02.779008Z",
+      "age_at_start_microseconds": 44877220992,
+      "initialized_path": "deep-space-one-day-resonant"
+    },
+    {
+      "norad_id": 38771,
+      "epoch_utc": "2026-10-10T06:40:10.134048Z",
+      "age_at_start_microseconds": -24010134048,
+      "initialized_path": "near-earth"
+    },
+    {
+      "norad_id": 21639,
+      "epoch_utc": "2026-10-10T05:14:22.200000Z",
+      "age_at_start_microseconds": -18862200000,
+      "initialized_path": "deep-space-one-day-resonant"
+    },
+    {
+      "norad_id": 39260,
+      "epoch_utc": "2026-10-10T05:46:52.945248Z",
+      "age_at_start_microseconds": -20812945248,
+      "initialized_path": "near-earth"
+    },
+    {
+      "norad_id": 22314,
+      "epoch_utc": "2026-10-10T05:37:37.784640Z",
+      "age_at_start_microseconds": -20257784640,
+      "initialized_path": "deep-space-one-day-resonant"
+    }
+  ],
+  "searches": [
+    {
+      "population": "mixed-5",
+      "site": {
+        "latitude_deg": 39.007,
+        "longitude_deg": -104.883,
+        "altitude_km": 2.187
+      },
+      "input_records": 5,
+      "input_json_bytes": 2111,
+      "evaluations": 7321,
+      "stored_passes": 16,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1477,
+          "passes": 5
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1473,
+          "passes": 4
+        }
+      ]
+    },
+    {
+      "population": "mixed-9",
+      "site": {
+        "latitude_deg": 39.007,
+        "longitude_deg": -104.883,
+        "altitude_km": 2.187
+      },
+      "input_records": 9,
+      "input_json_bytes": 3784,
+      "evaluations": 13165,
+      "stored_passes": 27,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1477,
+          "passes": 5
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1473,
+          "passes": 4
+        }
+      ]
+    },
+    {
+      "population": "mixed-12",
+      "site": {
+        "latitude_deg": 39.007,
+        "longitude_deg": -104.883,
+        "altitude_km": 2.187
+      },
+      "input_records": 12,
+      "input_json_bytes": 5036,
+      "evaluations": 17536,
+      "stored_passes": 33,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1477,
+          "passes": 5
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1473,
+          "passes": 4
+        }
+      ]
+    },
+    {
+      "population": "mixed-16",
+      "site": {
+        "latitude_deg": 39.007,
+        "longitude_deg": -104.883,
+        "altitude_km": 2.187
+      },
+      "input_records": 16,
+      "input_json_bytes": 6672,
+      "evaluations": 23380,
+      "stored_passes": 44,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1477,
+          "passes": 5
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1473,
+          "passes": 4
+        }
+      ]
+    },
+    {
+      "population": "leo-heavy",
+      "site": {
+        "latitude_deg": -60.0,
+        "longitude_deg": -120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4212,
+      "evaluations": 14938,
+      "stored_passes": 66,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1513,
+          "passes": 9
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1505,
+          "passes": 8
+        }
+      ]
+    },
+    {
+      "population": "leo-heavy",
+      "site": {
+        "latitude_deg": -60.0,
+        "longitude_deg": 0.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4212,
+      "evaluations": 14926,
+      "stored_passes": 65,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1501,
+          "passes": 8
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1513,
+          "passes": 9
+        }
+      ]
+    },
+    {
+      "population": "leo-heavy",
+      "site": {
+        "latitude_deg": -60.0,
+        "longitude_deg": 120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4212,
+      "evaluations": 14946,
+      "stored_passes": 68,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 3
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1513,
+          "passes": 9
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1505,
+          "passes": 8
+        }
+      ]
+    },
+    {
+      "population": "leo-heavy",
+      "site": {
+        "latitude_deg": -30.0,
+        "longitude_deg": -120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4212,
+      "evaluations": 14690,
+      "stored_passes": 36,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 3
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1473,
+          "passes": 4
+        }
+      ]
+    },
+    {
+      "population": "leo-heavy",
+      "site": {
+        "latitude_deg": -30.0,
+        "longitude_deg": 0.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4212,
+      "evaluations": 14626,
+      "stored_passes": 27,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1465,
+          "passes": 3
+        }
+      ]
+    },
+    {
+      "population": "leo-heavy",
+      "site": {
+        "latitude_deg": -30.0,
+        "longitude_deg": 120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4212,
+      "evaluations": 14670,
+      "stored_passes": 34,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 3
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1477,
+          "passes": 5
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1473,
+          "passes": 4
+        }
+      ]
+    },
+    {
+      "population": "leo-heavy",
+      "site": {
+        "latitude_deg": 0.0,
+        "longitude_deg": -120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4212,
+      "evaluations": 14618,
+      "stored_passes": 27,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1465,
+          "passes": 3
+        }
+      ]
+    },
+    {
+      "population": "leo-heavy",
+      "site": {
+        "latitude_deg": 0.0,
+        "longitude_deg": 0.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4212,
+      "evaluations": 14618,
+      "stored_passes": 26,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1465,
+          "passes": 3
+        }
+      ]
+    },
+    {
+      "population": "leo-heavy",
+      "site": {
+        "latitude_deg": 0.0,
+        "longitude_deg": 120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4212,
+      "evaluations": 14622,
+      "stored_passes": 27,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1453,
+          "passes": 2
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1465,
+          "passes": 3
+        }
+      ]
+    },
+    {
+      "population": "leo-heavy",
+      "site": {
+        "latitude_deg": 30.0,
+        "longitude_deg": -120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4212,
+      "evaluations": 14666,
+      "stored_passes": 33,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1465,
+          "passes": 3
+        }
+      ]
+    },
+    {
+      "population": "leo-heavy",
+      "site": {
+        "latitude_deg": 30.0,
+        "longitude_deg": 0.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4212,
+      "evaluations": 14682,
+      "stored_passes": 34,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1473,
+          "passes": 4
+        }
+      ]
+    },
+    {
+      "population": "leo-heavy",
+      "site": {
+        "latitude_deg": 30.0,
+        "longitude_deg": 120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4212,
+      "evaluations": 14658,
+      "stored_passes": 31,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1473,
+          "passes": 4
+        }
+      ]
+    },
+    {
+      "population": "leo-heavy",
+      "site": {
+        "latitude_deg": 60.0,
+        "longitude_deg": -120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4212,
+      "evaluations": 14922,
+      "stored_passes": 65,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 3
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1497,
+          "passes": 7
+        }
+      ]
+    },
+    {
+      "population": "leo-heavy",
+      "site": {
+        "latitude_deg": 60.0,
+        "longitude_deg": 0.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4212,
+      "evaluations": 14938,
+      "stored_passes": 66,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1505,
+          "passes": 8
+        }
+      ]
+    },
+    {
+      "population": "leo-heavy",
+      "site": {
+        "latitude_deg": 60.0,
+        "longitude_deg": 120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4212,
+      "evaluations": 14914,
+      "stored_passes": 63,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 32958,
+          "evaluations": 1489,
+          "passes": 6
+        },
+        {
+          "norad_id": 35951,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 37214,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 37849,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 38771,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 39260,
+          "evaluations": 1497,
+          "passes": 7
+        }
+      ]
+    },
+    {
+      "population": "deep-space-heavy",
+      "site": {
+        "latitude_deg": -60.0,
+        "longitude_deg": -120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4152,
+      "evaluations": 14626,
+      "stored_passes": 28,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1505,
+          "passes": 8
+        }
+      ]
+    },
+    {
+      "population": "deep-space-heavy",
+      "site": {
+        "latitude_deg": -60.0,
+        "longitude_deg": 0.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4152,
+      "evaluations": 14594,
+      "stored_passes": 25,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1505,
+          "passes": 8
+        }
+      ]
+    },
+    {
+      "population": "deep-space-heavy",
+      "site": {
+        "latitude_deg": -60.0,
+        "longitude_deg": 120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4152,
+      "evaluations": 14618,
+      "stored_passes": 28,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 3
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1513,
+          "passes": 9
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1505,
+          "passes": 8
+        }
+      ]
+    },
+    {
+      "population": "deep-space-heavy",
+      "site": {
+        "latitude_deg": -30.0,
+        "longitude_deg": -120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4152,
+      "evaluations": 14546,
+      "stored_passes": 19,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1441,
+          "passes": 1
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 3
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1473,
+          "passes": 4
+        }
+      ]
+    },
+    {
+      "population": "deep-space-heavy",
+      "site": {
+        "latitude_deg": -30.0,
+        "longitude_deg": 0.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4152,
+      "evaluations": 14482,
+      "stored_passes": 12,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1441,
+          "passes": 1
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1441,
+          "passes": 1
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1473,
+          "passes": 4
+        }
+      ]
+    },
+    {
+      "population": "deep-space-heavy",
+      "site": {
+        "latitude_deg": -30.0,
+        "longitude_deg": 120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4152,
+      "evaluations": 14526,
+      "stored_passes": 18,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 3
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1441,
+          "passes": 1
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1477,
+          "passes": 5
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1465,
+          "passes": 3
+        }
+      ]
+    },
+    {
+      "population": "deep-space-heavy",
+      "site": {
+        "latitude_deg": 0.0,
+        "longitude_deg": -120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4152,
+      "evaluations": 14506,
+      "stored_passes": 15,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1457,
+          "passes": 3
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1441,
+          "passes": 1
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1465,
+          "passes": 3
+        }
+      ]
+    },
+    {
+      "population": "deep-space-heavy",
+      "site": {
+        "latitude_deg": 0.0,
+        "longitude_deg": 0.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4152,
+      "evaluations": 14474,
+      "stored_passes": 11,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1441,
+          "passes": 1
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1441,
+          "passes": 1
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1465,
+          "passes": 3
+        }
+      ]
+    },
+    {
+      "population": "deep-space-heavy",
+      "site": {
+        "latitude_deg": 0.0,
+        "longitude_deg": 120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4152,
+      "evaluations": 14502,
+      "stored_passes": 14,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1453,
+          "passes": 2
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1441,
+          "passes": 1
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1473,
+          "passes": 4
+        }
+      ]
+    },
+    {
+      "population": "deep-space-heavy",
+      "site": {
+        "latitude_deg": 30.0,
+        "longitude_deg": -120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4152,
+      "evaluations": 14522,
+      "stored_passes": 16,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1441,
+          "passes": 1
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1465,
+          "passes": 3
+        }
+      ]
+    },
+    {
+      "population": "deep-space-heavy",
+      "site": {
+        "latitude_deg": 30.0,
+        "longitude_deg": 0.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4152,
+      "evaluations": 14530,
+      "stored_passes": 19,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1457,
+          "passes": 3
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1441,
+          "passes": 1
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1441,
+          "passes": 1
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1473,
+          "passes": 4
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1473,
+          "passes": 4
+        }
+      ]
+    },
+    {
+      "population": "deep-space-heavy",
+      "site": {
+        "latitude_deg": 30.0,
+        "longitude_deg": 120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4152,
+      "evaluations": 14506,
+      "stored_passes": 14,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1441,
+          "passes": 1
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1465,
+          "passes": 3
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1473,
+          "passes": 4
+        }
+      ]
+    },
+    {
+      "population": "deep-space-heavy",
+      "site": {
+        "latitude_deg": 60.0,
+        "longitude_deg": -120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4152,
+      "evaluations": 14618,
+      "stored_passes": 28,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1457,
+          "passes": 3
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 3
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1497,
+          "passes": 7
+        }
+      ]
+    },
+    {
+      "population": "deep-space-heavy",
+      "site": {
+        "latitude_deg": 60.0,
+        "longitude_deg": 0.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4152,
+      "evaluations": 14610,
+      "stored_passes": 27,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1457,
+          "passes": 3
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1457,
+          "passes": 3
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1505,
+          "passes": 8
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1497,
+          "passes": 7
+        }
+      ]
+    },
+    {
+      "population": "deep-space-heavy",
+      "site": {
+        "latitude_deg": 60.0,
+        "longitude_deg": 120.0,
+        "altitude_km": 0.0
+      },
+      "input_records": 10,
+      "input_json_bytes": 4152,
+      "evaluations": 14610,
+      "stored_passes": 27,
+      "earliest_candidates": 1,
+      "complete": true,
+      "satellites": [
+        {
+          "norad_id": 7376,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 7780,
+          "evaluations": 1457,
+          "passes": 3
+        },
+        {
+          "norad_id": 19548,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 20253,
+          "evaluations": 1449,
+          "passes": 2
+        },
+        {
+          "norad_id": 21639,
+          "evaluations": 1449,
+          "passes": 1
+        },
+        {
+          "norad_id": 22314,
+          "evaluations": 1441,
+          "passes": 0
+        },
+        {
+          "norad_id": 26407,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 27663,
+          "evaluations": 1457,
+          "passes": 2
+        },
+        {
+          "norad_id": 28054,
+          "evaluations": 1497,
+          "passes": 7
+        },
+        {
+          "norad_id": 29522,
+          "evaluations": 1505,
+          "passes": 8
+        }
+      ]
+    }
+  ],
+  "selected_cases": [
+    {
+      "case_id": 3,
+      "search_index": 0
+    },
+    {
+      "case_id": 4,
+      "search_index": 1
+    },
+    {
+      "case_id": 5,
+      "search_index": 2
+    },
+    {
+      "case_id": 6,
+      "search_index": 3
+    },
+    {
+      "case_id": 7,
+      "search_index": 6
+    },
+    {
+      "case_id": 8,
+      "search_index": 11
+    },
+    {
+      "case_id": 9,
+      "search_index": 19
+    },
+    {
+      "case_id": 10,
+      "search_index": 26
+    }
+  ],
+  "densest_case_id": 7
+}

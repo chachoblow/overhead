@@ -238,6 +238,43 @@ contract; tests bound conversion rounding without changing dependency features.
 hooks, conversion/ingestion, CLI validation, complete/partial/unsearched work,
 stable heap accounting, and phase arithmetic—not machine-dependent speed.
 
+## `overhead-m2-pool-preflight`
+
+Verify the separately pinned 16-object M2 acquisition pool and publish complete
+host search counts, without changing historical controls or fetching data.
+
+```sh
+python3 tools/prepare_m2_pool.py --check
+cargo run --release --locked -p overhead-tools --bin overhead-m2-pool-preflight \
+  > /tmp/m2-pool-suitability.json
+cmp /tmp/m2-pool-suitability.json docs/evaluations/m2-pool-suitability.json
+```
+
+No arguments except `--help`/`-h`; inputs/UTC are embedded. Exit 0 means the source
+suitability gate passed (or help); invalid arguments or failed gates exit 1 with
+stderr and no partial stdout JSON. No files, wall clock, network or hardware are
+used at runtime. The Python integrity/regeneration tool is also entirely offline;
+its standard library is sufficient. No dependencies were added.
+
+The gate checks all 16 identities/epochs/order, actual initialized sgp4 2.4
+method/resonance variants, rejection-free ingestion, and complete 24h searches.
+JSON contains four Colorado growth searches and all 30 density-site candidates,
+per-satellite counts, deterministic high/low site choices and the densest selected
+case. Every retained report/pass is cross-checked against a direct streaming search.
+The 34 suitability searches are not an expanded 34-case target matrix.
+
+**Not the full M2 preflight or capture manifest.** No allocations/capacities, RAM
+lifetimes, stack, timing or independent numerical checks are measured. Historical
+reference/error/partial/RAM cases remain to be preflighted. No supported size or
+production policy is selected. Source integrity is verified by the Python check;
+the Rust binary embeds the selected pool and publishes its recorded hash, rather
+than implementing another hash function. Run both checks for evidence regeneration.
+
+[Fixture provenance/regeneration](fixtures/m2-pool/README.md),
+[results and remaining gate](../docs/evaluations/m2-pool-suitability.md).
+Tests: `cargo test -p overhead-tools --bin overhead-m2-pool-preflight --test m2_pool_preflight`
+and `python3 -m unittest discover -s tools -p 'test_prepare_m2_pool.py'`.
+
 ## `overhead-track`
 
 Single-satellite measurements from explicit local inputs; no network, wall

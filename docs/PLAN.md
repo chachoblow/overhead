@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: M2; bounded evidence preparation scope accepted; pinned fixtures/host preflight and exact manifest freeze next.**
+**Current: M2; pinned real-orbit pool/source suitability pass; full host preflight and exact manifest freeze next.**
 Build the headless engine, then the real-data UI, then the device
 ([rationale](decisions/0005-engine-first-implementation.md)). Refine each
 slice before starting; later checkboxes are scope, not session-sized tasks.
@@ -80,9 +80,12 @@ hardware; the first S3 kernel baseline alone does not justify capacity or cadenc
 - [x] Refine/freeze the bounded evidence **preparation scope**, preserving historical
   controls and adding a separately pinned real-orbit cohort
   ([0019](decisions/0019-bounded-m2-evidence-preparation.md)); not a capture-ready manifest.
-- [ ] Prepare pinned fixtures and host preflight; freeze the exact ≤20-case manifest,
-  numerical references and expected outcomes under the
-  [preparation contract](evaluations/m2-next-evidence.md) before target-harness implementation.
+- [x] Pin the separate 16-object source pool and verify initialized paths, epochs,
+  growth searches and all density-site candidates on host
+  ([initial suitability evidence](evaluations/m2-pool-suitability.md)); not full preflight.
+- [ ] Complete host preflight (collection/input-memory behavior, diagnostics/error/
+  partial/RAM cases); pin numerical references and freeze the exact ≤20-case manifest
+  under the [preparation contract](evaluations/m2-next-evidence.md) before target-harness implementation.
 - [ ] Implement/capture the frozen suite: broader distinct populations/pass densities,
   collection/input-memory samples, stronger stack observations and independent target
   numerical checks. Set catalogue limits, cadence, scheduling and explicit over-budget

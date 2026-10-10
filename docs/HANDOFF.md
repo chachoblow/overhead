@@ -1,40 +1,41 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-10 UTC. Next: pinned fixtures/host preflight and exact M2 manifest freeze._
+_Last updated: 2026-10-10 UTC. Next: full host preflight and exact M2 manifest freeze._
 
 ## State
-M2 remains open for operating limits/cadence/scheduling. Bounded evidence preparation
-scope is accepted, **not** a capture-ready manifest or implemented expanded suite.
-Corrected catalogue-memory boots pass without the multiple-DROM diagnostic; separate
-RWX warning remains. No production defaults; render stub/static simulator unchanged.
-[PLAN](PLAN.md).
+M2 remains open for operating limits/cadence/scheduling. The separate pinned
+16-object pool passes initial source suitability; **not** full preflight or a
+capture-ready manifest. Corrected catalogue-memory boots pass without the
+multiple-DROM diagnostic; RWX warning remains. No production defaults/UI changes. [PLAN](PLAN.md).
 
 ## This session
-Reviewed the existing harness, ingestion contracts and pinned upstream verification
-set. User chose a separate pinned real-orbit cohort, preserving historical controls.
-[0019](decisions/0019-bounded-m2-evidence-preparation.md) accepts the preparation scope;
-[contract](evaluations/m2-next-evidence.md) bounds cases, inputs, site selection,
-error outcomes, RAM lifetimes and separate numeric/stack gates. No new orbital
-snapshot, code, dependency/toolchain change or hardware capture; offline rebuilds pass.
+Archived CelesTrak source bytes/provenance and deterministic offline extraction in
+[tools/fixtures/m2-pool](../tools/fixtures/m2-pool/README.md). Added
+`overhead-m2-pool-preflight`: actual initialized SGP4 paths, ≤48h epochs, four
+mixed growth searches and all 30 density-site candidates pass. Case 07 is densest
+(68 stored passes); pool is 6,672 bytes. [Evidence/remaining gates](evaluations/m2-pool-suitability.md).
+Historical fixtures unchanged; no dependency/toolchain/firmware/hardware change.
 
 ## Next / risks
-Prepare the 16-object source pool and host preflight; freeze exact identities,
-bytes/hashes, sites, diagnostics, work counts and numerical references before
-extending the target harness. Source suitability and fit are not established.
-Keep ≤20 cases and the fixed 64 KiB heap; review failures rather than silently
-relaxing the contract. No supported catalogue size, safe stack size or whole-device
-peak RAM established. Scheduling latency and independent target numeric checks
-remain pending. Sharp bring-up stays separate; review linker override on upgrades.
+Complete historical/error/partial/RAM cases, retained diagnostics, collection
+capacity/allocation observations, input-copy overlap/full release and independent
+numerical references; freeze exact ≤20-case manifest before target implementation.
+[Contract](evaluations/m2-next-evidence.md). Weather-derived LEOs are predominantly
+polar, not broad inclination coverage. Target fit, safe stack, supported catalogue
+size and whole-device peak RAM remain unestablished. Keep the fixed 64 KiB heap;
+review failed/redundant cases rather than silently replacing/widening them.
+Scheduling latency remains pending; Sharp bring-up stays separate.
 
 ## Hardware / local setup
-Board still holds the corrected three-sample catalogue-memory experiment; reset
-reruns it. No monitor left running. S3-DevKitC-1 UART `/dev/cu.usbserial-110`;
-display/PSRAM unused, capacity unconfirmed. Ask before flashing. Ignored build
-artifacts: `firmware/target/corrected-boot-20261010T141219Z`; binaries not archived.
-Re-gate the exact normal image before future flashing: [usage](../firmware/IMAGE_GATE.md).
+Board unchanged: corrected three-sample catalogue-memory experiment; reset reruns
+it. No monitor running. S3-DevKitC-1 UART `/dev/cu.usbserial-110`; display/PSRAM
+unused, capacity unconfirmed. Ask before flashing; re-gate exact normal images.
+[Image gate](../firmware/IMAGE_GATE.md). Prior ignored artifacts:
+`firmware/target/corrected-boot-20261010T141219Z`; binaries not archived.
 
 ## Verification
-Clean-source export passes workspace check/default/all-feature tests, no_std core
-check, firmware host tests/Clippy, fmt, 23 Python tests and all image regressions.
-Regenerated manifest and doc file links pass. Installed toolchain/SDL2 required;
-no ignored artifacts/hardware needed. [Host](../firmware/README.md#offline-checks) / [feature](../firmware/CATALOGUE_MEMORY.md#offline-verification--next-step) / [image](../firmware/IMAGE_GATE.md#complete-regression-run--no-hardware) commands.
+Clean staged-source export passes offline workspace check/default/all-feature tests,
+no_std core check, strict Clippy, fmt, firmware default/feature host tests/Clippy,
+28 Python tests and exact pool/report regeneration. No ignored artifacts needed;
+existing toolchain/cached dependencies and SDL2 required. Target images not rebuilt.
+[Fresh-checkout commands](../tools/fixtures/m2-pool/README.md#offline-regeneration-and-checks).
