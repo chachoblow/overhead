@@ -1,40 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-10 UTC. Next: source-level DROM remedy/image gate; refine bounded M2 evidence proposal._
+_Last updated: 2026-10-10 UTC. Next: approved corrected boot/capture; refine bounded M2 evidence proposal._
 
 ## State
-M2 remains open for operating limits/cadence/scheduling. First distinct-catalogue
-S3 heap and written-stack captures exist; no production defaults selected.
-Headless engine works; render stub/static simulator unchanged. [PLAN](PLAN.md).
+M2 remains open for operating limits/cadence/scheduling. DROM source remedy and
+image gate pass offline; no corrected target boot yet. Historical heap/stack
+captures unchanged; no production defaults. Render stub/static simulator unchanged.
+[PLAN](PLAN.md).
 
 ## This session
-Offline investigation reproduced the multiple-DROM cause: a 32-byte NOBITS
-alignment gap is skipped by espflash. A disposable ELF section-type counterfactual
-produces one DROM segment; it is not a source fix or flash candidate. Page mapping
-explains why this particular captured layout completes, not arbitrary-image safety.
-[Evidence, source references and next validation](evaluations/s3-drom-diagnostic.md).
-[Proposed bounded follow-up](evaluations/m2-next-evidence.md): at most 20 memory/work
-cases plus separate independent numeric and stronger stack gates; not yet accepted
-or implemented. Existing decisions/contracts and historical measurements unchanged.
+`firmware/rodata.x` emits file-backed alignment padding; `build.rs` tracks edits.
+`firmware/image_gate.py` checks ELF/image contents, descriptor/hash and single DROM.
+`firmware/check_images.py` passes both binaries, their 64 KiB stress builds, four
+alignment fixtures and a source-generated NOBITS negative control. Twelve new
+Python tests. [Usage](../firmware/IMAGE_GATE.md),
+[decision 0018](decisions/0018-source-level-drom-remedy-and-image-gate.md),
+[evidence/report](evaluations/s3-drom-diagnostic.md#source-remedy-and-gate--subsequent-offline-validation).
+No dependencies, registry files or toolchain changed; RWX warning unsuppressed.
 
 ## Hardware / local setup
-No hardware accessed, port opened, reset or flash this session. Board remains on
-the three-sample catalogue-memory matrix; ask before flashing. Same S3-DevKitC-1,
-UART `/dev/cu.usbserial-110`; display disconnected, PSRAM unconfirmed/unused.
-Measured ELF remains under ignored `firmware/target/catalogue-memory-capture.r3l6jk`;
-forensic images under `/tmp/overhead-drom-investigation` are disposable, not archived.
+No hardware accessed, port opened, reset or flash. Board remains on the historical
+three-sample catalogue-memory matrix; ask before flashing. S3-DevKitC-1 UART
+`/dev/cu.usbserial-110`; display disconnected, PSRAM unconfirmed/unused.
+New ignored artifacts/logs: `firmware/target/image-gate-final-20261010`.
+Stress/minimal/negative fixtures and the runner's final Cargo outputs are NOT flash
+candidates. Prepare an ordinary build and gate that exact ELF before approval.
 
 ## Next / risks
-Prepare a source-level remedy and single-DROM image gate for both firmware binaries
-and alignment stress; no registry/toolchain patch or warning suppression adopted.
-A corrected build still needs approved target boot/capture. RWX warning remains.
-Refine/freeze the proposed evidence contract before broadening measurements.
-No supported catalogue size, safe stack size or whole-device peak RAM established.
-Sharp validation remains a separate early check; scheduling requires latency evidence.
+Obtain approval for corrected normal-build flash and bounded boot/capture.
+Then refine/freeze the [next-evidence proposal](evaluations/m2-next-evidence.md)
+before broadening measurements; it remains unaccepted/unimplemented. No supported
+catalogue size, safe stack size or whole-device peak RAM established. Sharp bring-up
+remains separate; scheduling requires latency evidence. Review local override on upgrades.
 
 ## Verification
-Clean snapshot without ignored artifacts: workspace/default/all-feature tests,
-firmware host tests (6/10), 11 Python tests, strict host/catalogue-target Clippy,
-fmt, both target builds, regenerated manifest and saved capture/hash checks pass.
-Original-ELF forensic checks are in the linked investigation; binaries are not archived.
-[Fresh-session build/test commands](../firmware/CATALOGUE_MEMORY.md). No hardware access.
+Clean source snapshot without ignored artifacts: workspace check/default/all-feature
+tests, firmware host tests (6/10), strict host Clippy, formatting, 23 Python tests,
+four full target builds and all image cases pass. No target execution this session.
+[Fresh-session commands](../firmware/IMAGE_GATE.md); binaries are not archived.

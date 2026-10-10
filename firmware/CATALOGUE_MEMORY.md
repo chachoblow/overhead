@@ -97,6 +97,11 @@ The `.stack` section is available linker space, **not measured stack use**. Insp
 `stack_watermark::target::paint` for its bounded no-call loop and `exercise_stack`
 for the retained 8 KiB local. The existing linker RWX warning remains unsuppressed.
 
+Before requesting flash approval, run the [offline image gate](IMAGE_GATE.md)
+on the exact normal-build ELF/application image. Do not use stress-runner Cargo
+outputs as measurement builds. The local source remedy passes offline; a corrected
+target boot is not yet captured.
+
 From `firmware/`, **only after flash approval and checking the current port**:
 
 ```sh
@@ -136,9 +141,10 @@ for the new binary, formatting, 11 Python tests, a generated/parsed release host
 manifest, and both target release builds. Probe disassembly retains its no-call
 paint loop and known stack local. That preparation did not access hardware; the
 subsequent approved captures and their verification are in the linked results.
-Both captured boots report a multiple-DROM mapping diagnostic despite completing;
-see the results for the unresolved warning, rather than assuming it harmless.
+Both historical captured boots report a multiple-DROM mapping diagnostic despite
+completing. The [source remedy and image gate](IMAGE_GATE.md) now pass offline,
+but no corrected target boot/capture exists yet; historical results are unchanged.
 
-Next: investigate the boot diagnostic, broaden distinct populations/pass density/
-collection growth/input RAM lifetimes, and add stronger stack evidence and independent
-target numerical checks before selecting M2 capacity/cadence/scheduling policies.
+Next: approved corrected boot/capture, then refine/freeze the
+[bounded evidence proposal](../docs/evaluations/m2-next-evidence.md) before broader
+measurements or selecting M2 capacity/cadence/scheduling policies.

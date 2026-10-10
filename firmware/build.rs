@@ -27,6 +27,7 @@ fn main() {
     println!("cargo:rerun-if-changed={iss_path}");
     println!("cargo:rerun-if-changed={tle_path}");
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=rodata.x");
     println!("cargo:rerun-if-changed=src/selection.rs");
     let mut elements: Vec<Elements> =
         serde_json::from_str(&fs::read_to_string(iss_path).unwrap()).unwrap();

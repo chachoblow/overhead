@@ -1,7 +1,8 @@
 # S3 multiple-DROM diagnostic — offline investigation
 
-Investigated 2026-10-10 UTC. **Cause reproduced offline; no source fix or hardware
-validation.** Original captures, hashes and measured costs remain unchanged.
+Investigated 2026-10-10 UTC. **Source remedy and image gate now pass offline;
+corrected target boot/capture still pending approval.** Original captures, hashes
+and measured costs remain unchanged.
 This is a follow-up to [the catalogue-memory capture](s3-catalogue-memory.md),
 not grounds to treat arbitrary multiple-DROM images as safe.
 
@@ -97,12 +98,54 @@ with this application-image inventory. ELF/binaries remain ignored local artifac
 not a durable binary archive; current scratch files are under
 `/tmp/overhead-drom-investigation`.
 
-Next: prepare a source-level linker reproducer/remedy and an offline image gate
-requiring a single DROM segment with all expected bytes represented. Test both
-firmware binaries and an alignment-stress case, preserving descriptor placement
-and verifying RAM/IROM content. Do not suppress the warning or adopt ELF surgery.
-Any dependency/toolchain change or flash requires approval; a corrected build
-still needs an approved boot/capture before calling the warning fixed on target.
+## Source remedy and gate — subsequent offline validation
+
+The repository-local `firmware/rodata.x` now emits `BYTE(0)` before the existing
+alignment expression. This makes the gap PROGBITS without mutating the ELF or
+registry. GNU ld's current-directory INCLUDE lookup selects the override; the
+build script tracks it. Rationale: [0018](../decisions/0018-source-level-drom-remedy-and-image-gate.md).
+Usage, scope and regeneration: [IMAGE_GATE.md](../../firmware/IMAGE_GATE.md).
+
+Eight positive cases pass the new ELF/image gate with installed espflash 4.6.0
+and the unchanged toolchain. All have one DROM segment beginning at `0x3c000020`:
+
+| Build / fixture | Rodata alignment | File-backed merge bytes | Image bytes |
+|---|---:|---:|---:|
+| Kernel, baseline / 3 samples | 8 | 8 | 655,536 |
+| Catalogue-memory / 3 samples | 64 | 32 | 368,848 |
+| Kernel + retained alignment-stress input | 65,536 | 65,248 | 783,136 |
+| Catalogue + retained alignment-stress input | 65,536 | 65,248 | 499,920 |
+| Minimal alignment fixture | 4 | 4 | 65,616 |
+| Minimal alignment fixture | 64 | 32 | 65,616 |
+| Minimal alignment fixture | 4,096 | 3,808 | 65,616 |
+| Minimal alignment fixture | 65,536 | 65,248 | 131,152 |
+
+The gate verifies every loadable ELF byte in RAM/IROM/DROM against its image,
+allowing only the exact regenerated descriptor ELF hash. Descriptor placement,
+page offsets, checksums/digest, zero padding and section/segment coverage pass.
+The real kernel image also exercises a RAM section split across image segments.
+These are checks against each build's own ELF, not a binary-equivalence claim
+against the historical build or a runtime mapping readback.
+
+A ninth, negative source control removes only the remedy byte in a disposable
+script: the 64-byte fixture regains a 32-byte NOBITS gap, produces two DROM segments,
+and is rejected. The saved historical ELF/image is also rejected for the missing
+file-backed merge. Twelve new synthetic gate tests plus the prior eleven capture
+tests pass. Workspace check/tests, firmware host tests (6/10), default/feature
+strict host Clippy and formatting pass. All four full target links still emit
+the separate RWX warning, unsuppressed.
+
+The [saved report](s3-image-gate-report.json) records tool versions, relevant source
+hashes, image/ELF hashes, inventories and the negative-control result. Local ELFs,
+images and commands/build logs are under ignored
+`firmware/target/image-gate-final-20261010`; binaries are not archived. Fresh runs
+may differ in paths/metadata/hashes and should use the reproducible source checks,
+not expect byte-identical historical output. No hardware was accessed, port opened,
+reset or flash performed. Stress/minimal/negative fixtures are not flash candidates.
+
+Next: prepare and gate an ordinary corrected measurement build, obtain explicit
+flash approval, then capture its boot and bounded workload before calling the
+multiple-DROM diagnostic fixed on target. Do not broaden the evidence suite yet.
 
 ## Pinned source references
 

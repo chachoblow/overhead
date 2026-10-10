@@ -1,0 +1,303 @@
+{
+  "scope": "offline only; stress/fixture artifacts are not flash candidates",
+  "complete": true,
+  "tools": {
+    "rustc": "rustc 1.97.0-nightly (8ea53bcd7 2026-07-08) (1.97.0.0)",
+    "cargo": "cargo 1.97.0-nightly (c980f4866 2026-06-30) (1.97.0.0)",
+    "espflash": "espflash 4.6.0",
+    "xtensa-esp32s3-elf-as": "GNU assembler (crosstool-NG esp-16.2.0_20260914) 2.47.20260726\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or later.\nThis program has absolutely no warranty.\nThis assembler was configured for a target of `xtensa-esp-elf'.",
+    "xtensa-esp32s3-elf-ld": "GNU ld (crosstool-NG esp-16.2.0_20260914) 2.47.20260726\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) a later version.\nThis program has absolutely no warranty."
+  },
+  "source_sha256": {
+    "rodata.x": "91872657834f02052639cf8f1d5dcc2ddef6fde837bfcc40a050b84b076e0f22",
+    "Cargo.lock": "e689539ef7d048890dc8ad4c8a399827338a511a0eea1824f09067e8d8d546e5",
+    ".cargo/config.toml": "88c6fc9e0cac3fb47cc1e3e47f605340f8caa5f337cdb040ce0595c608c8558c",
+    "build.rs": "fa72dddc37231cab9e267d8a78fc833d934c444a8b77160d949ca59f1b435c46",
+    "image_gate.py": "95e94c48ab231e2f1fe4775711f74b9d43060bb5e39103f43d1abca573fd0fb0",
+    "check_images.py": "f2507d59f42cc6397f541cbbe9209a1fd148d07f3d67a6730152e8c75e95dbce"
+  },
+  "cases": {
+    "overhead-s3-benchmark": {
+      "elf_sha256": "bd69f1904a218ec37ec975d0c0fcdb357a240ab4632ccc9a8df3cf53110722fe",
+      "image_sha256": "245d6f396ce1dadaf7774c2c3471c043b5dd17073976b24f59876689d0d2594f",
+      "image_bytes": 655536,
+      "app_offset": 65536,
+      "rodata_alignment": 8,
+      "merge_bytes": 8,
+      "checked_sections": 9,
+      "checked_elf_bytes": 655419,
+      "segments": [
+        {
+          "address": "0x3c000020",
+          "bytes": 512156,
+          "file_offset": 32
+        },
+        {
+          "address": "0x3fc8b148",
+          "bytes": 2960,
+          "file_offset": 512196
+        },
+        {
+          "address": "0x40378000",
+          "bytes": 9148,
+          "file_offset": 515164
+        },
+        {
+          "address": "0x42080020",
+          "bytes": 127696,
+          "file_offset": 524320
+        },
+        {
+          "address": "0x4037a3bc",
+          "bytes": 3464,
+          "file_offset": 652024
+        }
+      ]
+    },
+    "overhead-s3-benchmark-stress-65536": {
+      "elf_sha256": "dea09eee063786ff13147c0bbe5a3252269b37c603711829c1f9044f1fdf59a8",
+      "image_sha256": "d221606d42bb20c03226ea89ca791842300f66177e57582e31855826877da7f6",
+      "image_bytes": 783136,
+      "app_offset": 65536,
+      "rodata_alignment": 65536,
+      "merge_bytes": 65248,
+      "checked_sections": 9,
+      "checked_elf_bytes": 733059,
+      "segments": [
+        {
+          "address": "0x3c000020",
+          "bytes": 589828,
+          "file_offset": 32
+        },
+        {
+          "address": "0x3fc8b148",
+          "bytes": 2960,
+          "file_offset": 589868
+        },
+        {
+          "address": "0x40378000",
+          "bytes": 12612,
+          "file_offset": 592836
+        },
+        {
+          "address": "0x00000000",
+          "bytes": 49928,
+          "file_offset": 605456
+        },
+        {
+          "address": "0x420a0020",
+          "bytes": 127696,
+          "file_offset": 655392
+        }
+      ]
+    },
+    "overhead-s3-catalogue-memory": {
+      "elf_sha256": "3bd493287afaa454598bd016142bd3534d8cbc5fc48e1780308b1548e1ae420c",
+      "image_sha256": "2c4016ce6b200d2f3a17af068784e86f55aaac7df7262f6af59ee7ff9ec0c299",
+      "image_bytes": 368848,
+      "app_offset": 65536,
+      "rodata_alignment": 64,
+      "merge_bytes": 32,
+      "checked_sections": 10,
+      "checked_elf_bytes": 337123,
+      "segments": [
+        {
+          "address": "0x3c000020",
+          "bytes": 83572,
+          "file_offset": 32
+        },
+        {
+          "address": "0x3fc8b148",
+          "bytes": 3244,
+          "file_offset": 83612
+        },
+        {
+          "address": "0x40378000",
+          "bytes": 12612,
+          "file_offset": 86864
+        },
+        {
+          "address": "0x00000000",
+          "bytes": 31612,
+          "file_offset": 99484
+        },
+        {
+          "address": "0x42020020",
+          "bytes": 237700,
+          "file_offset": 131104
+        }
+      ]
+    },
+    "overhead-s3-catalogue-memory-stress-65536": {
+      "elf_sha256": "b03da5685ac3ca6a4bf86cbb3d8a4b0284d057e90da017b10787a87f58a5db10",
+      "image_sha256": "3690aea09cfbca6951bfd7074d5cb5f5f372b7722789d5733f7ed1b9859fac44",
+      "image_bytes": 499920,
+      "app_offset": 65536,
+      "rodata_alignment": 65536,
+      "merge_bytes": 65248,
+      "checked_sections": 10,
+      "checked_elf_bytes": 450159,
+      "segments": [
+        {
+          "address": "0x3c000020",
+          "bytes": 196612,
+          "file_offset": 32
+        },
+        {
+          "address": "0x3fc8b148",
+          "bytes": 3244,
+          "file_offset": 196652
+        },
+        {
+          "address": "0x40378000",
+          "bytes": 12612,
+          "file_offset": 199904
+        },
+        {
+          "address": "0x00000000",
+          "bytes": 49644,
+          "file_offset": 212524
+        },
+        {
+          "address": "0x42040020",
+          "bytes": 237700,
+          "file_offset": 262176
+        }
+      ]
+    },
+    "linker-alignment-4": {
+      "elf_sha256": "4d15cecb915ae17289c1bb82abf79ee5f367d85ea9ecd8c912f2a7334bdacbcc",
+      "image_sha256": "35928405f334f690b38f102a6c616efc805618b7c9ff10beecb53a35570d9fc4",
+      "image_bytes": 65616,
+      "app_offset": 65536,
+      "rodata_alignment": 4,
+      "merge_bytes": 4,
+      "checked_sections": 5,
+      "checked_elf_bytes": 272,
+      "segments": [
+        {
+          "address": "0x3c000020",
+          "bytes": 264,
+          "file_offset": 32
+        },
+        {
+          "address": "0x3fc90000",
+          "bytes": 4,
+          "file_offset": 304
+        },
+        {
+          "address": "0x00000000",
+          "bytes": 65244,
+          "file_offset": 316
+        },
+        {
+          "address": "0x42020020",
+          "bytes": 4,
+          "file_offset": 65568
+        }
+      ]
+    },
+    "linker-alignment-64": {
+      "elf_sha256": "09b058af9b75dee4d7f8c7d04afc08539a1733c88a133a5121a5ec164a5e97c8",
+      "image_sha256": "e8e4a711df0db43193d29ebc62068a3b383328ab973ff0a7806e85e3f01556c3",
+      "image_bytes": 65616,
+      "app_offset": 65536,
+      "rodata_alignment": 64,
+      "merge_bytes": 32,
+      "checked_sections": 5,
+      "checked_elf_bytes": 300,
+      "segments": [
+        {
+          "address": "0x3c000020",
+          "bytes": 292,
+          "file_offset": 32
+        },
+        {
+          "address": "0x3fc90000",
+          "bytes": 4,
+          "file_offset": 332
+        },
+        {
+          "address": "0x00000000",
+          "bytes": 65216,
+          "file_offset": 344
+        },
+        {
+          "address": "0x42020020",
+          "bytes": 4,
+          "file_offset": 65568
+        }
+      ]
+    },
+    "linker-alignment-4096": {
+      "elf_sha256": "8ba398fe0b3ad8e578871388b5edb470cd81e0ba26c626298ab3ad3b197b97e9",
+      "image_sha256": "bde62243714da437daafcf9a2b35ac45d6043342b500e478dbc15d7fcd8d5e2b",
+      "image_bytes": 65616,
+      "app_offset": 65536,
+      "rodata_alignment": 4096,
+      "merge_bytes": 3808,
+      "checked_sections": 5,
+      "checked_elf_bytes": 4076,
+      "segments": [
+        {
+          "address": "0x3c000020",
+          "bytes": 4068,
+          "file_offset": 32
+        },
+        {
+          "address": "0x3fc90000",
+          "bytes": 4,
+          "file_offset": 4108
+        },
+        {
+          "address": "0x00000000",
+          "bytes": 61440,
+          "file_offset": 4120
+        },
+        {
+          "address": "0x42020020",
+          "bytes": 4,
+          "file_offset": 65568
+        }
+      ]
+    },
+    "linker-alignment-65536": {
+      "elf_sha256": "72ce2b7cb9c613926bbae66f59fa8f55682d7d4585c8167b39e7693c1801fd2e",
+      "image_sha256": "aad742492f38b8d4a30ee6b25d1bd2d706b2fc4fcf1b572b98ab57d05682ddfa",
+      "image_bytes": 131152,
+      "app_offset": 65536,
+      "rodata_alignment": 65536,
+      "merge_bytes": 65248,
+      "checked_sections": 5,
+      "checked_elf_bytes": 65516,
+      "segments": [
+        {
+          "address": "0x3c000020",
+          "bytes": 65540,
+          "file_offset": 32
+        },
+        {
+          "address": "0x3fc90000",
+          "bytes": 4,
+          "file_offset": 65580
+        },
+        {
+          "address": "0x00000000",
+          "bytes": 65504,
+          "file_offset": 65592
+        },
+        {
+          "address": "0x42020020",
+          "bytes": 4,
+          "file_offset": 131104
+        }
+      ]
+    }
+  },
+  "negative_control": {
+    "expected_rejection": "missing file-backed descriptor/rodata merge/rodata",
+    "drom_segments": 2,
+    "elf_sha256": "c6ca8d692c520713de0538d3d100ac2dacdb5b207e80a31ce32cd5fad7089f7b",
+    "image_sha256": "0ffd726a849224ff949e803bb9cfc92e890b1628083beaa3cf6bfbc0e6672c57"
+  }
+}

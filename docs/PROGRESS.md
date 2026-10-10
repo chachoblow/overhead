@@ -177,3 +177,14 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Verified the staged source without ignored artifacts: workspace check/default/all-feature tests, firmware host tests (6/10), 11 Python tests, formatting, strict host/catalogue-target Clippy and both target release builds pass; existing RWX warning remains.
 - Regenerated catalogue manifest matches; checked-in source/evidence hashes, both saved capture matrices and documentation links validate. No hardware access, source/dependency/toolchain changes, or claim of a corrected target boot.
 - Restored fresh-session commands in HANDOFF and documented rebuilding for structural investigation when the historical ELF is unavailable. Historical binary hashes are not promised for new build paths; scratch files are not prerequisites.
+
+## 2026-10-10 UTC (M2 source DROM remedy and offline image gate)
+- Added pinned local firmware/rodata.x remedy and ELF/image byte-verification gate; decision 0018 and firmware/IMAGE_GATE.md document rationale, pre-flash checks and reproduction.
+- Both firmware binaries, their 64 KiB stress builds and four alignment fixtures pass; a source-generated NOBITS negative control reproduces two DROM segments and is rejected. Report: docs/evaluations/s3-image-gate-report.json; historical artifacts/costs unchanged.
+- Workspace check/tests, firmware host tests (6/10), default/feature strict host Clippy, formatting, 23 Python tests and four full target builds pass. Historical ELF/image also rejected as expected.
+- No hardware/dependency/registry/toolchain changes. Corrected normal-build target boot/capture requires approval; separate RWX warning remains. Bounded evidence proposal still unaccepted; M2 limits/cadence/scheduling remain open.
+
+## 2026-10-10 UTC (image-gate clean-snapshot verification)
+- Exported staged source to a fresh directory without ignored artifacts; workspace check/default/all-feature tests, firmware host tests (6/10), default/feature strict host Clippy, formatting and 23 Python tests pass.
+- Rebuilt both firmware binaries and both 64 KiB stress variants; all eight positive image cases and the source-generated NOBITS negative control pass without historical ELFs. Existing RWX warning remains.
+- Fresh-session docs link both image regression and host checks. No hardware access, dependency/toolchain change, or corrected target boot claim; historical report remains unchanged.

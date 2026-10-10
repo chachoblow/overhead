@@ -65,6 +65,11 @@ embedded image; build/flash/boot succeed. No warning suppression is configured.
 
 ## Flash and capture
 
+Before any future approved flash, run the [offline image gate](IMAGE_GATE.md)
+on the exact normal-build ELF/application image. The local DROM linker remedy
+passes offline; corrected target boot/capture is still pending. Stress-test
+artifacts are not flash candidates. The gate does not itself authorize flashing.
+
 First generate expected work counts on the **host**, from repository root.
 Use the same revision, suite, and sample count as the target build; retain the
 manifest with the ELF/hash and raw log. This executes the workloads but does not
@@ -188,6 +193,10 @@ cargo +stable clippy --manifest-path firmware/Cargo.toml --lib --tests --example
 cargo fmt --manifest-path firmware/Cargo.toml -- --check
 python3 -m unittest discover -s firmware -p 'test_*.py'
 ```
+
+Run the separate [image regression runner](IMAGE_GATE.md#complete-regression-run--no-hardware)
+to check both binaries, alignment stress, and a source-generated negative control.
+It uses only the installed toolchain and never accesses hardware.
 
 For the optional memory binary's additional feature tests and protocol, see
 [CATALOGUE_MEMORY.md](CATALOGUE_MEMORY.md); the commands above retain default features.
