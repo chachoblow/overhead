@@ -47,6 +47,11 @@ fn main() {
         assert_eq!(e.classification, sgp4::Classification::Unclassified);
         writeln!(source, "Elements {{ norad_id: {}, classification: Classification::Unclassified, datetime: {}, element_set_number: {}, revolution_number: {}, ephemeris_type: {},",
             e.norad_id, datetime(e.datetime), e.element_set_number, e.revolution_number, e.ephemeris_type).unwrap();
+        if env::var_os("CARGO_FEATURE_CATALOGUE_MEMORY").is_some() {
+            // Alloc metadata fields exist with serde; old workloads still do
+            // not allocate names or alter their original numeric elements.
+            source.push_str("object_name: None, international_designator: None,\n");
+        }
         macro_rules! float_fields {
             ($($field:ident),* $(,)?) => { $(
                 writeln!(source, "{}: f64::from_bits({}),", stringify!($field), e.$field.to_bits()).unwrap();
@@ -114,6 +119,32 @@ fn main() {
         source,
     )
     .unwrap();
+    if env::var_os("CARGO_FEATURE_CATALOGUE_MEMORY").is_some() {
+        let path = "../tools/fixtures/catalogue-costs.tle";
+        println!("cargo:rerun-if-changed={path}");
+        let tle = fs::read_to_string(path).unwrap();
+        let lines: Vec<_> = tle.lines().collect();
+        let (records, remainder) = lines.as_chunks::<3>();
+        assert!(remainder.is_empty());
+        let elements: Vec<_> = records
+            .iter()
+            .map(|r| {
+                Elements::from_tle(Some(r[0].into()), r[1].as_bytes(), r[2].as_bytes()).unwrap()
+            })
+            .collect();
+        assert_eq!(
+            elements.iter().map(|e| e.norad_id).collect::<Vec<_>>(),
+            [6251, 8195, 28129, 24208, 28057, 9880, 14128, 28626]
+        );
+        for size in [4, 8] {
+            fs::write(
+                PathBuf::from(env::var_os("OUT_DIR").unwrap())
+                    .join(format!("catalogue-{size}.json")),
+                serde_json::to_string(&elements[..size]).unwrap(),
+            )
+            .unwrap();
+        }
+    }
     for (name, default) in [("BENCH_SUITE", "baseline"), ("BENCH_SAMPLES", "5")] {
         println!("cargo:rerun-if-env-changed={name}");
         let value = env::var(name).unwrap_or_else(|_| default.into());

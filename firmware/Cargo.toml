@@ -3,8 +3,13 @@ name = "overhead-s3-benchmark"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+catalogue-memory = ["overhead-core/catalogue", "dep:serde_json", "dep:esp-alloc"]
+
 [dependencies]
 overhead-core = { path = "../core" }
+# Same checked OMM-array path as the host experiment, without std.
+serde_json = { version = "1", default-features = false, features = ["alloc", "raw_value"], optional = true }
 
 [target.'cfg(target_arch = "xtensa")'.dependencies]
 # S3 startup, clock, and monotonic timer; no RTOS or wireless stack.
@@ -13,9 +18,11 @@ esp-hal = { version = "=1.2.2", features = ["esp32s3"] }
 esp-println = { version = "=0.18.0", default-features = false, features = ["esp32s3", "uart", "critical-section"] }
 # ESP-IDF-format image descriptor required by the flasher/bootloader.
 esp-bootloader-esp-idf = { version = "=0.6.0", features = ["esp32s3"] }
+# Bounded internal-RAM experiment; no C allocator exports or implicit global heap.
+esp-alloc = { version = "=0.11.0", default-features = false, features = ["esp32s3"], optional = true }
 
 [build-dependencies]
-# Parse existing fixtures on the host; no parser/allocator in target firmware.
+# Convert original fixtures on the host; the default target remains allocation-free.
 sgp4 = { version = "=2.4.0", default-features = false, features = ["libm", "serde"] }
 serde_json = "1"
 
@@ -24,6 +31,17 @@ name = "overhead-s3-benchmark"
 path = "src/main.rs"
 test = false
 bench = false
+
+[[bin]]
+name = "overhead-s3-catalogue-memory"
+path = "src/catalogue_main.rs"
+required-features = ["catalogue-memory"]
+test = false
+bench = false
+
+[[example]]
+name = "catalogue_expected"
+required-features = ["catalogue-memory"]
 
 [profile.release]
 opt-level = 3

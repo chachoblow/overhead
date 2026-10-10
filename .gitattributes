@@ -1,2 +1,3 @@
 # Preserve byte-for-byte UART captures, including CRLF and bootloader spacing.
 docs/evaluations/s3-costs-run-*.log -text whitespace=-blank-at-eol
+docs/evaluations/s3-catalogue-memory-run-*.log -text whitespace=-blank-at-eol

@@ -1,0 +1,176 @@
+{
+  "capture_date_utc": "2026-10-10",
+  "source_base_revision": "8a4ae967d2cf834599c75b8c253fed85f0ea64e8",
+  "source_dirty": true,
+  "source_note": "Base revision plus prepared experiment; source hashes identify measured files. ELF, build logs, full source snapshot and disassembly are ignored local artifacts, not durably archived.",
+  "local_artifact_root": "firmware/target/catalogue-memory-capture.r3l6jk",
+  "samples_per_case_per_run": 3,
+  "warmups_per_case_per_run": 1,
+  "cases_per_run": 8,
+  "runs": 2,
+  "target_rustc": "rustc 1.97.0-nightly (8ea53bcd7 2026-07-08) (1.97.0.0)\nbinary: rustc\ncommit-hash: 8ea53bcd7257011cbf96f6398551bdc650b04334\ncommit-date: 2026-07-08\nhost: aarch64-apple-darwin\nrelease: 1.97.0-nightly\nLLVM version: 21.1.3",
+  "build": "cd firmware && . \"$HOME/export-esp.sh\" && BENCH_SUITE=baseline BENCH_SAMPLES=3 cargo build --release --locked --features catalogue-memory --bin overhead-s3-catalogue-memory",
+  "profile": {
+    "opt_level": 3,
+    "debug": 2,
+    "lto": "Cargo default (no override)",
+    "pointer_bits": 32,
+    "cpu_mhz": 240,
+    "cores_used": 1,
+    "psram": "unused",
+    "allocator": "esp-alloc 0.11.0 LLFF",
+    "heap_reserved_bytes": 65536,
+    "rustflags": [
+      "-C",
+      "link-arg=-Tlinkall.x"
+    ],
+    "build_std": [
+      "core",
+      "alloc"
+    ],
+    "environment_flag_overrides": "No RUSTFLAGS, CARGO_ENCODED_RUSTFLAGS, or release-profile overrides in the build shell; LLFF forced by firmware/.cargo/config.toml."
+  },
+  "elf": {
+    "local_file": "benchmark.elf",
+    "sha256": "6d67a77de3baa5aa5b3a3c7337095623d69160fb618a9e97e61ae86aeccec47b"
+  },
+  "local_source_snapshot": {
+    "local_file": "source-snapshot.tar.gz",
+    "sha256": "eed99b032c5e573865948c48a389c9be77b644c19b21aec9fb6483892d426bc9"
+  },
+  "source_sha256": {
+    "core/Cargo.toml": "6e970dd75b79ca48d0c9817f1a80e3149b7e84390b08118a2d6f78d7e3f08aa2",
+    "core/src/catalogue.rs": "84e00e1057ac1275978226169ad99fe26593a024934f76fcc1f194591851149f",
+    "core/src/catalogue_passes/tests.rs": "10ab85422a8dd2bc74edd44ead067f03dadc4f4b142a28f90811aa6dcfd761fa",
+    "core/src/catalogue_passes.rs": "0b2c627a723ca2afa164d6131de6510bdfe857bc01b5d85258de5e2a85cace53",
+    "core/src/coordinates.rs": "f2327712946ae3bfa441b765c796dc528f1a2765debff3793b9797fa2fa3ef3c",
+    "core/src/ingest.rs": "001950a3be89f379796ed67c3c319c463f149e6deeeaef5e710ff3f19d083116",
+    "core/src/lib.rs": "832659c3a62404b108ca66b40b5ae98feacba277086eb483631b647045069fc8",
+    "core/src/observer.rs": "5d8e6d1bd9f87f282805bd71fad3f5ad4f3fe62c60f805c898a52d3ad942b4d7",
+    "core/src/omm.rs": "cd8b25aca0e0d5b8272a5c2a4c1afe008d2d230a1789c37401feea654e3b7a2c",
+    "core/src/passes.rs": "394e462a48742a482e451dd5e57e860184d8e411c19088201312149d5d65d5f1",
+    "core/src/position.rs": "3bb847aa419c4f1f544993004d218fe794cd7287f1bbced34d4afa8ddd7bbb76",
+    "core/src/propagate.rs": "68e28fed9d8b3cc5fc98a838e07328b52a032af1f8c01f3d384ad28406381659",
+    "core/src/time.rs": "7672d11cacbb593d15c6258778d40fcc30f845a474a087f8e712ea2e55f33dcc",
+    "core/tests/fixtures/iss-25544.json": "8eb6107b6481e52043171cc793279df3cbf287b1e40a190acd298097a71669ac",
+    "firmware/.cargo/config.toml": "8f9e2c74b6a5ee378b0cb2f89a99440ea0fbc9d0507bc14746819af2e7fa5fc4",
+    "firmware/Cargo.lock": "e689539ef7d048890dc8ad4c8a399827338a511a0eea1824f09067e8d8d546e5",
+    "firmware/Cargo.toml": "a3903f2641941d5a6949aa8ea76bd5c6959f26452102a02477c2e86110f1d9e8",
+    "firmware/build.rs": "26b6ee84e06d982eb40698737ad7a5926e7a7c664eb5c89e85617560970ee5f7",
+    "firmware/capture.py": "1dbd94015cc7d99077b113ca33ef98be1f8ec674de017cdbde6d6a3f43008b12",
+    "firmware/catalogue_capture.py": "339399ce7f3256193dff8530e2097c5eda8299b394d8ae8617f653c66f3769fa",
+    "firmware/examples/catalogue_expected.rs": "205e9e38c376259198ec01f01fbaf047e38294f6402f1927521f06174dcfce89",
+    "firmware/examples/expected.rs": "521758a726d6f63ecd7526e7bc41db3fe86ff2896c6abb09fb32c39c161fa8e8",
+    "firmware/rust-toolchain.toml": "6cf0a2df390965b31e8fb2ef2a15cdf5811ddc7f6dfa50f8ba0f749a618cc1ca",
+    "firmware/src/catalogue_main.rs": "64a6229f2e4535d16b9a3b698fff15c2d6d3a4919466764dd065f78da914f26c",
+    "firmware/src/catalogue_memory.rs": "85f652aeeeb50485cfc9cd6c012cdcf5db9616c7a51b04352d939685c8f880f7",
+    "firmware/src/heap_meter.rs": "1d76f68faced359c006470ebc2d78609d4a1fc2874598ac106d81113c5704234",
+    "firmware/src/lib.rs": "f450337d5b724bd44206906c75e23296d0fb7929bd09ba0adcb23c50939d1332",
+    "firmware/src/main.rs": "bc16cd7157e177a224fd3352e74cae8e241329b7d1545deb259b86e470ef332b",
+    "firmware/src/selection.rs": "ddb5355c4da582e033de9ce726aec6cad574596ddf9f653c25bb9405405e395f",
+    "firmware/src/stack_watermark.rs": "66822adfb1f4ac9bdfa775af9ee2974c21b32a2255ebcbab29012548bfbf7496",
+    "firmware/src/suites.rs": "87beae54bcd43689dbf7d0feae0c9fd17481efb7086d08e5ea37062e0ac799c7",
+    "firmware/test_capture.py": "d6f08ecc980ec8f650c4df35139636a6adab79ed4552f8aa60806263ea4baf5b",
+    "firmware/test_catalogue_capture.py": "e85437e410a7604544c65579ba434e355630c855adb5b316528e3c105fef3dea",
+    "tools/fixtures/catalogue-costs.tle": "2cb96da57983e5d6f2f145be410bdab9919caec417b6cba5535edb939ae55b99",
+    "tools/fixtures/pass-intervals.tle": "e2e27b0eb631dd4e172e661cfc7aea04797cabc2ee25f7d814a7caf8e697eced"
+  },
+  "generated_inputs": {
+    "4": {
+      "bytes": 1679,
+      "sha256": "09c9289ca7173b6e78897bb1d054e069b641294541e5b2d09b864a0bd53869de",
+      "regeneration": "firmware/build.rs with catalogue-memory feature; original tools/fixtures/catalogue-costs.tle"
+    },
+    "8": {
+      "bytes": 3331,
+      "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+      "regeneration": "firmware/build.rs with catalogue-memory feature; original tools/fixtures/catalogue-costs.tle"
+    }
+  },
+  "captures": [
+    {
+      "file": "s3-catalogue-memory-run-1.log",
+      "sha256": "7d793b3ecef9f04ff89777e06299333197bb3b4164683c80d1c6b10dbbce3311"
+    },
+    {
+      "file": "s3-catalogue-memory-run-2.log",
+      "sha256": "9ea504925edc46cf63706dff55a1c9180f2f8d054c6fa851d1b526cac6a87ae9"
+    }
+  ],
+  "expected": {
+    "file": "s3-catalogue-memory-expected.txt",
+    "sha256": "b793ca5cf695f446ca5a817106435eed4daf3d8249bcc04f63436bb31fdc9ee1"
+  },
+  "summary": {
+    "file": "s3-catalogue-memory-summary.csv",
+    "sha256": "d3a75fe968bac239ec7e44f45750b29a250c521fa4db8007d5a99f1e49f8fe71"
+  },
+  "application_image_bytes": 368848,
+  "elf_sections_bytes": {
+    ".rwtext": 11588,
+    ".rwtext.wifi": 0,
+    ".rwdata_dummy": 12612,
+    ".data": 3244,
+    ".data.wifi": 0,
+    ".bss": 65704,
+    ".noinit": 0,
+    ".flash.appdesc": 256,
+    ".rodata_merge": 32,
+    ".rodata": 83256,
+    ".eh_frame_hdr": 28,
+    ".rodata.wifi": 0,
+    ".vectors": 1024,
+    ".rotext_dummy": 131072,
+    ".text": 237689,
+    ".init": 3,
+    ".fini": 3,
+    ".rtc_fast.text": 0,
+    ".rtc_fast.data": 0,
+    ".rtc_fast.bss": 0,
+    ".rtc_fast.persistent": 0,
+    ".rtc_slow.text": 0,
+    ".rtc_slow.data": 0,
+    ".rtc_slow.bss": 0,
+    ".rtc_slow.persistent": 0,
+    ".stack": 260184,
+    ".espressif.metadata": 21,
+    ".eh_frame": 64,
+    ".xtensa.info": 56,
+    ".xt.prop": 48,
+    ".comment": 110,
+    ".xt.lit": 0,
+    ".debug_loc": 2500571,
+    ".debug_abbrev": 116262,
+    ".debug_info": 5134140,
+    ".debug_aranges": 33160,
+    ".debug_ranges": 590800,
+    ".debug_str": 3015577,
+    ".debug_frame": 74160,
+    ".debug_line": 962210
+  },
+  "stack": {
+    "bottom": 1070186152,
+    "top": 1070446336,
+    "paint_low": 1070186216,
+    "paint_high": 1070444928,
+    "untouched_bytes_all_samples": 254296,
+    "observed_bytes_all_samples": 5824,
+    "probe_baseline": 1120,
+    "probe_known_8k_local": 9068
+  },
+  "warnings": [
+    "Existing linker RWX LOAD warning.",
+    "Both boots report: Image contains multiple DROM segments. Only the last one will be mapped. Both runs complete; mapping message not fixed or suppressed."
+  ],
+  "limits": "Flash input only. Occupied heap is not total RAM; full heap reservation is already in .bss. Written-stack observation is not maximum reserved stack or a worst-case bound. Host counts are not independent numerical verification.",
+  "hardware": {
+    "board": "ESP32-S3-DevKitC-1 / WROOM-1",
+    "chip_revision": "v0.2",
+    "flash_bytes": 8388608,
+    "crystal_mhz": 40,
+    "connection": "CP2102N direct UART /dev/cu.usbserial-110",
+    "display": "disconnected",
+    "psram": "unconfirmed and unused"
+  },
+  "flash_tool": "espflash 4.6.0"
+}

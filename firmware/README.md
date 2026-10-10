@@ -1,13 +1,16 @@
 # ESP32-S3 kernel benchmark
 
-Early M2 measurement firmware, **not the device application**. No display,
-Wi-Fi, allocator, PSRAM, catalogue ingestion/aggregation, or scheduling. All
-orbital calculations still run in `overhead-core`. Results and limitations:
+Early M2 measurement firmware, **not the device application**. The default kernel
+binary has no display, Wi-Fi, allocator, PSRAM, catalogue ingestion/aggregation,
+or scheduling. A separate opt-in [catalogue memory experiment](CATALOGUE_MEMORY.md)
+now has first target captures; its feature/build commands are distinct.
+All orbital calculations still run in `overhead-core`. Results and limitations:
 [first S3 evaluation](../docs/evaluations/s3-costs.md),
 [16-slot follow-up](../docs/evaluations/s3-scaling-16.md), and
 [remaining V2 suites](../docs/evaluations/s3-expanded.md). All 122 prepared
-workloads are host-tested and now have target captures. Broader orbital samples,
-independent target numeric checks, and catalogue/peak-memory costs remain pending.
+kernel workloads are host-tested and now have target captures. Broader orbital
+samples, independent target numeric checks, and whole-device peak-memory budgets
+remain pending; the separate memory experiment supplies only its bounded evidence.
 
 ## Hardware and permission
 
@@ -155,8 +158,9 @@ larger distinct working set. Additional orbital fixtures remain future work.
   satellite altitude, rendering, or a complete application tick.
 - All prepared suites now have validated target captures; see the linked results.
   Age and search-setting sweeps are separate, not a Cartesian product. Broader
-  orbit samples, independent target numeric checks, and distinct-catalogue/peak-memory
-  measurements remain pending. The first larger-matrix capture timed out; partial
+  orbit samples and independent target numeric checks remain pending; initial
+  distinct-catalogue heap/write-watermark evidence lives in the separate experiment.
+  The first larger-matrix capture timed out; partial
   exploratory output is not part of the published final-build runs.
 
 V2 `CASE` records retain operation, orbit class, slot count, signed center age,
@@ -184,6 +188,9 @@ cargo +stable clippy --manifest-path firmware/Cargo.toml --lib --tests --example
 cargo fmt --manifest-path firmware/Cargo.toml -- --check
 python3 -m unittest discover -s firmware -p 'test_*.py'
 ```
+
+For the optional memory binary's additional feature tests and protocol, see
+[CATALOGUE_MEMORY.md](CATALOGUE_MEMORY.md); the commands above retain default features.
 
 Firmware library tests check fixture IDs, signed-age grids, preserved baseline
 counts, all 122 workload invocations/repeatability, suite selection, orthogonal

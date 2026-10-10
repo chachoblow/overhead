@@ -11,6 +11,8 @@ import selectors
 import subprocess
 import time
 
+import catalogue_capture
+
 
 def capture(port, elf, output, timeout, expected=None):
     # Validate the external host manifest before opening/resetting hardware.
@@ -98,6 +100,8 @@ def parse_suite(line):
 
 def parse_expected(text):
     """Strict host-generated contract; target-reported counts are not an oracle."""
+    if text.startswith(catalogue_capture.EXPECTED):
+        return catalogue_capture.parse_expected(text)
     lines = text.splitlines()
     if (len(lines) < 5 or lines[0] != "OVERHEAD_S3_EXPECTED_V2"
             or lines[-1] != "OVERHEAD_S3_EXPECTED_DONE"):
@@ -131,6 +135,9 @@ def parse_expected(text):
 
 
 def validate(text, expected=None):
+    if (catalogue_capture.START in text
+            or (expected is not None and expected.startswith(catalogue_capture.EXPECTED))):
+        return catalogue_capture.validate(text, expected)
     if "OVERHEAD_S3_BENCHMARK_V2" not in text:
         if expected is not None:
             raise ValueError("expected a V2 run for the supplied manifest")
@@ -176,7 +183,7 @@ if __name__ == "__main__":
     parser.add_argument("--elf", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--timeout", type=int, default=600)
-    parser.add_argument("--expected", help="host-generated expected-work manifest (required for V2)")
+    parser.add_argument("--expected", help="host-generated expected-work manifest (required for V2/catalogue)")
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error("timeout must be positive")

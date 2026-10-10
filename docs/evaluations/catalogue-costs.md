@@ -119,15 +119,13 @@ SHA-256:
 
 ## Remaining limits / next slice
 
-No stack high-water mark, static RAM, RSS, physical allocator footprint, PSRAM,
-S3 catalogue measurements, supported size, cadence, scheduler, or over-budget
-policy has been established. Firmware currently has no allocator or catalogue
-feature; reproducing this path on S3 requires an explicit memory/instrumentation
-plan, not multiplying these host bytes by a pointer-width ratio. Ask before
-flashing or changing toolchains.
+These host figures do not establish S3 capacity, whole-device peak RAM, cadence,
+scheduling, or an over-budget policy. Separate [initial S3 captures](s3-catalogue-memory.md)
+now measure bounded catalogue heap costs and observed stack writes with explicit
+input/storage lifetimes; they are not a pointer-width scaling of these host bytes
+or maximum reserved-stack evidence. Ask before flashing or changing toolchains.
 
-Next: choose a bounded target catalogue/allocator and stack-high-water experiment,
-including input/storage lifetimes. Broaden distinct orbital populations and
+Next: broaden distinct orbital populations and
 observer/pass-density cases, duplicates/diagnostics and larger collection growth;
 add independent target numeric checks before selecting operating limits. Eight
 historical objects are neither a curated product catalogue nor a worst-case

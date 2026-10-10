@@ -1,6 +1,10 @@
 #![no_std]
-//! Allocation-free target benchmark workloads, also testable on the host.
-//! This is an experiment harness, not an application scheduler or catalogue.
+#![cfg_attr(
+    all(feature = "catalogue-memory", target_arch = "xtensa"),
+    feature(asm_experimental_arch)
+)]
+//! Allocation-free kernel workloads plus opt-in catalogue/memory experiments.
+//! Shared with host checks; not an application scheduler or device catalogue.
 use core::hint::black_box;
 use overhead_core::{
     GeodeticPosition, Satellite, ecef_to_look_angles,
@@ -9,6 +13,15 @@ use overhead_core::{
 };
 
 pub mod suites;
+
+#[cfg(feature = "catalogue-memory")]
+extern crate alloc;
+#[cfg(feature = "catalogue-memory")]
+pub mod catalogue_memory;
+#[cfg(feature = "catalogue-memory")]
+pub mod heap_meter;
+#[cfg(all(feature = "catalogue-memory", any(target_arch = "xtensa", test)))]
+pub mod stack_watermark;
 
 pub const TRACK_STEPS: usize = 1441;
 pub const SEARCH_LIMIT: u64 = 200_000;

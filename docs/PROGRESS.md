@@ -149,3 +149,20 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Two release runs agree on all work/allocation counts; eight-entry catalogue retains 5,927 bytes, 24h results add 2,560, initialization peaks at 14,279 requested bytes excluding prepared input. Evidence/hashes and exclusions in docs/evaluations/catalogue-costs.md; not target peak RAM or capacity.
 - Workspace check/tests (150 + 6 doctests), targeted strict Clippy, fmt, source comparison, and release runs pass. Clean staged snapshot checks/tests and evidence/link validation also pass. No hardware access or core/dependency/toolchain/firmware changes; existing fixtures unchanged.
 - Next: bounded target catalogue/allocator and stack-high-water experiment, broader populations/pass density, independent target numeric checks, then operating policy. M2 remains open; no production defaults selected.
+
+## 2026-10-10 UTC (M2 target catalogue-memory preparation)
+- Added feature-gated overhead-s3-catalogue-memory: flash OMM, bounded internal esp-alloc LLFF heap, phase/requested/occupied accounting, release checks, and CPU0 written-stack probe/smoke check. Scope in decision 0017; method/commands in firmware/CATALOGUE_MEMORY.md.
+- Added same-model host manifest and strict memory-capture validation; default kernel workloads remain allocation-free. Optional target dependencies/firmware lockfile changed; core, host workspace, fixtures, and toolchain unchanged.
+- Workspace check/tests (150 + 6 doctests), default/feature firmware tests (6/10), strict host/target Clippy, formatting, 11 Python tests, release host manifest parsing, both target builds, and probe disassembly review pass; existing RWX warning remains.
+- No port opened/reset/flash and no target memory results. Next: approved first capture/repeat, broader samples and independent target numeric checks; no capacity/cadence/scheduling defaults selected.
+
+## 2026-10-10 UTC (M2 first S3 catalogue-memory captures)
+- With explicit approval, flashed the unchanged prepared catalogue-memory binary and captured two runs of eight cases × three samples. Raw logs, host manifest, summary and hashes live under docs/evaluations/s3-catalogue-memory*.
+- All work/heap counters and stack marks agree: eight-entry initialization peaks at 16,024 occupied bytes; 24h catalogue/results retain 8,088, prediction ~14.53s. Observed written-stack depth is 5,824 bytes, not maximum reserved stack or whole-device peak RAM.
+- Workspace check/tests (150 + 6 doctests), ten firmware host tests, 11 Python tests, release build/manifest, capture validation and evidence/source/input cross-checks pass. No code/dependency/toolchain changes during capture; board left with catalogue-memory (three samples), no monitor.
+- Both boots emit a multiple-DROM mapping diagnostic despite complete runs; retain as unresolved alongside the existing linker warning. Broader populations/density/input-memory/stack evidence and independent target numeric checks precede operating policy; M2 remains open.
+
+## 2026-10-10 UTC (clean-session verification and packaging)
+- Verified the staged source in a clean directory without ignored artifacts: workspace check/tests (150 + 6 doctests), firmware tests (6/10), 11 Python tests, strict host/target Clippy, formatting, and both target builds pass.
+- Regenerated release host manifest matches the saved one; source/evidence hashes, both captured matrices, summary medians/counters, and documentation links revalidate without local measurement artifacts. Handoff points to fresh-session commands.
+- Extended Git's byte-preservation rule to the new UART logs so line-ending conversion cannot invalidate recorded hashes. No hardware access or measured-source changes; M2 scope and unresolved boot diagnostic unchanged.
