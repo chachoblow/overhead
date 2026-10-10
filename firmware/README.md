@@ -3,10 +3,11 @@
 Early M2 measurement firmware, **not the device application**. No display,
 Wi-Fi, allocator, PSRAM, catalogue ingestion/aggregation, or scheduling. All
 orbital calculations still run in `overhead-core`. Results and limitations:
-[first S3 evaluation](../docs/evaluations/s3-costs.md) and
-[16-slot follow-up](../docs/evaluations/s3-scaling-16.md). All expanded suites are
-host-tested; only `scaling-16` has a new target capture. The original V1 baseline
-is measured; V2 baseline and remaining suites still await target captures.
+[first S3 evaluation](../docs/evaluations/s3-costs.md),
+[16-slot follow-up](../docs/evaluations/s3-scaling-16.md), and
+[remaining V2 suites](../docs/evaluations/s3-expanded.md). All 122 prepared
+workloads are host-tested and now have target captures. Broader orbital samples,
+independent target numeric checks, and catalogue/peak-memory costs remain pending.
 
 ## Hardware and permission
 
@@ -152,10 +153,11 @@ larger distinct working set. Additional orbital fixtures remain future work.
   Record new ELF section sizes/hash and build context for any new measurement.
 - Full geometry means ECEF rotation and observer look angles, not geodetic
   satellite altitude, rendering, or a complete application tick.
-- Except for scaling-16, target captures for the expanded suites remain pending,
-  as do broader orbit samples and distinct-catalogue/peak-memory measurements. The first
-  larger-matrix capture timed out; partial exploratory output is not part of
-  the published final-build run.
+- All prepared suites now have validated target captures; see the linked results.
+  Age and search-setting sweeps are separate, not a Cartesian product. Broader
+  orbit samples, independent target numeric checks, and distinct-catalogue/peak-memory
+  measurements remain pending. The first larger-matrix capture timed out; partial
+  exploratory output is not part of the published final-build runs.
 
 V2 `CASE` records retain operation, orbit class, slot count, signed center age,
 window, detection interval, and tolerance. Tracking uses zero detection/tolerance

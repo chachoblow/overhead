@@ -1,0 +1,256 @@
+{
+  "source_revision": "eb86769ce786d9a1bd35a96ae9b370b435b613a0",
+  "source_dirty": false,
+  "capture_date_utc": "2026-10-10",
+  "samples_per_workload": 3,
+  "warmups_per_workload": 1,
+  "firmware_lock_sha256": "abd11c0adcad8d4b28e492a3fe6cfff5280aefe4d27502a391a1b1a74387782c",
+  "local_artifact_root": "firmware/target/measurements/2026-10-10-remaining",
+  "note": "ELFs and build logs are local ignored build artifacts, not durably archived. Section/type sizes are not peak memory. See s3-expanded.md for context and limitations.",
+  "summary": {
+    "file": "s3-expanded-summary.csv",
+    "sha256": "75aa948ce2ec02203352bd82144415c78e70420383626bcd146ffe8396d986b6"
+  },
+  "suites": {
+    "baseline": {
+      "elf": {
+        "local_file": "baseline/benchmark.elf",
+        "sha256": "050d1e65aadaa5b7ade09c6d81b9b193814e19f50bbfefe8e5fc0df91e6d2113"
+      },
+      "capture": {
+        "file": "s3-costs-run-v2-baseline-1.log",
+        "sha256": "28b8a8787883a311b32dd0b6dd1a600d3b639d12bcd2f52e2a47466a439f05cc"
+      },
+      "expected": {
+        "file": "s3-v2-baseline-expected.txt",
+        "sha256": "81204ef7642d72bc03e88d3779840195d55c66c8849f13c223fee9555db816ec"
+      },
+      "application_image_bytes": 654992,
+      "selected_sections_bytes": {
+        ".rwtext": 11356,
+        ".data": 2952,
+        ".bss": 168,
+        ".rodata": 511228,
+        ".vectors": 1024,
+        ".text": 128057,
+        ".stack": 326256
+      }
+    },
+    "scaling-64": {
+      "elf": {
+        "local_file": "scaling-64/benchmark.elf",
+        "sha256": "c34452442fcf3542d27c01b8c78a91c799b4086f836ca4079450217cb7704883"
+      },
+      "capture": {
+        "file": "s3-costs-run-v2-scaling-64-1.log",
+        "sha256": "1ba133cd4076a5988e519f1cbe802354016ea913a502af379707cd01c49f6a5a"
+      },
+      "expected": {
+        "file": "s3-v2-scaling-64-expected.txt",
+        "sha256": "6034330f8c813ed8673f7d6779d764110b254e587948ad19e0d86313897a8e03"
+      },
+      "application_image_bytes": 654992,
+      "selected_sections_bytes": {
+        ".rwtext": 11356,
+        ".data": 2952,
+        ".bss": 168,
+        ".rodata": 511228,
+        ".vectors": 1024,
+        ".text": 128057,
+        ".stack": 326256
+      }
+    },
+    "ages-leo": {
+      "elf": {
+        "local_file": "ages-leo/benchmark.elf",
+        "sha256": "14b3a9ecfaa62c2dc8ea2fe257ab087b54d3d8301220aec02848d403c9094d3d"
+      },
+      "capture": {
+        "file": "s3-costs-run-v2-ages-leo-1.log",
+        "sha256": "a3ebd3c407004a4a1555a569cbeb21de1f302c2de6f7b95bb95437a66db9870b"
+      },
+      "expected": {
+        "file": "s3-v2-ages-leo-expected.txt",
+        "sha256": "71b3da83de32e0d531d5382c7296113b7a536e853f2ba971e85ecb76b0679954"
+      },
+      "application_image_bytes": 654992,
+      "selected_sections_bytes": {
+        ".rwtext": 11356,
+        ".data": 2952,
+        ".bss": 168,
+        ".rodata": 511228,
+        ".vectors": 1024,
+        ".text": 128057,
+        ".stack": 326256
+      }
+    },
+    "ages-heo": {
+      "elf": {
+        "local_file": "ages-heo/benchmark.elf",
+        "sha256": "2fd5935090bfec3765dcc1406b15e83f69420e92efdb406bb4cb591e8e7ed53d"
+      },
+      "capture": {
+        "file": "s3-costs-run-v2-ages-heo-1.log",
+        "sha256": "04cbf2c40745a89e4b9f2b3ad2aa5cb565ff0bab8a30eec0a8a64c2e6e06a66b"
+      },
+      "expected": {
+        "file": "s3-v2-ages-heo-expected.txt",
+        "sha256": "63c20d0564d2ca103d4c5e933d2c5d1429e1d1a50fe9c75f8d77ee252e8d1384"
+      },
+      "application_image_bytes": 654992,
+      "selected_sections_bytes": {
+        ".rwtext": 11356,
+        ".data": 2952,
+        ".bss": 168,
+        ".rodata": 511228,
+        ".vectors": 1024,
+        ".text": 128057,
+        ".stack": 326256
+      }
+    },
+    "ages-geo": {
+      "elf": {
+        "local_file": "ages-geo/benchmark.elf",
+        "sha256": "70e0013b54479bff641457b7fd123c72fa20eee7228e05e7fb95d01c0521990c"
+      },
+      "capture": {
+        "file": "s3-costs-run-v2-ages-geo-1.log",
+        "sha256": "2fd50cf53f0163471ca515b57657f0014e92f6d9ee3b969f21d01f468b650b33"
+      },
+      "expected": {
+        "file": "s3-v2-ages-geo-expected.txt",
+        "sha256": "8baa5357e7876dcade9c84c45290f186d5664f44ccbfada39977221c00b6762e"
+      },
+      "application_image_bytes": 654992,
+      "selected_sections_bytes": {
+        ".rwtext": 11356,
+        ".data": 2952,
+        ".bss": 168,
+        ".rodata": 511228,
+        ".vectors": 1024,
+        ".text": 128057,
+        ".stack": 326256
+      }
+    },
+    "ages-gnss": {
+      "elf": {
+        "local_file": "ages-gnss/benchmark.elf",
+        "sha256": "8abc74a4cf828e942004502bb640923c2f5b6f356f2721a84198955bfeb67b6e"
+      },
+      "capture": {
+        "file": "s3-costs-run-v2-ages-gnss-1.log",
+        "sha256": "5bb39c3534c768eb2c9c31d89d4052664439687e18010a7c92c837be18460ded"
+      },
+      "expected": {
+        "file": "s3-v2-ages-gnss-expected.txt",
+        "sha256": "2aa7311b060b54596befb84f69837ff8557d70e2a5849d078667be630d96e78e"
+      },
+      "application_image_bytes": 654992,
+      "selected_sections_bytes": {
+        ".rwtext": 11356,
+        ".data": 2952,
+        ".bss": 168,
+        ".rodata": 511236,
+        ".vectors": 1024,
+        ".text": 128057,
+        ".stack": 326256
+      }
+    },
+    "search-leo": {
+      "elf": {
+        "local_file": "search-leo/benchmark.elf",
+        "sha256": "57b96bcdbbd3c1b4b03362ebfd459a64963c2e640d9119335a06b76dd22a0930"
+      },
+      "capture": {
+        "file": "s3-costs-run-v2-search-leo-1.log",
+        "sha256": "c97b82634b856c0ba1f85844517e1d3da89b274d2a02c8a0ef00cd73004fbf5c"
+      },
+      "expected": {
+        "file": "s3-v2-search-leo-expected.txt",
+        "sha256": "cee29cb8725356f456b2a6ba563f1fb5ad9abbc91363659512d47cc38de6107a"
+      },
+      "application_image_bytes": 654992,
+      "selected_sections_bytes": {
+        ".rwtext": 11356,
+        ".data": 2952,
+        ".bss": 168,
+        ".rodata": 511228,
+        ".vectors": 1024,
+        ".text": 128057,
+        ".stack": 326256
+      }
+    },
+    "search-heo": {
+      "elf": {
+        "local_file": "search-heo/benchmark.elf",
+        "sha256": "059bb2ac49a1e6ad25df107b4ae9e3050beca87d255ce18be80995bc58f27133"
+      },
+      "capture": {
+        "file": "s3-costs-run-v2-search-heo-1.log",
+        "sha256": "c5475b0f7c341fbc57c9494cdd69581e6ec93352bc767a084da9a65a24406ced"
+      },
+      "expected": {
+        "file": "s3-v2-search-heo-expected.txt",
+        "sha256": "3aea58131e7055befbc1bb27b57fef60ecddf07841beb2aaa8e89836ad20a34c"
+      },
+      "application_image_bytes": 654992,
+      "selected_sections_bytes": {
+        ".rwtext": 11356,
+        ".data": 2952,
+        ".bss": 168,
+        ".rodata": 511228,
+        ".vectors": 1024,
+        ".text": 128057,
+        ".stack": 326256
+      }
+    },
+    "search-geo": {
+      "elf": {
+        "local_file": "search-geo/benchmark.elf",
+        "sha256": "6aec2b06885f4fe59b036a05654af7075a4618759a137dd6233fbc44dc65780c"
+      },
+      "capture": {
+        "file": "s3-costs-run-v2-search-geo-1.log",
+        "sha256": "03a290f26e6438bf07bf82b919491ead9b29cf3b4886eff2bb7ac6863b4f64d1"
+      },
+      "expected": {
+        "file": "s3-v2-search-geo-expected.txt",
+        "sha256": "cd57eff1062f690550451c9b599362ed8899aff32ddf2f6f37caf91b85ab836a"
+      },
+      "application_image_bytes": 654992,
+      "selected_sections_bytes": {
+        ".rwtext": 11356,
+        ".data": 2952,
+        ".bss": 168,
+        ".rodata": 511228,
+        ".vectors": 1024,
+        ".text": 128057,
+        ".stack": 326256
+      }
+    },
+    "search-gnss": {
+      "elf": {
+        "local_file": "search-gnss/benchmark.elf",
+        "sha256": "afaaea7d5e55a92a0c38496c658373c084173f256c7ef371326bdc410deb403b"
+      },
+      "capture": {
+        "file": "s3-costs-run-v2-search-gnss-1.log",
+        "sha256": "de2c2c0f1ce1ffb0e03e5518290c2a57b45ec079b54f76b26266a7b73f493839"
+      },
+      "expected": {
+        "file": "s3-v2-search-gnss-expected.txt",
+        "sha256": "7d9755054bfed2820e1720c4bf50ee95c0973b62d40fa24bdf32d96255d5f819"
+      },
+      "application_image_bytes": 654992,
+      "selected_sections_bytes": {
+        ".rwtext": 11356,
+        ".data": 2952,
+        ".bss": 168,
+        ".rodata": 511228,
+        ".vectors": 1024,
+        ".text": 128057,
+        ".stack": 326256
+      }
+    }
+  }
+}
