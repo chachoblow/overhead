@@ -259,3 +259,14 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Exported the exact Git index without ignored files; workspace check/default/all-feature tests, no_std core, strict Clippy/fmt, all firmware host feature combinations and 52 Python tests pass offline.
 - Frozen sources/fixtures, exact host preflight/numerics and all derived capture tables reproduce; staged raw-log/sidecar hashes retain original bytes. Both normal M2 images and the complete historical image-gate regression build/pass from the fresh export.
 - Updated fresh-session entry points/prerequisites in HANDOFF and harness docs. No hardware access, toolchain/dependency change or new operating-policy decision; remaining M2 scope is unchanged.
+
+## 2026-10-11 UTC (radar-first iteration on the verified engine)
+- Accepted 0021: begin the minimal real-data M3 simulator slice while M2 budgets/scheduling remain open; preserve engine correctness, prediction code/tests and frozen evidence.
+- Radar quality takes priority over prediction; catalogue size and information-area contents/proportions need visual iteration. The proposed small-catalogue operating package was not accepted.
+- Updated PLAN/DESIGN and cross-linked amendments to 0003/0005; HANDOFF now points to refining the M3 slice. Live retrieval remains M6; no scheduler or numeric production limits selected.
+- Documentation only; no code/dependency/toolchain or hardware changes. Build/test suites were not rerun; documentation whitespace and local-link checks pass.
+
+## 2026-10-11 UTC (radar-first fresh-session verification before commit)
+- Exported staged tracked sources without ignored build/capture artifacts; offline workspace check/default/all-feature tests, no_std core, strict Clippy/fmt, simulator build and local catalogue smoke test pass.
+- All 52 Python tests, frozen manifest/source checks and exact capture-table regeneration pass. No simulator window opened, target images rebuilt, hardware accessed or tools/dependencies changed.
+- Refreshed HANDOFF with current static-simulator/renderer-stub state, startup links and verification. Next session refines M3 under 0021; M2 limits/scheduling remain open.

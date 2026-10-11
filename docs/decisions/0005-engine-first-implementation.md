@@ -1,7 +1,7 @@
 # 0005 — Build a verified calculation engine before the UI
 
 Date: 2026-10-04
-Status: accepted
+Status: accepted (remaining implementation sequence amended by [0021](0021-radar-first-iteration-on-verified-engine.md); engine-first correctness remains)
 
 ## Decision
 Build headless calculations, catalogue handling, and physical pass prediction

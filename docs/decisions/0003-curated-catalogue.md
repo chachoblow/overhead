@@ -1,7 +1,7 @@
 # 0003 — Curated satellite catalogue by default
 
 Date: 2026-10-04
-Status: accepted
+Status: accepted (scale expectation amended by [0021](0021-radar-first-iteration-on-verified-engine.md); curated sources remain the default)
 
 ## Decision
 The device tracks a curated set of satellites assembled from CelesTrak's

@@ -10,21 +10,32 @@ used an LED matrix and a position API.
   Handle the panel/ribbon gently during bring-up.
 
 ## Interface intent
-A location-centered circular radar with a 160×240 readout column to its right.
+A location-centered circular radar with a secondary information area. The initial
+160×240 right-hand column is a starting layout, not a fixed allocation; its
+proportions and contents should earn their space through simulator feedback.
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 fast markers have a minimum on-screen traversal time. **Readouts always use
 true positions, never visually slowed markers.**
 
+A responsive, full but legible radar is the priority, not a particular satellite
+count. Curate and tune density on the small 1-bit display: tens may work better
+than hundreds. Pass prediction remains useful but secondary to radar quality
+([0021](decisions/0021-radar-first-iteration-on-verified-engine.md)).
+
 Only satellites above the local geometric horizon are eligible for markers,
 then clipped to the current view—even at whole-Earth zoom. This is the observer's
-sky, not a global satellite tracker. Physical passes use a separate configurable
+sky, not a global satellite tracker. Zooming out can reveal additional eligible
+objects from the catalogue; catalogue size is not the visible marker count.
+Physical passes use a separate configurable
 elevation threshold, independent of zoom
 ([pass semantics](decisions/0012-physical-pass-semantics.md)).
 
-The panel reflects the radar, with no menus or pages:
+The information area should reflect the radar, with no menus or pages. Candidate
+contents, not a mandatory checklist:
 - Local time and orbit-data age.
 - Auto-selected satellite: name, altitude, range, elevation, travel direction.
-- Next pass and countdown to its start, especially when the local sky is empty.
+- Next pass and countdown to its start, especially when the local sky is empty,
+  if useful without compromising the radar.
 - View radius (e.g. `R 500 KM`).
 
 No pass lists, radio information, or battery indicator. Layout, selection, and
@@ -38,7 +49,8 @@ projection policies should evolve with simulator feedback.
 ## Product choices
 [On-device SGP4](decisions/0001-on-device-sgp4.md),
 [Wi-Fi elements/SNTP](decisions/0002-data-and-time-over-wifi.md),
-[curated catalogue](decisions/0003-curated-catalogue.md), and
+[curated catalogue](decisions/0003-curated-catalogue.md)
+(scale tuned through [0021](decisions/0021-radar-first-iteration-on-verified-engine.md)), and
 [configured location](decisions/0004-hardcoded-location.md) are settled;
 follow those records for rationale and constraints. Implementation order and
 deferred scope belong to [PLAN.md](PLAN.md).

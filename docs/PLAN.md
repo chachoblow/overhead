@@ -1,9 +1,10 @@
 # Overhead — Plan
 
-**Current: M2; all frozen S3 capture gates pass. Next: operating-budget decisions and separate bounded-scheduling verification.**
-Build the headless engine, then the real-data UI, then the device
-([rationale](decisions/0005-engine-first-implementation.md)). Refine each
-slice before starting; later checkboxes are scope, not session-sized tasks.
+**Current: begin the minimal M3 simulator slice on the verified engine; M2 operating-budget and scheduling work remains open.**
+All frozen S3 capture gates pass. Engine-first correctness remains the foundation
+([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
+remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
+Refine each slice before starting; later checkboxes are scope, not session-sized tasks.
 
 ## Complete
 - **M0 — Setup:** workspace, simulator window, project workflow.
@@ -15,7 +16,7 @@ slice before starting; later checkboxes are scope, not session-sized tasks.
 Conventions live in [decisions/](decisions/) (0006–0010);
 verification provenance in the [fixture README](../core/tests/fixtures/README.md).
 
-## Early hardware checks (alongside M2)
+## Early hardware checks (alongside engine/UI work)
 - [x] Benchmark propagation and prediction on confirmed S3 hardware; record board,
   build, mixed LEO/HEO/GNSS/GEO workloads, and timings
   ([first target baseline](evaluations/s3-costs.md)).
@@ -97,25 +98,39 @@ hardware; the first S3 kernel baseline alone does not justify capacity or cadenc
   120 measured samples, 75 numerical rows per diagnostic boot and 252 two-pattern
   phase-stack observations; work/heap/collection counters agree and fully release
   ([results and limits](evaluations/s3-m2.md)). No new matrix or production policy.
-- [ ] Set initial catalogue/input/result limits, lookahead, cadence and explicit
-  over-budget behavior. Select scheduling and verify bounded latency separately.
+- [x] Agree the transition to radar-first simulator iteration on the verified
+  engine; retain prediction and leave numeric product limits open
+  ([0021](decisions/0021-radar-first-iteration-on-verified-engine.md)).
+- [ ] Use the visual workload and measured target costs to set catalogue/input/result
+  limits, lookahead, calculation/prediction cadences and explicit over-budget behavior.
+- [ ] Select scheduling and verify bounded latency separately. Production prediction
+  scheduling does not block the initial M3 slice; M2 is not closed by starting it.
 
 **Done when:** a curated catalogue and upcoming passes are testable headlessly,
 with measured costs justifying supported size, cadence, and prediction accuracy.
 
-## M3 — Minimal real-data radar
+## M3 — Minimal real-data radar (next)
+Refine this slice before implementing: consume verified physical state, preserve
+explicit failures, and keep presentation separate. No pass-prediction integration
+or live fetching is required. Simulator throughput is not target capacity evidence.
+
 - [ ] Add shared app state, renderer entry point, simulator loop, explicit clock,
-  and convenient simulator configuration.
+  and convenient observer/local-catalogue configuration.
 - [ ] Implement/test location-centered projection, clipping, and zoom from
   local scales to wider than Earth; settle spatial-view semantics.
 - [ ] Show real markers and basic identification; wire scroll wheel/up/down zoom.
+- [ ] Compare catalogue selections/densities and radar/information-area proportions
+  on the 400×240 view before fixing product counts or panel contents.
 
 **Done when:** satellites move through a zoomable view traceable to verified
-engine outputs. Coastlines and visual slow-down are not prerequisites.
+engine outputs, with initial visual feedback on density and layout. Coastlines,
+visual slow-down and pass countdowns are not prerequisites.
 
 ## M4 — Useful display behavior
-- [ ] Add stable automatic selection and true satellite/time/data-age/zoom readouts.
-- [ ] Connect next-pass countdown and empty-sky behavior.
+- [ ] Refine secondary information contents with visual feedback; add stable
+  automatic selection and the chosen true satellite/time/data-age/zoom readouts.
+- [ ] Refine empty-sky behavior; evaluate next-pass countdown integration where
+  useful, without sacrificing radar quality or responsiveness.
 - [ ] Prepare coastlines offline and render them legibly across zoom levels.
 
 **Done when:** the view is useful and understandable during passes and empty sky.
