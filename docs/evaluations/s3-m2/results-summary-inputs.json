@@ -1,0 +1,25 @@
+{
+  "generator_sha256": "90bdb788b2237104a73bbf908555b564d512826013c8a7c4a2d10e502221c9be",
+  "inputs": [
+    {
+      "name": "measure-boot-1.log",
+      "bytes": 93560,
+      "sha256": "677fd088b0f28def11a12ae3ce9f6b4ad283c224171d9ff6d0d93faa24733066"
+    },
+    {
+      "name": "measure-boot-2.log",
+      "bytes": 93560,
+      "sha256": "9939db5e5271f3c7786f9f37b69dd159545725c812f5e788041856330d8ebb59"
+    },
+    {
+      "name": "diagnostic-boot-1.log",
+      "bytes": 73648,
+      "sha256": "b65bc488cba43aa2c2d5edbd5ca31e063e202a9e9092184354caf5b383ebb31c"
+    },
+    {
+      "name": "diagnostic-boot-2.log",
+      "bytes": 73648,
+      "sha256": "3f5dd22e067bf16f7d57b0ef7d3149defb1e99be8fe37e36c9ebd9a70ecba771"
+    }
+  ]
+}

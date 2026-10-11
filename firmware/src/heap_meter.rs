@@ -22,6 +22,8 @@ pub struct Meter<A> {
     live: AtomicUsize,
     peak: AtomicUsize,
     occupied_peak: AtomicUsize,
+    pipeline_peak: AtomicUsize,
+    pipeline_occupied_peak: AtomicUsize,
     calls: AtomicUsize,
     requested: AtomicUsize,
     failures: AtomicUsize,
@@ -31,9 +33,9 @@ pub struct Meter<A> {
 pub struct Snapshot {
     pub requested_live: usize,
     pub occupied_live: usize,
-    calls: usize,
-    requested: usize,
-    failures: usize,
+    pub calls: usize,
+    pub requested: usize,
+    pub failures: usize,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -55,6 +57,8 @@ impl<A: Backend> Meter<A> {
             live: AtomicUsize::new(0),
             peak: AtomicUsize::new(0),
             occupied_peak: AtomicUsize::new(0),
+            pipeline_peak: AtomicUsize::new(0),
+            pipeline_occupied_peak: AtomicUsize::new(0),
             calls: AtomicUsize::new(0),
             requested: AtomicUsize::new(0),
             failures: AtomicUsize::new(0),
@@ -69,6 +73,23 @@ impl<A: Backend> Meter<A> {
             requested: self.requested.load(Relaxed),
             failures: self.failures.load(Relaxed),
         }
+    }
+
+    /// Independently reset whole-pipeline peaks, before input copies. Phase
+    /// resets cannot erase these counters. Single allocating owner only.
+    pub fn start_pipeline(&self) -> Snapshot {
+        let start = self.snapshot();
+        self.pipeline_peak.store(start.requested_live, Relaxed);
+        self.pipeline_occupied_peak
+            .store(start.occupied_live, Relaxed);
+        start
+    }
+
+    pub fn finish_pipeline(&self, start: Snapshot) -> Phase {
+        let mut result = self.finish(start);
+        result.requested_peak = self.pipeline_peak.load(Relaxed);
+        result.occupied_peak = self.pipeline_occupied_peak.load(Relaxed);
+        result
     }
 
     /// No concurrent allocating tasks/interrupt handlers, nor overlapping phases.
@@ -105,8 +126,10 @@ unsafe impl<A: Backend> GlobalAlloc for Meter<A> {
         } else {
             let live = self.live.fetch_add(layout.size(), Relaxed) + layout.size();
             self.peak.fetch_max(live, Relaxed);
-            self.occupied_peak
-                .fetch_max(self.backend.occupied(), Relaxed);
+            let occupied = self.backend.occupied();
+            self.occupied_peak.fetch_max(occupied, Relaxed);
+            self.pipeline_peak.fetch_max(live, Relaxed);
+            self.pipeline_occupied_peak.fetch_max(occupied, Relaxed);
             self.calls.fetch_add(1, Relaxed);
             self.requested.fetch_add(layout.size(), Relaxed);
         }
@@ -149,6 +172,29 @@ mod tests {
             unsafe { System.dealloc(ptr, layout) };
             self.used
                 .fetch_sub(layout.size().next_multiple_of(16), Relaxed);
+        }
+    }
+
+    #[test]
+    fn pipeline_peak_survives_phase_resets_and_full_release() {
+        let meter = Meter::new(TestBackend {
+            used: AtomicUsize::new(0),
+        });
+        let pipeline = meter.start_pipeline();
+        unsafe {
+            let layout = Layout::from_size_align(99, 16).unwrap();
+            let ptr = meter.alloc(layout);
+            meter.dealloc(ptr, layout);
+            let phase = meter.begin();
+            assert_eq!(meter.finish(phase).requested_peak, 0);
+            let whole = meter.finish_pipeline(pipeline);
+            assert_eq!(whole.requested_peak, 99);
+            assert_eq!(whole.occupied_peak, 112);
+            assert_eq!(whole.requested_live, 0);
+            assert_eq!(whole.occupied_live, 0);
+            assert_eq!(whole.calls, 1);
+            let next = meter.start_pipeline();
+            assert_eq!(meter.finish_pipeline(next).requested_peak, 0);
         }
     }
 

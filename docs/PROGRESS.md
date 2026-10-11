@@ -242,3 +242,20 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Exported the Git index without ignored artifacts; offline workspace check/default/all-feature tests, no_std core, strict Clippy/fmt, all firmware host feature combinations and 39 Python tests pass.
 - Exact input/numerical/manifest regeneration and debug/release host preflight/numerical reports agree; original reference bytes survive Git staging unchanged. Existing toolchain/dependency caches and SDL2 remain documented prerequisites.
 - Refreshed HANDOFF verification; preparation scope, frozen manifest and next target-implementation block are unchanged. No target images built or hardware accessed.
+
+## 2026-10-11 UTC (frozen M2 harness implementation, offline only)
+- Added lossless static case tables, the owned 20-case pipeline, timed/diagnostic examples, independent pipeline heap peaks and per-phase two-pattern stack probes; pinned preparation inputs/core/dependencies/toolchain remain unchanged.
+- Added strict capture/set validation and normal-image archival/gating with source hashes, section/symbol inventories and frame review; `firmware/M2_CAPTURE.md` owns commands, timeout derivation and limits. No full private collection-capacity or safe-stack claim.
+- Workspace/firmware host gates, 48 Python tests, exact preflight/freeze regeneration, clean-source smoke checks, both exact normal image gates and existing linker regression pass. Images remain local ignored artifacts, not target evidence.
+- No flash, reset or monitor access. Next: obtain approval for two flashes/four reset-separated captures; operating-budget and scheduling decisions remain open.
+
+## 2026-10-11 UTC (approved frozen M2 S3 captures)
+- Flashed the two exact normal images with approval; both timed boots and both diagnostic boots pass: 120 timed samples, 75 unchanged numerical rows per diagnostic boot, 252 phase-stack observations. No failed/partial capture attempt or firmware/dependency/toolchain change.
+- Work/heap/collection counters agree across boots/images with full release. Peak requested/backend occupancy is 31,993/32,124 B; slowest aggregation ~25.58 s; deepest observed phase-stack mark 9,248 B is not a safe allocation. `evaluations/s3-m2.md` owns interpretation and limits.
+- Preserved raw logs/build/reset/hash provenance in `evaluations/s3-m2/`; added reproducible standard-library reporting and tests. Workspace checks/tests, 52 Python tests, frozen gates and exact table regeneration pass; all boot segments match gated images without multiple-DROM diagnostics.
+- Board now holds the diagnostic image, idle with monitors closed. Next: initial operating-budget decision and separate bounded-scheduling verification; whole-device RAM/safe stack and RWX remain open.
+
+## 2026-10-11 UTC (fresh-session verification before commit)
+- Exported the exact Git index without ignored files; workspace check/default/all-feature tests, no_std core, strict Clippy/fmt, all firmware host feature combinations and 52 Python tests pass offline.
+- Frozen sources/fixtures, exact host preflight/numerics and all derived capture tables reproduce; staged raw-log/sidecar hashes retain original bytes. Both normal M2 images and the complete historical image-gate regression build/pass from the fresh export.
+- Updated fresh-session entry points/prerequisites in HANDOFF and harness docs. No hardware access, toolchain/dependency change or new operating-policy decision; remaining M2 scope is unchanged.

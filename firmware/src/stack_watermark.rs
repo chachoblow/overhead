@@ -2,8 +2,8 @@
 //! The target probe deliberately includes its own measurement/harness overhead.
 const PATTERN: u32 = 0xa5c3_6996;
 
-fn untouched_words(words: usize, mut read: impl FnMut(usize) -> u32) -> usize {
-    (0..words).take_while(|&i| read(i) == PATTERN).count()
+fn untouched_words(words: usize, pattern: u32, mut read: impl FnMut(usize) -> u32) -> usize {
+    (0..words).take_while(|&i| read(i) == pattern).count()
 }
 
 #[cfg(target_arch = "xtensa")]
@@ -14,9 +14,11 @@ mod target {
         low: usize,
         high: usize,
         top: usize,
+        pattern: u32,
+        guard_value: u32,
     }
 
-    #[derive(Clone, Copy, Debug)]
+    #[derive(Clone, Copy, Debug, Default)]
     pub struct Watermark {
         pub stack_low: usize,
         pub stack_top: usize,
@@ -43,6 +45,16 @@ mod target {
     /// that invariant until scanning; only one outstanding paint is allowed.
     #[inline(never)]
     pub unsafe fn paint() -> Painted {
+        unsafe { paint_pattern(PATTERN) }
+    }
+
+    /// Paint with a specified diagnostic pattern.
+    ///
+    /// # Safety
+    /// Same exclusive CPU0 stack ownership requirements as `paint`.
+    #[inline(never)]
+    pub unsafe fn paint_pattern(pattern: u32) -> Painted {
+        let guard_value = unsafe { (&raw const __stack_chk_guard).read_volatile() };
         let bottom = (&raw const _stack_end_cpu0) as usize;
         let top = (&raw const _stack_start_cpu0) as usize;
         let guard = (&raw const __stack_chk_guard) as usize;
@@ -70,12 +82,18 @@ mod target {
                 high = out(reg) high,
                 cursor = inout(reg) low => _,
                 top = in(reg) top,
-                pattern = in(reg) PATTERN,
+                pattern = in(reg) pattern,
                 options(nostack),
             );
         }
         assert!(high > low && high < top && high.is_multiple_of(4));
-        Painted { low, high, top }
+        Painted {
+            low,
+            high,
+            top,
+            pattern,
+            guard_value,
+        }
     }
 
     #[inline(never)]
@@ -87,8 +105,8 @@ mod target {
     }
 
     #[inline(never)]
-    unsafe fn calibration(loaded: bool) -> Watermark {
-        let painted = unsafe { paint() };
+    unsafe fn calibration(loaded: bool, pattern: u32) -> Watermark {
+        let painted = unsafe { paint_pattern(pattern) };
         if loaded {
             exercise_stack();
         }
@@ -101,8 +119,16 @@ mod target {
     /// # Safety
     /// Same CPU0 stack ownership requirements as `paint` and `scan`.
     pub unsafe fn self_check() -> (Watermark, Watermark) {
-        let baseline = unsafe { calibration(false) };
-        let loaded = unsafe { calibration(true) };
+        unsafe { self_check_pattern(PATTERN) }
+    }
+
+    /// Known-local smoke test for each independently painted pattern.
+    ///
+    /// # Safety
+    /// Same exclusive CPU0 stack ownership requirements as `paint`.
+    pub unsafe fn self_check_pattern(pattern: u32) -> (Watermark, Watermark) {
+        let baseline = unsafe { calibration(false, pattern) };
+        let loaded = unsafe { calibration(true, pattern) };
         assert!(
             loaded.observed_bytes >= baseline.observed_bytes + 4096,
             "stack probe did not observe the known stack local"
@@ -119,7 +145,12 @@ mod target {
         #[inline(never)]
         pub unsafe fn scan(self) -> Watermark {
             let words = (self.high - self.low) / 4;
-            let untouched = untouched_words(words, |i| unsafe {
+            assert_eq!(
+                unsafe { (&raw const __stack_chk_guard).read_volatile() },
+                self.guard_value,
+                "stack guard changed during diagnostic phase"
+            );
+            let untouched = untouched_words(words, self.pattern, |i| unsafe {
                 ((self.low + 4 * i) as *const u32).read_volatile()
             }) * 4;
             // Reaching this boundary invalidates the experiment even if the HAL
@@ -150,8 +181,17 @@ mod tests {
             ([PATTERN, PATTERN, 0, PATTERN], 2),
             ([0, PATTERN, PATTERN, PATTERN], 0),
         ] {
-            assert_eq!(untouched_words(words.len(), |i| words[i]), expected);
+            assert_eq!(
+                untouched_words(words.len(), PATTERN, |i| words[i]),
+                expected
+            );
         }
-        assert_eq!(untouched_words(0, |_| panic!()), 0);
+        assert_eq!(untouched_words(0, PATTERN, |_| panic!()), 0);
+        for pattern in [0xa5a5_a5a5, 0x5a5a_5a5a] {
+            assert_eq!(
+                untouched_words(4, pattern, |i| if i < 2 { pattern } else { !pattern }),
+                2
+            );
+        }
     }
 }

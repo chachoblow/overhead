@@ -1,0 +1,196 @@
++ rustc --version
+rustc 1.97.0-nightly (8ea53bcd7 2026-07-08) (1.97.0.0)
++ cargo --version
+cargo 1.97.0-nightly (c980f4866 2026-06-30) (1.97.0.0)
++ espflash --version
+espflash 4.6.0
++ xtensa-esp32s3-elf-objdump --version
+GNU objdump (crosstool-NG esp-16.2.0_20260914) 2.47.20260726
+Copyright (C) 2026 Free Software Foundation, Inc.
+This program is free software; you may redistribute it under the terms of
+the GNU General Public License version 3 or (at your option) any later version.
+This program has absolutely no warranty.
++ git rev-parse HEAD
+81c42c17bfb19bef420b17fa10642fc443318cef
++ git status --short
+ M firmware/src/heap_meter.rs
+ M firmware/src/lib.rs
+ M firmware/src/stack_watermark.rs
+?? firmware/examples/m2_diagnostic.rs
+?? firmware/examples/m2_measure.rs
+?? firmware/examples/m2_support/
+?? firmware/generate_m2.py
+?? firmware/m2_capture.py
+?? firmware/prepare_m2_images.py
+?? firmware/src/m2.rs
+?? firmware/src/m2_fixtures.rs
+?? firmware/test_m2_capture.py
++ cargo build --offline --release --locked --example m2_measure --features catalogue-memory
+   Compiling compiler_builtins v0.1.160 (/Users/wesleyklein/.rustup/toolchains/esp/lib/rustlib/src/rust/library/compiler-builtins/compiler-builtins)
+   Compiling core v0.0.0 (/Users/wesleyklein/.rustup/toolchains/esp/lib/rustlib/src/rust/library/core)
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.26
+   Compiling quote v1.0.47
+   Compiling esp-metadata-generated v0.5.3
+   Compiling litrs v1.0.0
+   Compiling serde_core v1.0.229
+   Compiling libm v0.2.16
+   Compiling serde v1.0.229
+   Compiling equivalent v1.0.2
+   Compiling hashbrown v0.17.1
+   Compiling autocfg v1.5.1
+   Compiling itoa v1.0.18
+   Compiling somni-parser v0.3.1
+   Compiling document-features v0.2.12
+   Compiling indexmap v2.14.2
+   Compiling num-traits v0.2.19
+   Compiling ident_case v1.0.1
+   Compiling ryu v1.0.23
+   Compiling unsafe-libyaml v0.2.11
+   Compiling embedded-io-async v0.6.1
+   Compiling heapless v0.9.3
+   Compiling zmij v1.0.23
+   Compiling embassy-sync v0.8.0
+   Compiling heapless v0.8.0
+   Compiling somni-expr v0.3.2
+   Compiling embedded-hal-async v1.0.0
+   Compiling memchr v2.8.3
+   Compiling fnv v1.0.7
+   Compiling version_check v0.9.5
+   Compiling syn v3.0.6
+   Compiling syn v2.0.119
+   Compiling esp-rom-sys v0.1.5
+   Compiling embassy-sync v0.6.2
+   Compiling embassy-sync v0.7.2
+   Compiling generic-array v0.14.7
+   Compiling esp-sync v0.3.0
+   Compiling embassy-time-driver v0.2.2
+   Compiling strsim v0.11.1
+   Compiling portable-atomic v1.15.0
+   Compiling darling_core v0.21.3
+   Compiling winnow v1.0.4
+   Compiling darling_core v0.24.1
+   Compiling toml_parser v1.1.5+spec-1.1.0
+   Compiling xtensa-lx-rt v0.23.0
+   Compiling esp32s3 v0.36.0
+   Compiling object v0.37.3
+   Compiling embassy-hal-internal v0.4.0
+   Compiling toml_datetime v1.1.2+spec-1.1.0
+   Compiling serde_derive v1.0.229
+   Compiling toml_edit v0.25.17+spec-1.1.0
+   Compiling somni-template v0.3.2
+   Compiling darling_macro v0.21.3
+   Compiling darling v0.21.3
+   Compiling serde_json v1.0.151
+   Compiling paste v1.0.15
+   Compiling heck v0.5.0
+   Compiling strum_macros v0.27.2
+   Compiling darling_macro v0.24.1
+   Compiling proc-macro-crate v3.5.0
+   Compiling enumset_derive v0.15.0
+   Compiling darling v0.24.1
+   Compiling xtensa-lx-rt-proc-macros v0.5.0
+   Compiling bitfield-macros v0.19.5
+   Compiling jiff-core v0.1.1
+   Compiling indoc v2.0.7
+   Compiling log v0.4.34
+   Compiling rustversion v1.0.23
+   Compiling termcolor v1.4.1
+   Compiling esp-println v0.18.0
+   Compiling instability v0.3.14
+   Compiling esp-hal-procmacros v0.23.0
+   Compiling jiff v0.2.38
+   Compiling serde_yaml v0.9.34+deprecated
+   Compiling alloc v0.0.0 (/Users/wesleyklein/.rustup/toolchains/esp/lib/rustlib/src/rust/library/alloc)
+   Compiling chrono v0.4.45
+   Compiling delegate v0.13.5
+   Compiling esp-storage v0.10.0
+   Compiling sgp4 v2.4.0
+   Compiling esp-config v0.8.0
+   Compiling overhead-s3-benchmark v0.1.0 (/Users/wesleyklein/Code/Overhead/firmware)
+   Compiling esp-hal v1.2.2
+   Compiling esp-alloc v0.11.0
+   Compiling esp-bootloader-esp-idf v0.6.0
+   Compiling stable_deref_trait v1.2.1
+   Compiling critical-section v1.2.0
+   Compiling byteorder v1.5.0
+   Compiling cfg-if v1.0.5
+   Compiling futures-core v0.3.34
+   Compiling typenum v1.20.1
+   Compiling futures-sink v0.3.34
+   Compiling embedded-io v0.7.1
+   Compiling embedded-io v0.6.1
+   Compiling nb v1.1.0
+   Compiling embedded-hal v1.0.0
+   Compiling hash32 v0.3.1
+   Compiling embedded-io-async v0.7.0
+   Compiling pin-project-lite v0.2.17
+   Compiling futures-task v0.3.34
+   Compiling futures-util v0.3.34
+   Compiling nb v0.1.3
+   Compiling xtensa-lx v0.13.0
+   Compiling void v1.0.2
+   Compiling as-slice v0.2.1
+   Compiling embedded-hal v0.2.7
+   Compiling aligned v0.4.3
+   Compiling embedded-storage v0.3.2
+   Compiling vcell v0.1.3
+   Compiling embassy-time v0.5.1
+   Compiling embedded-storage-async v0.4.2
+   Compiling hybrid-array v0.4.15
+   Compiling block-device-driver v0.2.0
+   Compiling embassy-usb-driver v0.2.2
+   Compiling enumset v1.1.14
+   Compiling block-buffer v0.12.1
+   Compiling crypto-common v0.2.2
+   Compiling crypto-common v0.1.7
+   Compiling block-buffer v0.10.4
+   Compiling gcd v2.3.0
+   Compiling embassy-futures v0.1.2
+   Compiling fugit v0.5.0
+   Compiling digest v0.10.7
+   Compiling embassy-usb-synopsys-otg v0.4.0
+   Compiling digest v0.11.3
+   Compiling embassy-embedded-hal v0.6.0
+   Compiling sdio v0.5.2
+   Compiling static_cell v2.1.1
+   Compiling embedded-can v0.4.1
+   Compiling rand_core v0.10.1
+   Compiling bytemuck v1.25.2
+   Compiling rand_core v0.9.5
+   Compiling strum v0.27.2
+   Compiling rand_core v0.6.4
+   Compiling ufmt-write v0.1.0
+   Compiling bitfield v0.19.5
+   Compiling const-default v1.0.0
+   Compiling sha2 v0.11.0
+   Compiling rlsf v0.2.3
+   Compiling linked_list_allocator v0.10.6
+   Compiling allocator-api2 v0.3.1
+   Compiling overhead-core v0.1.0 (/Users/wesleyklein/Code/Overhead/core)
+warning: linker stderr: /Users/wesleyklein/.rustup/toolchains/esp/xtensa-esp-elf/esp-16.2.0_20260914/xtensa-esp-elf/bin/../lib/gcc/xtensa-esp-elf/16.2.0/../../../../xtensa-esp-elf/bin/ld: /Users/wesleyklein/Code/Overhead/firmware/target/m2-normal-implementation-final-2/cargo-target/xtensa-esp32s3-none-elf/release/examples/m2_measure-7c5a236bfcca19a3 has a LOAD segment with RWX permissions
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `overhead-s3-benchmark` (example "m2_measure") generated 1 warning
+    Finished `release` profile [optimized + debuginfo] target(s) in 27.25s
++ espflash save-image --chip esp32s3 --flash-size 8mb --flash-mode dio --flash-freq 40mhz --skip-update-check /Users/wesleyklein/Code/Overhead/firmware/target/m2-normal-implementation-final-2/m2_measure.elf /Users/wesleyklein/Code/Overhead/firmware/target/m2-normal-implementation-final-2/m2_measure.bin
+Chip type:         esp32s3
+Merge:             false
+Skip padding:      false
+App/part. size:    420,640/8,323,072 bytes, 5.05%
+[2026-10-11T04:19:31Z INFO ] Image successfully saved!
++ cargo build --offline --release --locked --example m2_diagnostic --features catalogue-memory,numerical-reference
+   Compiling overhead-s3-benchmark v0.1.0 (/Users/wesleyklein/Code/Overhead/firmware)
+warning: linker stderr: /Users/wesleyklein/.rustup/toolchains/esp/xtensa-esp-elf/esp-16.2.0_20260914/xtensa-esp-elf/bin/../lib/gcc/xtensa-esp-elf/16.2.0/../../../../xtensa-esp-elf/bin/ld: /Users/wesleyklein/Code/Overhead/firmware/target/m2-normal-implementation-final-2/cargo-target/xtensa-esp32s3-none-elf/release/examples/m2_diagnostic-d9e5895c2d1561e2 has a LOAD segment with RWX permissions
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `overhead-s3-benchmark` (example "m2_diagnostic") generated 1 warning
+    Finished `release` profile [optimized + debuginfo] target(s) in 7.84s
++ espflash save-image --chip esp32s3 --flash-size 8mb --flash-mode dio --flash-freq 40mhz --skip-update-check /Users/wesleyklein/Code/Overhead/firmware/target/m2-normal-implementation-final-2/m2_diagnostic.elf /Users/wesleyklein/Code/Overhead/firmware/target/m2-normal-implementation-final-2/m2_diagnostic.bin
+Chip type:         esp32s3
+Merge:             false
+Skip padding:      false
+App/part. size:    493,648/8,323,072 bytes, 5.93%
+[2026-10-11T04:19:39Z INFO ] Image successfully saved!

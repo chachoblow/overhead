@@ -305,6 +305,19 @@ memory observations depend on the host/compiler. [Method/results/remaining gates
 The separate numerical preparation/shared firmware checker and manifest hash gate
 are described in the frozen annex; this runner still does not measure numerics.
 
+## `summarize_m2_capture.py`
+
+Offline, standard-library reporting for the [frozen S3 captures](../docs/evaluations/s3-m2.md).
+Validates two timed and two diagnostic logs with the strict firmware validator
+before deriving unfiltered timing/heap summaries and per-phase stack tables.
+Never accesses hardware, changes the frozen manifest or overwrites existing output.
+Use `--check` to reproduce published tables; exact commands/provenance are in the
+[capture archive](../docs/evaluations/s3-m2/README.md#offline-validation-and-table-regeneration).
+
+```sh
+python3 -m unittest discover -s tools -p 'test_summarize_m2_capture.py'
+```
+
 ## `overhead-track`
 
 Single-satellite measurements from explicit local inputs; no network, wall

@@ -1,40 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-11 UTC. Next: implement/capture the frozen M2 S3 suite._
+_Last updated: 2026-10-11 UTC. Next: initial operating-budget decision and bounded scheduling._
 
 ## State
-M2 preparation is complete: **20 unchanged cases frozen** as `m2-bounded-20-v1`;
-75 shared numerical rows pass on host, not yet on target. No supported size,
-cadence, safe stack or scheduling claim. [PLAN](PLAN.md),
-[frozen annex/representation contract](evaluations/m2-frozen-manifest.md),
-[0020](decisions/0020-m2-capture-manifest-freeze.md).
+All frozen `m2-bounded-20-v1` target gates pass: two timed boots (120 samples),
+two diagnostic boots (75 numerical rows each), and 252 two-pattern phase-stack
+observations. Work/heap/collection counters agree across boots/images; every
+pipeline fully releases. No failed/partial capture attempt or widened tolerance.
+[Results](evaluations/s3-m2.md), [raw evidence/provenance](evaluations/s3-m2/README.md).
+M2 is not closed: no production limit/cadence or safe-stack claim.
 
-## This session
-Pinned original TEME sources and complete existing geometry selection in
-`tools/fixtures/m2-numerical/`; added opt-in allocation-free shared checker
-`firmware/src/numerical.rs` and build-host conversion. Added offline numerical/
-manifest integrity scripts/tests and `tools/fixtures/m2-cases/manifest.json`.
-Reviewed static metadata, owned diagnostics, exact input consumption/lifetimes.
-Historical fixtures, pool and candidate host report are unchanged; no new cases,
-dependencies, core APIs, toolchain changes, target images or hardware access.
+## Fresh session
+Read [PLAN](PLAN.md) and [DESIGN](DESIGN.md); stay in the remaining M2 scope.
+Use [host/build commands](../firmware/M2_CAPTURE.md#sources-and-build) and
+[evidence regeneration](evaluations/s3-m2/README.md#offline-validation-and-table-regeneration).
+Tracked sources suffice: no ignored capture/build artifacts or running monitor
+are required. Existing stable/Espressif toolchains, cached dependencies, Python
+3.11+ and Homebrew SDL2 remain prerequisites; no tools were installed/changed.
+New builds require their own image gate and approval before hardware access.
 
 ## Next / risks
-Implement the frozen measurement/diagnostic harness and strict capture validation;
-derive timeouts from frozen work/prior S3 costs, inspect frames, and re-gate exact
-normal images before requesting flash approval. Keep the fixed 64 KiB heap.
-Target pipeline/backend/timing/release, numerical and two-pattern stack evidence
-remain open. Then decide conservative limits/cadence/over-budget behavior and verify
-bounded scheduling latency separately. No additional matrix without an unanswered
-decision. Whole-device RAM and safe stack remain unknown; Sharp bring-up is separate.
+Decide input/group/record/accepted-satellite/stored-result limits, lookahead,
+recomputation cadence and explicit over-budget behavior. Then select and verify
+bounded scheduling latency separately; no architecture selected by these captures.
+Largest observed heap: 31,993 requested / 32,124 backend bytes; slowest aggregation
+~25.58 s. Deepest observed phase-stack mark: 9,248 B, not a safe allocation.
+Allow app/display/network/refresh headroom; whole-device RAM/safe stack and RWX
+remain open. No extra matrix without an unanswered decision. Sharp is separate.
 
-## Hardware / local setup
-Board unchanged; reset reruns the corrected historical catalogue-memory experiment.
-No monitor started. UART `/dev/cu.usbserial-110`; display/PSRAM unused, capacity
-unconfirmed. Ask before flashing; [image gate](../firmware/IMAGE_GATE.md).
-Corrected multiple-DROM boots pass; RWX warning remains.
-
-## Verification
-Clean staged-source export (no ignored artifacts) passes offline workspace check/
-default/all-feature tests, no_std core, strict Clippy/fmt, all firmware host feature
-combinations, 39 Python tests, and exact debug/release preflight/numerical reports.
-Existing toolchain/cached dependencies and SDL2 required. [Reproduction](../tools/fixtures/m2-cases/README.md#offline-regeneration).
+## Hardware / verification
+Board holds `m2_diagnostic`; reset reruns numerical/stack diagnostics. No monitor
+active; UART `/dev/cu.usbserial-110`. Display/PSRAM unused; future access needs approval.
+Captured binaries/disassembly/source tarball remain local under
+`firmware/target/m2-capture-20261011T0423/`; ignored files are not durable archives.
+Clean staged-source export passes offline workspace check/default/all-feature tests,
+no_std core, strict Clippy/fmt, all firmware host feature combinations, 52 Python
+tests, exact preflight/numerics/frozen tables and four-log evidence regeneration.
+Both new normal images build/gate from that export; the full historical linker
+regression also passes. Captured source/input/image hashes and raw bytes are intact.

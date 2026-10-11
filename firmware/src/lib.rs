@@ -23,6 +23,8 @@ extern crate alloc;
 pub mod catalogue_memory;
 #[cfg(feature = "catalogue-memory")]
 pub mod heap_meter;
+#[cfg(feature = "catalogue-memory")]
+pub mod m2;
 #[cfg(all(feature = "catalogue-memory", any(target_arch = "xtensa", test)))]
 pub mod stack_watermark;
 

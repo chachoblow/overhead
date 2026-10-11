@@ -1,0 +1,53 @@
+{
+  "mode": "measure",
+  "manifest_sha256": "be9746af568105d5eb51a5b8da1318fcb47d0f61d6f75a9aa0bc0983b2928acb",
+  "timeout_s": 18180,
+  "command": [
+    "espflash",
+    "monitor",
+    "--port",
+    "/dev/cu.usbserial-110",
+    "--elf",
+    "/Users/wesleyklein/Code/Overhead/firmware/target/m2-capture-20261011T0423/m2_measure.elf",
+    "--non-interactive",
+    "--skip-update-check"
+  ],
+  "image_gate": {
+    "elf_sha256": "d416dae1d972ba242db8855bd9a3ab02bbaa3aa60ca0f7b2b0f93d67562ff5ea",
+    "image_sha256": "4aaf1698245f3adb419c4b45a2edc9dcca76843f153a7deb2267154d6d872e03",
+    "image_bytes": 420640,
+    "app_offset": 65536,
+    "rodata_alignment": 64,
+    "merge_bytes": 32,
+    "checked_sections": 10,
+    "checked_elf_bytes": 420527,
+    "segments": [
+      {
+        "address": "0x3c000020",
+        "bytes": 129516,
+        "file_offset": 32
+      },
+      {
+        "address": "0x3fc8b148",
+        "bytes": 1540,
+        "file_offset": 129556
+      },
+      {
+        "address": "0x42020020",
+        "bytes": 274680,
+        "file_offset": 131104
+      },
+      {
+        "address": "0x3fc8b74c",
+        "bytes": 2184,
+        "file_offset": 405792
+      },
+      {
+        "address": "0x40378000",
+        "bytes": 12612,
+        "file_offset": 407984
+      }
+    ]
+  },
+  "status": "capture-attempt-not-acceptance"
+}

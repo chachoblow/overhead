@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: M2; preparation complete, exact 20-case manifest frozen. Next: implement/capture the frozen S3 suite, then operating-budget decisions and scheduling verification.**
+**Current: M2; all frozen S3 capture gates pass. Next: operating-budget decisions and separate bounded-scheduling verification.**
 Build the headless engine, then the real-data UI, then the device
 ([rationale](decisions/0005-engine-first-implementation.md)). Refine each
 slice before starting; later checkboxes are scope, not session-sized tasks.
@@ -89,11 +89,16 @@ hardware; the first S3 kernel baseline alone does not justify capacity or cadenc
 - [x] Pin numerical references and identical host/target check selection, finish
   target metadata/representation review, and freeze the exact 20-case manifest
   ([frozen annex](evaluations/m2-frozen-manifest.md), [0020](decisions/0020-m2-capture-manifest-freeze.md));
-  all 75 numerical rows pass on host, not yet on target.
-- [ ] Implement/capture the frozen suite: broader distinct populations/pass densities,
-  collection/input-memory samples, stronger stack observations and independent target
-  numerical checks. Set catalogue limits, cadence, scheduling and explicit over-budget
-  behavior; verify bounded scheduling latency separately.
+  all 75 numerical rows pass on host; accepted target evidence is below.
+- [x] Implement the frozen timed/diagnostic harness, strict capture validation and
+  exact normal-image gates; preserve pinned sources and fixed heap
+  ([usage, frame review and limits](../firmware/M2_CAPTURE.md)).
+- [x] With approval, capture the frozen suite: two timed and two diagnostic boots,
+  120 measured samples, 75 numerical rows per diagnostic boot and 252 two-pattern
+  phase-stack observations; work/heap/collection counters agree and fully release
+  ([results and limits](evaluations/s3-m2.md)). No new matrix or production policy.
+- [ ] Set initial catalogue/input/result limits, lookahead, cadence and explicit
+  over-budget behavior. Select scheduling and verify bounded latency separately.
 
 **Done when:** a curated catalogue and upcoming passes are testable headlessly,
 with measured costs justifying supported size, cadence, and prediction accuracy.

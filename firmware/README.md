@@ -8,15 +8,21 @@ All orbital calculations still run in `overhead-core`. Results and limitations:
 [first S3 evaluation](../docs/evaluations/s3-costs.md),
 [16-slot follow-up](../docs/evaluations/s3-scaling-16.md), and
 [remaining V2 suites](../docs/evaluations/s3-expanded.md). All 122 prepared
-kernel workloads are host-tested and now have target captures. Broader orbital
-samples, independent target numeric checks, and whole-device peak-memory budgets
-remain pending; the separate memory experiment supplies only its bounded evidence.
+kernel workloads are host-tested and now have target captures. Additional distinct
+populations and independent numerical checks have separate [frozen-suite evidence](../docs/evaluations/s3-m2.md).
+Whole-device peak-memory budgets and scheduling guarantees remain open.
 
-## Prepared M2 numerical checks (host-only evidence)
+## Frozen M2 harness and numerical checks
+
+The separate [frozen M2 harness](M2_CAPTURE.md) now implements the timed and
+numerical/stack diagnostic images for all 20 frozen cases. Both exact normal
+images pass offline gates and now have two accepted captures each
+([results and limits](../docs/evaluations/s3-m2.md)). Its commands/protocol are
+separate from the historical suites documented below.
 
 The opt-in `numerical-reference` library feature provides the same allocation-free
-75-row checker for host and future target diagnostics. It does not add a capture
-binary or alter the historical measurement suites. Run from the repository root:
+75-row checker for host and the new target diagnostic example. Historical
+measurement suites are unchanged. Run the checker from the repository root:
 
 ```sh
 cargo +stable run --offline --locked --manifest-path firmware/Cargo.toml \
@@ -25,7 +31,9 @@ cargo +stable run --offline --locked --manifest-path firmware/Cargo.toml \
 
 [Reference selection/provenance and tests](../tools/fixtures/m2-numerical/README.md);
 [frozen expanded-suite annex](../docs/evaluations/m2-frozen-manifest.md).
-Target execution, image gating and approval remain separate future work.
+All 75 rows pass in both approved diagnostic boots. Future flashes/resets still
+require approval; exact image gates and compiled-frame review are recorded in
+[M2_CAPTURE](M2_CAPTURE.md).
 
 ## Hardware and permission
 
@@ -148,7 +156,8 @@ Timeouts are conservative capture allowances, **not measured runtime bounds**.
 Start with three samples and one suite at a time to avoid another unbounded
 combined matrix. One untimed warm-up is always additional to the selected samples.
 The 16/64-slot suites still reference only four satellite instances, not a
-larger distinct working set. Additional orbital fixtures remain future work.
+larger distinct working set. Additional distinct populations are measured only in
+the separate [frozen M2 harness](M2_CAPTURE.md), not added to these historical suites.
 
 ### Timing and input contract
 - Each tracking invocation evaluates 1,441 timestamps at 60s spacing, from the
@@ -179,8 +188,8 @@ larger distinct working set. Additional orbital fixtures remain future work.
   satellite altitude, rendering, or a complete application tick.
 - All prepared suites now have validated target captures; see the linked results.
   Age and search-setting sweeps are separate, not a Cartesian product. Broader
-  orbit samples and independent target numeric checks remain pending; initial
-  distinct-catalogue heap/write-watermark evidence lives in the separate experiment.
+  distinct-population, heap/stack and independent numerical evidence now lives in
+  the separate [frozen M2 suite](M2_CAPTURE.md).
   The first larger-matrix capture timed out; partial
   exploratory output is not part of the published final-build runs.
 

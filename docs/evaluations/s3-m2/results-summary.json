@@ -1,0 +1,2004 @@
+{
+  "schema_version": 1,
+  "manifest_id": "m2-bounded-20-v1",
+  "manifest_sha256": "be9746af568105d5eb51a5b8da1318fcb47d0f61d6f75a9aa0bc0983b2928acb",
+  "scope": "instrumented target samples, not worst-case/safe-stack/device capacity or operating policy",
+  "timed_samples": 120,
+  "stack_observations": 252,
+  "numerical_rows_per_diagnostic_boot": 75,
+  "cases": [
+    {
+      "case_id": 1,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 36,
+          "median_us": 40.0,
+          "max_us": 41
+        },
+        "initialization": {
+          "min_us": 37849,
+          "median_us": 37907.0,
+          "max_us": 37931
+        },
+        "input-release": {
+          "min_us": 19,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 599404,
+          "median_us": 599506.0,
+          "max_us": 599531
+        },
+        "destruction": {
+          "min_us": 219,
+          "median_us": 219.0,
+          "max_us": 222
+        }
+      },
+      "pipeline": {
+        "requested_peak": 15959,
+        "requested_live": 0,
+        "occupied_peak": 16024,
+        "occupied_live": 0,
+        "calls": 74,
+        "requested": 33223,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 15959,
+          "requested_live": 5575,
+          "occupied_peak": 16024,
+          "occupied_live": 5640,
+          "calls": 69,
+          "requested": 31447,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 5575,
+          "requested_live": 5575,
+          "occupied_peak": 5640,
+          "occupied_live": 5640,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 7351,
+          "requested_live": 7351,
+          "occupied_peak": 7416,
+          "occupied_live": 7416,
+          "calls": 5,
+          "requested": 1776,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 7351,
+          "requested_live": 0,
+          "occupied_peak": 7416,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        8
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 8,
+        "diagnostics_length": 0,
+        "memberships_length": 8,
+        "reports_length": 8,
+        "passes_length": 3,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 2,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 36,
+          "median_us": 37.0,
+          "max_us": 40
+        },
+        "initialization": {
+          "min_us": 37784,
+          "median_us": 37843.0,
+          "max_us": 37864
+        },
+        "input-release": {
+          "min_us": 20,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 14895056,
+          "median_us": 14895700.0,
+          "max_us": 14916954
+        },
+        "destruction": {
+          "min_us": 225,
+          "median_us": 225.0,
+          "max_us": 228
+        }
+      },
+      "pipeline": {
+        "requested_peak": 15959,
+        "requested_live": 0,
+        "occupied_peak": 16024,
+        "occupied_live": 0,
+        "calls": 77,
+        "requested": 33895,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 15959,
+          "requested_live": 5575,
+          "occupied_peak": 16024,
+          "occupied_live": 5640,
+          "calls": 69,
+          "requested": 31447,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 5575,
+          "requested_live": 5575,
+          "occupied_peak": 5640,
+          "occupied_live": 5640,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 8023,
+          "requested_live": 8023,
+          "occupied_peak": 8088,
+          "occupied_live": 8088,
+          "calls": 8,
+          "requested": 2448,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 8023,
+          "requested_live": 0,
+          "occupied_peak": 8088,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        8
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 8,
+        "diagnostics_length": 0,
+        "memberships_length": 8,
+        "reports_length": 8,
+        "passes_length": 13,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 3,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 36,
+          "median_us": 36.0,
+          "max_us": 40
+        },
+        "initialization": {
+          "min_us": 20599,
+          "median_us": 20606.0,
+          "max_us": 20622
+        },
+        "input-release": {
+          "min_us": 19,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 8079281,
+          "median_us": 8099710.0,
+          "max_us": 8099723
+        },
+        "destruction": {
+          "min_us": 170,
+          "median_us": 173.0,
+          "max_us": 174
+        }
+      },
+      "pipeline": {
+        "requested_peak": 15889,
+        "requested_live": 0,
+        "occupied_peak": 15928,
+        "occupied_live": 0,
+        "calls": 53,
+        "requested": 27929,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 15889,
+          "requested_live": 5529,
+          "occupied_peak": 15928,
+          "occupied_live": 5568,
+          "calls": 45,
+          "requested": 25617,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 5529,
+          "requested_live": 5529,
+          "occupied_peak": 5568,
+          "occupied_live": 5568,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 7617,
+          "requested_live": 7617,
+          "occupied_peak": 7656,
+          "occupied_live": 7656,
+          "calls": 8,
+          "requested": 2312,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 7617,
+          "requested_live": 0,
+          "occupied_peak": 7656,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        8
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 5,
+        "diagnostics_length": 0,
+        "memberships_length": 5,
+        "reports_length": 5,
+        "passes_length": 16,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 4,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 36,
+          "median_us": 36.5,
+          "max_us": 40
+        },
+        "initialization": {
+          "min_us": 36804,
+          "median_us": 36806.0,
+          "max_us": 36814
+        },
+        "input-release": {
+          "min_us": 20,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 15482402,
+          "median_us": 15521624.0,
+          "max_us": 15564227
+        },
+        "destruction": {
+          "min_us": 191,
+          "median_us": 192.0,
+          "max_us": 192
+        }
+      },
+      "pipeline": {
+        "requested_peak": 24056,
+        "requested_live": 0,
+        "occupied_peak": 24128,
+        "occupied_live": 0,
+        "calls": 91,
+        "requested": 48000,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 24056,
+          "requested_live": 11008,
+          "occupied_peak": 24128,
+          "occupied_live": 11080,
+          "calls": 79,
+          "requested": 44312,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 11008,
+          "requested_live": 11008,
+          "occupied_peak": 11080,
+          "occupied_live": 11080,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 14472,
+          "requested_live": 14472,
+          "occupied_peak": 14544,
+          "occupied_live": 14544,
+          "calls": 12,
+          "requested": 3688,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 14472,
+          "requested_live": 0,
+          "occupied_peak": 14544,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        16
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 9,
+        "diagnostics_length": 0,
+        "memberships_length": 9,
+        "reports_length": 9,
+        "passes_length": 27,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 5,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 36,
+          "median_us": 36.5,
+          "max_us": 37
+        },
+        "initialization": {
+          "min_us": 48612,
+          "median_us": 48692.5,
+          "max_us": 48719
+        },
+        "input-release": {
+          "min_us": 20,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 20029178,
+          "median_us": 20053772.0,
+          "max_us": 20058913
+        },
+        "destruction": {
+          "min_us": 210,
+          "median_us": 214.0,
+          "max_us": 215
+        }
+      },
+      "pipeline": {
+        "requested_peak": 31880,
+        "requested_live": 0,
+        "occupied_peak": 31976,
+        "occupied_live": 0,
+        "calls": 119,
+        "requested": 70056,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 31880,
+          "requested_live": 11096,
+          "occupied_peak": 31976,
+          "occupied_live": 11192,
+          "calls": 105,
+          "requested": 65560,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 11096,
+          "requested_live": 11096,
+          "occupied_peak": 11192,
+          "occupied_live": 11192,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 15368,
+          "requested_live": 15368,
+          "occupied_peak": 15464,
+          "occupied_live": 15464,
+          "calls": 14,
+          "requested": 4496,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 15368,
+          "requested_live": 0,
+          "occupied_peak": 15464,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        16
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 12,
+        "diagnostics_length": 0,
+        "memberships_length": 12,
+        "reports_length": 12,
+        "passes_length": 33,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 6,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 36,
+          "median_us": 36.0,
+          "max_us": 37
+        },
+        "initialization": {
+          "min_us": 64287,
+          "median_us": 64310.0,
+          "max_us": 64337
+        },
+        "input-release": {
+          "min_us": 20,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 25566998,
+          "median_us": 25567044.5,
+          "max_us": 25579120
+        },
+        "destruction": {
+          "min_us": 229,
+          "median_us": 229.0,
+          "max_us": 230
+        }
+      },
+      "pipeline": {
+        "requested_peak": 31993,
+        "requested_live": 0,
+        "occupied_peak": 32124,
+        "occupied_live": 0,
+        "calls": 155,
+        "requested": 79225,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 31993,
+          "requested_live": 11177,
+          "occupied_peak": 32124,
+          "occupied_live": 11308,
+          "calls": 137,
+          "requested": 73353,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 11177,
+          "requested_live": 11177,
+          "occupied_peak": 11308,
+          "occupied_live": 11308,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 16825,
+          "requested_live": 16825,
+          "occupied_peak": 16956,
+          "occupied_live": 16956,
+          "calls": 18,
+          "requested": 5872,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 16825,
+          "requested_live": 0,
+          "occupied_peak": 16956,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        16
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 16,
+        "diagnostics_length": 0,
+        "memberships_length": 16,
+        "reports_length": 16,
+        "passes_length": 44,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 7,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 40,
+          "median_us": 41.0,
+          "max_us": 41
+        },
+        "initialization": {
+          "min_us": 29182,
+          "median_us": 29279.5,
+          "max_us": 29292
+        },
+        "input-release": {
+          "min_us": 19,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 14243111,
+          "median_us": 14243369.5,
+          "max_us": 14250939
+        },
+        "destruction": {
+          "min_us": 183,
+          "median_us": 183.0,
+          "max_us": 188
+        }
+      },
+      "pipeline": {
+        "requested_peak": 24085,
+        "requested_live": 0,
+        "occupied_peak": 24168,
+        "occupied_live": 0,
+        "calls": 108,
+        "requested": 54325,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 24085,
+          "requested_live": 11029,
+          "occupied_peak": 24168,
+          "occupied_live": 11112,
+          "calls": 87,
+          "requested": 46261,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 11029,
+          "requested_live": 11029,
+          "occupied_peak": 11112,
+          "occupied_live": 11112,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 16933,
+          "requested_live": 16853,
+          "occupied_peak": 17016,
+          "occupied_live": 16936,
+          "calls": 21,
+          "requested": 8064,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 16853,
+          "requested_live": 0,
+          "occupied_peak": 16936,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        16
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 10,
+        "diagnostics_length": 0,
+        "memberships_length": 10,
+        "reports_length": 10,
+        "passes_length": 68,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 8,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 36,
+          "median_us": 40.5,
+          "max_us": 41
+        },
+        "initialization": {
+          "min_us": 29145,
+          "median_us": 29233.0,
+          "max_us": 29243
+        },
+        "input-release": {
+          "min_us": 19,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 12807761,
+          "median_us": 12808555.5,
+          "max_us": 12808745
+        },
+        "destruction": {
+          "min_us": 226,
+          "median_us": 226.0,
+          "max_us": 226
+        }
+      },
+      "pipeline": {
+        "requested_peak": 24085,
+        "requested_live": 0,
+        "occupied_peak": 24168,
+        "occupied_live": 0,
+        "calls": 98,
+        "requested": 49621,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 24085,
+          "requested_live": 11029,
+          "occupied_peak": 24168,
+          "occupied_live": 11112,
+          "calls": 87,
+          "requested": 46261,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 11029,
+          "requested_live": 11029,
+          "occupied_peak": 11112,
+          "occupied_live": 11112,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 14389,
+          "requested_live": 14389,
+          "occupied_peak": 14472,
+          "occupied_live": 14472,
+          "calls": 11,
+          "requested": 3360,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 14389,
+          "requested_live": 0,
+          "occupied_peak": 14472,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        16
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 10,
+        "diagnostics_length": 0,
+        "memberships_length": 10,
+        "reports_length": 10,
+        "passes_length": 26,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 9,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 36,
+          "median_us": 37.0,
+          "max_us": 41
+        },
+        "initialization": {
+          "min_us": 50637,
+          "median_us": 50799.0,
+          "max_us": 50801
+        },
+        "input-release": {
+          "min_us": 19,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 19041452,
+          "median_us": 19041458.0,
+          "max_us": 19041459
+        },
+        "destruction": {
+          "min_us": 194,
+          "median_us": 195.0,
+          "max_us": 195
+        }
+      },
+      "pipeline": {
+        "requested_peak": 24086,
+        "requested_live": 0,
+        "occupied_peak": 24164,
+        "occupied_live": 0,
+        "calls": 100,
+        "requested": 50518,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 24086,
+          "requested_live": 11030,
+          "occupied_peak": 24164,
+          "occupied_live": 11108,
+          "calls": 87,
+          "requested": 46262,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 11030,
+          "requested_live": 11030,
+          "occupied_peak": 11108,
+          "occupied_live": 11108,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 14918,
+          "requested_live": 14838,
+          "occupied_peak": 14996,
+          "occupied_live": 14916,
+          "calls": 13,
+          "requested": 4256,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 14838,
+          "requested_live": 0,
+          "occupied_peak": 14916,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        16
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 10,
+        "diagnostics_length": 0,
+        "memberships_length": 10,
+        "reports_length": 10,
+        "passes_length": 28,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 10,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 37,
+          "median_us": 37.0,
+          "max_us": 41
+        },
+        "initialization": {
+          "min_us": 50861,
+          "median_us": 50862.0,
+          "max_us": 50873
+        },
+        "input-release": {
+          "min_us": 20,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 17460622,
+          "median_us": 17460626.5,
+          "max_us": 17460629
+        },
+        "destruction": {
+          "min_us": 223,
+          "median_us": 224.0,
+          "max_us": 228
+        }
+      },
+      "pipeline": {
+        "requested_peak": 24086,
+        "requested_live": 0,
+        "occupied_peak": 24164,
+        "occupied_live": 0,
+        "calls": 95,
+        "requested": 48950,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 24086,
+          "requested_live": 11030,
+          "occupied_peak": 24164,
+          "occupied_live": 11108,
+          "calls": 87,
+          "requested": 46262,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 11030,
+          "requested_live": 11030,
+          "occupied_peak": 11108,
+          "occupied_live": 11108,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 13718,
+          "requested_live": 13718,
+          "occupied_peak": 13796,
+          "occupied_live": 13796,
+          "calls": 8,
+          "requested": 2688,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 13718,
+          "requested_live": 0,
+          "occupied_peak": 13796,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        16
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 10,
+        "diagnostics_length": 0,
+        "memberships_length": 10,
+        "reports_length": 10,
+        "passes_length": 11,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 11,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 36,
+          "median_us": 36.5,
+          "max_us": 41
+        },
+        "initialization": {
+          "min_us": 29193,
+          "median_us": 29274.5,
+          "max_us": 29285
+        },
+        "input-release": {
+          "min_us": 20,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 2064590,
+          "median_us": 2064743.0,
+          "max_us": 2071973
+        },
+        "destruction": {
+          "min_us": 227,
+          "median_us": 227.0,
+          "max_us": 227
+        }
+      },
+      "pipeline": {
+        "requested_peak": 24085,
+        "requested_live": 0,
+        "occupied_peak": 24168,
+        "occupied_live": 0,
+        "calls": 90,
+        "requested": 47829,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 24085,
+          "requested_live": 11029,
+          "occupied_peak": 24168,
+          "occupied_live": 11112,
+          "calls": 87,
+          "requested": 46261,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 11029,
+          "requested_live": 11029,
+          "occupied_peak": 11112,
+          "occupied_live": 11112,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 12597,
+          "requested_live": 12597,
+          "occupied_peak": 12680,
+          "occupied_live": 12680,
+          "calls": 3,
+          "requested": 1568,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 12597,
+          "requested_live": 0,
+          "occupied_peak": 12680,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        16
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 10,
+        "diagnostics_length": 0,
+        "memberships_length": 10,
+        "reports_length": 10,
+        "passes_length": 2,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 12,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 40,
+          "median_us": 40.5,
+          "max_us": 41
+        },
+        "initialization": {
+          "min_us": 29274,
+          "median_us": 29304.5,
+          "max_us": 29306
+        },
+        "input-release": {
+          "min_us": 19,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 206,
+          "median_us": 209.0,
+          "max_us": 209
+        },
+        "destruction": {
+          "min_us": 165,
+          "median_us": 179.5,
+          "max_us": 191
+        }
+      },
+      "pipeline": {
+        "requested_peak": 24085,
+        "requested_live": 0,
+        "occupied_peak": 24168,
+        "occupied_live": 0,
+        "calls": 88,
+        "requested": 47461,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 24085,
+          "requested_live": 11029,
+          "occupied_peak": 24168,
+          "occupied_live": 11112,
+          "calls": 87,
+          "requested": 46261,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 11029,
+          "requested_live": 11029,
+          "occupied_peak": 11112,
+          "occupied_live": 11112,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 12229,
+          "requested_live": 12229,
+          "occupied_peak": 12312,
+          "occupied_live": 12312,
+          "calls": 1,
+          "requested": 1200,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 12229,
+          "requested_live": 0,
+          "occupied_peak": 12312,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        16
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 0,
+        "entries_length": 10,
+        "diagnostics_length": 0,
+        "memberships_length": 10,
+        "reports_length": 10,
+        "passes_length": 0,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 13,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 36,
+          "median_us": 37.0,
+          "max_us": 41
+        },
+        "initialization": {
+          "min_us": 152023,
+          "median_us": 152345.0,
+          "max_us": 152425
+        },
+        "input-release": {
+          "min_us": 20,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 14860447,
+          "median_us": 14860554.0,
+          "max_us": 14877253
+        },
+        "destruction": {
+          "min_us": 222,
+          "median_us": 222.5,
+          "max_us": 226
+        }
+      },
+      "pipeline": {
+        "requested_peak": 16151,
+        "requested_live": 0,
+        "occupied_peak": 16184,
+        "occupied_live": 0,
+        "calls": 243,
+        "requested": 81148,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 16151,
+          "requested_live": 5671,
+          "occupied_peak": 16184,
+          "occupied_live": 5704,
+          "calls": 235,
+          "requested": 78700,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 5671,
+          "requested_live": 5671,
+          "occupied_peak": 5704,
+          "occupied_live": 5704,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 8119,
+          "requested_live": 8119,
+          "occupied_peak": 8152,
+          "occupied_live": 8152,
+          "calls": 8,
+          "requested": 2448,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 8119,
+          "requested_live": 0,
+          "occupied_peak": 8152,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        8,
+        8,
+        8,
+        8
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 8,
+        "diagnostics_length": 0,
+        "memberships_length": 32,
+        "reports_length": 8,
+        "passes_length": 13,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 14,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 36,
+          "median_us": 40.5,
+          "max_us": 41
+        },
+        "initialization": {
+          "min_us": 44259,
+          "median_us": 44279.0,
+          "max_us": 44361
+        },
+        "input-release": {
+          "min_us": 20,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 13818653,
+          "median_us": 13852297.0,
+          "max_us": 13852306
+        },
+        "destruction": {
+          "min_us": 234,
+          "median_us": 237.5,
+          "max_us": 238
+        }
+      },
+      "pipeline": {
+        "requested_peak": 16119,
+        "requested_live": 0,
+        "occupied_peak": 16176,
+        "occupied_live": 0,
+        "calls": 92,
+        "requested": 37671,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 16119,
+          "requested_live": 5743,
+          "occupied_peak": 16176,
+          "occupied_live": 5800,
+          "calls": 85,
+          "requested": 35567,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 5743,
+          "requested_live": 5743,
+          "occupied_peak": 5800,
+          "occupied_live": 5800,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 7847,
+          "requested_live": 7847,
+          "occupied_peak": 7904,
+          "occupied_live": 7904,
+          "calls": 7,
+          "requested": 2104,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 7847,
+          "requested_live": 0,
+          "occupied_peak": 7904,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        8,
+        4
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 7,
+        "diagnostics_length": 1,
+        "memberships_length": 7,
+        "reports_length": 7,
+        "passes_length": 9,
+        "conflict_origins_length": 2
+      }
+    },
+    {
+      "case_id": 15,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 36,
+          "median_us": 36.5,
+          "max_us": 37
+        },
+        "initialization": {
+          "min_us": 41313,
+          "median_us": 41393.0,
+          "max_us": 41451
+        },
+        "input-release": {
+          "min_us": 20,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 14988305,
+          "median_us": 14988307.0,
+          "max_us": 15015315
+        },
+        "destruction": {
+          "min_us": 258,
+          "median_us": 258.0,
+          "max_us": 260
+        }
+      },
+      "pipeline": {
+        "requested_peak": 16249,
+        "requested_live": 0,
+        "occupied_peak": 16316,
+        "occupied_live": 0,
+        "calls": 97,
+        "requested": 38227,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 16249,
+          "requested_live": 5865,
+          "occupied_peak": 16316,
+          "occupied_live": 5932,
+          "calls": 89,
+          "requested": 35779,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 5865,
+          "requested_live": 5865,
+          "occupied_peak": 5932,
+          "occupied_live": 5932,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 8313,
+          "requested_live": 8313,
+          "occupied_peak": 8380,
+          "occupied_live": 8380,
+          "calls": 8,
+          "requested": 2448,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 8313,
+          "requested_live": 0,
+          "occupied_peak": 8380,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        8,
+        4
+      ],
+      "collections": {
+        "parse_capacity": 4,
+        "candidate_capacity": 4,
+        "entries_length": 8,
+        "diagnostics_length": 1,
+        "memberships_length": 8,
+        "reports_length": 8,
+        "passes_length": 13,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 16,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 36,
+          "median_us": 40.0,
+          "max_us": 41
+        },
+        "initialization": {
+          "min_us": 38127,
+          "median_us": 38256.5,
+          "max_us": 38267
+        },
+        "input-release": {
+          "min_us": 20,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": null,
+        "destruction": {
+          "min_us": 76,
+          "median_us": 77.0,
+          "max_us": 84
+        }
+      },
+      "pipeline": {
+        "requested_peak": 9502,
+        "requested_live": 0,
+        "occupied_peak": 9556,
+        "occupied_live": 0,
+        "calls": 71,
+        "requested": 23495,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 0,
+          "requested_live": 0,
+          "occupied_peak": 0,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 9502,
+          "requested_live": 48,
+          "occupied_peak": 9556,
+          "occupied_live": 48,
+          "calls": 71,
+          "requested": 23495,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 48,
+          "requested_live": 48,
+          "occupied_peak": 48,
+          "occupied_live": 48,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 48,
+          "requested_live": 0,
+          "occupied_peak": 48,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        8,
+        0
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 0,
+        "entries_length": 0,
+        "diagnostics_length": 0,
+        "memberships_length": 0,
+        "reports_length": 0,
+        "passes_length": 0,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 17,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 129,
+          "median_us": 137.5,
+          "max_us": 145
+        },
+        "initialization": {
+          "min_us": 37719,
+          "median_us": 37742.0,
+          "max_us": 37774
+        },
+        "input-release": {
+          "min_us": 59,
+          "median_us": 63.5,
+          "max_us": 64
+        },
+        "aggregation": {
+          "min_us": 14849588,
+          "median_us": 14852113.5,
+          "max_us": 14881481
+        },
+        "destruction": {
+          "min_us": 225,
+          "median_us": 225.0,
+          "max_us": 229
+        }
+      },
+      "pipeline": {
+        "requested_peak": 19290,
+        "requested_live": 0,
+        "occupied_peak": 19356,
+        "occupied_live": 0,
+        "calls": 78,
+        "requested": 37226,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 3331,
+          "requested_live": 3331,
+          "occupied_peak": 3332,
+          "occupied_live": 3332,
+          "calls": 1,
+          "requested": 3331,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 19290,
+          "requested_live": 8906,
+          "occupied_peak": 19356,
+          "occupied_live": 8972,
+          "calls": 69,
+          "requested": 31447,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 8906,
+          "requested_live": 5575,
+          "occupied_peak": 8972,
+          "occupied_live": 5640,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 8023,
+          "requested_live": 8023,
+          "occupied_peak": 8088,
+          "occupied_live": 8088,
+          "calls": 8,
+          "requested": 2448,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 8023,
+          "requested_live": 0,
+          "occupied_peak": 8088,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        8
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 8,
+        "diagnostics_length": 0,
+        "memberships_length": 8,
+        "reports_length": 8,
+        "passes_length": 13,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 18,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 125,
+          "median_us": 134.0,
+          "max_us": 149
+        },
+        "initialization": {
+          "min_us": 37689,
+          "median_us": 37751.0,
+          "max_us": 37768
+        },
+        "input-release": {
+          "min_us": 19,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 14896787,
+          "median_us": 14915058.0,
+          "max_us": 14915160
+        },
+        "destruction": {
+          "min_us": 234,
+          "median_us": 234.5,
+          "max_us": 238
+        }
+      },
+      "pipeline": {
+        "requested_peak": 19290,
+        "requested_live": 0,
+        "occupied_peak": 19356,
+        "occupied_live": 0,
+        "calls": 78,
+        "requested": 37226,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 3331,
+          "requested_live": 3331,
+          "occupied_peak": 3332,
+          "occupied_live": 3332,
+          "calls": 1,
+          "requested": 3331,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 19290,
+          "requested_live": 8906,
+          "occupied_peak": 19356,
+          "occupied_live": 8972,
+          "calls": 69,
+          "requested": 31447,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 8906,
+          "requested_live": 8906,
+          "occupied_peak": 8972,
+          "occupied_live": 8972,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 11354,
+          "requested_live": 11354,
+          "occupied_peak": 11420,
+          "occupied_live": 11420,
+          "calls": 8,
+          "requested": 2448,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 11354,
+          "requested_live": 0,
+          "occupied_peak": 11420,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        8
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 8,
+        "diagnostics_length": 0,
+        "memberships_length": 8,
+        "reports_length": 8,
+        "passes_length": 13,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 19,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 127,
+          "median_us": 143.5,
+          "max_us": 147
+        },
+        "initialization": {
+          "min_us": 29156,
+          "median_us": 29232.0,
+          "max_us": 29248
+        },
+        "input-release": {
+          "min_us": 59,
+          "median_us": 59.0,
+          "max_us": 60
+        },
+        "aggregation": {
+          "min_us": 14222525,
+          "median_us": 14222778.0,
+          "max_us": 14230118
+        },
+        "destruction": {
+          "min_us": 188,
+          "median_us": 188.5,
+          "max_us": 193
+        }
+      },
+      "pipeline": {
+        "requested_peak": 28297,
+        "requested_live": 0,
+        "occupied_peak": 28380,
+        "occupied_live": 0,
+        "calls": 109,
+        "requested": 58537,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 4212,
+          "requested_live": 4212,
+          "occupied_peak": 4212,
+          "occupied_live": 4212,
+          "calls": 1,
+          "requested": 4212,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 28297,
+          "requested_live": 15241,
+          "occupied_peak": 28380,
+          "occupied_live": 15324,
+          "calls": 87,
+          "requested": 46261,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 15241,
+          "requested_live": 11029,
+          "occupied_peak": 15324,
+          "occupied_live": 11112,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 16933,
+          "requested_live": 16853,
+          "occupied_peak": 17016,
+          "occupied_live": 16936,
+          "calls": 21,
+          "requested": 8064,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 16853,
+          "requested_live": 0,
+          "occupied_peak": 16936,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        16
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 10,
+        "diagnostics_length": 0,
+        "memberships_length": 10,
+        "reports_length": 10,
+        "passes_length": 68,
+        "conflict_origins_length": 0
+      }
+    },
+    {
+      "case_id": 20,
+      "timed_samples": 6,
+      "phase_times": {
+        "input-copy": {
+          "min_us": 131,
+          "median_us": 143.0,
+          "max_us": 147
+        },
+        "initialization": {
+          "min_us": 29165,
+          "median_us": 29245.0,
+          "max_us": 29262
+        },
+        "input-release": {
+          "min_us": 20,
+          "median_us": 20.0,
+          "max_us": 20
+        },
+        "aggregation": {
+          "min_us": 14243112,
+          "median_us": 14243366.5,
+          "max_us": 14250941
+        },
+        "destruction": {
+          "min_us": 195,
+          "median_us": 196.0,
+          "max_us": 196
+        }
+      },
+      "pipeline": {
+        "requested_peak": 28297,
+        "requested_live": 0,
+        "occupied_peak": 28380,
+        "occupied_live": 0,
+        "calls": 109,
+        "requested": 58537,
+        "failures": 0
+      },
+      "phase_memory": {
+        "input-copy": {
+          "requested_peak": 4212,
+          "requested_live": 4212,
+          "occupied_peak": 4212,
+          "occupied_live": 4212,
+          "calls": 1,
+          "requested": 4212,
+          "failures": 0
+        },
+        "initialization": {
+          "requested_peak": 28297,
+          "requested_live": 15241,
+          "occupied_peak": 28380,
+          "occupied_live": 15324,
+          "calls": 87,
+          "requested": 46261,
+          "failures": 0
+        },
+        "input-release": {
+          "requested_peak": 15241,
+          "requested_live": 15241,
+          "occupied_peak": 15324,
+          "occupied_live": 15324,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        },
+        "aggregation": {
+          "requested_peak": 21145,
+          "requested_live": 21065,
+          "occupied_peak": 21228,
+          "occupied_live": 21148,
+          "calls": 21,
+          "requested": 8064,
+          "failures": 0
+        },
+        "destruction": {
+          "requested_peak": 21065,
+          "requested_live": 0,
+          "occupied_peak": 21148,
+          "occupied_live": 0,
+          "calls": 0,
+          "requested": 0,
+          "failures": 0
+        }
+      },
+      "raw_capacities": [
+        16
+      ],
+      "collections": {
+        "parse_capacity": 0,
+        "candidate_capacity": 4,
+        "entries_length": 10,
+        "diagnostics_length": 0,
+        "memberships_length": 10,
+        "reports_length": 10,
+        "passes_length": 68,
+        "conflict_origins_length": 0
+      }
+    }
+  ]
+}

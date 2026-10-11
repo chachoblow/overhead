@@ -1,0 +1,2 @@
+# Preserve original UART/monitor bytes without changing the pinned root attributes.
+*.log -text whitespace=-blank-at-eol
