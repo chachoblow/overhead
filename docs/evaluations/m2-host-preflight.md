@@ -2,9 +2,9 @@
 
 2026-10-10 UTC. Host-only continuation of [source suitability](m2-pool-suitability.md)
 under [0019](../decisions/0019-bounded-m2-evidence-preparation.md).
-**Not the final capture manifest:** independent numerical references/portable
-checks and the remaining [preparation contract](m2-next-evidence.md) review are
-still open. No target harness, firmware, toolchain, dependency, hardware, or
+**Historical candidate-stage report:** adopted unchanged by the 2026-10-11
+[frozen annex](m2-frozen-manifest.md), which closes numerical/representation
+preparation. The original candidate output/schema remains unchanged. No target harness, firmware, toolchain, dependency, hardware, or
 production-default change. The fixed 64 KiB target heap is unchanged.
 
 ## Inputs and retained outcomes
@@ -129,7 +129,9 @@ isolated subprocess, check exact published evidence on this host, and exercise
 working-directory independence. No ignored firmware artifacts are prerequisites.
 [Reproduction](../../tools/fixtures/m2-cases/README.md#offline-regeneration).
 
-Before marking the full preparation gate complete:
+The following were the remaining gates at publication; steps 1–2 are now closed
+by the [frozen annex](m2-frozen-manifest.md). Step 3 remains next:
+
 
 1. Pin the 12 original TEME references/provenance and the complete existing
    coordinate/observer selection with unchanged tolerances; prepare the identical

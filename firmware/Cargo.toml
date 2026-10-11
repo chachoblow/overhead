@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [features]
+# Shared host/target reference checker only; no capture harness or new dependency.
+numerical-reference = []
 catalogue-memory = ["overhead-core/catalogue", "dep:serde_json", "dep:esp-alloc"]
 
 [dependencies]
@@ -38,6 +40,10 @@ path = "src/catalogue_main.rs"
 required-features = ["catalogue-memory"]
 test = false
 bench = false
+
+[[example]]
+name = "numerical_expected"
+required-features = ["numerical-reference"]
 
 [[example]]
 name = "catalogue_expected"

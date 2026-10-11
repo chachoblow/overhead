@@ -12,6 +12,21 @@ kernel workloads are host-tested and now have target captures. Broader orbital
 samples, independent target numeric checks, and whole-device peak-memory budgets
 remain pending; the separate memory experiment supplies only its bounded evidence.
 
+## Prepared M2 numerical checks (host-only evidence)
+
+The opt-in `numerical-reference` library feature provides the same allocation-free
+75-row checker for host and future target diagnostics. It does not add a capture
+binary or alter the historical measurement suites. Run from the repository root:
+
+```sh
+cargo +stable run --offline --locked --manifest-path firmware/Cargo.toml \
+  --example numerical_expected --features numerical-reference
+```
+
+[Reference selection/provenance and tests](../tools/fixtures/m2-numerical/README.md);
+[frozen expanded-suite annex](../docs/evaluations/m2-frozen-manifest.md).
+Target execution, image gating and approval remain separate future work.
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing

@@ -1,8 +1,10 @@
-# Candidate M2 case documents
+# M2 case documents and frozen manifest
 
 Offline inputs for the [bounded preparation contract](../../../docs/evaluations/m2-next-evidence.md).
-**Candidate host evidence, not a frozen capture manifest.**
-[Results and remaining gates](../../../docs/evaluations/m2-host-preflight.md).
+**All 20 cases are now frozen as `m2-bounded-20-v1`:**
+[manifest.json](manifest.json), [representation/acceptance annex](../../../docs/evaluations/m2-frozen-manifest.md).
+The original [candidate host report](../../../docs/evaluations/m2-host-preflight.md)
+and input archive retain their historical schema/status, adopted without byte changes.
 No historical fixture, source snapshot, element epoch, or production policy is refreshed.
 
 ## Provenance and exact representation
@@ -38,13 +40,15 @@ Case 13 references `historical` four times: all 32 input records and all 13,324
 bytes count, not eight records/3,331 bytes. RAM cases reuse their control's exact
 bytes; they are not additional source populations. Case names and source metadata
 are descriptive external tables, not dynamically allocated URLs measured here.
-The final target metadata/numerical/capture annex remains to be frozen.
+The [frozen annex](../../../docs/evaluations/m2-frozen-manifest.md) fixes target
+metadata/diagnostic representation and pins the separate numerical references.
 
 ## Offline regeneration
 
 A fresh session starts with `docs/HANDOFF.md`, `docs/PLAN.md`, and `docs/DESIGN.md`.
-The numerical-reference/manifest-freeze work listed there remains open; running
-these candidate gates does not authorize target implementation or flashing.
+Preparation is complete; target implementation is next. Running these host gates
+does not establish target fit or authorize flashing. Run the additional numerical
+and manifest checks below as well as the original host regressions.
 
 From the repo root with the existing Rust toolchain/cached dependencies, Python
 3.11+ (standard library only), and Homebrew SDL2 (linker path in `.cargo/config.toml`):
@@ -58,6 +62,8 @@ cargo clippy --offline --locked --workspace --all-targets --all-features -- -D w
 cargo fmt --all -- --check
 python3 tools/prepare_m2_pool.py --check
 python3 tools/prepare_m2_cases.py --check
+python3 tools/prepare_m2_numerical.py --check
+python3 tools/prepare_m2_manifest.py --check
 python3 -m unittest discover -s tools -p 'test_prepare_m2*.py'
 cargo run --offline --release --locked -p overhead-tools --bin overhead-m2-preflight \
   > /tmp/m2-host-preflight.json
@@ -89,4 +95,6 @@ any mismatch between generated and archived text. No network or ignored firmware
 artifact is needed. Host collection/size observations depend on compiler/architecture;
 portable integration tests always check inputs/work/diagnostics, and compare exact
 memory evidence only on the published OS/architecture. Changed evidence requires
-review before any eventual manifest freeze, not a silent expected-output refresh.
+review and renewed preflight/manifest freeze, not a silent expected-output refresh.
+Additional shared numerical feature tests and host example commands live in the
+[numerical fixture README](../m2-numerical/README.md).

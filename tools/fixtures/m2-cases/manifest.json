@@ -1,0 +1,4645 @@
+{
+  "schema_version": 1,
+  "manifest_id": "m2-bounded-20-v1",
+  "frozen_date_utc": "2026-10-11",
+  "status": "frozen-preparation-not-target-evidence",
+  "sources": [
+    {
+      "path": ".gitattributes",
+      "bytes": 647,
+      "sha256": "f692a329e7bb052c63853abe006ac1e3b415a618cd915266ff2ebb7ea3d908ff"
+    },
+    {
+      "path": "Cargo.lock",
+      "bytes": 12915,
+      "sha256": "58f907720e3e528a3881fb3c884150111e41e843be6ef309123af44150beaa47"
+    },
+    {
+      "path": "core/Cargo.toml",
+      "bytes": 1163,
+      "sha256": "6e970dd75b79ca48d0c9817f1a80e3149b7e84390b08118a2d6f78d7e3f08aa2"
+    },
+    {
+      "path": "core/src/catalogue.rs",
+      "bytes": 8032,
+      "sha256": "84e00e1057ac1275978226169ad99fe26593a024934f76fcc1f194591851149f"
+    },
+    {
+      "path": "core/src/catalogue_passes.rs",
+      "bytes": 5437,
+      "sha256": "0b2c627a723ca2afa164d6131de6510bdfe857bc01b5d85258de5e2a85cace53"
+    },
+    {
+      "path": "core/src/catalogue_passes/tests.rs",
+      "bytes": 4151,
+      "sha256": "10ab85422a8dd2bc74edd44ead067f03dadc4f4b142a28f90811aa6dcfd761fa"
+    },
+    {
+      "path": "core/src/coordinates.rs",
+      "bytes": 7538,
+      "sha256": "f2327712946ae3bfa441b765c796dc528f1a2765debff3793b9797fa2fa3ef3c"
+    },
+    {
+      "path": "core/src/ingest.rs",
+      "bytes": 4713,
+      "sha256": "001950a3be89f379796ed67c3c319c463f149e6deeeaef5e710ff3f19d083116"
+    },
+    {
+      "path": "core/src/lib.rs",
+      "bytes": 1103,
+      "sha256": "832659c3a62404b108ca66b40b5ae98feacba277086eb483631b647045069fc8"
+    },
+    {
+      "path": "core/src/observer.rs",
+      "bytes": 4316,
+      "sha256": "5d8e6d1bd9f87f282805bd71fad3f5ad4f3fe62c60f805c898a52d3ad942b4d7"
+    },
+    {
+      "path": "core/src/omm.rs",
+      "bytes": 2844,
+      "sha256": "cd8b25aca0e0d5b8272a5c2a4c1afe008d2d230a1789c37401feea654e3b7a2c"
+    },
+    {
+      "path": "core/src/passes.rs",
+      "bytes": 21607,
+      "sha256": "394e462a48742a482e451dd5e57e860184d8e411c19088201312149d5d65d5f1"
+    },
+    {
+      "path": "core/src/position.rs",
+      "bytes": 1845,
+      "sha256": "3bb847aa419c4f1f544993004d218fe794cd7287f1bbced34d4afa8ddd7bbb76"
+    },
+    {
+      "path": "core/src/propagate.rs",
+      "bytes": 4739,
+      "sha256": "68e28fed9d8b3cc5fc98a838e07328b52a032af1f8c01f3d384ad28406381659"
+    },
+    {
+      "path": "core/src/time.rs",
+      "bytes": 1481,
+      "sha256": "7672d11cacbb593d15c6258778d40fcc30f845a474a087f8e712ea2e55f33dcc"
+    },
+    {
+      "path": "core/tests/coordinates.rs",
+      "bytes": 10536,
+      "sha256": "799ae529b0394e912b7ea337e91ec122b7b3c620d82924a4a8dc74f74cfa528d"
+    },
+    {
+      "path": "core/tests/fixtures/README.md",
+      "bytes": 5219,
+      "sha256": "a6a8e14a79d0b63f9240b4ff6a5a1af4e33f5e4f312c87834700d806ac432076"
+    },
+    {
+      "path": "core/tests/fixtures/coordinates.json",
+      "bytes": 5518,
+      "sha256": "fe6218a9bff5489758ad1f33c9ceaf3eed0dcdfeb466ed67252f244fd2e59464"
+    },
+    {
+      "path": "core/tests/fixtures/iss-25544.json",
+      "bytes": 420,
+      "sha256": "8eb6107b6481e52043171cc793279df3cbf287b1e40a190acd298097a71669ac"
+    },
+    {
+      "path": "core/tests/fixtures/observer.json",
+      "bytes": 14138,
+      "sha256": "29e12233b4c846d6df58074ea4ec94c9676e18214aedb7bfd9a9a0f5b879bd8d"
+    },
+    {
+      "path": "core/tests/observer.rs",
+      "bytes": 11469,
+      "sha256": "7f1081cb90277e9d0de19aec616947b18dd22f0fe09604798e291c052d12bd30"
+    },
+    {
+      "path": "core/tests/propagate.rs",
+      "bytes": 8746,
+      "sha256": "a6960b9023db061185dc1f21e24c28ebb7f73f7d17b687160eefc63174ac0eb6"
+    },
+    {
+      "path": "docs/decisions/0019-bounded-m2-evidence-preparation.md",
+      "bytes": 2443,
+      "sha256": "e3a6328cf03dc3ff2a339d5371000697aa8948244791d7cbdff6677795e8d51e"
+    },
+    {
+      "path": "docs/decisions/0020-m2-capture-manifest-freeze.md",
+      "bytes": 1901,
+      "sha256": "abebdf40f93d45e03ad6c65fd0315c99487de053309dfc51d5eb4c0fcc91112c"
+    },
+    {
+      "path": "docs/evaluations/m2-frozen-manifest.md",
+      "bytes": 8164,
+      "sha256": "6a693d8d8659ae6c1680a0d779ab8c0d4696add9b0107f147af7f5f31f3db271"
+    },
+    {
+      "path": "docs/evaluations/m2-host-preflight.json",
+      "bytes": 187680,
+      "sha256": "e9123ebf3edde69c85d6ea55ee47e64ac2ed2e662fcde608585eb6023650343c"
+    },
+    {
+      "path": "docs/evaluations/m2-pool-suitability.json",
+      "bytes": 51327,
+      "sha256": "0ce8a44153bccee3c2e713bf41af4d530613f9d8849636ff300c9d236ce7769e"
+    },
+    {
+      "path": "firmware/Cargo.lock",
+      "bytes": 40854,
+      "sha256": "e689539ef7d048890dc8ad4c8a399827338a511a0eea1824f09067e8d8d546e5"
+    },
+    {
+      "path": "firmware/Cargo.toml",
+      "bytes": 1942,
+      "sha256": "266b7294c0a950e1013fb6d0da067462061fc01701fab554b22e3eab42c92e55"
+    },
+    {
+      "path": "firmware/build.rs",
+      "bytes": 6792,
+      "sha256": "df1e86f713ae2b78e276f5ae7f9f14300853d86c3e89fd6827214232ffa2e12c"
+    },
+    {
+      "path": "firmware/build_numerical.rs",
+      "bytes": 6139,
+      "sha256": "1e5c3a22ea08eea3cb0d6e38a1d7c1f0814b0beb1e66034cac8f4f706bc74541"
+    },
+    {
+      "path": "firmware/examples/numerical_expected.rs",
+      "bytes": 473,
+      "sha256": "b5ba44f646764c0984bde1cae40c661049d0d3d789b493ed91924014cbafe8b1"
+    },
+    {
+      "path": "firmware/src/numerical.rs",
+      "bytes": 11094,
+      "sha256": "88f8334ad0f2d18b7e53259d662e20cdf9fe6763dd32dc861d8738106dbb9de0"
+    },
+    {
+      "path": "tools/Cargo.toml",
+      "bytes": 478,
+      "sha256": "294f99bb94ed455c9d8dcee33a241c3d2b483dfc690211d7c04d34dd1faf10d5"
+    },
+    {
+      "path": "tools/fixtures/catalogue-costs.tle",
+      "bytes": 1223,
+      "sha256": "2cb96da57983e5d6f2f145be410bdab9919caec417b6cba5535edb939ae55b99"
+    },
+    {
+      "path": "tools/fixtures/m2-cases/inputs.json",
+      "bytes": 43664,
+      "sha256": "9bf737a4ec2dd7b4cf887691bbfd4da416ddf94f945b90df338b73979eac766f"
+    },
+    {
+      "path": "tools/fixtures/m2-numerical/README.md",
+      "bytes": 5301,
+      "sha256": "8ecc77b3a55cf97e2b45508202283c29bd606100563c9ce533c3f1cfcb03ecc4"
+    },
+    {
+      "path": "tools/fixtures/m2-numerical/references.json",
+      "bytes": 27745,
+      "sha256": "7a72e13858d8065ed81a1b82ec15cc98c7df719e30004ce7241851c7dc9cfc9a"
+    },
+    {
+      "path": "tools/fixtures/m2-numerical/vallado/00005.e",
+      "bytes": 1779,
+      "sha256": "5fd9b6dedbd755f0f336b143a076bbe6308e22c2f79f21910367963868b64869"
+    },
+    {
+      "path": "tools/fixtures/m2-numerical/vallado/08195.e",
+      "bytes": 3099,
+      "sha256": "627eb33a5a1c68287122ff29c0e2f08a4908e4bba3c38ed517e79e26e209a710"
+    },
+    {
+      "path": "tools/fixtures/m2-numerical/vallado/24208.e",
+      "bytes": 1779,
+      "sha256": "102bbf36cff1b68b69f54b52fbf508c4a4db7a839cf43262b5090a1473573cf4"
+    },
+    {
+      "path": "tools/fixtures/m2-numerical/vallado/28129.e",
+      "bytes": 1779,
+      "sha256": "bf7129f4785eb875284f814ea5fee72baf778dfbed6176ab92408734b5b06fd5"
+    },
+    {
+      "path": "tools/fixtures/m2-numerical/vallado/SGP4-VER.TLE",
+      "bytes": 8897,
+      "sha256": "034f655fb7afffac65edc8c4a8b1a50b28cfa3e0b588d23f8e5989e8994d4bcc"
+    },
+    {
+      "path": "tools/fixtures/m2-pool/README.md",
+      "bytes": 5805,
+      "sha256": "3b19ba82c397bd32ea54138b387c0e09dced5c86482f6cd49770ac3e92252ded"
+    },
+    {
+      "path": "tools/fixtures/m2-pool/acquisition.json",
+      "bytes": 1378,
+      "sha256": "8588670b63a37cb64d42caa47d9fb5c545b98e0a5f46c9ee1c5f07480396245f"
+    },
+    {
+      "path": "tools/fixtures/m2-pool/pool.json",
+      "bytes": 6672,
+      "sha256": "64197cca475768a0d1030c504c2084fad3b865feccacb66d682a43ed36fdcec2"
+    },
+    {
+      "path": "tools/fixtures/m2-pool/selection.json",
+      "bytes": 15391,
+      "sha256": "e726bad7903278fbf12853fb059deb47289f7241afa361032c9fe018b220d076"
+    },
+    {
+      "path": "tools/prepare_m2_cases.py",
+      "bytes": 2121,
+      "sha256": "2407a51218428551af074a83864676756eb4e843acc6e0b2779c35a6480db39b"
+    },
+    {
+      "path": "tools/prepare_m2_manifest.py",
+      "bytes": 6631,
+      "sha256": "0bf5f65b797ae7c4d6b8c1eba21ab74d4fe3484a5c3d32beb68d4d0ba2b0cc87"
+    },
+    {
+      "path": "tools/prepare_m2_numerical.py",
+      "bytes": 4359,
+      "sha256": "ac259b07f2303e3f9e0cbaefb4bcdda666910700d4c2ad76c72ced6985c8aef9"
+    },
+    {
+      "path": "tools/prepare_m2_pool.py",
+      "bytes": 5306,
+      "sha256": "ab9ffd7253d8c713d4efb8db08741a2e90cee58145c7d6459cc0703325e80d87"
+    },
+    {
+      "path": "tools/src/bin/m2_preflight/inputs.rs",
+      "bytes": 3628,
+      "sha256": "42a9ae65bed580aa2ff5079accfa4128b32507a6f68ead1c9d4a2134c1033715"
+    },
+    {
+      "path": "tools/src/bin/m2_preflight/memory.rs",
+      "bytes": 7097,
+      "sha256": "6c9df5115d99cb0ec6ce1a2780eae30ec5a22f100a922f35dc1c7589a32d86cc"
+    },
+    {
+      "path": "tools/src/bin/overhead-m2-pool-preflight.rs",
+      "bytes": 15692,
+      "sha256": "75d711b3231a3ac572b76e5d284ce7579ac02e50c9194904391db6f9572df618"
+    },
+    {
+      "path": "tools/src/bin/overhead-m2-preflight.rs",
+      "bytes": 26825,
+      "sha256": "c4a3ed616e4a6860f52a9e022a6d41995cd6f5a33d418586d72b751ecca9b297"
+    },
+    {
+      "path": "tools/test_prepare_m2_manifest.py",
+      "bytes": 2102,
+      "sha256": "c8bcf89480d3e07d2f499dfbe756e007a3b237d009356bc443f9813c24658789"
+    },
+    {
+      "path": "tools/test_prepare_m2_numerical.py",
+      "bytes": 2495,
+      "sha256": "68acd5ca6f652e1ddd7c3d667210486f7d004f85b802bc0b8af78dd30f7df22c"
+    },
+    {
+      "path": "tools/tests/m2_preflight.rs",
+      "bytes": 5207,
+      "sha256": "f4b2fd21962e4d12b77a29c45ca0fceb4180f30102fe1fad12c1e3077510c579"
+    }
+  ],
+  "internal_heap_bytes": 65536,
+  "experimental_ceilings": {
+    "groups": 4,
+    "input_records": 32,
+    "input_json_bytes": 32768,
+    "accepted_satellites": 16
+  },
+  "search_controls": {
+    "threshold_deg": 10,
+    "detection_s": 60,
+    "crossing_tolerance_s": 5,
+    "per_satellite_allowance": 200000
+  },
+  "measurement_captures": {
+    "boots": 2,
+    "warmups_per_case_per_boot": 1,
+    "samples_per_case_per_boot": 3,
+    "total_measured_samples": 120
+  },
+  "stack_captures": {
+    "boots": 2,
+    "patterns": [
+      "0xA5A5A5A5",
+      "0x5A5A5A5A"
+    ],
+    "observations_per_case_pattern_per_boot": 1,
+    "phase_case_ids": {
+      "input-copy": [
+        17,
+        18,
+        19,
+        20
+      ],
+      "initialization": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "aggregation": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        17,
+        18,
+        19,
+        20
+      ],
+      "destruction": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ]
+    }
+  },
+  "numerical": {
+    "reference_path": "tools/fixtures/m2-numerical/references.json",
+    "checker_path": "firmware/src/numerical.rs",
+    "rows": {
+      "Teme": 12,
+      "Rotation": 9,
+      "Geodetic": 13,
+      "Geometry": 27,
+      "IssPipeline": 12,
+      "VanguardPipeline": 2
+    },
+    "total_rows": 75,
+    "tolerances": {
+      "teme_position_axis_km": 1e-06,
+      "teme_velocity_axis_km_s": 1e-09,
+      "coordinate_position_norm_km": 0.001,
+      "geodetic_height_km": 0.001,
+      "geodetic_angle_deg": 1e-06,
+      "geometry_range_km": 1e-08,
+      "geometry_angle_deg": 1e-09,
+      "pipeline_range_km": 0.1,
+      "pipeline_angle_deg": 0.01
+    }
+  },
+  "target_representation_contract": "docs/evaluations/m2-frozen-manifest.md",
+  "cases": [
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2006-06-25T19:46:43.980095999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 6251,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T07:58:18.143616001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 8195,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T13:28:40.058400Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 9880,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T00:40:57.987552Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 14128,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T00:58:29.343360Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 24208,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T18:52:04.079712001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28057,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2006-06-24T13:41:49.461503999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28129,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T11:12:14.455008001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28626,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "historical"
+        ],
+        "id": 1,
+        "lifetime": "flash-control",
+        "shared_allowance": 1600000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 3600
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-1-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 3331,
+      "input_records": 8,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 500,
+        "satellites": [
+          {
+            "evaluations": 69,
+            "norad_id": 6251,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 61,
+            "norad_id": 8195,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 65,
+            "norad_id": 9880,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 61,
+            "norad_id": 14128,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 61,
+            "norad_id": 24208,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 61,
+            "norad_id": 28057,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 61,
+            "norad_id": 28129,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 61,
+            "norad_id": 28626,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 3
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2006-06-25T19:46:43.980095999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 6251,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T07:58:18.143616001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 8195,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T13:28:40.058400Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 9880,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T00:40:57.987552Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 14128,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T00:58:29.343360Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 24208,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T18:52:04.079712001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28057,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2006-06-24T13:41:49.461503999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28129,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T11:12:14.455008001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28626,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "historical"
+        ],
+        "id": 2,
+        "lifetime": "flash-control",
+        "shared_allowance": 1600000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-2-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 3331,
+      "input_records": 8,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 11616,
+        "satellites": [
+          {
+            "evaluations": 1473,
+            "norad_id": 6251,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 8195,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 9880,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 14128,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 24208,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28057,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 28129,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 28626,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 13
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "mixed-5"
+        ],
+        "id": 3,
+        "lifetime": "flash-control",
+        "shared_allowance": 1000000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 2111,
+          "document": "mixed-5",
+          "index": 0,
+          "name": "m2-3-group-0",
+          "records": 5,
+          "sha256": "bfc7bcfb9842e0ab0ae8f12dfeb928674eb55bacea683e0f67c4787a88e0ebdf",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 2111,
+      "input_records": 5,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 7321,
+        "satellites": [
+          {
+            "evaluations": 1449,
+            "norad_id": 7376,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28054,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1477,
+            "norad_id": 29522,
+            "passes": 5,
+            "status": "Complete",
+            "upcoming_passes": 5
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 32958,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          }
+        ],
+        "stored_passes": 16
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-08T09:33:14.856768Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7780,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:48:29.993760Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 19548,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "mixed-9"
+        ],
+        "id": 4,
+        "lifetime": "flash-control",
+        "shared_allowance": 1800000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3784,
+          "document": "mixed-9",
+          "index": 0,
+          "name": "m2-4-group-0",
+          "records": 9,
+          "sha256": "0143a70260821a6ecd81c7146c1b765083962790da91a2b03a1b6226d4367737",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 3784,
+      "input_records": 9,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 13165,
+        "satellites": [
+          {
+            "evaluations": 1449,
+            "norad_id": 7376,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 7780,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 19548,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28054,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1477,
+            "norad_id": 29522,
+            "passes": 5,
+            "status": "Complete",
+            "upcoming_passes": 5
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 32958,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 35951,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 37214,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          }
+        ],
+        "stored_passes": 27
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-08T09:33:14.856768Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7780,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:48:29.993760Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 19548,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T11:32:02.779008Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 20253,
+          "selected_from": {
+            "group": 0,
+            "record": 11
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T19:11:32.077248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 27663,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 10
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "mixed-12"
+        ],
+        "id": 5,
+        "lifetime": "flash-control",
+        "shared_allowance": 2400000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 5036,
+          "document": "mixed-12",
+          "index": 0,
+          "name": "m2-5-group-0",
+          "records": 12,
+          "sha256": "67fa95119f7d8f6fa349b510b94a96ae5b4c7e80e7551b31a941218e172a0d6b",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 5036,
+      "input_records": 12,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 17536,
+        "satellites": [
+          {
+            "evaluations": 1449,
+            "norad_id": 7376,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 7780,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 19548,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 20253,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 27663,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28054,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1477,
+            "norad_id": 29522,
+            "passes": 5,
+            "status": "Complete",
+            "upcoming_passes": 5
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 32958,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 35951,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 37214,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 37849,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          }
+        ],
+        "stored_passes": 33
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-08T09:33:14.856768Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7780,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:48:29.993760Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 19548,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T11:32:02.779008Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 20253,
+          "selected_from": {
+            "group": 0,
+            "record": 11
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:14:22.200Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 21639,
+          "selected_from": {
+            "group": 0,
+            "record": 13
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:37:37.784640Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 22314,
+          "selected_from": {
+            "group": 0,
+            "record": 15
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T19:11:32.077248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 27663,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 10
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:40:10.134048Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 38771,
+          "selected_from": {
+            "group": 0,
+            "record": 12
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:46:52.945248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 39260,
+          "selected_from": {
+            "group": 0,
+            "record": 14
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "mixed-16"
+        ],
+        "id": 6,
+        "lifetime": "flash-control",
+        "shared_allowance": 3200000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 6672,
+          "document": "mixed-16",
+          "index": 0,
+          "name": "m2-6-group-0",
+          "records": 16,
+          "sha256": "64197cca475768a0d1030c504c2084fad3b865feccacb66d682a43ed36fdcec2",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 6672,
+      "input_records": 16,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 23380,
+        "satellites": [
+          {
+            "evaluations": 1449,
+            "norad_id": 7376,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 7780,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 19548,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 20253,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 21639,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 22314,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 27663,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28054,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1477,
+            "norad_id": 29522,
+            "passes": 5,
+            "status": "Complete",
+            "upcoming_passes": 5
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 32958,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 35951,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 37214,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 37849,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 38771,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 39260,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          }
+        ],
+        "stored_passes": 44
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:40:10.134048Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 38771,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:46:52.945248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 39260,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "leo-heavy"
+        ],
+        "id": 7,
+        "lifetime": "flash-control",
+        "shared_allowance": 2000000,
+        "site_deg_km": [
+          -60.0,
+          120.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4212,
+          "document": "leo-heavy",
+          "index": 0,
+          "name": "m2-7-group-0",
+          "records": 10,
+          "sha256": "04c6b118b670b35b70a3b6a6a67a6a6f458cde19d1936c868c890a3055ceb100",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4212,
+      "input_records": 10,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 14946,
+        "satellites": [
+          {
+            "evaluations": 1457,
+            "norad_id": 7376,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1513,
+            "norad_id": 28054,
+            "passes": 9,
+            "status": "Complete",
+            "upcoming_passes": 9
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 29522,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 32958,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 35951,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1497,
+            "norad_id": 37214,
+            "passes": 7,
+            "status": "Complete",
+            "upcoming_passes": 7
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 37849,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1497,
+            "norad_id": 38771,
+            "passes": 7,
+            "status": "Complete",
+            "upcoming_passes": 7
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 39260,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          }
+        ],
+        "stored_passes": 68
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:40:10.134048Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 38771,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:46:52.945248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 39260,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "leo-heavy"
+        ],
+        "id": 8,
+        "lifetime": "flash-control",
+        "shared_allowance": 2000000,
+        "site_deg_km": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4212,
+          "document": "leo-heavy",
+          "index": 0,
+          "name": "m2-8-group-0",
+          "records": 10,
+          "sha256": "04c6b118b670b35b70a3b6a6a67a6a6f458cde19d1936c868c890a3055ceb100",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4212,
+      "input_records": 10,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 14618,
+        "satellites": [
+          {
+            "evaluations": 1441,
+            "norad_id": 7376,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 26407,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 28054,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 29522,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 32958,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 35951,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 37214,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 37849,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 38771,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 39260,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          }
+        ],
+        "stored_passes": 26
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-08T09:33:14.856768Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7780,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:48:29.993760Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 19548,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T11:32:02.779008Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 20253,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:14:22.200Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 21639,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:37:37.784640Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 22314,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T19:11:32.077248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 27663,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "deep-space-heavy"
+        ],
+        "id": 9,
+        "lifetime": "flash-control",
+        "shared_allowance": 2000000,
+        "site_deg_km": [
+          -60.0,
+          -120.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4152,
+          "document": "deep-space-heavy",
+          "index": 0,
+          "name": "m2-9-group-0",
+          "records": 10,
+          "sha256": "02e48191c6b86fcaeaab3e8059e6adb73e54a3ffcc9895e8c582f3c0fcfbb2bd",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4152,
+      "input_records": 10,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 14626,
+        "satellites": [
+          {
+            "evaluations": 1457,
+            "norad_id": 7376,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 7780,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 19548,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 20253,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 21639,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 22314,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 27663,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 28054,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 29522,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          }
+        ],
+        "stored_passes": 28
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-08T09:33:14.856768Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7780,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:48:29.993760Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 19548,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T11:32:02.779008Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 20253,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:14:22.200Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 21639,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:37:37.784640Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 22314,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T19:11:32.077248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 27663,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "deep-space-heavy"
+        ],
+        "id": 10,
+        "lifetime": "flash-control",
+        "shared_allowance": 2000000,
+        "site_deg_km": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4152,
+          "document": "deep-space-heavy",
+          "index": 0,
+          "name": "m2-10-group-0",
+          "records": 10,
+          "sha256": "02e48191c6b86fcaeaab3e8059e6adb73e54a3ffcc9895e8c582f3c0fcfbb2bd",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4152,
+      "input_records": 10,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 14474,
+        "satellites": [
+          {
+            "evaluations": 1441,
+            "norad_id": 7376,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 7780,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 19548,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 20253,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 21639,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 22314,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 26407,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 27663,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 28054,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          },
+          {
+            "evaluations": 1465,
+            "norad_id": 29522,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 3
+          }
+        ],
+        "stored_passes": 11
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:40:10.134048Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 38771,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:46:52.945248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 39260,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": 7,
+        "groups": [
+          "leo-heavy"
+        ],
+        "id": 11,
+        "lifetime": "flash-control",
+        "shared_allowance": 1000,
+        "site_deg_km": [
+          -60.0,
+          120.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4212,
+          "document": "leo-heavy",
+          "index": 0,
+          "name": "m2-11-group-0",
+          "records": 10,
+          "sha256": "04c6b118b670b35b70a3b6a6a67a6a6f458cde19d1936c868c890a3055ceb100",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4212,
+      "input_records": 10,
+      "search": {
+        "complete": false,
+        "earliest_candidates": 1,
+        "evaluations": 1000,
+        "satellites": [
+          {
+            "evaluations": 1000,
+            "norad_id": 7376,
+            "passes": 2,
+            "status": "Incomplete(SearchStop { at: 2026-10-10T16:28:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 26407,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 28054,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 29522,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 32958,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 35951,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 37214,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 37849,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 38771,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 39260,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 2
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:40:10.134048Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 38771,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:46:52.945248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 39260,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": 7,
+        "groups": [
+          "leo-heavy"
+        ],
+        "id": 12,
+        "lifetime": "flash-control",
+        "shared_allowance": 0,
+        "site_deg_km": [
+          -60.0,
+          120.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4212,
+          "document": "leo-heavy",
+          "index": 0,
+          "name": "m2-12-group-0",
+          "records": 10,
+          "sha256": "04c6b118b670b35b70a3b6a6a67a6a6f458cde19d1936c868c890a3055ceb100",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4212,
+      "input_records": 10,
+      "search": {
+        "complete": false,
+        "earliest_candidates": 0,
+        "evaluations": 0,
+        "satellites": [
+          {
+            "evaluations": 0,
+            "norad_id": 7376,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 26407,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 28054,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 29522,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 32958,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 35951,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 37214,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 37849,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 38771,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 0,
+            "norad_id": 39260,
+            "passes": 0,
+            "status": "Unsearched(SearchStop { at: 2026-10-10T00:00:00, phase: Sampling, reason: TotalLimit })",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 0
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2006-06-25T19:46:43.980095999Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 6251,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T07:58:18.143616001Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 8195,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T13:28:40.058400Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 9880,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T00:40:57.987552Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 14128,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T00:58:29.343360Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 24208,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T18:52:04.079712001Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 28057,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2006-06-24T13:41:49.461503999Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 28129,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T11:12:14.455008001Z",
+          "groups": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "norad_id": 28626,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "historical",
+          "historical",
+          "historical",
+          "historical"
+        ],
+        "id": 13,
+        "lifetime": "flash-control",
+        "shared_allowance": 1600000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-13-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        },
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 1,
+          "name": "m2-13-group-1",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        },
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 2,
+          "name": "m2-13-group-2",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        },
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 3,
+          "name": "m2-13-group-3",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 13324,
+      "input_records": 32,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 11616,
+        "satellites": [
+          {
+            "evaluations": 1473,
+            "norad_id": 6251,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 8195,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 9880,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 14128,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 24208,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28057,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 28129,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 28626,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 13
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2006-06-25T07:58:18.143616001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 8195,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T13:28:40.058400Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 9880,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T00:40:57.987552Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 14128,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T00:58:29.343360Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 24208,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T18:52:04.079712001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28057,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2006-06-24T13:41:49.461503999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28129,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T11:12:14.455008001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28626,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "historical",
+          "conflict"
+        ],
+        "id": 14,
+        "lifetime": "flash-control",
+        "shared_allowance": 1400000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [
+          {
+            "epoch_utc": "2006-06-25T19:46:43.980095999Z",
+            "kind": "epoch-conflict",
+            "norad_id": 6251,
+            "origins": [
+              {
+                "group": 0,
+                "record": 0
+              },
+              {
+                "group": 1,
+                "record": 1
+              }
+            ]
+          }
+        ],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-14-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        },
+        {
+          "bytes": 843,
+          "document": "conflict",
+          "index": 1,
+          "name": "m2-14-group-1",
+          "records": 2,
+          "sha256": "6796634ecf8d12d56abcfbd005fbc526d2e3a91bb193a10bb7d9a583ea2cc43e",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4174,
+      "input_records": 10,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 10143,
+        "satellites": [
+          {
+            "evaluations": 1449,
+            "norad_id": 8195,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 9880,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 14128,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 24208,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28057,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 28129,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 28626,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 9
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2006-06-25T19:46:43.980095999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 6251,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T07:58:18.143616001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 8195,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T13:28:40.058400Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 9880,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T00:40:57.987552Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 14128,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T00:58:29.343360Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 24208,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T18:52:04.079712001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28057,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2006-06-24T13:41:49.461503999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28129,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T11:12:14.455008001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28626,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": null,
+        "groups": [
+          "historical",
+          "invalid"
+        ],
+        "id": 15,
+        "lifetime": "flash-control",
+        "shared_allowance": 1600000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [
+          {
+            "error": "EccentricityOutOfRange(1.0)",
+            "kind": "invalid-record",
+            "norad_id": 6251,
+            "origin": {
+              "group": 1,
+              "record": 1
+            }
+          }
+        ],
+        "failure": null,
+        "parse": [
+          {
+            "message": "unsupported OMM CENTER_NAME \"MARS\"; expected EARTH",
+            "origin": {
+              "group": 1,
+              "record": 0
+            }
+          }
+        ]
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-15-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        },
+        {
+          "bytes": 858,
+          "document": "invalid",
+          "index": 1,
+          "name": "m2-15-group-1",
+          "records": 2,
+          "sha256": "6e3e2dcfeb3bcc9500087fa7283cb32ecb31f89ce107ec8a6999dcd265f3634c",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4189,
+      "input_records": 10,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 11616,
+        "satellites": [
+          {
+            "evaluations": 1473,
+            "norad_id": 6251,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 8195,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 9880,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 14128,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 24208,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28057,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 28129,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 28626,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 13
+      }
+    },
+    {
+      "accepted": null,
+      "case": {
+        "control": null,
+        "groups": [
+          "historical",
+          "malformed"
+        ],
+        "id": 16,
+        "lifetime": "flash-control",
+        "shared_allowance": 0,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": {
+          "group": 1,
+          "message": "EOF while parsing a list at line 1 column 1",
+          "phase": "document"
+        },
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-16-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        },
+        {
+          "bytes": 1,
+          "document": "malformed",
+          "index": 1,
+          "name": "m2-16-group-1",
+          "records": null,
+          "sha256": "245843abef9e72e7efac30138a994bf6301e7e1d7d7042a33d42e863d2638811",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 3332,
+      "input_records": 8,
+      "search": null
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2006-06-25T19:46:43.980095999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 6251,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T07:58:18.143616001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 8195,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T13:28:40.058400Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 9880,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T00:40:57.987552Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 14128,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T00:58:29.343360Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 24208,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T18:52:04.079712001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28057,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2006-06-24T13:41:49.461503999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28129,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T11:12:14.455008001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28626,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": 2,
+        "groups": [
+          "historical"
+        ],
+        "id": 17,
+        "lifetime": "ram-dropped",
+        "shared_allowance": 1600000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-17-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 3331,
+      "input_records": 8,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 11616,
+        "satellites": [
+          {
+            "evaluations": 1473,
+            "norad_id": 6251,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 8195,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 9880,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 14128,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 24208,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28057,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 28129,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 28626,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 13
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2006-06-25T19:46:43.980095999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 6251,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T07:58:18.143616001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 8195,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T13:28:40.058400Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 9880,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T00:40:57.987552Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 14128,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T00:58:29.343360Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 24208,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2006-06-26T18:52:04.079712001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28057,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2006-06-24T13:41:49.461503999Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28129,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2006-06-25T11:12:14.455008001Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28626,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": 2,
+        "groups": [
+          "historical"
+        ],
+        "id": 18,
+        "lifetime": "ram-retained",
+        "shared_allowance": 1600000,
+        "site_deg_km": [
+          39.007,
+          -104.883,
+          2.187
+        ],
+        "start_utc": "2006-06-26T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 3331,
+          "document": "historical",
+          "index": 0,
+          "name": "m2-18-group-0",
+          "records": 8,
+          "sha256": "2e18244cfec8152122bd7ca4575513862f429ad7f7f4c2ea58e856abf8895972",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 3331,
+      "input_records": 8,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 11616,
+        "satellites": [
+          {
+            "evaluations": 1473,
+            "norad_id": 6251,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 8195,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 9880,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 14128,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 24208,
+            "passes": 0,
+            "status": "Complete",
+            "upcoming_passes": 0
+          },
+          {
+            "evaluations": 1473,
+            "norad_id": 28057,
+            "passes": 4,
+            "status": "Complete",
+            "upcoming_passes": 4
+          },
+          {
+            "evaluations": 1449,
+            "norad_id": 28129,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 1
+          },
+          {
+            "evaluations": 1441,
+            "norad_id": 28626,
+            "passes": 1,
+            "status": "Complete",
+            "upcoming_passes": 0
+          }
+        ],
+        "stored_passes": 13
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:40:10.134048Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 38771,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:46:52.945248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 39260,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": 7,
+        "groups": [
+          "leo-heavy"
+        ],
+        "id": 19,
+        "lifetime": "ram-dropped",
+        "shared_allowance": 2000000,
+        "site_deg_km": [
+          -60.0,
+          120.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4212,
+          "document": "leo-heavy",
+          "index": 0,
+          "name": "m2-19-group-0",
+          "records": 10,
+          "sha256": "04c6b118b670b35b70a3b6a6a67a6a6f458cde19d1936c868c890a3055ceb100",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4212,
+      "input_records": 10,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 14946,
+        "satellites": [
+          {
+            "evaluations": 1457,
+            "norad_id": 7376,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1513,
+            "norad_id": 28054,
+            "passes": 9,
+            "status": "Complete",
+            "upcoming_passes": 9
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 29522,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 32958,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 35951,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1497,
+            "norad_id": 37214,
+            "passes": 7,
+            "status": "Complete",
+            "upcoming_passes": 7
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 37849,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1497,
+            "norad_id": 38771,
+            "passes": 7,
+            "status": "Complete",
+            "upcoming_passes": 7
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 39260,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          }
+        ],
+        "stored_passes": 68
+      }
+    },
+    {
+      "accepted": [
+        {
+          "epoch_utc": "2026-10-09T01:03:29.357856Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 7376,
+          "selected_from": {
+            "group": 0,
+            "record": 8
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T01:38:11.603040Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 26407,
+          "selected_from": {
+            "group": 0,
+            "record": 9
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:30:06.549120Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 28054,
+          "selected_from": {
+            "group": 0,
+            "record": 0
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:53:22.930944Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 29522,
+          "selected_from": {
+            "group": 0,
+            "record": 1
+          }
+        },
+        {
+          "epoch_utc": "2026-10-09T07:12:26.644896Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 32958,
+          "selected_from": {
+            "group": 0,
+            "record": 2
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:20:35.445696Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 35951,
+          "selected_from": {
+            "group": 0,
+            "record": 3
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T07:19:45.607872Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37214,
+          "selected_from": {
+            "group": 0,
+            "record": 4
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:34:05.928384Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 37849,
+          "selected_from": {
+            "group": 0,
+            "record": 5
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T06:40:10.134048Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 38771,
+          "selected_from": {
+            "group": 0,
+            "record": 6
+          }
+        },
+        {
+          "epoch_utc": "2026-10-10T05:46:52.945248Z",
+          "groups": [
+            0
+          ],
+          "norad_id": 39260,
+          "selected_from": {
+            "group": 0,
+            "record": 7
+          }
+        }
+      ],
+      "case": {
+        "control": 7,
+        "groups": [
+          "leo-heavy"
+        ],
+        "id": 20,
+        "lifetime": "ram-retained",
+        "shared_allowance": 2000000,
+        "site_deg_km": [
+          -60.0,
+          120.0,
+          0.0
+        ],
+        "start_utc": "2026-10-10T00:00:00Z",
+        "window_s": 86400
+      },
+      "diagnostics": {
+        "core": [],
+        "failure": null,
+        "parse": []
+      },
+      "groups": [
+        {
+          "bytes": 4212,
+          "document": "leo-heavy",
+          "index": 0,
+          "name": "m2-20-group-0",
+          "records": 10,
+          "sha256": "04c6b118b670b35b70a3b6a6a67a6a6f458cde19d1936c868c890a3055ceb100",
+          "source_metadata": "static fixture references; no dynamic URLs or fetch strings in measured pipeline"
+        }
+      ],
+      "input_json_bytes": 4212,
+      "input_records": 10,
+      "search": {
+        "complete": true,
+        "earliest_candidates": 1,
+        "evaluations": 14946,
+        "satellites": [
+          {
+            "evaluations": 1457,
+            "norad_id": 7376,
+            "passes": 3,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1457,
+            "norad_id": 26407,
+            "passes": 2,
+            "status": "Complete",
+            "upcoming_passes": 2
+          },
+          {
+            "evaluations": 1513,
+            "norad_id": 28054,
+            "passes": 9,
+            "status": "Complete",
+            "upcoming_passes": 9
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 29522,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 32958,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 35951,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1497,
+            "norad_id": 37214,
+            "passes": 7,
+            "status": "Complete",
+            "upcoming_passes": 7
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 37849,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          },
+          {
+            "evaluations": 1497,
+            "norad_id": 38771,
+            "passes": 7,
+            "status": "Complete",
+            "upcoming_passes": 7
+          },
+          {
+            "evaluations": 1505,
+            "norad_id": 39260,
+            "passes": 8,
+            "status": "Complete",
+            "upcoming_passes": 8
+          }
+        ],
+        "stored_passes": 68
+      }
+    }
+  ]
+}

@@ -1,0 +1,1160 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "tools/fixtures/m2-numerical/vallado/SGP4-VER.TLE",
+      "bytes": 8897,
+      "sha256": "034f655fb7afffac65edc8c4a8b1a50b28cfa3e0b588d23f8e5989e8994d4bcc",
+      "url": "https://raw.githubusercontent.com/CelesTrak/fundamentals-of-astrodynamics/49df0479c950917c0a2c5ac31f2db6477bba57f6/datalib/SGP4-VER.TLE"
+    },
+    {
+      "path": "tools/fixtures/m2-numerical/vallado/00005.e",
+      "bytes": 1779,
+      "sha256": "5fd9b6dedbd755f0f336b143a076bbe6308e22c2f79f21910367963868b64869",
+      "url": "https://raw.githubusercontent.com/CelesTrak/fundamentals-of-astrodynamics/49df0479c950917c0a2c5ac31f2db6477bba57f6/software/cpp/TestSGP4/TestSGP4/00005.e"
+    },
+    {
+      "path": "tools/fixtures/m2-numerical/vallado/08195.e",
+      "bytes": 3099,
+      "sha256": "627eb33a5a1c68287122ff29c0e2f08a4908e4bba3c38ed517e79e26e209a710",
+      "url": "https://raw.githubusercontent.com/CelesTrak/fundamentals-of-astrodynamics/49df0479c950917c0a2c5ac31f2db6477bba57f6/software/cpp/TestSGP4/TestSGP4/08195.e"
+    },
+    {
+      "path": "tools/fixtures/m2-numerical/vallado/24208.e",
+      "bytes": 1779,
+      "sha256": "102bbf36cff1b68b69f54b52fbf508c4a4db7a839cf43262b5090a1473573cf4",
+      "url": "https://raw.githubusercontent.com/CelesTrak/fundamentals-of-astrodynamics/49df0479c950917c0a2c5ac31f2db6477bba57f6/software/cpp/TestSGP4/TestSGP4/24208.e"
+    },
+    {
+      "path": "tools/fixtures/m2-numerical/vallado/28129.e",
+      "bytes": 1779,
+      "sha256": "bf7129f4785eb875284f814ea5fee72baf778dfbed6176ab92408734b5b06fd5",
+      "url": "https://raw.githubusercontent.com/CelesTrak/fundamentals-of-astrodynamics/49df0479c950917c0a2c5ac31f2db6477bba57f6/software/cpp/TestSGP4/TestSGP4/28129.e"
+    },
+    {
+      "path": "core/tests/fixtures/coordinates.json",
+      "bytes": 5518,
+      "sha256": "fe6218a9bff5489758ad1f33c9ceaf3eed0dcdfeb466ed67252f244fd2e59464",
+      "url": null
+    },
+    {
+      "path": "core/tests/fixtures/observer.json",
+      "bytes": 14138,
+      "sha256": "29e12233b4c846d6df58074ea4ec94c9676e18214aedb7bfd9a9a0f5b879bd8d",
+      "url": null
+    },
+    {
+      "path": "core/tests/fixtures/iss-25544.json",
+      "bytes": 420,
+      "sha256": "8eb6107b6481e52043171cc793279df3cbf287b1e40a190acd298097a71669ac",
+      "url": null
+    }
+  ],
+  "selection": "all existing independent coordinate/observer fixture rows, in original order; TEME ID then 0/360/1440 minutes",
+  "strict_less_than_tolerances": {
+    "teme_position_axis_km": 1e-06,
+    "teme_velocity_axis_km_s": 1e-09,
+    "coordinate_position_norm_km": 0.001,
+    "geodetic_height_km": 0.001,
+    "geodetic_angle_deg": 1e-06,
+    "geometry_range_km": 1e-08,
+    "geometry_angle_deg": 1e-09,
+    "pipeline_range_km": 0.1,
+    "pipeline_angle_deg": 0.01
+  },
+  "teme": [
+    {
+      "id": "teme-00005-0",
+      "norad_id": 5,
+      "tle": [
+        "1 00005U 58002B   00179.78495062  .00000023  00000-0  28098-4 0  4753",
+        "2 00005  34.2682 348.7242 1859667 331.7664  19.3264 10.82419157413667"
+      ],
+      "minutes": 0,
+      "position_km": [
+        7022.46529266,
+        -1400.08296755,
+        0.03995155
+      ],
+      "velocity_km_s": [
+        1.893841015,
+        6.405893759,
+        4.53480725
+      ]
+    },
+    {
+      "id": "teme-00005-360",
+      "norad_id": 5,
+      "tle": [
+        "1 00005U 58002B   00179.78495062  .00000023  00000-0  28098-4 0  4753",
+        "2 00005  34.2682 348.7242 1859667 331.7664  19.3264 10.82419157413667"
+      ],
+      "minutes": 360,
+      "position_km": [
+        -7154.03120202,
+        -3783.17682504,
+        -3536.19412294
+      ],
+      "velocity_km_s": [
+        4.741887409,
+        -4.151817765,
+        -2.093935425
+      ]
+    },
+    {
+      "id": "teme-00005-1440",
+      "norad_id": 5,
+      "tle": [
+        "1 00005U 58002B   00179.78495062  .00000023  00000-0  28098-4 0  4753",
+        "2 00005  34.2682 348.7242 1859667 331.7664  19.3264 10.82419157413667"
+      ],
+      "minutes": 1440,
+      "position_km": [
+        -938.55923943,
+        -6268.18748831,
+        -4294.02924751
+      ],
+      "velocity_km_s": [
+        7.536105209,
+        -0.427127707,
+        0.98987808
+      ]
+    },
+    {
+      "id": "teme-08195-0",
+      "norad_id": 8195,
+      "tle": [
+        "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
+        "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656"
+      ],
+      "minutes": 0,
+      "position_km": [
+        2349.8948335,
+        -14785.93811562,
+        0.02119378
+      ],
+      "velocity_km_s": [
+        2.721488096,
+        -3.256811655,
+        4.498416672
+      ]
+    },
+    {
+      "id": "teme-08195-360",
+      "norad_id": 8195,
+      "tle": [
+        "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
+        "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656"
+      ],
+      "minutes": 360,
+      "position_km": [
+        19089.29762968,
+        3107.89495018,
+        39958.1466137
+      ],
+      "velocity_km_s": [
+        -0.410308034,
+        1.640332277,
+        -0.306873818
+      ]
+    },
+    {
+      "id": "teme-08195-1440",
+      "norad_id": 8195,
+      "tle": [
+        "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
+        "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656"
+      ],
+      "minutes": 1440,
+      "position_km": [
+        2890.80638268,
+        -15446.439523,
+        948.77010176
+      ],
+      "velocity_km_s": [
+        2.65440749,
+        -2.909344895,
+        4.486437362
+      ]
+    },
+    {
+      "id": "teme-24208-0",
+      "norad_id": 24208,
+      "tle": [
+        "1 24208U 96044A   06177.04061740 -.00000094  00000-0  10000-3 0  1600",
+        "2 24208   3.8536  80.0121 0026640 311.0977  48.3000  1.00778054 36119"
+      ],
+      "minutes": 0,
+      "position_km": [
+        7534.10987189,
+        41266.39266843,
+        -0.10801028
+      ],
+      "velocity_km_s": [
+        -3.027168008,
+        0.558848996,
+        0.207982755
+      ]
+    },
+    {
+      "id": "teme-24208-360",
+      "norad_id": 24208,
+      "tle": [
+        "1 24208U 96044A   06177.04061740 -.00000094  00000-0  10000-3 0  1600",
+        "2 24208   3.8536  80.0121 0026640 311.0977  48.3000  1.00778054 36119"
+      ],
+      "minutes": 360,
+      "position_km": [
+        -41413.95109398,
+        7055.51656639,
+        2838.90906671
+      ],
+      "velocity_km_s": [
+        -0.52166508,
+        -3.029172207,
+        -0.002066843
+      ]
+    },
+    {
+      "id": "teme-24208-1440",
+      "norad_id": 24208,
+      "tle": [
+        "1 24208U 96044A   06177.04061740 -.00000094  00000-0  10000-3 0  1600",
+        "2 24208   3.8536  80.0121 0026640 311.0977  48.3000  1.00778054 36119"
+      ],
+      "minutes": 1440,
+      "position_km": [
+        5501.081371,
+        41590.27784405,
+        138.3252293
+      ],
+      "velocity_km_s": [
+        -3.050691874,
+        0.409203052,
+        0.207958133
+      ]
+    },
+    {
+      "id": "teme-28129-0",
+      "norad_id": 28129,
+      "tle": [
+        "1 28129U 03058A   06175.57071136 -.00000104  00000-0  10000-3 0   459",
+        "2 28129  54.7298 324.8098 0048506 266.2640  93.1663  2.00562768 18443"
+      ],
+      "minutes": 0,
+      "position_km": [
+        21707.46412351,
+        -15318.6175239,
+        0.13551152
+      ],
+      "velocity_km_s": [
+        1.304029214,
+        1.816904974,
+        3.161919976
+      ]
+    },
+    {
+      "id": "teme-28129-360",
+      "norad_id": 28129,
+      "tle": [
+        "1 28129U 03058A   06175.57071136 -.00000104  00000-0  10000-3 0   459",
+        "2 28129  54.7298 324.8098 0048506 266.2640  93.1663  2.00562768 18443"
+      ],
+      "minutes": 360,
+      "position_km": [
+        -21607.02086957,
+        15432.5996263,
+        206.62470309
+      ],
+      "velocity_km_s": [
+        -1.306049851,
+        -1.817011568,
+        -3.163725018
+      ]
+    },
+    {
+      "id": "teme-28129-1440",
+      "norad_id": 28129,
+      "tle": [
+        "1 28129U 03058A   06175.57071136 -.00000104  00000-0  10000-3 0   459",
+        "2 28129  54.7298 324.8098 0048506 266.2640  93.1663  2.00562768 18443"
+      ],
+      "minutes": 1440,
+      "position_km": [
+        22002.20074562,
+        -14879.72595593,
+        774.32827099
+      ],
+      "velocity_km_s": [
+        1.191573619,
+        1.894561165,
+        3.159953047
+      ]
+    }
+  ],
+  "rotations": [
+    {
+      "name": "start_of_supported_era",
+      "utc": "1957-01-01T00:00:00",
+      "teme_km": [
+        6378.137,
+        0,
+        0
+      ],
+      "ecef_km": [
+        -1148.7456512627748,
+        -6273.835750119209,
+        0.0
+      ]
+    },
+    {
+      "name": "before_j2000",
+      "utc": "1999-12-31T23:59:59.123456",
+      "teme_km": [
+        3500,
+        -4500,
+        4000
+      ],
+      "ecef_km": [
+        -5037.733956822816,
+        -2668.5645167906905,
+        4000.0
+      ]
+    },
+    {
+      "name": "j2000_noon",
+      "utc": "2000-01-01T12:00:00",
+      "teme_km": [
+        7000,
+        0,
+        0
+      ],
+      "ecef_km": [
+        1270.9175712278939,
+        6883.659530158663,
+        0.0
+      ]
+    },
+    {
+      "name": "vanguard_epoch",
+      "utc": "2000-06-27T18:50:19.733568",
+      "teme_km": [
+        7022.46529266,
+        -1400.08296755,
+        0.03995155
+      ],
+      "ecef_km": [
+        -6198.557667977639,
+        3585.126767548608,
+        0.03995155
+      ]
+    },
+    {
+      "name": "vanguard_plus_360_min",
+      "utc": "2000-06-28T00:50:19.733568",
+      "teme_km": [
+        -7154.03120202,
+        -3783.17682504,
+        -3536.19412294
+      ],
+      "ecef_km": [
+        1245.7976376784127,
+        -7996.285235967408,
+        -3536.19412294
+      ]
+    },
+    {
+      "name": "leap_day",
+      "utc": "2024-02-29T23:59:59.999999",
+      "teme_km": [
+        -4000,
+        3000,
+        -5000
+      ],
+      "ecef_km": [
+        4802.407849117954,
+        -1391.7179494172885,
+        -5000.0
+      ]
+    },
+    {
+      "name": "subsecond",
+      "utc": "2026-10-04T12:43:41.833056",
+      "teme_km": [
+        4200,
+        -3500,
+        4100
+      ],
+      "ecef_km": [
+        -2400.7552796792347,
+        4911.860552488464,
+        4100.0
+      ]
+    },
+    {
+      "name": "century_not_leap",
+      "utc": "2100-03-01T00:00:00",
+      "teme_km": [
+        0,
+        7000,
+        0
+      ],
+      "ecef_km": [
+        2520.95421744351,
+        -6530.297836512036,
+        0.0
+      ]
+    },
+    {
+      "name": "end_of_supported_era",
+      "utc": "2100-12-31T23:59:59.999999",
+      "teme_km": [
+        3500,
+        -4500,
+        -4000
+      ],
+      "ecef_km": [
+        -5062.450042727515,
+        -2621.3736026915694,
+        -4000.0
+      ]
+    }
+  ],
+  "geodetic": [
+    {
+      "name": "greenwich_equator",
+      "latitude_deg": 0,
+      "longitude_deg": 0,
+      "altitude_km": 0,
+      "ecef_km": [
+        6378.137,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "east_equator",
+      "latitude_deg": 0,
+      "longitude_deg": 90,
+      "altitude_km": 0,
+      "ecef_km": [
+        3.905482530786651e-13,
+        6378.137,
+        0.0
+      ]
+    },
+    {
+      "name": "north_pole",
+      "latitude_deg": 90,
+      "longitude_deg": 0,
+      "altitude_km": 0,
+      "ecef_km": [
+        3.918620924814471e-13,
+        0.0,
+        6356.75231424518
+      ]
+    },
+    {
+      "name": "south_pole",
+      "latitude_deg": -90,
+      "longitude_deg": 0,
+      "altitude_km": 0,
+      "ecef_km": [
+        3.918620924814471e-13,
+        0.0,
+        -6356.75231424518
+      ]
+    },
+    {
+      "name": "north_near_pole",
+      "latitude_deg": 89.999999,
+      "longitude_deg": 123,
+      "altitude_km": 0.1,
+      "ecef_km": [
+        -6.083385149853336e-05,
+        9.367591653649076e-05,
+        6356.852314245179
+      ]
+    },
+    {
+      "name": "south_near_pole",
+      "latitude_deg": -89.999999,
+      "longitude_deg": -45,
+      "altitude_km": 500,
+      "ecef_km": [
+        8.515024066353444e-05,
+        -8.515024066353443e-05,
+        -6856.752314245178
+      ]
+    },
+    {
+      "name": "antimeridian",
+      "latitude_deg": 30,
+      "longitude_deg": -180,
+      "altitude_km": 0,
+      "ecef_km": [
+        -5528.256639292837,
+        -6.770161798175076e-13,
+        3170.373735383638
+      ]
+    },
+    {
+      "name": "below_sea_level",
+      "latitude_deg": 31.5,
+      "longitude_deg": 35.5,
+      "altitude_km": -0.43,
+      "ecef_km": [
+        4431.121217524325,
+        3160.68804747144,
+        3313.062343177701
+      ]
+    },
+    {
+      "name": "vallado_site_wgs84",
+      "latitude_deg": 39.007,
+      "longitude_deg": -104.883,
+      "altitude_km": 2.187,
+      "ecef_km": [
+        -1275.1219100114342,
+        -4797.989026930928,
+        3994.297451201174
+      ]
+    },
+    {
+      "name": "southern_leo",
+      "latitude_deg": -51.6,
+      "longitude_deg": 151.2,
+      "altitude_km": 420,
+      "ecef_km": [
+        -3707.4935104497367,
+        2038.2118053442491,
+        -5304.432129715973
+      ]
+    },
+    {
+      "name": "inclined_geo_height",
+      "latitude_deg": 45,
+      "longitude_deg": -73,
+      "altitude_km": 35786,
+      "ecef_km": [
+        8719.142352585786,
+        -28519.029594891188,
+        29791.871680407705
+      ]
+    },
+    {
+      "name": "equatorial_geo",
+      "latitude_deg": 0,
+      "longitude_deg": 80,
+      "altitude_km": 35786,
+      "ecef_km": [
+        7321.725552948795,
+        41523.5690166689,
+        0.0
+      ]
+    },
+    {
+      "name": "high_orbit",
+      "latitude_deg": -63.4,
+      "longitude_deg": 179.999999,
+      "altitude_km": 100000,
+      "ecef_km": [
+        -47639.451047117225,
+        0.0008314652837366225,
+        -95095.50456062242
+      ]
+    }
+  ],
+  "geometry": [
+    {
+      "observer": {
+        "name": "vallado_site_wgs84",
+        "latitude_deg": 39.007,
+        "longitude_deg": -104.883,
+        "altitude_km": 2.187
+      },
+      "ecef_km": [
+        7000,
+        -2000,
+        3500
+      ],
+      "azimuth_deg": 69.95549198737604,
+      "elevation_deg": -27.67753004313558,
+      "range_km": 8749.326556406562
+    },
+    {
+      "observer": {
+        "name": "vallado_site_wgs84",
+        "latitude_deg": 39.007,
+        "longitude_deg": -104.883,
+        "altitude_km": 2.187
+      },
+      "ecef_km": [
+        -4200,
+        3500,
+        -4100
+      ],
+      "azimuth_deg": 250.91936295487838,
+      "elevation_deg": -63.97100533644665,
+      "range_km": 11955.299450908082
+    },
+    {
+      "observer": {
+        "name": "vallado_site_wgs84",
+        "latitude_deg": 39.007,
+        "longitude_deg": -104.883,
+        "altitude_km": 2.187
+      },
+      "ecef_km": [
+        42000,
+        1000,
+        0
+      ],
+      "azimuth_deg": 79.57753508788254,
+      "elevation_deg": -20.7107921619959,
+      "range_km": 43844.12463730386
+    },
+    {
+      "observer": {
+        "name": "sydney",
+        "latitude_deg": -33.8688,
+        "longitude_deg": 151.2093,
+        "altitude_km": 0.058
+      },
+      "ecef_km": [
+        7000,
+        -2000,
+        3500
+      ],
+      "azimuth_deg": 236.54867784771392,
+      "elevation_deg": -82.22951398618726,
+      "range_km": 14347.342685126472
+    },
+    {
+      "observer": {
+        "name": "sydney",
+        "latitude_deg": -33.8688,
+        "longitude_deg": 151.2093,
+        "altitude_km": 0.058
+      },
+      "ecef_km": [
+        -4200,
+        3500,
+        -4100
+      ],
+      "azimuth_deg": 247.46697943477844,
+      "elevation_deg": 18.079609296387147,
+      "range_km": 1189.6519379081897
+    },
+    {
+      "observer": {
+        "name": "sydney",
+        "latitude_deg": -33.8688,
+        "longitude_deg": 151.2093,
+        "altitude_km": 0.058
+      },
+      "ecef_km": [
+        42000,
+        1000,
+        0
+      ],
+      "azimuth_deg": 226.16290772221095,
+      "elevation_deg": -51.3109158022066,
+      "range_km": 46805.58273692743
+    },
+    {
+      "observer": {
+        "name": "equator_west",
+        "latitude_deg": 0,
+        "longitude_deg": -80,
+        "altitude_km": 0
+      },
+      "ecef_km": [
+        7000,
+        -2000,
+        3500
+      ],
+      "azimuth_deg": 61.868881880679034,
+      "elevation_deg": -23.27410172135969,
+      "range_km": 8080.838470346538
+    },
+    {
+      "observer": {
+        "name": "equator_west",
+        "latitude_deg": 0,
+        "longitude_deg": -80,
+        "altitude_km": 0
+      },
+      "ecef_km": [
+        -4200,
+        3500,
+        -4100
+      ],
+      "azimuth_deg": 220.71499738638508,
+      "elevation_deg": -62.864177800969834,
+      "range_km": 11859.710731921388
+    },
+    {
+      "observer": {
+        "name": "equator_west",
+        "latitude_deg": 0,
+        "longitude_deg": -80,
+        "altitude_km": 0
+      },
+      "ecef_km": [
+        42000,
+        1000,
+        0
+      ],
+      "azimuth_deg": 90.0,
+      "elevation_deg": -0.0961761593437058,
+      "range_km": 41535.63232094673
+    },
+    {
+      "observer": {
+        "name": "equator_east",
+        "latitude_deg": 0,
+        "longitude_deg": 90,
+        "altitude_km": 0
+      },
+      "ecef_km": [
+        7000,
+        -2000,
+        3500
+      ],
+      "azimuth_deg": 296.565051177078,
+      "elevation_deg": -46.95066268839294,
+      "range_km": 11464.867185919295
+    },
+    {
+      "observer": {
+        "name": "equator_east",
+        "latitude_deg": 0,
+        "longitude_deg": 90,
+        "altitude_km": 0
+      },
+      "ecef_km": [
+        -4200,
+        3500,
+        -4100
+      ],
+      "azimuth_deg": 134.30972280213493,
+      "elevation_deg": -26.12157911852731,
+      "range_km": 6537.099707880323
+    },
+    {
+      "observer": {
+        "name": "equator_east",
+        "latitude_deg": 0,
+        "longitude_deg": 90,
+        "altitude_km": 0
+      },
+      "ecef_km": [
+        42000,
+        1000,
+        0
+      ],
+      "azimuth_deg": 270.0,
+      "elevation_deg": -7.297064560251188,
+      "range_km": 42342.93751726217
+    },
+    {
+      "observer": {
+        "name": "antimeridian",
+        "latitude_deg": 30,
+        "longitude_deg": -180,
+        "altitude_km": 0.4
+      },
+      "ecef_km": [
+        7000,
+        -2000,
+        3500
+      ],
+      "azimuth_deg": 16.980705183832832,
+      "elevation_deg": -57.344593804684315,
+      "range_km": 12691.50960424393
+    },
+    {
+      "observer": {
+        "name": "antimeridian",
+        "latitude_deg": 30,
+        "longitude_deg": -180,
+        "altitude_km": 0.4
+      },
+      "ecef_km": [
+        -4200,
+        3500,
+        -4100
+      ],
+      "azimuth_deg": 211.85792536520108,
+      "elevation_deg": -35.819209060748335,
+      "range_km": 8177.800957755685
+    },
+    {
+      "observer": {
+        "name": "antimeridian",
+        "latitude_deg": 30,
+        "longitude_deg": -180,
+        "altitude_km": 0.4
+      },
+      "ecef_km": [
+        42000,
+        1000,
+        0
+      ],
+      "azimuth_deg": 357.2760855604251,
+      "elevation_deg": -63.79081819576406,
+      "range_km": 47644.73366117294
+    },
+    {
+      "observer": {
+        "name": "negative_height",
+        "latitude_deg": 31.5,
+        "longitude_deg": 35.5,
+        "altitude_km": -0.43
+      },
+      "ecef_km": [
+        7000,
+        -2000,
+        3500
+      ],
+      "azimuth_deg": 276.3394075045542,
+      "elevation_deg": -6.714334793753344,
+      "range_km": 5767.736558642957
+    },
+    {
+      "observer": {
+        "name": "negative_height",
+        "latitude_deg": 31.5,
+        "longitude_deg": 35.5,
+        "altitude_km": -0.43
+      },
+      "ecef_km": [
+        -4200,
+        3500,
+        -4100
+      ],
+      "azimuth_deg": 117.49341087497073,
+      "elevation_deg": -58.416018974513875,
+      "range_km": 11382.656955938128
+    },
+    {
+      "observer": {
+        "name": "negative_height",
+        "latitude_deg": 31.5,
+        "longitude_deg": 35.5,
+        "altitude_km": -0.43
+      },
+      "ecef_km": [
+        42000,
+        1000,
+        0
+      ],
+      "azimuth_deg": 232.40826290172,
+      "elevation_deg": 38.038320115617424,
+      "range_km": 37776.521913757744
+    },
+    {
+      "observer": {
+        "name": "north_pole",
+        "latitude_deg": 90,
+        "longitude_deg": 123,
+        "altitude_km": 0
+      },
+      "ecef_km": [
+        7000,
+        -2000,
+        3500
+      ],
+      "azimuth_deg": 318.94539590092285,
+      "elevation_deg": -21.425296064896262,
+      "range_km": 7820.552012802242
+    },
+    {
+      "observer": {
+        "name": "north_pole",
+        "latitude_deg": 90,
+        "longitude_deg": 123,
+        "altitude_km": 0
+      },
+      "ecef_km": [
+        -4200,
+        3500,
+        -4100
+      ],
+      "azimuth_deg": 162.8055710922652,
+      "elevation_deg": -62.39777626715365,
+      "range_km": 11799.731732606124
+    },
+    {
+      "observer": {
+        "name": "north_pole",
+        "latitude_deg": 90,
+        "longitude_deg": 123,
+        "altitude_km": 0
+      },
+      "ecef_km": [
+        42000,
+        1000,
+        0
+      ],
+      "azimuth_deg": 301.63607246839706,
+      "elevation_deg": -8.60406565609562,
+      "range_km": 42490.09649300248
+    },
+    {
+      "observer": {
+        "name": "south_pole",
+        "latitude_deg": -90,
+        "longitude_deg": -45,
+        "altitude_km": 0
+      },
+      "ecef_km": [
+        7000,
+        -2000,
+        3500
+      ],
+      "azimuth_deg": 29.05460409907713,
+      "elevation_deg": -53.55075347331254,
+      "range_km": 12253.798030993401
+    },
+    {
+      "observer": {
+        "name": "south_pole",
+        "latitude_deg": -90,
+        "longitude_deg": -45,
+        "altitude_km": 0
+      },
+      "ecef_km": [
+        -4200,
+        3500,
+        -4100
+      ],
+      "azimuth_deg": 185.1944289077348,
+      "elevation_deg": -22.429962763226424,
+      "range_km": 5914.637014039913
+    },
+    {
+      "observer": {
+        "name": "south_pole",
+        "latitude_deg": -90,
+        "longitude_deg": -45,
+        "altitude_km": 0
+      },
+      "ecef_km": [
+        42000,
+        1000,
+        0
+      ],
+      "azimuth_deg": 46.36392753160292,
+      "elevation_deg": -8.604065656095619,
+      "range_km": 42490.09649300247
+    },
+    {
+      "observer": {
+        "name": "near_pole",
+        "latitude_deg": 89.999999,
+        "longitude_deg": 123,
+        "altitude_km": 0.1
+      },
+      "ecef_km": [
+        7000,
+        -2000,
+        3500
+      ],
+      "azimuth_deg": 318.9453962205417,
+      "elevation_deg": -21.425978592536357,
+      "range_km": 7820.588620544214
+    },
+    {
+      "observer": {
+        "name": "near_pole",
+        "latitude_deg": 89.999999,
+        "longitude_deg": 123,
+        "altitude_km": 0.1
+      },
+      "ecef_km": [
+        -4200,
+        3500,
+        -4100
+      ],
+      "azimuth_deg": 162.80557131163948,
+      "elevation_deg": -62.3980007479629,
+      "range_km": 11799.820301818118
+    },
+    {
+      "observer": {
+        "name": "near_pole",
+        "latitude_deg": 89.999999,
+        "longitude_deg": 123,
+        "altitude_km": 0.1
+      },
+      "ecef_km": [
+        42000,
+        1000,
+        0
+      ],
+      "azimuth_deg": 301.63607246926523,
+      "elevation_deg": -8.60419949619522,
+      "range_km": 42490.11151159545
+    }
+  ],
+  "iss_pipeline": [
+    {
+      "utc": "2026-10-04T12:43:41.833056",
+      "dut1_seconds": 0.09370623175929893,
+      "observer": {
+        "name": "vallado_site_wgs84",
+        "latitude_deg": 39.007,
+        "longitude_deg": -104.883,
+        "altitude_km": 2.187
+      },
+      "azimuth_deg": 150.23469472919786,
+      "elevation_deg": -16.803519108558394,
+      "range_km": 4825.756482100993
+    },
+    {
+      "utc": "2026-10-04T12:43:41.833056",
+      "dut1_seconds": 0.09370623175929893,
+      "observer": {
+        "name": "sydney",
+        "latitude_deg": -33.8688,
+        "longitude_deg": 151.2093,
+        "altitude_km": 0.058
+      },
+      "azimuth_deg": 110.50050771275949,
+      "elevation_deg": -57.51033591717951,
+      "range_km": 11260.616780822102
+    },
+    {
+      "utc": "2026-10-04T12:43:41.833056",
+      "dut1_seconds": 0.09370623175929893,
+      "observer": {
+        "name": "equator_west",
+        "latitude_deg": 0,
+        "longitude_deg": -80,
+        "altitude_km": 0
+      },
+      "azimuth_deg": 270.00019158368895,
+      "elevation_deg": 32.865975055140396,
+      "range_km": 731.3353719129312
+    },
+    {
+      "utc": "2026-10-04T12:43:41.833056",
+      "dut1_seconds": 0.09370623175929893,
+      "observer": {
+        "name": "equator_east",
+        "latitude_deg": 0,
+        "longitude_deg": 90,
+        "altitude_km": 0
+      },
+      "azimuth_deg": 270.0002059167823,
+      "elevation_deg": -87.5126943872863,
+      "range_km": 13169.300091937068
+    },
+    {
+      "utc": "2026-10-04T14:13:41.833056",
+      "dut1_seconds": 0.09370166300929839,
+      "observer": {
+        "name": "vallado_site_wgs84",
+        "latitude_deg": 39.007,
+        "longitude_deg": -104.883,
+        "altitude_km": 2.187
+      },
+      "azimuth_deg": 193.55905984126645,
+      "elevation_deg": -20.33162221575556,
+      "range_km": 5435.182903620375
+    },
+    {
+      "utc": "2026-10-04T14:13:41.833056",
+      "dut1_seconds": 0.09370166300929839,
+      "observer": {
+        "name": "sydney",
+        "latitude_deg": -33.8688,
+        "longitude_deg": 151.2093,
+        "altitude_km": 0.058
+      },
+      "azimuth_deg": 99.53334521651153,
+      "elevation_deg": -42.10035426566609,
+      "range_km": 9168.432998763292
+    },
+    {
+      "utc": "2026-10-04T14:13:41.833056",
+      "dut1_seconds": 0.09370166300929839,
+      "observer": {
+        "name": "equator_west",
+        "latitude_deg": 0,
+        "longitude_deg": -80,
+        "altitude_km": 0
+      },
+      "azimuth_deg": 254.88910037425254,
+      "elevation_deg": -12.382650095320491,
+      "range_km": 4101.467675449696
+    },
+    {
+      "utc": "2026-10-04T14:13:41.833056",
+      "dut1_seconds": 0.09370166300929839,
+      "observer": {
+        "name": "equator_east",
+        "latitude_deg": 0,
+        "longitude_deg": 90,
+        "altitude_km": 0
+      },
+      "azimuth_deg": 110.0987868056452,
+      "elevation_deg": -76.29810907568695,
+      "range_km": 12829.934997901806
+    },
+    {
+      "utc": "2026-10-05T12:43:41.833056",
+      "dut1_seconds": 0.09354154112773472,
+      "observer": {
+        "name": "vallado_site_wgs84",
+        "latitude_deg": 39.007,
+        "longitude_deg": -104.883,
+        "altitude_km": 2.187
+      },
+      "azimuth_deg": 339.7801846897724,
+      "elevation_deg": -68.4916637805866,
+      "range_km": 12323.81726920544
+    },
+    {
+      "utc": "2026-10-05T12:43:41.833056",
+      "dut1_seconds": 0.09354154112773472,
+      "observer": {
+        "name": "sydney",
+        "latitude_deg": -33.8688,
+        "longitude_deg": 151.2093,
+        "altitude_km": 0.058
+      },
+      "azimuth_deg": 286.33020648082373,
+      "elevation_deg": -31.32465295322631,
+      "range_km": 7373.357175353694
+    },
+    {
+      "utc": "2026-10-05T12:43:41.833056",
+      "dut1_seconds": 0.09354154112773472,
+      "observer": {
+        "name": "equator_west",
+        "latitude_deg": 0,
+        "longitude_deg": -80,
+        "altitude_km": 0
+      },
+      "azimuth_deg": 86.96839206543599,
+      "elevation_deg": -84.00853778835702,
+      "range_km": 13106.58404369258
+    },
+    {
+      "utc": "2026-10-05T12:43:41.833056",
+      "dut1_seconds": 0.09354154112773472,
+      "observer": {
+        "name": "equator_east",
+        "latitude_deg": 0,
+        "longitude_deg": 90,
+        "altitude_km": 0
+      },
+      "azimuth_deg": 290.90245889919953,
+      "elevation_deg": 63.946737345204724,
+      "range_km": 461.7306822055894
+    }
+  ]
+}

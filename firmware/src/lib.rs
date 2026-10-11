@@ -14,6 +14,9 @@ use overhead_core::{
 
 pub mod suites;
 
+#[cfg(feature = "numerical-reference")]
+pub mod numerical;
+
 #[cfg(feature = "catalogue-memory")]
 extern crate alloc;
 #[cfg(feature = "catalogue-memory")]

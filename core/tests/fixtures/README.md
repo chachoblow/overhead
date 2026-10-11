@@ -5,6 +5,11 @@ import no Overhead code. Numerical gates verify implementations/models, not
 real-world orbit accuracy. JSON angles are degrees; positions/heights/ranges
 are km (engine APIs use radians).
 
+The bounded M2 target diagnostic consumes every independent coordinate/observer
+fixture row plus separately pinned original TEME vectors through one shared checker;
+[selection/provenance](../../../tools/fixtures/m2-numerical/README.md). These historical
+fixtures and their tolerances are unchanged.
+
 ## `iss-25544.json`
 CelesTrak OMM for ISS (ZARYA), NORAD 25544, stored byte-for-byte as retrieved.
 

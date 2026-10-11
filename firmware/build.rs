@@ -5,6 +5,7 @@ use sgp4::{
     chrono::{Datelike, NaiveDateTime, TimeDelta, Timelike},
 };
 
+mod build_numerical;
 #[path = "src/selection.rs"]
 mod selection;
 
@@ -22,6 +23,10 @@ fn datetime(time: NaiveDateTime) -> String {
 }
 
 fn main() {
+    println!("cargo:rerun-if-changed=build_numerical.rs");
+    if env::var_os("CARGO_FEATURE_NUMERICAL_REFERENCE").is_some() {
+        build_numerical::generate();
+    }
     let iss_path = "../core/tests/fixtures/iss-25544.json";
     let tle_path = "../tools/fixtures/pass-intervals.tle";
     println!("cargo:rerun-if-changed={iss_path}");

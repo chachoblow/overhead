@@ -1,13 +1,13 @@
 # M2 next evidence — bounded preparation contract
 
 Preparation scope accepted 2026-10-10 UTC in [0019](../decisions/0019-bounded-m2-evidence-preparation.md).
-**The separate snapshot/source-suitability gate and 20 candidate host ingestion/
-work/requested-memory cases are prepared; numerical preparation, final contract
-review, exact capture manifest and expanded target suite are not.**
+**Preparation is complete: the exact 20-case manifest, numerical references/shared
+checker and target representation review are frozen under [0020](../decisions/0020-m2-capture-manifest-freeze.md).
+The expanded target harness/captures and operating-budget decisions remain open.**
 [Source suitability](m2-pool-suitability.md),
 [candidate host evidence/remaining gates](m2-host-preflight.md).
-This contract freezes scope, not a capture-ready matrix, production policy, or
-supported catalogue size. [PLAN](../PLAN.md) owns status;
+This contract defines scope; the [frozen annex](m2-frozen-manifest.md) now pins the
+capture matrix. Neither establishes production policy or supported catalogue size. [PLAN](../PLAN.md) owns status;
 decisions 0011–0018 remain authoritative for existing behavior and evidence.
 
 The goal is an initial supported catalogue and prediction operating budget, not
@@ -157,12 +157,12 @@ preflight annex with exact IDs/order/epochs/UTC/sites, group/record/byte counts,
 mutations, expected diagnostics/failure phases, work/completion counts, collection
 observations and input lifetimes. Freeze numerical reference values/tolerances too.
 Any subsequent change invalidates that manifest and requires renewed preflight.
-The final frozen annex is **not yet available**. The [source-suitability subset](m2-pool-suitability.md)
-and [candidate host annex](m2-host-preflight.md) cover source paths/searches, retained
-error/partial outcomes, collection observations and requested input-memory overlap/
-release. Numerical references and identical host/target check selection, final target
-metadata/representation review, and manifest freeze remain required. Host requested
-bytes do not substitute for future target backend occupancy, timings or stack gates.
+The [final frozen annex](m2-frozen-manifest.md) is available under 0020. It adopts the
+[source-suitability subset](m2-pool-suitability.md) and unchanged
+[candidate host annex](m2-host-preflight.md), pins original numerical references and
+the identical host/target checker, and fixes target metadata/diagnostic representation.
+Host requested bytes do not substitute for future target backend occupancy, timings
+or stack gates; prepared shared checks have not yet run on the S3.
 
 Extend strict capture validation to that manifest, including retained/released
 storage and all expected outcomes. Keep protocol versions distinguishable from

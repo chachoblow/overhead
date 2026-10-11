@@ -231,3 +231,14 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Exported staged source without ignored artifacts; offline workspace check/default/all-feature tests, no_std core, strict Clippy and formatting pass with the installed toolchain/cached dependencies and SDL2.
 - Firmware default/feature host tests/Clippy, all 31 Python tests, candidate/pool input integrity checks, and exact candidate debug/release plus pool release reports pass. No hardware accessed or target images rebuilt.
 - Added fresh-context startup/check commands and refreshed HANDOFF. Numerical preparation/final manifest freeze remains next; no new policy or dependency/toolchain change.
+
+## 2026-10-11 UTC (M2 numerical preparation and manifest freeze)
+- Pinned 12 original CelesTrak TEME vectors and all existing independent coordinate/observer rows in `tools/fixtures/m2-numerical/`; one allocation-free firmware-library checker passes all 75 selected rows on host with unchanged tolerances.
+- Completed target metadata/diagnostic representation review and froze all 20 unchanged cases as `m2-bounded-20-v1` under decision 0020; `evaluations/m2-frozen-manifest.md` owns the annex and next implementation block. No new matrix or production policy.
+- Workspace check/default/all-feature tests, no_std core, strict Clippy/fmt, firmware host feature combinations, 39 Python tests and exact preflight/numerical regeneration pass; clean-source export verifies offline checks and reports without ignored artifacts.
+- No target images built or hardware accessed; no dependency/toolchain/core API changes. Next: implement/capture the frozen suite, then choose operating limits/cadence/over-budget behavior and separately verify scheduling latency.
+
+## 2026-10-11 UTC (frozen-manifest fresh-session verification)
+- Exported the Git index without ignored artifacts; offline workspace check/default/all-feature tests, no_std core, strict Clippy/fmt, all firmware host feature combinations and 39 Python tests pass.
+- Exact input/numerical/manifest regeneration and debug/release host preflight/numerical reports agree; original reference bytes survive Git staging unchanged. Existing toolchain/dependency caches and SDL2 remain documented prerequisites.
+- Refreshed HANDOFF verification; preparation scope, frozen manifest and next target-implementation block are unchanged. No target images built or hardware accessed.

@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: M2; 20 candidate host ingestion/work/requested-memory cases pass; numerical preparation and exact manifest freeze next.**
+**Current: M2; preparation complete, exact 20-case manifest frozen. Next: implement/capture the frozen S3 suite, then operating-budget decisions and scheduling verification.**
 Build the headless engine, then the real-data UI, then the device
 ([rationale](decisions/0005-engine-first-implementation.md)). Refine each
 slice before starting; later checkboxes are scope, not session-sized tasks.
@@ -86,9 +86,10 @@ hardware; the first S3 kernel baseline alone does not justify capacity or cadenc
 - [x] Preflight all 20 candidate host ingestion/work cases with retained diagnostics,
   collection observations, RAM-input overlap/lifetimes and full requested-memory
   release ([evidence/limits](evaluations/m2-host-preflight.md)); not a frozen manifest.
-- [ ] Pin numerical references and identical host/target check selection, finish
-  target metadata/representation review, and freeze the exact ≤20-case manifest
-  under the [preparation contract](evaluations/m2-next-evidence.md) before target-harness implementation.
+- [x] Pin numerical references and identical host/target check selection, finish
+  target metadata/representation review, and freeze the exact 20-case manifest
+  ([frozen annex](evaluations/m2-frozen-manifest.md), [0020](decisions/0020-m2-capture-manifest-freeze.md));
+  all 75 numerical rows pass on host, not yet on target.
 - [ ] Implement/capture the frozen suite: broader distinct populations/pass densities,
   collection/input-memory samples, stronger stack observations and independent target
   numerical checks. Set catalogue limits, cadence, scheduling and explicit over-budget

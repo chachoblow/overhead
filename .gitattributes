@@ -6,3 +6,6 @@ docs/evaluations/s3-corrected-boot-run-*.log -text whitespace=-blank-at-eol
 # Preserve GP response hashes (including CRLF) and byte-exact generated fixtures.
 tools/fixtures/m2-pool/**/*.json -text whitespace=cr-at-eol
 docs/evaluations/m2-pool-suitability.json -text
+
+# Original published verification data: preserve CRLF/trailing whitespace for hashes.
+tools/fixtures/m2-numerical/vallado/* -text whitespace=-blank-at-eol

@@ -295,12 +295,15 @@ accepted identities/provenance, retained diagnostics and work/status, collection
 observations, and repeated single-threaded requested-heap accounting with input-copy
 and allocate-copy-free overlap. Every case must restore its allocation baseline.
 
-**Not a frozen manifest or S3 RAM claim.** Prepared input/source metadata is outside
+The output remains the original candidate-stage report, now adopted unchanged by
+the [frozen manifest](../docs/evaluations/m2-frozen-manifest.md); it is **not an S3 RAM claim**.
+Prepared input/source metadata is outside
 the measured baseline; the borrowed control models flash lifetime on host. No backend
 footprint, phase timing, stack, or independent numerical accuracy is reported. Exact
 memory observations depend on the host/compiler. [Method/results/remaining gates](../docs/evaluations/m2-host-preflight.md);
 [fixture provenance and offline tests](fixtures/m2-cases/README.md).
-No core API, firmware, dependency, toolchain, or production default changes.
+The separate numerical preparation/shared firmware checker and manifest hash gate
+are described in the frozen annex; this runner still does not measure numerics.
 
 ## `overhead-track`
 
