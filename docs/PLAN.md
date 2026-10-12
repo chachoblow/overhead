@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: review the implemented M3 real-data simulator; M2 operating-budget and scheduling work remains open.**
+**Current: refine the M3 perspective-camera change for a fresh session; implementation is deferred. M2 operating-budget and scheduling work remains open.**
 All frozen S3 capture gates pass. Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -111,19 +111,27 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
 
 ## M3 — Minimal real-data radar (in progress)
 The initial ground-map slice is implemented under
-[0022](decisions/0022-minimal-ground-map-simulator.md); see [simulator usage](../sim/README.md).
-Shared state consumes verified physical outputs, preserving failures separately
-from presentation. No pass-prediction integration or live fetching is required.
-Simulator throughput is not target capacity evidence.
+[0022](decisions/0022-minimal-ground-map-simulator.md); see [current simulator usage](../sim/README.md).
+User feedback now selects [0024's perspective orbital view](decisions/0024-perspective-orbital-view-direction.md).
+That change is documented, not implemented: refine camera parameters, clipping,
+Earth depiction and zoom semantics before coding in a fresh session. Preserve
+verified physical outputs and explicit failures separately from presentation.
+No pass-prediction integration or live fetching is required; simulator throughput
+is not target capacity evidence.
 
 - [x] Add shared app state, renderer entry point, simulator loop, explicit clock,
   and convenient observer/local-catalogue configuration.
-- [x] Implement/test location-centered projection, clipping, and zoom from
-  local scales to wider than Earth; settle spatial-view semantics.
+- [x] Implement/test the initial location-centered ground-map projection,
+  clipping and zoom from local scales to wider than Earth (0022).
 - [x] Show real markers and basic identification; wire scroll wheel/up/down zoom.
-- [ ] Compare catalogue selections/densities and radar/information-area proportions
-  on the 400×240 view before fixing product counts or panel contents. Initial
-  deterministic snapshots inspected; moving-view/input review with the user remains.
+- [x] Gather first user feedback: busier weather/GPS view is a good first pass;
+  clarify actual 3D perspective-camera intent rather than ground tracks (0024).
+- [ ] Refine and implement/test the perspective camera, actual-position projection,
+  Earth silhouette and clipping; update zoom controls/readout semantics without
+  changing physical state or observer-horizon eligibility. Deferred this session.
+- [ ] Reassess catalogue density and radar/information-area proportions with the
+  perspective view before fixing product counts or panel contents. The busier
+  example is a visual reference, not an accepted production population.
 
 **Done when:** satellites move through a zoomable view traceable to verified
 engine outputs, with initial visual feedback on density and layout. Coastlines,

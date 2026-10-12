@@ -282,3 +282,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Built the simulator there; documented snapshots reproduce 4/22/6 visible markers, demo works from an unrelated directory, and SDL dummy-loop smoke passes. Cached dependencies/toolchains and Homebrew SDL2 remain prerequisites; no interactive review or hardware access.
 - Found the current-tree frozen Python gate rejects the new workspace lockfile; confirmed this is the only pinned-source mismatch and external locked packages are unchanged. Accepted 0023: historical evidence uses full revision ab267ae587585d1a0fa9983e49bad49537055c0d, without weakening guards or renewing the freeze.
 - From that pinned Git archive, all 52 Python tests, pool/case/numerical/source/manifest/table gates, four-log validation and exact derived-table regeneration pass. Documented separate current/historical verification; no target images rebuilt or evidence changed.
+
+## 2026-10-12 UTC (perspective-camera intent; implementation deferred)
+- User liked the busier weather/GPS first pass and clarified that markers should represent actual 3D satellites viewed by a north-up camera above the observer; zoom moves the camera at fixed field of view, rather than scaling ground tracks.
+- Accepted direction 0024, amending only 0022's projection/zoom intent; retain true observer-horizon eligibility, physical readouts, explicit failures and the existing shared architecture. Numeric camera parameters remain open.
+- Updated DESIGN/PLAN and fresh-session HANDOFF; current code/tests/commands still use the orthographic ground map. User explicitly requested documentation only, with implementation refinement deferred to a fresh session.
+- No code, dependency, fixture, hardware or toolchain changes; build/test suites not rerun. Documentation whitespace and local file links checked.

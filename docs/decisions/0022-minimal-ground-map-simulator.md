@@ -1,7 +1,7 @@
 # 0022 — Minimal ground-map simulator
 
 Date: 2026-10-12
-Status: accepted
+Status: accepted (projection/zoom direction superseded by [0024](0024-perspective-orbital-view-direction.md); current implementation remains as below)
 
 ## Decision
 Use a map-like ground-track view, not an azimuth/elevation sky chart, for the

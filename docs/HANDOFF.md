@@ -1,40 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-12 UTC. Next: interactive M3 radar review._
+_Last updated: 2026-10-12 UTC. Next: refine the M3 perspective-camera slice._
 
-## State / changes
-The first real-data M3 simulator slice is implemented under
-[0021](decisions/0021-radar-first-iteration-on-verified-engine.md) and
-[0022](decisions/0022-minimal-ground-map-simulator.md). The user chose map-like
-satellite ground tracks over a sky chart; the initial projection is orthographic.
-`app/` holds no_std + alloc clockless state/projection/zoom/identification;
-`render/src/lib.rs` draws the 1-bit frame; `sim/` supplies explicit replay inputs,
-SDL controls and deterministic PNG snapshots. Core, prediction and firmware
-sources/fixtures are unchanged. No new third-party library/version.
+## User direction / session boundary
+The user tried the simulator and liked the busier weather/GPS view as a first
+pass, but expected actual 3D satellites rather than footprints inside Earth.
+[0024](decisions/0024-perspective-orbital-view-direction.md) accepts a north-up
+camera above the observer looking down toward that location, fixed field of view,
+and zoom by moving the camera closer/farther. Altitude affects marker placement;
+Earth and satellites share perspective, so markers may lie outside its silhouette.
+Retain true observer-horizon eligibility and true-position readouts.
+**The user explicitly requested documentation only; do not assume this is implemented.**
 
-## Next step
-Run `cargo run -p overhead-sim -- --demo`, then the denser weather/GPS example
-in [sim/README.md](../sim/README.md). Review moving-marker legibility, wheel/arrow
-zoom, Tab identification and 200/240-pixel radar allocations with the user before
-fixing density or panel contents. Initial inspected snapshots show 4 visible
-markers for the 16-object pool, 22 for weather/GPS at 8,000 km and 6 at 2,500 km.
-Not accepted catalogue sizes or target capacity. M3 feedback remains open in
-[PLAN](PLAN.md); do not jump into M4/M5 polish.
+## Current code / next session
+Commit `403354e` implements the earlier orthographic ground map under
+[0022](decisions/0022-minimal-ground-map-simulator.md). Code/tests/CLI are unchanged.
+`app/src/projection.rs` flattens ground positions; `app/src/lib.rs` caches them;
+`render/src/lib.rs` draws a scaled Earth circle. `sim/src/config.rs`, snapshot
+tests and [sim/README.md](../sim/README.md) still use projected-map radius semantics.
+Read PLAN, DESIGN and 0024. Refine the camera frame, fixed FOV value, distance
+range/defaults/units, near-plane/viewport clipping and consistent Earth depiction
+before implementing. Replace projection-specific tests with reviewed perspective
+cases; preserve engine outputs, horizon counts and explicit failure behavior.
+Use weather/GPS as the visual reference, not a default/count decision; no numeric
+camera package settled. Stay in M3: no coastlines, slow-down, prediction or firmware.
 
-## Contracts / open risks
-Markers use ground positions, true elevation > 0, then map/view clipping. Map
-radius is projected distance; readouts remain true. Failures replace old markers
-and stay explicit. Sources are historical local data, not live tracking.
-M2 production limits/cadences/overload/scheduling and whole-device RAM/safe stack
-remain open. Preserve [frozen S3 evidence](evaluations/s3-m2.md); no new measurement
-matrix without a specific question. Sharp bring-up and RWX remain separate.
+## Open risks / evidence
+M2 operating limits/cadences/overload/scheduling and whole-device RAM/safe stack
+remain open. Sharp bring-up and RWX are separate. Frozen M2 checks require
+[0023's pinned revision](decisions/0023-frozen-m2-revision-isolation.md), not the
+current workspace lockfile; do not renew old evidence to accommodate UI changes.
 
 ## Verification / hardware
-Clean staged-source export, empty build directory: offline locked workspace
-check/default/all-feature tests, core/app/render no-default checks, Clippy/fmt,
-simulator build/help/snapshots and outside-checkout demo pass. SDL dummy loop
-passes; interactive input review pending. Cached tools/dependencies and SDL2 required.
-Per [0023](decisions/0023-frozen-m2-revision-isolation.md), current Cargo.lock
-intentionally fails the old freeze. At pinned revision `ab267ae`, all 52 Python
-tests, frozen preparation gates and capture-derived tables pass unchanged.
-No hardware/target build/toolchain change; board retains diagnostic image, no monitor active.
+This follow-up changed only docs (0024, amendment to 0022, DESIGN/PLAN/PROGRESS
+and this handoff); whitespace/local file links checked. No code tests rerun.
+Prior `403354e` fresh-source workspace/default/all-feature/no-default/Clippy/fmt
+and simulator smoke gates passed; historical pinned gates/52 Python tests passed.
+Those results cover the ground-map implementation, not the planned perspective.
+No hardware/build/toolchain access; board unchanged, no monitor. Cached tools/dependencies and Homebrew SDL2 required.

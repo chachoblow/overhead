@@ -22,11 +22,16 @@ count. Curate and tune density on the small 1-bit display: tens may work better
 than hundreds. Pass prediction remains useful but secondary to radar quality
 ([0021](decisions/0021-radar-first-iteration-on-verified-engine.md)).
 
-The initial radar is a north-up, map-like ground-track view, not an elevation/
-azimuth sky chart. Its observer-centered orthographic projection and projected
-kilometre zoom are defined in [0022](decisions/0022-minimal-ground-map-simulator.md).
-Markers show where satellites are over Earth; altitude/range/elevation readouts
-remain true physical measurements. Projection and layout remain iterative.
+The intended radar is a north-up perspective view of actual 3D satellite positions,
+as if a camera floats above the configured observer looking down toward that
+location. Zoom moves the camera closer or farther away at a fixed field of view.
+Earth and satellites share the perspective; altitude affects marker placement,
+and satellites can appear outside Earth's silhouette rather than being flattened
+onto its surface. Objects outside the view or behind the camera are clipped.
+[0024](decisions/0024-perspective-orbital-view-direction.md) records this direction;
+camera parameters remain to be refined. The current simulator still implements
+[0022's ground tracks](decisions/0022-minimal-ground-map-simulator.md); the change
+is not implemented yet.
 
 Only satellites above the local geometric horizon are eligible for markers,
 then clipped to the current view—even at whole-Earth zoom. This is the observer's
@@ -42,7 +47,7 @@ contents, not a mandatory checklist:
 - Auto-selected satellite: name, altitude, range, elevation, travel direction.
 - Next pass and countdown to its start, especially when the local sky is empty,
   if useful without compromising the radar.
-- View radius (e.g. `R 500 KM`).
+- Camera-distance/zoom readout, with units clarified for the perspective view.
 
 No pass lists, radio information, or battery indicator. Layout, selection, and
 projection policies should evolve with simulator feedback.
