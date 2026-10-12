@@ -1,11 +1,12 @@
 # 0024 — Perspective orbital-view direction
 
 Date: 2026-10-12
-Status: accepted (perspective direction; moving-camera/fixed-FOV choice superseded by [0025](0025-fixed-camera-lens-zoom.md); implementation deferred)
+Status: accepted (perspective direction; moving-camera/fixed-FOV choice superseded by [0025](0025-fixed-camera-lens-zoom.md); fixed-camera implementation under [0026](0026-fixed-camera-perspective-slice.md))
 
-The original decision below records camera travel. Follow 0025 for the current
-fixed-camera lens zoom and parameter-refinement scope; the remaining 3D and
-physical-state contracts here still apply.
+The original decision below records camera travel and its documentation-only
+session boundary. Follow 0025 for fixed-camera lens zoom and 0026 for accepted
+settings and implementation; the remaining 3D and physical-state contracts here
+still apply.
 
 ## Decision
 Replace the ground-track projection with a north-up perspective view of satellites'

@@ -1,40 +1,39 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-12 UTC. Next: refine the M3 fixed-camera lens-zoom slice._
+_Last updated: 2026-10-12 UTC. Next session: review M3 radar/information-area proportions._
 
-## User direction / session boundary
-The user reconsidered camera travel and selected **fixed-camera lens zoom** in
-[0025](decisions/0025-fixed-camera-lens-zoom.md), superseding only 0024's
-moving-camera/fixed-FOV choice. Keep the north-up perspective view of actual 3D
-satellites, aimed at the observer, with shared Earth/satellite geometry and true
-observer-horizon eligibility/readouts. Zoom changes FOV, not camera position.
-No numeric camera package was accepted; behind-camera indicators are not included.
-**This session saves documentation only; the perspective change is not implemented.**
+## Current state / user direction
+The perspective/lens-zoom slice replaces the ground map under
+[0026](decisions/0026-fixed-camera-perspective-slice.md), with
+[0027's 75,000 km fixed camera](decisions/0027-higher-fixed-camera-overview.md).
+The user prefers this higher view, likes zoom-magnified screen motion and the
+fuller overview, and explicitly likes the empty outer band as framing.
+Keep that breathing room; do not auto-fit or add objects merely to fill it.
+Physical tracking and true horizon eligibility remain unchanged.
+The user deferred radar/panel review to the next session; no more UI work now.
 
-## Current code / next session
-Commit `403354e` implements [0022's ground map](decisions/0022-minimal-ground-map-simulator.md).
-`app/src/projection.rs` flattens ground positions; `app/src/lib.rs` caches them;
-`render/src/lib.rs` draws a scaled Earth circle. `sim/src/config.rs`, snapshot
-tests and [sim/README.md](../sim/README.md) still use projected-map radius semantics.
-Read PLAN, DESIGN and 0025. Refine fixed camera distance/reference/units and frame,
-FOV default/range, near-plane/viewport clipping, Earth depiction and zoom
-readout/CLI migration before implementing. Zoom alone cannot put an object behind
-the camera, but the fixed camera need not contain every eligible orbit in front.
-Replace projection-specific tests with reviewed perspective/lens-zoom cases;
-preserve physical outputs, horizon counts and explicit failure behavior.
-Weather/GPS is a visual reference, not a default/count decision. Stay in M3.
+## Implementation / next session
+`app/src/projection.rs` shares the fixed camera between ECEF targets and the
+WGS-84 limb; `app/src/lib.rs` caches presentation apart from physical state.
+`render/src/lib.rs` draws the outline/readouts; `sim/src/config.rs` uses FOV,
+not the old map-radius semantics. App/render/CLI regressions cover the geometry.
+Read PLAN/DESIGN; [sim usage](../sim/README.md) has current run/snapshot commands.
+Next is radar/panel proportions and which readouts earn space; no production
+population, cadence or panel-content decision has been made. Stay in M3.
+At the pinned weather/GPS time/site 20°/100°/5° show 6/22/4 markers (SKY 22).
+For a quick run use `cargo run -p overhead-sim -- --demo --fov-deg 100`;
+the unchanged small demo has no markers at default 20° but four at 100°.
+No slowdown, prediction integration or fetching work is included.
 
-## Open risks / evidence
-M2 operating limits/cadences/overload/scheduling and whole-device RAM/safe stack
-remain open. Sharp bring-up and RWX are separate. Frozen M2 checks require
-[0023's pinned revision](decisions/0023-frozen-m2-revision-isolation.md), not the
-current workspace lockfile; do not renew old evidence to accommodate UI changes.
-
-## Changes / verification
-Added 0025; updated 0024/DESIGN/PLAN/PROGRESS/HANDOFF. Fresh export, empty target:
-offline locked workspace check/default/all-feature tests, core/app/render
-no-default checks, Clippy/fmt,
-snapshots (4/22/6 markers) and SDL dummy-loop smoke pass. These verify the current
-ground map, not planned lens zoom. Documentation whitespace/local links checked.
-Run via [sim usage](../sim/README.md); cached Rust tools/dependencies and Homebrew SDL2 required.
-No interactive/hardware/firmware-build review or frozen-evidence rerun/change.
+## Verification / prerequisites / risks
+Fresh staged-source Git export, empty target: offline locked workspace check,
+default/all-feature tests, core/app/render no-default checks, strict Clippy/fmt
+and simulator build pass. Snapshot examples reproduce expected counts from an
+unrelated directory with SDL unavailable; two-second SDL dummy-loop smoke passes.
+Existing Rust tool/dependency caches and Homebrew SDL2 are required; no ignored
+build artifacts are needed. User visual feedback is received; no agent interactive
+input review, hardware access, firmware build or toolchain change was performed.
+M2 limits/cadences/overload/scheduling and whole-device RAM/safe stack remain open;
+Sharp bring-up and RWX are separate. Frozen evidence uses
+[0023's pinned revision](decisions/0023-frozen-m2-revision-isolation.md), not this
+workspace; no frozen evidence was renewed. Host throughput is not target capacity.

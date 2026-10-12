@@ -12,7 +12,7 @@ use embedded_graphics::{
 };
 use overhead_app::{
     RadarApp,
-    projection::{MAP_RADIUS_KM, ViewPoint},
+    projection::{EarthLimb, ViewPoint},
 };
 use overhead_core::sgp4::chrono::Timelike;
 
@@ -64,12 +64,7 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
     Circle::with_center(center, (radius * 2 + 1) as u32)
         .into_styled(stroke)
         .draw(&mut display)?;
-    if app.view().radius_km() > MAP_RADIUS_KM {
-        let earth_radius = (f64::from(radius) * MAP_RADIUS_KM / app.view().radius_km()) as u32;
-        Circle::with_center(center, earth_radius * 2 + 1)
-            .into_styled(stroke)
-            .draw(&mut display)?;
-    }
+    draw_earth(&mut display, app.earth_limb(), layout)?;
     Line::new(center - Point::new(3, 0), center + Point::new(3, 0))
         .into_styled(stroke)
         .draw(&mut display)?;
@@ -98,7 +93,7 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
         y: 16,
     };
     panel.line(format_args!("OVERHEAD"))?;
-    panel.line(format_args!("GROUND MAP / REPLAY"))?;
+    panel.line(format_args!("ORBIT VIEW / REPLAY"))?;
     if let Some(time) = app.time() {
         panel.line(format_args!("{} UTC", time.date()))?;
         panel.line(format_args!(
@@ -111,7 +106,7 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
         panel.line(format_args!("NO VALID FRAME"))?;
         panel.line(format_args!("--"))?;
     }
-    panel.line(format_args!("R {:.0} KM (MAP)", app.view().radius_km()))?;
+    panel.line(format_args!("FOV {:.2} DEG", app.view().fov_deg()))?;
     let counts = app.counts();
     panel.line(format_args!(
         "VIEW {} / SKY {}",
@@ -165,6 +160,50 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
     ))?;
     panel.line(format_args!("UP/DN ZOOM  TAB PICK"))?;
     Ok(())
+}
+
+fn draw_earth<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    limb: EarthLimb,
+    layout: Layout,
+) -> Result<(), D::Error> {
+    let radius = layout.radius();
+    let center = layout.center();
+    // Sample both rows and columns for a continuous one-bit ellipse. Work is
+    // bounded by viewport diameter, not the zoomed ellipse's enormous extent.
+    // All clipping happens before float-to-pixel conversion, then again after
+    // rounding so neither the outline nor a glyph can leak out of the radar.
+    let pixels = (-radius..=radius)
+        .flat_map(|offset| {
+            let coordinate = f64::from(offset) / f64::from(radius);
+            let rows = limb
+                .east_at(coordinate)
+                .into_iter()
+                .flatten()
+                .map(move |east| ViewPoint {
+                    east,
+                    north: coordinate,
+                });
+            let columns = limb
+                .north_at(coordinate)
+                .into_iter()
+                .flatten()
+                .map(move |north| ViewPoint {
+                    east: coordinate,
+                    north,
+                });
+            rows.chain(columns)
+        })
+        .filter_map(|point| {
+            if point.east * point.east + point.north * point.north > 1.0 {
+                return None;
+            }
+            let pixel = layout.marker(point);
+            let delta = pixel - center;
+            (delta.x * delta.x + delta.y * delta.y <= radius * radius)
+                .then_some(Pixel(pixel, BinaryColor::On))
+        });
+    display.draw_iter(pixels)
 }
 
 fn draw_marker<D: DrawTarget<Color = BinaryColor>>(
@@ -307,7 +346,7 @@ mod tests {
                 altitude_km: 0.0,
                 ..geo
             },
-            View::new(8000.0).unwrap(),
+            View::new(20.0).unwrap(),
         )
         .unwrap();
         app.update(time).unwrap();
@@ -333,6 +372,55 @@ mod tests {
         assert!(Layout::new(179).is_err());
         assert!(Layout::new(241).is_err());
     }
+    #[test]
+    fn earth_outline_is_bounded_and_clipped_at_every_zoom() {
+        use overhead_app::projection::Camera;
+        let camera = Camera::new(GeodeticPosition {
+            latitude_rad: 39.007_f64.to_radians(),
+            longitude_rad: (-104.883_f64).to_radians(),
+            altitude_km: 2.187,
+        })
+        .unwrap();
+        for size in [180, 200, 240] {
+            let layout = Layout::new(size).unwrap();
+            for fov in [0.1, 5.0, 8.9, 9.0, 9.1, 20.0, 100.0] {
+                let mut screen = Screen {
+                    pixels: [[false; 400]; 240],
+                };
+                draw_earth(
+                    &mut screen,
+                    camera.earth_limb(View::new(fov).unwrap()),
+                    layout,
+                )
+                .unwrap();
+                let mut ink = 0;
+                for (y, row) in screen.pixels.iter().enumerate() {
+                    for (x, &on) in row.iter().enumerate() {
+                        if on {
+                            ink += 1;
+                            let delta = Point::new(x as i32, y as i32) - layout.center();
+                            assert!(
+                                delta.x * delta.x + delta.y * delta.y
+                                    <= layout.radius() * layout.radius()
+                            );
+                            if fov == 100.0 {
+                                assert!(delta.x.abs() <= 8 && delta.y.abs() <= 8);
+                            }
+                        }
+                    }
+                }
+                if fov <= 5.0 {
+                    assert_eq!(ink, 0);
+                }
+                if fov >= 9.1 {
+                    assert!(ink > 24);
+                }
+                // Four candidate boundary pixels per row/column index at most.
+                assert!(ink <= 4 * (2 * layout.radius() + 1));
+            }
+        }
+    }
+
     #[test]
     fn full_marker_is_clipped_at_circular_edge() {
         let mut screen = Screen {

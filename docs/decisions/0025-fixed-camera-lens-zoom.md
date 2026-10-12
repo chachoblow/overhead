@@ -1,7 +1,10 @@
 # 0025 — Fixed-camera lens zoom
 
 Date: 2026-10-12
-Status: accepted (direction only; implementation deferred)
+Status: accepted (direction; settings refined and implemented under [0026](0026-fixed-camera-perspective-slice.md))
+
+The original direction-only decision and session boundary are recorded below.
+0026 owns the subsequently accepted numeric settings and implemented slice.
 
 ## Decision
 Use a fixed camera above the configured observer, looking down toward that

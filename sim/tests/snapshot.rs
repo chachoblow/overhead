@@ -68,7 +68,7 @@ fn demo_is_deterministic_from_an_unrelated_directory_without_sdl() {
     let args = ["--demo", "--snapshot", "frame.png"];
     let report = success(scratch.run(&args));
     assert!(
-        report.contains("catalogue=16 sky=4 visible=4 failed=0"),
+        report.contains("catalogue=16 sky=4 visible=0 failed=0"),
         "{report}"
     );
     let expected = scratch.png("frame.png");
@@ -76,29 +76,77 @@ fn demo_is_deterministic_from_an_unrelated_directory_without_sdl() {
     assert_eq!(scratch.png("frame.png"), expected);
     success(scratch.run(&["--demo", "--radar-size", "200", "--snapshot", "small.png"]));
     assert_ne!(scratch.png("small.png"), expected);
+    let wide = success(scratch.run(&["--demo", "--fov-deg", "100", "--snapshot", "wide.png"]));
+    assert!(wide.contains("catalogue=16 sky=4 visible=4 failed=0"));
+    assert_ne!(scratch.png("wide.png"), expected);
 }
 
 #[test]
 fn real_catalogue_zoom_changes_visibility_not_sky_count() {
     let scratch = Scratch::new();
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/weather-gps.json");
-    let run = |radius: &str, file: &str| {
+    let run = |fov: &str, file: &str| {
         success(scratch.run(&[
             manifest.to_str().unwrap(),
             "2026-10-10T00:00:00Z",
             "39.007",
             "-104.883",
             "2.187",
-            "--radius-km",
-            radius,
+            "--fov-deg",
+            fov,
             "--snapshot",
             file,
         ]))
     };
-    assert!(run("8000", "wide.png").contains("catalogue=105 sky=22 visible=22 failed=0"));
-    assert!(run("2500", "local.png").contains("catalogue=105 sky=22 visible=6 failed=0"));
-    assert!(run("50", "empty.png").contains("catalogue=105 sky=22 visible=0 failed=0"));
-    assert_ne!(scratch.png("wide.png"), scratch.png("local.png"));
+    // Review counts independently from physical look angles, not by copying
+    // the new executable's output or calling the app's projection.
+    let loaded = overhead_tools::catalogue::load(&manifest).unwrap();
+    let time = overhead_core::sgp4::chrono::NaiveDate::from_ymd_opt(2026, 10, 10)
+        .unwrap()
+        .and_hms_opt(0, 0, 0)
+        .unwrap();
+    let observer = overhead_core::GeodeticPosition {
+        latitude_rad: 39.007_f64.to_radians(),
+        longitude_rad: (-104.883_f64).to_radians(),
+        altitude_km: 2.187,
+    };
+    let looks: Vec<_> = loaded
+        .catalogue
+        .entries()
+        .iter()
+        .map(|entry| {
+            let ecef = entry.satellite().state_at(time).unwrap().to_ecef().unwrap();
+            overhead_core::ecef_to_look_angles(ecef, observer).unwrap()
+        })
+        .collect();
+    assert_eq!(
+        looks.iter().filter(|look| look.elevation_rad > 0.0).count(),
+        22
+    );
+    for (fov, file, expected) in [
+        (100.0_f64, "wide.png", 22),
+        (20.0, "default.png", 6),
+        (5.0, "local.png", 4),
+        (0.1, "empty.png", 0),
+    ] {
+        let reference = looks
+            .iter()
+            .filter(|look| {
+                let depth = 75_000.0 - look.range_km * look.elevation_rad.sin();
+                let horizontal = look.range_km * look.elevation_rad.cos();
+                look.elevation_rad > 0.0
+                    && depth >= 1.0
+                    && horizontal / depth <= (fov.to_radians() / 2.0).tan()
+            })
+            .count();
+        assert_eq!(reference, expected);
+        assert!(
+            run(&fov.to_string(), file)
+                .contains(&format!("catalogue=105 sky=22 visible={expected} failed=0"))
+        );
+    }
+    assert_ne!(scratch.png("wide.png"), scratch.png("default.png"));
+    assert_ne!(scratch.png("default.png"), scratch.png("local.png"));
     assert_ne!(scratch.png("local.png"), scratch.png("empty.png"));
 }
 
@@ -106,7 +154,8 @@ fn real_catalogue_zoom_changes_visibility_not_sky_count() {
 fn malformed_inputs_fail_before_creating_a_snapshot() {
     let scratch = Scratch::new();
     for args in [
-        vec!["--demo", "--radius-km", "NaN", "--snapshot", "bad.png"],
+        vec!["--demo", "--fov-deg", "NaN", "--snapshot", "bad.png"],
+        vec!["--demo", "--radius-km", "8000", "--snapshot", "bad.png"],
         vec![
             "absent.json",
             "2026-10-10T00:00:00Z",
@@ -124,7 +173,12 @@ fn malformed_inputs_fail_before_creating_a_snapshot() {
         assert!(!output.stderr.is_empty());
     }
     assert!(!scratch.0.join("bad.png").exists());
-    assert!(success(scratch.run(&["--help"])).contains("Usage:"));
+    let removed = scratch.run(&["--demo", "--radius-km", "8000"]);
+    assert!(
+        String::from_utf8_lossy(&removed.stderr).contains("--radius-km was removed; use --fov-deg")
+    );
+    let help = success(scratch.run(&["--help"]));
+    assert!(help.contains("Usage:") && help.contains("--fov-deg"));
     assert_eq!(scratch.run(&[]).status.code(), Some(1));
     scratch.manifest(json!([]));
     let output = scratch.run(&[
@@ -139,6 +193,30 @@ fn malformed_inputs_fail_before_creating_a_snapshot() {
     assert_eq!(output.status.code(), Some(1));
     assert!(String::from_utf8_lossy(&output.stderr).contains("no usable satellites"));
     assert!(!scratch.0.join("bad.png").exists());
+}
+
+#[test]
+fn unrepresentable_camera_geometry_is_a_fatal_configuration_error() {
+    let scratch = Scratch::new();
+    scratch.manifest(
+        serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap(),
+    );
+    let output = scratch.run(&[
+        "catalogue.json",
+        "2026-10-10T00:00:00Z",
+        "0",
+        "0",
+        "-75000",
+        "--snapshot",
+        "bad-camera.png",
+    ]);
+    assert_eq!(output.status.code(), Some(1));
+    assert!(
+        String::from_utf8_lossy(&output.stderr)
+            .contains("observer height cannot form a finite Earth view")
+    );
+    assert!(output.stdout.is_empty());
+    assert!(!scratch.0.join("bad-camera.png").exists());
 }
 
 #[test]

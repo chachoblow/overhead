@@ -1,4 +1,4 @@
-use overhead_app::projection::View;
+use overhead_app::projection::{DEFAULT_FOV_DEG, View};
 use overhead_core::{
     GeodeticPosition,
     sgp4::chrono::{NaiveDateTime, TimeDelta},
@@ -17,15 +17,17 @@ Replay advances from explicit UTC at 1x using monotonic elapsed time, not now.
 No network, freshness cutoff, pass prediction, or production scheduling.
 
 Options (each at most once):
-  --radius-km N    Projected map radius, 50..20000 km (default 8000)
+  --fov-deg N     Full circular field of view, 0.1..100 degrees (default 20)
   --radar-size N   Radar allocation, 180..240 pixels (default 240)
   --snapshot PNG  Render exactly the start UTC to a 400x240 PNG; no window
   --help, -h      Show this help
 
 Controls: wheel/up = zoom in; down = zoom out; Tab = next marker; Esc = quit.
-Ground positions use a north-up spherical orthographic map. Map radius is not
-surface or slant distance. Only true elevation > 0 is eligible, then map/view
-clipping applies. Readouts use true physical state; ERR counts failed objects.
+Actual 3D positions use a north-up perspective camera fixed 75000 km above the
+observer along local up. Zoom changes the lens, not camera position. Earth is a
+WGS-84 outline through the same camera. Only true elevation > 0 is eligible;
+near-plane (1 km) and circular-view clipping also apply. Readouts use true state;
+ERR counts failed objects. The former --radius-km option is no longer supported.
 
 --demo uses the pinned 16-object historical M2 pool at 2026-10-10T00:00:00Z,
 observer 39.007 -104.883 2.187, from this build's checkout. Not live data or a
@@ -88,7 +90,7 @@ impl Config {
             altitude_km: number(height, "height")?,
         };
         observer.to_ecef().map_err(|e| e.to_string())?;
-        let mut radius = None;
+        let mut fov = None;
         let mut size = None;
         let mut snapshot = None;
         let mut options = options.iter();
@@ -97,7 +99,13 @@ impl Config {
                 .next()
                 .ok_or_else(|| format!("missing value for {flag}"))?;
             match flag.as_str() {
-                "--radius-km" if radius.is_none() => radius = Some(number(value, "radius")?),
+                "--fov-deg" if fov.is_none() => fov = Some(number(value, "field of view")?),
+                "--radius-km" => {
+                    return Err(
+                        "--radius-km was removed; use --fov-deg (lens angle, not map distance)"
+                            .into(),
+                    );
+                }
                 "--radar-size" if size.is_none() => {
                     size = Some(value.parse::<u32>().map_err(|_| "invalid radar size")?)
                 }
@@ -111,7 +119,7 @@ impl Config {
             manifest,
             start,
             observer,
-            view: View::new(radius.unwrap_or(8000.0))?,
+            view: View::new(fov.unwrap_or(DEFAULT_FOV_DEG))?,
             layout: Layout::new(size.unwrap_or(240))?,
             snapshot,
         })
@@ -149,8 +157,9 @@ mod tests {
     }
     #[test]
     fn explicit_configuration_and_demo() {
-        let demo = parse("--demo --radius-km 500 --radar-size 200").unwrap();
-        assert_eq!(demo.view.radius_km(), 500.0);
+        let demo = parse("--demo --fov-deg 60 --radar-size 200").unwrap();
+        assert!((demo.view.fov_deg() - 60.0).abs() < 1e-12);
+        assert!((parse("--demo").unwrap().view.fov_deg() - DEFAULT_FOV_DEG).abs() < 1e-12);
         let config = parse("x.json 2026-10-10T00:00:00.123Z -90 180 -1 --snapshot x.png").unwrap();
         assert_eq!(config.observer.latitude_rad.to_degrees(), -90.0);
         assert_eq!(config.snapshot, Some(PathBuf::from("x.png")));
@@ -159,11 +168,16 @@ mod tests {
     fn reject_invalid_and_repeated_inputs() {
         for args in [
             "",
-            "--demo --radius-km 0",
-            "--demo --radius-km NaN",
+            "--demo --fov-deg 0",
+            "--demo --fov-deg 0.099",
+            "--demo --fov-deg 100.01",
+            "--demo --fov-deg NaN",
+            "--demo --fov-deg inf",
+            "--demo --fov-deg 20 --fov-deg 60",
+            "--demo --radius-km 8000",
             "--demo --radar-size 999",
             "--demo --radar-size 200 --radar-size 240",
-            "--demo --radius-km",
+            "--demo --fov-deg",
             "--demo --wat 1",
             "--demo --snapshot a --snapshot b",
             "x 2026-10-10T00:00:00 0 0 0",

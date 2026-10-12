@@ -22,7 +22,7 @@ count. Curate and tune density on the small 1-bit display: tens may work better
 than hundreds. Pass prediction remains useful but secondary to radar quality
 ([0021](decisions/0021-radar-first-iteration-on-verified-engine.md)).
 
-The intended radar is a north-up perspective view of actual 3D satellite positions,
+The radar is a north-up perspective view of actual 3D satellite positions,
 from a fixed camera above the configured observer looking down toward that
 location. Lens zoom narrows or widens the field of view without moving the camera.
 Earth and satellites share the perspective; altitude affects marker placement,
@@ -31,10 +31,15 @@ onto its surface. Objects outside the view or behind the camera are clipped;
 zoom alone cannot move an object behind the camera.
 [0024](decisions/0024-perspective-orbital-view-direction.md) records the 3D direction,
 with lens zoom selected in [0025](decisions/0025-fixed-camera-lens-zoom.md).
-Fixed camera distance and field-of-view parameters remain to be refined.
-The current simulator still implements
-[0022's ground tracks](decisions/0022-minimal-ground-map-simulator.md); the change
-is not implemented yet.
+The simulator implements [0026's perspective contract](decisions/0026-fixed-camera-perspective-slice.md)
+with [0027's higher fixed camera](decisions/0027-higher-fixed-camera-overview.md)
+and a WGS-84 Earth outline through that same camera, replacing the ground map.
+User feedback favors the faster apparent motion when zoomed in and the fuller
+satellite overview when zoomed out. The higher fixed viewpoint makes Earth
+smaller at the widest lens setting; zoom itself still never moves the camera.
+The user likes the empty outer band in this overview as framing, not wasted
+space that must be filled. These visual choices do not select production counts
+or capacity.
 
 Only satellites above the local geometric horizon are eligible for markers,
 then clipped to the current view—even at whole-Earth zoom. This is the observer's
@@ -50,7 +55,8 @@ contents, not a mandatory checklist:
 - Auto-selected satellite: name, altitude, range, elevation, travel direction.
 - Next pass and countdown to its start, especially when the local sky is empty,
   if useful without compromising the radar.
-- Lens-zoom readout, with meaning and units clarified for the perspective view.
+- Lens-zoom readout: the current simulator shows the full circular field of view
+  in degrees, not a map radius or physical distance.
 
 No pass lists, radio information, or battery indicator. Layout, selection, and
 projection policies should evolve with simulator feedback.

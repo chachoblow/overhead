@@ -16,8 +16,8 @@ past context.
 - `core/` → `overhead-core`: ingestion, propagation, coordinates, observer geometry,
   and catalogue assembly. Default no_std/allocation-free; optional `omm` parsing
   and `catalogue` (implies `omm`) require alloc, not std.
-- `app/` → `overhead-app`: no_std + alloc, clockless radar state, ground-map
-  projection, zoom and basic identification; no I/O or scheduling.
+- `app/` → `overhead-app`: no_std + alloc, clockless radar state, fixed-camera
+  perspective projection, lens zoom and basic identification; no I/O or scheduling.
 - `render/` → `overhead-render`: no_std, embedded-graphics `BinaryColor`;
   400×240 radar/readouts consuming shared app state.
 - `sim/` → `overhead-sim`: real-data SDL2 replay, 400×240 at 2×, LcdWhite theme;

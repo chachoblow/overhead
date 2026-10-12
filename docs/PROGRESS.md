@@ -299,3 +299,26 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Exported staged tracked files to a clean directory with an empty build target; offline locked workspace check/default/all-feature tests, core/app/render no-default-feature checks, strict Clippy and formatting pass.
 - Built and ran the current simulator from that export: snapshots reproduce 4/22/6 visible markers from an unrelated working directory with SDL unavailable; SDL dummy-loop smoke runs for two seconds. No ignored binaries needed; cached Rust tools/dependencies and Homebrew SDL2 remain prerequisites.
 - Refreshed HANDOFF verification and run prerequisites; 0025 and open camera parameters remain the next-session direction. Results cover the existing ground map, not perspective/lens zoom; no interactive review, hardware access, firmware build or frozen-evidence rerun/change.
+
+## 2026-10-12 UTC (fixed-camera perspective implementation)
+- Accepted 0026 after user review: 50,000 km above observer, 20° default/0.1°–100° lens zoom, 1 km near plane, shared WGS-84 Earth outline and actual ECEF satellite projection. Replaced map-radius CLI/readout semantics without changing physical tracking or horizon eligibility.
+- Updated shared app/renderer and simulator tests with independent ellipsoid tangency and physical-look-angle references. Inspected weather/GPS snapshots at 20°/100°/5° (4/22/4 markers, SKY 22); the unchanged small demo is empty at default zoom and shows its four eligible objects at 100°.
+- Working-tree workspace check/default/all-feature tests, core/app/render no-default checks, strict Clippy/fmt, deterministic CLI snapshots and two-second SDL dummy-loop smoke pass. No fresh-export verification or interactive input/motion review; visual density/layout feedback is next in M3.
+- Updated decision/status/usage/handoff docs. No dependencies, core/firmware sources, frozen fixtures/evidence or toolchains changed; no hardware access. M2 operating budgets/scheduling remain open.
+
+## 2026-10-12 UTC (higher fixed camera after perspective feedback)
+- User strongly preferred the perspective view, specifically zoom-magnified screen motion and the fuller overview, and chose a 75,000 km fixed camera for a smaller Earth. Accepted 0027, superseding only 0026's height; lens range/controls and physical-state contracts stay unchanged.
+- Updated the camera constant, CLI help and geometry/render/snapshot regressions. Weather/GPS now shows 6/22/4 markers at 20°/100°/5° with unchanged SKY 22; inspected regenerated PNGs, including the roughly 15-pixel Earth at widest zoom.
+- Workspace check/default/all-feature tests, core/app/render no-default checks, strict Clippy/fmt, deterministic snapshots and two-second SDL dummy-loop smoke pass at the new height. No dependencies, engine/firmware/fixture changes, hardware access or frozen-evidence renewal.
+- Recorded the user feedback in DESIGN/PLAN and refreshed usage/handoff. Higher-camera and panel-layout review remain next in M3; no fresh-export verification or agent interactive input review.
+
+## 2026-10-12 UTC (higher-camera framing approved)
+- User prefers the 75,000 km view and likes the empty outer band as framing; retain the camera and margin rather than filling it through auto-fit or more objects.
+- Recorded this review in 0027/DESIGN/PLAN and current usage/handoff; radar/information-area proportions remain the next visual question in M3, with no production population chosen.
+- Documentation only; no code or hardware changes and no test rerun. Prior implementation verification remains applicable; documentation whitespace and local links checked.
+
+## 2026-10-12 UTC (perspective fresh-session verification before commit)
+- Exported staged tracked sources to a clean directory with an empty build target; offline locked workspace check/default/all-feature tests, core/app/render no-default checks, strict Clippy/fmt and simulator build pass.
+- From an unrelated directory with SDL unavailable, fresh executable snapshots reproduce pool 0/4 markers at 20°/100° and weather/GPS 6/22/4/0 at 20°/100°/5°/0.1°. SDL dummy-loop smoke runs for two seconds; cached Rust tools/dependencies and Homebrew SDL2 remain prerequisites, with no ignored build artifacts needed.
+- Refreshed HANDOFF and simulator verification notes; user explicitly deferred radar/panel review to the next session. The 75,000 km camera and empty outer framing are accepted; no further UI changes made.
+- No new dependencies, fixtures, toolchains, hardware access, firmware build or frozen-evidence rerun/change. Documentation whitespace/local links checked; M2 budgets/scheduling remain open.

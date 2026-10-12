@@ -14,7 +14,7 @@ use overhead_core::{
     validate_utc_time,
 };
 pub mod projection;
-use projection::{GroundMap, MapPoint, View, ViewPoint};
+use projection::{Camera, CameraError, CameraPoint, EarthLimb, View, ViewPoint};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TrackingError {
@@ -41,11 +41,11 @@ pub struct PhysicalState {
     pub look: LookAngles,
 }
 
-/// Projected ground location is cached separately from the physical state.
+/// Camera-relative position is cached separately from the physical state.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Sample {
     pub physical: PhysicalState,
-    pub ground: Option<MapPoint>,
+    pub camera: CameraPoint,
 }
 
 impl Sample {
@@ -56,7 +56,7 @@ impl Sample {
         if !self.above_horizon() {
             return None;
         }
-        view.locate(self.ground?)
+        view.locate(self.camera)
     }
 }
 
@@ -71,7 +71,7 @@ pub struct Counts {
 pub struct RadarApp {
     catalogue: Catalogue,
     observer: GeodeticPosition,
-    map: GroundMap,
+    camera: Camera,
     view: View,
     time: Option<NaiveDateTime>,
     samples: Vec<Result<Sample, TrackingError>>,
@@ -83,13 +83,13 @@ impl RadarApp {
         catalogue: Catalogue,
         observer: GeodeticPosition,
         view: View,
-    ) -> Result<Self, CoordinateError> {
-        let map = GroundMap::new(observer)?;
+    ) -> Result<Self, CameraError> {
+        let camera = Camera::new(observer)?;
         let samples = Vec::with_capacity(catalogue.entries().len());
         Ok(Self {
             catalogue,
             observer,
-            map,
+            camera,
             view,
             time: None,
             samples,
@@ -109,7 +109,7 @@ impl RadarApp {
         }
         for entry in self.catalogue.entries() {
             self.samples
-                .push(sample(entry, time, self.observer, &self.map));
+                .push(sample(entry, time, self.observer, &self.camera));
         }
         self.time = Some(time);
         self.reconcile_selection();
@@ -124,6 +124,9 @@ impl RadarApp {
     }
     pub fn view(&self) -> View {
         self.view
+    }
+    pub fn earth_limb(&self) -> EarthLimb {
+        self.camera.earth_limb(self.view)
     }
     pub fn selected_id(&self) -> Option<u64> {
         self.selected
@@ -201,7 +204,7 @@ fn sample(
     entry: &CatalogueEntry,
     time: NaiveDateTime,
     observer: GeodeticPosition,
-    map: &GroundMap,
+    camera: &Camera,
 ) -> Result<Sample, TrackingError> {
     let state = entry
         .satellite()
@@ -210,14 +213,14 @@ fn sample(
     let ecef = state.to_ecef().map_err(TrackingError::Coordinates)?;
     let geodetic = ecef_to_geodetic(ecef).map_err(TrackingError::Coordinates)?;
     let look = ecef_to_look_angles(ecef, observer).map_err(TrackingError::Observation)?;
-    let ground = map.project(geodetic).map_err(TrackingError::Coordinates)?;
+    let camera = camera.project(ecef).map_err(TrackingError::Coordinates)?;
     Ok(Sample {
         physical: PhysicalState {
             ecef,
             geodetic,
             look,
         },
-        ground,
+        camera,
     })
 }
 
@@ -247,7 +250,7 @@ mod tests {
             .unwrap();
         let mut observer = ecef_to_geodetic(ecef).unwrap();
         observer.altitude_km = 0.0;
-        RadarApp::new(catalogue, observer, View::new(8000.0).unwrap()).unwrap()
+        RadarApp::new(catalogue, observer, View::new(20.0).unwrap()).unwrap()
     }
 
     #[test]
@@ -296,19 +299,20 @@ mod tests {
         let mut s = *app.samples[0].as_ref().unwrap();
         for elevation in [-0.1, 0.0, -0.0] {
             s.physical.look.elevation_rad = elevation;
-            for radius in [50.0, 20_000.0] {
-                assert!(s.marker(View::new(radius).unwrap()).is_none());
+            for fov in [0.1, 20.0, 100.0] {
+                assert!(s.marker(View::new(fov).unwrap()).is_none());
             }
         }
         s.physical.look.elevation_rad = 0.1;
-        s.ground = Some(MapPoint {
+        s.camera = CameraPoint {
             east_km: 500.0,
             north_km: 0.0,
-        });
+            depth_km: 30_000.0,
+        };
+        assert!(s.marker(View::new(0.1).unwrap()).is_none());
+        assert!(s.marker(View::new(20.0).unwrap()).is_some());
+        s.camera.depth_km = -1.0;
         assert!(s.marker(View::new(100.0).unwrap()).is_none());
-        assert!(s.marker(View::new(1000.0).unwrap()).is_some());
-        s.ground = None;
-        assert!(s.marker(View::new(20_000.0).unwrap()).is_none());
     }
 
     #[test]
@@ -350,7 +354,7 @@ mod tests {
         let mut app = RadarApp::new(
             builder.finish().unwrap(),
             observer,
-            View::new(8000.0).unwrap(),
+            View::new(100.0).unwrap(),
         )
         .unwrap();
         let time = NaiveDate::from_ymd_opt(2026, 10, 10)
@@ -379,6 +383,35 @@ mod tests {
         let selected = app.selected_id();
         app.update(time + Duration::seconds(1)).unwrap();
         assert_eq!(app.selected_id(), selected);
+
+        // Independent projection reference from core's range/elevation/azimuth,
+        // rather than the camera's ECEF basis rotation. Zoom only changes lens.
+        let original = app.samples.clone();
+        for fov in [0.1_f64, 5.0, 20.0, 60.0, 100.0] {
+            app.view = View::new(fov).unwrap();
+            let half_span = libm::tan(fov.to_radians() / 2.0);
+            for (_, result) in app.objects() {
+                let s = result.as_ref().unwrap();
+                let look = s.physical.look;
+                let up = look.range_km * libm::sin(look.elevation_rad);
+                let horizontal = look.range_km * libm::cos(look.elevation_rad);
+                let depth = projection::CAMERA_HEIGHT_KM - up;
+                let expected_visible = look.elevation_rad > 0.0
+                    && depth >= projection::NEAR_PLANE_KM
+                    && horizontal / depth <= half_span;
+                let marker = s.marker(app.view);
+                assert_eq!(marker.is_some(), expected_visible);
+                if let Some(marker) = marker {
+                    let azimuth = look.azimuth_rad.unwrap_or(0.0);
+                    let scale = horizontal / depth / half_span;
+                    assert!((marker.east - scale * libm::sin(azimuth)).abs() < 1e-10);
+                    assert!((marker.north - scale * libm::cos(azimuth)).abs() < 1e-10);
+                }
+            }
+            assert_eq!(app.counts().above_horizon, 4);
+            assert_eq!(app.counts().failed, 0);
+            assert_eq!(app.samples, original);
+        }
     }
 
     #[test]
@@ -409,7 +442,7 @@ mod tests {
                 longitude_rad: 0.0,
                 altitude_km: 0.0,
             },
-            View::new(8000.0).unwrap(),
+            View::new(20.0).unwrap(),
         )
         .unwrap();
         app.update(epoch + Duration::minutes(20)).unwrap();
@@ -430,10 +463,11 @@ mod tests {
         app.update(time).unwrap();
         app.select_next();
         assert_eq!(app.selected_id(), Some(25544));
-        app.samples[0].as_mut().unwrap().ground = Some(MapPoint {
+        app.samples[0].as_mut().unwrap().camera = CameraPoint {
             east_km: 500.0,
             north_km: 0.0,
-        });
+            depth_km: 30_000.0,
+        };
         app.zoom(64);
         assert_eq!(app.selected_id(), None);
         app.select_next();
