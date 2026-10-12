@@ -85,7 +85,7 @@ fn demo_is_deterministic_from_an_unrelated_directory_without_sdl() {
 fn real_catalogue_zoom_changes_visibility_not_sky_count() {
     let scratch = Scratch::new();
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/weather-gps.json");
-    let run = |fov: &str, file: &str| {
+    let run = |fov: &str, viewport: &str, file: &str| {
         success(scratch.run(&[
             manifest.to_str().unwrap(),
             "2026-10-10T00:00:00Z",
@@ -94,6 +94,8 @@ fn real_catalogue_zoom_changes_visibility_not_sky_count() {
             "2.187",
             "--fov-deg",
             fov,
+            "--viewport",
+            viewport,
             "--snapshot",
             file,
         ]))
@@ -126,6 +128,7 @@ fn real_catalogue_zoom_changes_visibility_not_sky_count() {
     for (fov, file, expected) in [
         (100.0_f64, "wide.png", 22),
         (20.0, "default.png", 6),
+        (40.0, "middle.png", 17),
         (5.0, "local.png", 4),
         (0.1, "empty.png", 0),
     ] {
@@ -140,11 +143,76 @@ fn real_catalogue_zoom_changes_visibility_not_sky_count() {
             })
             .count();
         assert_eq!(reference, expected);
-        assert!(
-            run(&fov.to_string(), file)
-                .contains(&format!("catalogue=105 sky=22 visible={expected} failed=0"))
+        for viewport in ["circle", "borderless-circle", "square"] {
+            let count = if viewport == "square" {
+                looks
+                    .iter()
+                    .filter(|look| {
+                        let depth = 75_000.0 - look.range_km * look.elevation_rad.sin();
+                        let horizontal = look.range_km * look.elevation_rad.cos();
+                        let azimuth = look.azimuth_rad.unwrap_or(0.0);
+                        let span = depth * (fov.to_radians() / 2.0).tan();
+                        look.elevation_rad > 0.0
+                            && depth >= 1.0
+                            && (horizontal * azimuth.sin()).abs() <= span
+                            && (horizontal * azimuth.cos()).abs() <= span
+                    })
+                    .count()
+            } else {
+                expected
+            };
+            if viewport == "square" && fov == 40.0 {
+                assert!(count > expected);
+            }
+            let path = if viewport == "circle" {
+                file.to_owned()
+            } else {
+                format!("{viewport}-{file}")
+            };
+            let report = run(&fov.to_string(), viewport, &path);
+            assert!(
+                report.contains(&format!("catalogue=105 sky=22 visible={count} failed=0")),
+                "{report}"
+            );
+            let png = scratch.png(&path);
+            assert_eq!(run(&fov.to_string(), viewport, &path), report);
+            assert_eq!(scratch.png(&path), png);
+        }
+    }
+    // Omitting --viewport must really select square, including corner markers.
+    for (fov, file, expected_count) in [("20", "default.png", 6), ("40", "middle.png", 18)] {
+        let report = success(scratch.run(&[
+            manifest.to_str().unwrap(),
+            "2026-10-10T00:00:00Z",
+            "39.007",
+            "-104.883",
+            "2.187",
+            "--fov-deg",
+            fov,
+            "--snapshot",
+            "implicit.png",
+        ]));
+        assert!(report.contains(&format!(
+            "catalogue=105 sky=22 visible={expected_count} failed=0"
+        )));
+        assert_eq!(
+            scratch.png("implicit.png"),
+            scratch.png(&format!("square-{file}"))
         );
     }
+    // At 20 degrees this frame has no corner-only markers; at 40 it does.
+    assert_eq!(
+        scratch.png("borderless-circle-default.png"),
+        scratch.png("square-default.png")
+    );
+    assert_ne!(
+        scratch.png("borderless-circle-middle.png"),
+        scratch.png("square-middle.png")
+    );
+    assert_ne!(
+        scratch.png("default.png"),
+        scratch.png("borderless-circle-default.png")
+    );
     assert_ne!(scratch.png("wide.png"), scratch.png("default.png"));
     assert_ne!(scratch.png("default.png"), scratch.png("local.png"));
     assert_ne!(scratch.png("local.png"), scratch.png("empty.png"));
@@ -155,6 +223,7 @@ fn malformed_inputs_fail_before_creating_a_snapshot() {
     let scratch = Scratch::new();
     for args in [
         vec!["--demo", "--fov-deg", "NaN", "--snapshot", "bad.png"],
+        vec!["--demo", "--viewport", "triangle", "--snapshot", "bad.png"],
         vec!["--demo", "--radius-km", "8000", "--snapshot", "bad.png"],
         vec![
             "absent.json",

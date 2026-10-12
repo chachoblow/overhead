@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: review the implemented M3 fixed-camera perspective view, lens zoom, density and layout. M2 operating-budget and scheduling work remains open.**
+**Current: M3 panel design deferred to another session; normal/debug separation and field reduction agreed, not implemented. M2 operating-budget and scheduling work remains open.**
 All frozen S3 capture gates pass. Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -115,12 +115,17 @@ has been replaced by [0024's actual-3D perspective direction](decisions/0024-per
 and [0025's fixed-camera lens zoom](decisions/0025-fixed-camera-lens-zoom.md),
 implemented under [0026](decisions/0026-fixed-camera-perspective-slice.md) with
 [0027's higher fixed camera](decisions/0027-higher-fixed-camera-overview.md).
+[0028](decisions/0028-borderless-square-viewport.md) now selects borderless square
+clipping, retaining the 240×240 allocation and provisional 20° default.
 See [current simulator usage and review examples](../sim/README.md).
 Physical outputs, observer-horizon counts and explicit failures remain separate
-from presentation. The user prefers the higher camera and likes the empty outer
-band as framing; next is radar/panel layout review, not filling that space or
-selecting a production population. No pass-prediction integration or live fetching
-is required; simulator throughput is not target capacity evidence.
+from presentation. The user prefers the higher camera and breathing room;
+removing the ring is not a reason to fill the view. [0029](decisions/0029-normal-and-debug-presentation-direction.md)
+records normal/debug separation and field reduction as direction only. The user
+deferred visual iteration; neither panel mockup is approved. Refine the next
+slice before implementation, without choosing a production population.
+No pass-prediction integration or live fetching is required; simulator throughput
+is not target capacity evidence.
 
 - [x] Add shared app state, renderer entry point, simulator loop, explicit clock,
   and convenient observer/local-catalogue configuration.
@@ -140,9 +145,16 @@ is required; simulator throughput is not target capacity evidence.
   overview (0027).
 - [x] Review the higher camera: user prefers it and likes the empty outer band
   as framing; retain that breathing room rather than auto-fitting or adding objects.
-- [ ] Reassess catalogue density and radar/information-area proportions with the
-  perspective view before fixing product counts or panel contents. The busier
-  example is a visual reference, not an accepted production population.
+- [x] Compare view sizing and shape: user retains 240×240 and provisional 20°,
+  selects borderless square after reviewing circular/borderless/square examples
+  (0028). Shared projection/rendering and CLI defaults reflect the choice.
+- [x] Agree normal/debug presentation separation and reduction of routine
+  diagnostic fields in the normal view (0029). Record the alive/active-but-not-busy
+  visual brief; this is feedback, not an implemented split or approved mockup.
+- [ ] Resume panel design in a later session and scope a normal/debug slice:
+  layout/graphics, remaining fields, access controls and failure communication
+  remain open. Reassess density alongside it before fixing product counts;
+  the busier example is a visual reference, not a production population.
 
 **Done when:** satellites move through a zoomable view traceable to verified
 engine outputs, with initial visual feedback on density and layout. Coastlines,

@@ -1,39 +1,39 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-12 UTC. Next session: review M3 radar/information-area proportions._
+_Last updated: 2026-10-12 UTC. Next session: revisit M3 panel design; no approved mockup._
 
 ## Current state / user direction
-The perspective/lens-zoom slice replaces the ground map under
-[0026](decisions/0026-fixed-camera-perspective-slice.md), with
-[0027's 75,000 km fixed camera](decisions/0027-higher-fixed-camera-overview.md).
-The user prefers this higher view, likes zoom-magnified screen motion and the
-fuller overview, and explicitly likes the empty outer band as framing.
-Keep that breathing room; do not auto-fit or add objects merely to fill it.
-Physical tracking and true horizon eligibility remain unchanged.
-The user deferred radar/panel review to the next session; no more UI work now.
+Implemented: 240×240 borderless square, provisional 20° FOV, fixed 75,000 km camera
+under [0028](decisions/0028-borderless-square-viewport.md). Keep breathing room.
+Agreed direction only: [0029](decisions/0029-normal-and-debug-presentation-direction.md)
+separates normal and objective debug presentations and cuts routine diagnostic
+fields from normal. View/sky information stays with a new presentation; range
+is still undecided. No panel layout, graphical treatment or debug access chosen.
+The user wants **alive and active, but not busy**; supplied Are.na references
+inform DESIGN. Both normal-panel mockups remain unapproved. The user explicitly
+deferred further visual iteration to a different session; stop UI work here.
 
-## Implementation / next session
-`app/src/projection.rs` shares the fixed camera between ECEF targets and the
-WGS-84 limb; `app/src/lib.rs` caches presentation apart from physical state.
-`render/src/lib.rs` draws the outline/readouts; `sim/src/config.rs` uses FOV,
-not the old map-radius semantics. App/render/CLI regressions cover the geometry.
-Read PLAN/DESIGN; [sim usage](../sim/README.md) has current run/snapshot commands.
-Next is radar/panel proportions and which readouts earn space; no production
-population, cadence or panel-content decision has been made. Stay in M3.
-At the pinned weather/GPS time/site 20°/100°/5° show 6/22/4 markers (SKY 22).
-For a quick run use `cargo run -p overhead-sim -- --demo --fov-deg 100`;
-the unchanged small demo has no markers at default 20° but four at 100°.
-No slowdown, prediction integration or fetching work is included.
+## Implementation / next step
+`app/src/projection.rs`, `render/src/lib.rs`, `sim/src/config.rs` and associated
+tests implement viewport comparisons and square defaults. Physical tracking,
+true horizon eligibility and the original diagnostic panel are unchanged.
+Normal/debug splitting, `v`/launch controls and graphical readouts are NOT
+implemented. `/tmp/overhead-panel-mockups/` holds disposable exploration PNGs/
+scripts only, not source assets or an accepted specification. Illustrated pass
+profiles/carets were invented; no prediction integration was approved or added.
+Next session: read DESIGN/0029, then scope panel exploration or a small split/
+field-reduction slice with the user. Do not implement the last mock by default.
+Stay in M3; no slowdown, fetching or production population/cadence decision.
+[Simulator usage](../sim/README.md) owns current run/shape-comparison commands.
 
-## Verification / prerequisites / risks
+## Verification / risks
 Fresh staged-source Git export, empty target: offline locked workspace check,
 default/all-feature tests, core/app/render no-default checks, strict Clippy/fmt
-and simulator build pass. Snapshot examples reproduce expected counts from an
-unrelated directory with SDL unavailable; two-second SDL dummy-loop smoke passes.
-Existing Rust tool/dependency caches and Homebrew SDL2 are required; no ignored
-build artifacts are needed. User visual feedback is received; no agent interactive
-input review, hardware access, firmware build or toolchain change was performed.
-M2 limits/cadences/overload/scheduling and whole-device RAM/safe stack remain open;
-Sharp bring-up and RWX are separate. Frozen evidence uses
-[0023's pinned revision](decisions/0023-frozen-m2-revision-isolation.md), not this
-workspace; no frozen evidence was renewed. Host throughput is not target capacity.
+and simulator build pass. Headless snapshots from an unrelated directory with
+SDL unavailable reproduce counts; default 20° matches the reviewed square PNG.
+Two-second SDL dummy-loop smoke passes. No ignored artifacts or mockups needed;
+cached Rust tools/dependencies and Homebrew SDL2 remain prerequisites. No agent
+interactive review, hardware access, firmware build or toolchain changes.
+M2 budgets/scheduling, whole-device RAM/safe stack, Sharp bring-up and RWX remain
+open. Frozen evidence uses [0023's pinned revision](decisions/0023-frozen-m2-revision-isolation.md),
+not this workspace; no evidence renewed. Host throughput is not target capacity.

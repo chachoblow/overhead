@@ -1,7 +1,7 @@
 # 0026 — Fixed-camera perspective simulator slice
 
 Date: 2026-10-12
-Status: accepted (camera height superseded by [0027](0027-higher-fixed-camera-overview.md); remaining contracts unchanged)
+Status: accepted (camera height superseded by [0027](0027-higher-fixed-camera-overview.md); circular viewport/clipping superseded by [0028](0028-borderless-square-viewport.md); remaining contracts unchanged)
 
 ## Decision
 Implement [0025's lens-zoom direction](0025-fixed-camera-lens-zoom.md) with a

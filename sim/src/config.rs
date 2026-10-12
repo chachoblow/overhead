@@ -1,4 +1,4 @@
-use overhead_app::projection::{DEFAULT_FOV_DEG, View};
+use overhead_app::projection::{DEFAULT_FOV_DEG, View, Viewport};
 use overhead_core::{
     GeodeticPosition,
     sgp4::chrono::{NaiveDateTime, TimeDelta},
@@ -17,8 +17,9 @@ Replay advances from explicit UTC at 1x using monotonic elapsed time, not now.
 No network, freshness cutoff, pass prediction, or production scheduling.
 
 Options (each at most once):
-  --fov-deg N     Full circular field of view, 0.1..100 degrees (default 20)
+  --fov-deg N     Full width/height field of view, 0.1..100 degrees (default 20)
   --radar-size N   Radar allocation, 180..240 pixels (default 240)
+  --viewport MODE  square (default, borderless), circle, borderless-circle
   --snapshot PNG  Render exactly the start UTC to a 400x240 PNG; no window
   --help, -h      Show this help
 
@@ -26,7 +27,7 @@ Controls: wheel/up = zoom in; down = zoom out; Tab = next marker; Esc = quit.
 Actual 3D positions use a north-up perspective camera fixed 75000 km above the
 observer along local up. Zoom changes the lens, not camera position. Earth is a
 WGS-84 outline through the same camera. Only true elevation > 0 is eligible;
-near-plane (1 km) and circular-view clipping also apply. Readouts use true state;
+near-plane (1 km) and viewport clipping also apply. Readouts use true state;
 ERR counts failed objects. The former --radius-km option is no longer supported.
 
 --demo uses the pinned 16-object historical M2 pool at 2026-10-10T00:00:00Z,
@@ -92,6 +93,7 @@ impl Config {
         observer.to_ecef().map_err(|e| e.to_string())?;
         let mut fov = None;
         let mut size = None;
+        let mut viewport = None;
         let mut snapshot = None;
         let mut options = options.iter();
         while let Some(flag) = options.next() {
@@ -109,6 +111,18 @@ impl Config {
                 "--radar-size" if size.is_none() => {
                     size = Some(value.parse::<u32>().map_err(|_| "invalid radar size")?)
                 }
+                "--viewport" if viewport.is_none() => {
+                    viewport = Some(match value.as_str() {
+                        "circle" => Viewport::Circle,
+                        "borderless-circle" => Viewport::BorderlessCircle,
+                        "square" => Viewport::Square,
+                        _ => {
+                            return Err(
+                                "viewport must be circle, borderless-circle or square".into()
+                            );
+                        }
+                    });
+                }
                 "--snapshot" if snapshot.is_none() && !value.is_empty() => {
                     snapshot = Some(PathBuf::from(value))
                 }
@@ -119,7 +133,8 @@ impl Config {
             manifest,
             start,
             observer,
-            view: View::new(fov.unwrap_or(DEFAULT_FOV_DEG))?,
+            view: View::new(fov.unwrap_or(DEFAULT_FOV_DEG))?
+                .with_viewport(viewport.unwrap_or_default()),
             layout: Layout::new(size.unwrap_or(240))?,
             snapshot,
         })
@@ -165,6 +180,19 @@ mod tests {
         assert_eq!(config.snapshot, Some(PathBuf::from("x.png")));
     }
     #[test]
+    fn comparison_viewports_are_explicit_and_default_is_square() {
+        assert_eq!(parse("--demo").unwrap().view.viewport(), Viewport::Square);
+        for (name, expected) in [
+            ("circle", Viewport::Circle),
+            ("borderless-circle", Viewport::BorderlessCircle),
+            ("square", Viewport::Square),
+        ] {
+            let c = parse(&format!("--demo --viewport {name}")).unwrap();
+            assert_eq!(c.view.viewport(), expected);
+            assert!((c.view.fov_deg() - 20.0).abs() < 1e-12);
+        }
+    }
+    #[test]
     fn reject_invalid_and_repeated_inputs() {
         for args in [
             "",
@@ -179,6 +207,9 @@ mod tests {
             "--demo --radar-size 200 --radar-size 240",
             "--demo --fov-deg",
             "--demo --wat 1",
+            "--demo --viewport",
+            "--demo --viewport triangle",
+            "--demo --viewport square --viewport circle",
             "--demo --snapshot a --snapshot b",
             "x 2026-10-10T00:00:00 0 0 0",
             "x 2101-01-01T00:00:00Z 0 0 0",

@@ -7,7 +7,7 @@ use overhead_core::{CoordinateError, EcefPosition, GeodeticPosition};
 /// Along the observer's geodetic local up, relative to the observer, not MSL.
 pub const CAMERA_HEIGHT_KM: f64 = 75_000.0;
 pub const NEAR_PLANE_KM: f64 = 1.0;
-/// Full angle across the circular viewport; provisional simulator settings.
+/// Full angle across the viewport width/height; provisional simulator settings.
 pub const DEFAULT_FOV_DEG: f64 = 20.0;
 pub const MIN_FOV_DEG: f64 = 0.1;
 pub const MAX_FOV_DEG: f64 = 100.0;
@@ -57,7 +57,7 @@ pub struct CameraPoint {
     pub depth_km: f64,
 }
 
-/// Normalized coordinates in the circular viewport, east/right and north/up.
+/// Normalized viewport coordinates, east/right and north/up.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ViewPoint {
     pub east: f64,
@@ -199,11 +199,33 @@ impl EarthLimb {
     }
 }
 
+/// Borderless square is the current UI default. The circular comparison modes
+/// share clipping; Square admits corners at the same horizontal/vertical scale.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum Viewport {
+    Circle,
+    BorderlessCircle,
+    #[default]
+    Square,
+}
+impl Viewport {
+    pub fn contains(self, point: ViewPoint) -> bool {
+        if !point.east.is_finite() || !point.north.is_finite() {
+            return false;
+        }
+        match self {
+            Self::Circle | Self::BorderlessCircle => libm::hypot(point.east, point.north) <= 1.0,
+            Self::Square => point.east.abs() <= 1.0 && point.north.abs() <= 1.0,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct View {
     // tan(full FOV / 2), allowing geometric magnification steps, not linear
     // degree steps. x_screen = (east/depth) / half_span.
     half_span: f64,
+    viewport: Viewport,
 }
 impl View {
     pub fn new(fov_deg: f64) -> Result<Self, &'static str> {
@@ -212,7 +234,15 @@ impl View {
         }
         Ok(Self {
             half_span: libm::tan(fov_deg.to_radians() / 2.0),
+            viewport: Viewport::default(),
         })
+    }
+    pub fn with_viewport(mut self, viewport: Viewport) -> Self {
+        self.viewport = viewport;
+        self
+    }
+    pub fn viewport(self) -> Viewport {
+        self.viewport
     }
     pub fn fov_deg(self) -> f64 {
         (2.0 * libm::atan(self.half_span)).to_degrees()
@@ -226,7 +256,7 @@ impl View {
             libm::tan(MAX_FOV_DEG.to_radians() / 2.0),
         );
     }
-    /// Include near-plane equality and marker centers on the circular edge.
+    /// Include near-plane equality and marker centers on the viewport edge.
     /// Glyph pixels are additionally clipped by the renderer. No far plane.
     pub fn locate(self, point: CameraPoint) -> Option<ViewPoint> {
         if ![point.east_km, point.north_km, point.depth_km]
@@ -238,11 +268,8 @@ impl View {
         }
         let east = (point.east_km / point.depth_km) / self.half_span;
         let north = (point.north_km / point.depth_km) / self.half_span;
-        let distance = libm::hypot(east, north);
-        if !distance.is_finite() || distance > 1.0 {
-            return None;
-        }
-        Some(ViewPoint { east, north })
+        let point = ViewPoint { east, north };
+        self.viewport.contains(point).then_some(point)
     }
 }
 
@@ -365,10 +392,71 @@ mod tests {
     }
 
     #[test]
-    fn near_plane_behind_camera_edges_and_nonfinite_inputs() {
+    fn comparison_viewports_preserve_lens_scale_and_clip_corners() {
+        assert_eq!(
+            View::new(DEFAULT_FOV_DEG).unwrap().viewport(),
+            Viewport::Square
+        );
+        for fov in [MIN_FOV_DEG, DEFAULT_FOV_DEG, MAX_FOV_DEG] {
+            let circle = View::new(fov).unwrap().with_viewport(Viewport::Circle);
+            let borderless = circle.with_viewport(Viewport::BorderlessCircle);
+            let square = circle.with_viewport(Viewport::Square);
+            for (east, north) in [
+                (0.0, 0.0),
+                (1.0, 0.0),
+                (0.8, 0.8),
+                (-1.0, -1.0),
+                (1.001, 0.0),
+            ] {
+                let point = CameraPoint {
+                    east_km: east * circle.half_span,
+                    north_km: north * circle.half_span,
+                    depth_km: 1.0,
+                };
+                assert_eq!(circle.locate(point), borderless.locate(point));
+                assert_eq!(
+                    square.locate(point).is_some(),
+                    east.abs() <= 1.0 && north.abs() <= 1.0
+                );
+                if let Some(p) = circle.locate(point) {
+                    assert_eq!(square.locate(point), Some(p));
+                }
+                for view in [circle, borderless, square] {
+                    assert!(
+                        view.locate(CameraPoint {
+                            depth_km: 0.999,
+                            ..point
+                        })
+                        .is_none()
+                    );
+                    assert!(
+                        view.locate(CameraPoint {
+                            east_km: f64::NAN,
+                            ..point
+                        })
+                        .is_none()
+                    );
+                    assert!(
+                        view.locate(CameraPoint {
+                            north_km: f64::INFINITY,
+                            ..point
+                        })
+                        .is_none()
+                    );
+                    let mut zoomed = view;
+                    zoomed.zoom(1);
+                    assert_eq!(zoomed.viewport(), view.viewport());
+                    near(view.fov_deg(), fov);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn circular_near_plane_behind_camera_edges_and_nonfinite_inputs() {
         let camera = Camera::new(geo(0.0, 0.0, 0.0)).unwrap();
         for fov in [MIN_FOV_DEG, DEFAULT_FOV_DEG, MAX_FOV_DEG] {
-            let view = View::new(fov).unwrap();
+            let view = View::new(fov).unwrap().with_viewport(Viewport::Circle);
             for depth in [-1000.0, 0.0, 0.999] {
                 let p = camera
                     .project(target(&camera, 0.0, 0.0, CAMERA_HEIGHT_KM - depth))

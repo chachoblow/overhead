@@ -322,3 +322,21 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - From an unrelated directory with SDL unavailable, fresh executable snapshots reproduce pool 0/4 markers at 20°/100° and weather/GPS 6/22/4/0 at 20°/100°/5°/0.1°. SDL dummy-loop smoke runs for two seconds; cached Rust tools/dependencies and Homebrew SDL2 remain prerequisites, with no ignored build artifacts needed.
 - Refreshed HANDOFF and simulator verification notes; user explicitly deferred radar/panel review to the next session. The 75,000 km camera and empty outer framing are accepted; no further UI changes made.
 - No new dependencies, fixtures, toolchains, hardware access, firmware build or frozen-evidence rerun/change. Documentation whitespace/local links checked; M2 budgets/scheduling remain open.
+
+## 2026-10-12 UTC (viewport sizing and borderless square)
+- Compared 240/200-pixel allocations and 20°/30°/40°/100° views; user retained 240×240 and provisional 20°. Added shared circular/borderless-circular/square clipping with explicit simulator comparison options, then selected borderless square as default under 0028.
+- App/render/CLI tests cover lens-scale preservation, corner clipping for markers/Earth, counts/selection, unchanged physical state, deterministic snapshots and implicit-default square wiring. Weather/GPS stays 6/22/4/0 at 20°/100°/5°/0.1°; at 40° square shows 18 versus circular 17, with SKY 22 and no failures.
+- Working-checkout workspace check/tests, app/render no-default checks, targeted strict Clippy and fmt pass; the default 20° PNG matches the reviewed square image byte-for-byte. No new fresh-export or agent interactive verification, dependencies, hardware access, toolchain/firmware changes or frozen-evidence renewal.
+- Updated decision/design/plan/usage/handoff; next is right-panel exploration, not finalizing its existing contents. M3 continues and M2 product budgets/scheduling remain open.
+
+## 2026-10-12 UTC (panel direction, visual iteration deferred)
+- Reviewed current readouts and agreed normal/debug separation plus removal of branding/routine diagnostic fields from the normal view (0029). Retain redesigned view/sky information; range, other fields, controls and failure communication remain open.
+- User supplied Are.na inspiration and the brief “alive and active, but not busy.” Produced disposable normal/debug and instrument-style mockups under `/tmp/overhead-panel-mockups/`; neither normal-panel design was accepted. Pass hills/carets were explicitly illustrative, not predictions.
+- User deferred further visual iteration to another session. Recorded direction and boundaries in DESIGN/PLAN/HANDOFF; no panel split, debug toggle, graphical readouts or prediction integration implemented. M3 remains open.
+- Design/docs only after the previously verified square-default change; no further application code, test rerun, dependencies, hardware/toolchain work or frozen-evidence changes.
+
+## 2026-10-12 UTC (square-default fresh-session verification before commit)
+- Exported the staged Git source tree into a fresh directory with an empty build target. Offline locked workspace check/default/all-feature tests, core/app/render no-default checks, strict workspace Clippy/fmt and simulator build pass.
+- Fresh executable runs from an unrelated directory with SDL unavailable: pool 0/4 at 20°/100°, weather/GPS square 6/18/22/4/0 at 20°/40°/100°/5°/0.1°, circular modes 17 at 40°, all with zero failures. Default 20° PNG matches the reviewed square image; two-second SDL dummy-loop smoke passes.
+- Updated HANDOFF and simulator verification notes. Existing Rust caches and Homebrew SDL2 are prerequisites; no ignored builds or disposable mockups are required. Normal/debug split remains direction only; panel design is deferred.
+- No new application code, dependencies, hardware access, firmware/toolchain changes or frozen-evidence renewal; no agent interactive review. Documentation whitespace/local links checked.

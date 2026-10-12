@@ -12,7 +12,7 @@ use embedded_graphics::{
 };
 use overhead_app::{
     RadarApp,
-    projection::{EarthLimb, ViewPoint},
+    projection::{EarthLimb, ViewPoint, Viewport},
 };
 use overhead_core::sgp4::chrono::Timelike;
 
@@ -38,6 +38,16 @@ impl Layout {
     fn radius(self) -> i32 {
         self.radar_size as i32 / 2 - 3
     }
+    fn contains(self, pixel: Point, viewport: Viewport) -> bool {
+        let delta = pixel - self.center();
+        let radius = self.radius();
+        match viewport {
+            Viewport::Circle | Viewport::BorderlessCircle => {
+                delta.x * delta.x + delta.y * delta.y <= radius * radius
+            }
+            Viewport::Square => delta.x.abs() <= radius && delta.y.abs() <= radius,
+        }
+    }
     fn marker(self, p: ViewPoint) -> Point {
         let round = |v: f64| (v + if v < 0.0 { -0.5 } else { 0.5 }) as i32;
         self.center()
@@ -61,10 +71,13 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
     let stroke = PrimitiveStyle::with_stroke(BinaryColor::On, 1);
     let center = layout.center();
     let radius = layout.radius();
-    Circle::with_center(center, (radius * 2 + 1) as u32)
-        .into_styled(stroke)
-        .draw(&mut display)?;
-    draw_earth(&mut display, app.earth_limb(), layout)?;
+    let viewport = app.view().viewport();
+    if viewport == Viewport::Circle {
+        Circle::with_center(center, (radius * 2 + 1) as u32)
+            .into_styled(stroke)
+            .draw(&mut display)?;
+    }
+    draw_earth(&mut display, app.earth_limb(), layout, viewport)?;
     Line::new(center - Point::new(3, 0), center + Point::new(3, 0))
         .into_styled(stroke)
         .draw(&mut display)?;
@@ -81,7 +94,7 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
     for (entry, _, point) in app.markers() {
         let marker = layout.marker(point);
         let selected = app.selected_id() == Some(entry.elements().norad_id);
-        draw_marker(&mut display, marker, selected, center, radius)?;
+        draw_marker(&mut display, marker, selected, layout, viewport)?;
     }
 
     let x = layout.radar_size as i32 + 10;
@@ -166,9 +179,9 @@ fn draw_earth<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
     limb: EarthLimb,
     layout: Layout,
+    viewport: Viewport,
 ) -> Result<(), D::Error> {
     let radius = layout.radius();
-    let center = layout.center();
     // Sample both rows and columns for a continuous one-bit ellipse. Work is
     // bounded by viewport diameter, not the zoomed ellipse's enormous extent.
     // All clipping happens before float-to-pixel conversion, then again after
@@ -195,12 +208,12 @@ fn draw_earth<D: DrawTarget<Color = BinaryColor>>(
             rows.chain(columns)
         })
         .filter_map(|point| {
-            if point.east * point.east + point.north * point.north > 1.0 {
+            if !viewport.contains(point) {
                 return None;
             }
             let pixel = layout.marker(point);
-            let delta = pixel - center;
-            (delta.x * delta.x + delta.y * delta.y <= radius * radius)
+            layout
+                .contains(pixel, viewport)
                 .then_some(Pixel(pixel, BinaryColor::On))
         });
     display.draw_iter(pixels)
@@ -210,10 +223,10 @@ fn draw_marker<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
     marker: Point,
     selected: bool,
-    center: Point,
-    radius: i32,
+    layout: Layout,
+    viewport: Viewport,
 ) -> Result<(), D::Error> {
-    // Clip every glyph pixel to the circle, not just the center. A highlighted
+    // Clip every glyph pixel to the viewport, not just the center. A highlighted
     // edge marker must not spill into the information area.
     let pixels = (-3_i32..=3)
         .flat_map(|y| (-3_i32..=3).map(move |x| (x, y)))
@@ -225,8 +238,7 @@ fn draw_marker<D: DrawTarget<Color = BinaryColor>>(
                 distance <= 1
             };
             let p = marker + Point::new(x, y);
-            let d = p - center;
-            (ink && d.x * d.x + d.y * d.y <= radius * radius).then_some(Pixel(p, BinaryColor::On))
+            (ink && layout.contains(p, viewport)).then_some(Pixel(p, BinaryColor::On))
         });
     display.draw_iter(pixels)
 }
@@ -325,6 +337,9 @@ mod tests {
         }
     }
     fn app() -> RadarApp {
+        app_with_viewport(Viewport::Circle)
+    }
+    fn app_with_viewport(viewport: Viewport) -> RadarApp {
         let mut builder = CatalogueBuilder::new();
         let elements: Vec<OmmElements> =
             serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
@@ -346,7 +361,7 @@ mod tests {
                 altitude_km: 0.0,
                 ..geo
             },
-            View::new(20.0).unwrap(),
+            View::new(20.0).unwrap().with_viewport(viewport),
         )
         .unwrap();
         app.update(time).unwrap();
@@ -391,6 +406,7 @@ mod tests {
                     &mut screen,
                     camera.earth_limb(View::new(fov).unwrap()),
                     layout,
+                    Viewport::Circle,
                 )
                 .unwrap();
                 let mut ink = 0;
@@ -434,7 +450,14 @@ mod tests {
             Point::new(0, radius),
             Point::new(0, -radius),
         ] {
-            draw_marker(&mut screen, center + offset, true, center, radius).unwrap();
+            draw_marker(
+                &mut screen,
+                center + offset,
+                true,
+                Layout::new(240).unwrap(),
+                Viewport::Circle,
+            )
+            .unwrap();
         }
         for (y, row) in screen.pixels.iter().enumerate() {
             for (x, &on) in row.iter().enumerate() {
@@ -446,6 +469,82 @@ mod tests {
             }
         }
     }
+    #[test]
+    fn borderless_changes_only_the_outer_ring() {
+        let layout = Layout::new(240).unwrap();
+        let mut circle = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        let mut borderless = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw(&mut circle, &app(), layout, false).unwrap();
+        draw(
+            &mut borderless,
+            &app_with_viewport(Viewport::BorderlessCircle),
+            layout,
+            false,
+        )
+        .unwrap();
+        assert_ne!(circle.pixels, borderless.pixels);
+        Circle::with_center(layout.center(), (layout.radius() * 2 + 1) as u32)
+            .into_styled(PrimitiveStyle::with_stroke(BinaryColor::On, 1))
+            .draw(&mut borderless)
+            .unwrap();
+        assert_eq!(circle.pixels, borderless.pixels);
+    }
+
+    #[test]
+    fn square_clips_glyphs_and_earth_at_its_edges_not_the_circle() {
+        let camera = overhead_app::projection::Camera::new(GeodeticPosition {
+            latitude_rad: 39.007_f64.to_radians(),
+            longitude_rad: (-104.883_f64).to_radians(),
+            altitude_km: 2.187,
+        })
+        .unwrap();
+        for size in [180, 200, 240] {
+            let layout = Layout::new(size).unwrap();
+            let mut screen = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            for east in [-1.0, 1.0] {
+                for north in [-1.0, 1.0] {
+                    let corner = layout.marker(ViewPoint { east, north });
+                    draw_marker(&mut screen, corner, true, layout, Viewport::Square).unwrap();
+                    assert!(screen.pixels[corner.y as usize][corner.x as usize]);
+                }
+            }
+            for (y, row) in screen.pixels.iter().enumerate() {
+                for (x, &on) in row.iter().enumerate() {
+                    if on {
+                        assert!(layout.contains(Point::new(x as i32, y as i32), Viewport::Square));
+                    }
+                }
+            }
+            let mut corner_limb = false;
+            for fov in [0.1, 5.0, 8.0, 9.0, 20.0, 100.0] {
+                screen.pixels = [[false; 400]; 240];
+                draw_earth(
+                    &mut screen,
+                    camera.earth_limb(View::new(fov).unwrap()),
+                    layout,
+                    Viewport::Square,
+                )
+                .unwrap();
+                for (y, row) in screen.pixels.iter().enumerate() {
+                    for (x, &on) in row.iter().enumerate() {
+                        if on {
+                            let p = Point::new(x as i32, y as i32);
+                            assert!(layout.contains(p, Viewport::Square));
+                            corner_limb |= !layout.contains(p, Viewport::Circle);
+                        }
+                    }
+                }
+            }
+            assert!(corner_limb);
+        }
+    }
+
     #[test]
     fn labels_are_sanitized_and_truncation_is_visible() {
         let mut line = LineBuffer::new(5);

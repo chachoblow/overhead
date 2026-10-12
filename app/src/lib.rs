@@ -396,13 +396,14 @@ mod tests {
                 let up = look.range_km * libm::sin(look.elevation_rad);
                 let horizontal = look.range_km * libm::cos(look.elevation_rad);
                 let depth = projection::CAMERA_HEIGHT_KM - up;
+                let azimuth = look.azimuth_rad.unwrap_or(0.0);
                 let expected_visible = look.elevation_rad > 0.0
                     && depth >= projection::NEAR_PLANE_KM
-                    && horizontal / depth <= half_span;
+                    && (horizontal * libm::sin(azimuth)).abs() / depth <= half_span
+                    && (horizontal * libm::cos(azimuth)).abs() / depth <= half_span;
                 let marker = s.marker(app.view);
                 assert_eq!(marker.is_some(), expected_visible);
                 if let Some(marker) = marker {
-                    let azimuth = look.azimuth_rad.unwrap_or(0.0);
                     let scale = horizontal / depth / half_span;
                     assert!((marker.east - scale * libm::sin(azimuth)).abs() < 1e-10);
                     assert!((marker.north - scale * libm::cos(azimuth)).abs() < 1e-10);
@@ -454,6 +455,45 @@ mod tests {
         ));
         assert_eq!(app.counts().failed, 1);
         assert_eq!(app.markers().count(), 0);
+    }
+
+    #[test]
+    fn square_corners_update_counts_and_selection_without_changing_truth() {
+        use projection::Viewport;
+        let mut app = app();
+        let time = app.catalogue.entries()[0].satellite().epoch();
+        app.update(time).unwrap();
+        // Synthetic camera placement isolates shape from propagation.
+        let span = libm::tan(20.0_f64.to_radians() / 2.0);
+        app.samples[0].as_mut().unwrap().camera = CameraPoint {
+            east_km: span * 0.8,
+            north_km: span * 0.8,
+            depth_km: 1.0,
+        };
+        let original = app.samples.clone();
+        for viewport in [
+            Viewport::Circle,
+            Viewport::BorderlessCircle,
+            Viewport::Square,
+            Viewport::Circle,
+        ] {
+            app.view = app.view.with_viewport(viewport);
+            app.reconcile_selection();
+            let expected = usize::from(viewport == Viewport::Square);
+            assert_eq!(app.counts().visible, expected);
+            assert_eq!(app.markers().count(), expected);
+            assert_eq!(app.counts().above_horizon, 1);
+            assert_eq!(app.counts().failed, 0);
+            assert_eq!(app.selected_id(), (expected == 1).then_some(25544));
+            app.select_next();
+            assert_eq!(app.selected_id(), (expected == 1).then_some(25544));
+            assert_eq!(app.samples, original);
+        }
+        app.view = app.view.with_viewport(Viewport::Square);
+        app.samples[0].as_mut().unwrap().physical.look.elevation_rad = 0.0;
+        app.reconcile_selection();
+        assert_eq!(app.counts().visible, 0);
+        assert_eq!(app.selected_id(), None);
     }
 
     #[test]

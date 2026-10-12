@@ -47,20 +47,26 @@ Missing fetch metadata remains unknown; it is not inferred from filenames.
 - Tab: select the next visible NORAD ID, wrapping. Selection stays while visible;
   otherwise the first visible ID is used. This is inspection, not final ranking.
 - Escape/window close: quit.
-- `--fov-deg`: full angle across the circular viewport, 0.1°–100°; default 20°.
+- `--fov-deg`: full angle across viewport width/height, 0.1°–100°; default 20°.
   The former `--radius-km` option is rejected with migration guidance.
 - `--radar-size`: left-hand radar allocation, 180–240 pixels; default 240.
-  The circle stays vertically centered. Smaller values give more panel width.
+  The viewport stays vertically centered. Smaller values give more panel width.
+- `--viewport`: `square` (default, no outer border), `circle` (circular clipping
+  and ring), or `borderless-circle` (circular clipping, no ring).
+  See [comparison](#viewport-shape-comparison).
 
 The [perspective contract](../docs/decisions/0026-fixed-camera-perspective-slice.md)
-owns lens and clipping semantics; [0027](../docs/decisions/0027-higher-fixed-camera-overview.md)
+owns lens semantics, with square clipping now selected by
+[0028](../docs/decisions/0028-borderless-square-viewport.md).
+[0027](../docs/decisions/0027-higher-fixed-camera-overview.md)
 raises the fixed camera to 75,000 km along geodetic local up from the observer,
 looking back at that observer, north up and east right. The central cross is the observer aim point, small crosses are
 actual 3D satellite positions, and the diamond is the selected satellite.
 
-The outer circle is the viewport; Earth's outline is the WGS-84 ellipsoid through
-the same perspective camera. Satellites can appear outside its silhouette.
-At terrestrial sites Earth spans roughly 45% of the radar diameter at the default
+The default viewport is a borderless square. Earth's outline is the WGS-84
+ellipsoid through the same perspective camera. Satellites can appear outside
+its silhouette. The circular comparison mode draws a separate outer ring.
+At terrestrial sites Earth spans roughly 45% of the viewport width at the default
 20°, 14% at 60°, and 6.6% at 100° (about 15 pixels at the default layout).
 At tight zoom the limb can leave the view entirely.
 There are no coastlines or filled occlusion mask. `FOV ... DEG` is a lens angle,
@@ -68,7 +74,7 @@ There are no coastlines or filled occlusion mask. `FOV ... DEG` is a lens angle,
 
 Only satellites above the true local geometric horizon are eligible; zoom cannot
 reveal below-horizon objects. The camera also clips forward depth < 1 km (including
-behind-camera objects) and marker centers outside the circular view. Lens zoom
+behind-camera objects) and marker centers outside the selected viewport. Lens zoom
 cannot put an object behind the camera or bring one in front. Camera configurations
 with a nonfinite Earth view or Earth crossing the near plane fail explicitly;
 these concern extreme observer heights, not ordinary terrestrial sites.
@@ -120,7 +126,8 @@ calculation failures. Counts are checked against an independent physical-look-an
 projection, not copied from the old ground map. These are reproducible observations,
 not capacity or density targets. User feedback on the initial perspective view
 favored zoom-magnified motion and the fuller overview. The user also prefers the
-higher camera and its empty outer framing; radar/panel layout remains open.
+higher camera and its breathing room, and subsequently selected the 240×240
+borderless square. Right-panel contents remain open.
 
 Both manifests reference existing immutable snapshots; they do not copy or
 modify orbital data. `catalogue.json` uses the selected 16-object pool;
@@ -128,6 +135,36 @@ modify orbital data. `catalogue.json` uses the selected 16-object pool;
 [Acquisition, exact bytes, selection and provenance](../tools/fixtures/m2-pool/README.md)
 remain there. These archives include historical/inactive objects and are not a
 chosen production group set. Source URLs are provenance only, never fetched.
+
+## Viewport shape comparison
+
+The user selected borderless square under [0028](../docs/decisions/0028-borderless-square-viewport.md),
+keeping the working 240×240 allocation and provisional 20° default. Circular
+modes remain available for comparison; panel contents are not settled.
+
+```sh
+for mode in circle borderless-circle square; do
+  cargo run -p overhead-sim -- sim/examples/weather-gps.json \
+    2026-10-10T00:00:00Z 39.007 -104.883 2.187 \
+    --fov-deg 20 --radar-size 240 --viewport "$mode" \
+    --snapshot "/tmp/overhead-$mode.png"
+done
+```
+
+All three retain the same camera, lens scale, Earth outline, observer aim point,
+N label and panel. Both circular modes have identical marker eligibility;
+only the outer ring differs. Square mode keeps the same inset and horizontal/
+vertical extent, admitting the corners rather than rescaling the view. Its
+**diagonal** FOV is consequently wider. Glyphs and the Earth outline are clipped
+to the chosen shape; counts and selection use that same viewport. Physical
+samples, true horizon eligibility and failures are unchanged. The option also
+works in the interactive replay; it is not a runtime shape-switch control.
+
+At the pinned weather/GPS time/site, all modes show six markers at 20°; the two
+borderless images are identical because no marker occupies an extra corner.
+For a visible corner comparison, repeat at 40°: circular modes show 17 markers,
+square shows 18. All have SKY 22 and zero failures. This does not select 40° as
+the default or change the production population.
 
 ## Verify
 
@@ -137,19 +174,27 @@ cargo test -p overhead-app -p overhead-render -p overhead-sim
 ```
 
 Tests cover actual-position perspective, altitude/depth effects, fixed-camera
-magnification, near-plane/circular boundaries, poles/dateline, independent
+magnification, near-plane/circular/square boundaries, poles/dateline, independent
 ellipsoid tangency, true-state traceability, horizon counts, failed-frame
 replacement, selection/zoom, clipped outline/glyph pixels, explicit clock/config,
 and real CLI PNG snapshots with SDL unavailable. Existing engine/prediction
-regression tests remain unchanged. From a fresh staged-source Git export with an
-empty target directory, offline locked workspace check/default/all-feature tests,
-core/app/render no-default-feature checks, strict Clippy/fmt and the simulator
-build pass. Snapshot examples reproduce the counts above from an unrelated working
-directory with SDL unavailable; two-second SDL dummy-loop smoke also passes.
-Existing Rust tool/dependency caches and Homebrew SDL2 remain prerequisites; no
-ignored build artifacts are needed. `--demo` uses the checkout's paths when built
-there. No agent interactive input review was performed; the user reviewed and
-preferred both the perspective view and the subsequent higher camera.
+regression tests remain unchanged. From a fresh staged-source Git export with
+an empty build target, offline locked workspace check/default/all-feature tests,
+core/app/render no-default-feature checks, strict workspace Clippy/fmt and the
+simulator build pass. CLI tests compare explicit/default square snapshots,
+corner counts against independent physical-look-angle references, and determinism.
+
+The fresh executable runs from an unrelated directory with SDL unavailable:
+pool 20°/100° shows 0/4 markers; weather/GPS 20°/40°/100°/5°/0.1° shows
+6/18/22/4/0, with circular modes showing 17 at 40°. All have zero failures.
+The 20° default PNG matches the reviewed square comparison byte-for-byte;
+a two-second SDL dummy-loop smoke also passes.
+
+Existing Rust tool/dependency caches and Homebrew SDL2 remain prerequisites;
+no ignored build artifacts or disposable panel mockups are needed. `--demo`
+uses the checkout's paths when built there. The user reviewed snapshots and
+selected square; no agent interactive input review or hardware test was
+performed. Verification history is in [PROGRESS](../docs/PROGRESS.md).
 
 Frozen M2 evidence is a separate historical verification scope: use its
 [pinned revision workflow](../docs/evaluations/s3-m2/README.md#offline-validation-and-table-regeneration),
