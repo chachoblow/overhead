@@ -23,13 +23,16 @@ than hundreds. Pass prediction remains useful but secondary to radar quality
 ([0021](decisions/0021-radar-first-iteration-on-verified-engine.md)).
 
 The intended radar is a north-up perspective view of actual 3D satellite positions,
-as if a camera floats above the configured observer looking down toward that
-location. Zoom moves the camera closer or farther away at a fixed field of view.
+from a fixed camera above the configured observer looking down toward that
+location. Lens zoom narrows or widens the field of view without moving the camera.
 Earth and satellites share the perspective; altitude affects marker placement,
 and satellites can appear outside Earth's silhouette rather than being flattened
-onto its surface. Objects outside the view or behind the camera are clipped.
-[0024](decisions/0024-perspective-orbital-view-direction.md) records this direction;
-camera parameters remain to be refined. The current simulator still implements
+onto its surface. Objects outside the view or behind the camera are clipped;
+zoom alone cannot move an object behind the camera.
+[0024](decisions/0024-perspective-orbital-view-direction.md) records the 3D direction,
+with lens zoom selected in [0025](decisions/0025-fixed-camera-lens-zoom.md).
+Fixed camera distance and field-of-view parameters remain to be refined.
+The current simulator still implements
 [0022's ground tracks](decisions/0022-minimal-ground-map-simulator.md); the change
 is not implemented yet.
 
@@ -47,7 +50,7 @@ contents, not a mandatory checklist:
 - Auto-selected satellite: name, altitude, range, elevation, travel direction.
 - Next pass and countdown to its start, especially when the local sky is empty,
   if useful without compromising the radar.
-- Camera-distance/zoom readout, with units clarified for the perspective view.
+- Lens-zoom readout, with meaning and units clarified for the perspective view.
 
 No pass lists, radio information, or battery indicator. Layout, selection, and
 projection policies should evolve with simulator feedback.

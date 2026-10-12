@@ -288,3 +288,14 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Accepted direction 0024, amending only 0022's projection/zoom intent; retain true observer-horizon eligibility, physical readouts, explicit failures and the existing shared architecture. Numeric camera parameters remain open.
 - Updated DESIGN/PLAN and fresh-session HANDOFF; current code/tests/commands still use the orthographic ground map. User explicitly requested documentation only, with implementation refinement deferred to a fresh session.
 - No code, dependency, fixture, hardware or toolchain changes; build/test suites not rerun. Documentation whitespace and local file links checked.
+
+## 2026-10-12 UTC (fixed-camera lens-zoom decision)
+- Reconsidered the initial camera-travel intuition; accepted 0025's fixed camera with variable FOV, superseding only 0024's moving-camera/fixed-FOV choice. Actual 3D perspective and physical-state contracts remain unchanged.
+- Lens zoom favors magnifying the observer-centered scene without crossing satellite altitudes. Fixed camera distance, FOV defaults/range, clipping, Earth depiction and CLI/readout semantics remain open; no numeric proposal was accepted.
+- Added the supersession note to 0024 and updated DESIGN/PLAN/HANDOFF. Current code/tests/CLI still implement the orthographic ground map; no behind-camera indicators or implementation changes included.
+- Documentation only, approved after preview; whitespace and local file links checked. No build/test rerun, dependency/fixture/toolchain changes or hardware access.
+
+## 2026-10-12 UTC (lens-zoom handoff fresh-source verification before commit)
+- Exported staged tracked files to a clean directory with an empty build target; offline locked workspace check/default/all-feature tests, core/app/render no-default-feature checks, strict Clippy and formatting pass.
+- Built and ran the current simulator from that export: snapshots reproduce 4/22/6 visible markers from an unrelated working directory with SDL unavailable; SDL dummy-loop smoke runs for two seconds. No ignored binaries needed; cached Rust tools/dependencies and Homebrew SDL2 remain prerequisites.
+- Refreshed HANDOFF verification and run prerequisites; 0025 and open camera parameters remain the next-session direction. Results cover the existing ground map, not perspective/lens zoom; no interactive review, hardware access, firmware build or frozen-evidence rerun/change.
