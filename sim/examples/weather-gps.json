@@ -1,0 +1,14 @@
+{
+  "groups": [
+    {
+      "name": "historical-weather",
+      "path": "../../tools/fixtures/m2-pool/sources/leo.json",
+      "source_url": "https://celestrak.org/NORAD/elements/gp.php?GROUP=weather&FORMAT=JSON"
+    },
+    {
+      "name": "historical-gps",
+      "path": "../../tools/fixtures/m2-pool/sources/gnss.json",
+      "source_url": "https://celestrak.org/NORAD/elements/gp.php?GROUP=gps-ops&FORMAT=JSON"
+    }
+  ]
+}

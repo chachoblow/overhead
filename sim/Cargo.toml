@@ -7,3 +7,10 @@ edition = "2024"
 embedded-graphics.workspace = true
 embedded-graphics-simulator = "0.8.0"
 overhead-render = { version = "0.1.0", path = "../render" }
+overhead-core = { path = "../core", features = ["catalogue"] }
+overhead-app = { path = "../app" }
+# Reuse checked local manifest/file loading instead of a second ingestion path.
+overhead-tools = { path = "../tools" }
+
+[dev-dependencies]
+serde_json = "1"

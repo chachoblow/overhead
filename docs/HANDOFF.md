@@ -1,41 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-11 UTC. Next: refine the minimal real-data M3 simulator slice._
+_Last updated: 2026-10-12 UTC. Next: interactive M3 radar review._
 
-## State / agreed direction
-[0021](decisions/0021-radar-first-iteration-on-verified-engine.md) permits visual
-iteration on the verified engine before remaining M2 budgets/scheduling are closed.
-Radar quality comes first; catalogue size and information-area contents/proportions
-need visual feedback. Prediction stays tested and available, but secondary.
-No proposed numeric operating package was accepted; M2 remains open.
-Updated [PLAN](PLAN.md), [DESIGN](DESIGN.md) and amendment links in 0003/0005.
-Current `sim/src/main.rs` is static; `render/src/lib.rs` is still a stub.
+## State / changes
+The first real-data M3 simulator slice is implemented under
+[0021](decisions/0021-radar-first-iteration-on-verified-engine.md) and
+[0022](decisions/0022-minimal-ground-map-simulator.md). The user chose map-like
+satellite ground tracks over a sky chart; the initial projection is orthographic.
+`app/` holds no_std + alloc clockless state/projection/zoom/identification;
+`render/src/lib.rs` draws the 1-bit frame; `sim/` supplies explicit replay inputs,
+SDL controls and deterministic PNG snapshots. Core, prediction and firmware
+sources/fixtures are unchanged. No new third-party library/version.
 
-## Fresh session / next step
-Read PLAN, DESIGN and 0021. Refine the M3 slice before implementing: shared app
-state/rendering, explicit clock/observer, configurable local real catalogue,
-projection/clipping/zoom, real markers and basic identification. Use existing
-physical APIs and preserve explicit failures; presentation cannot alter true data.
-Compare density/layout on the 400×240 view; no fixed tens/hundreds target or
-mandatory countdown. Live fetching/cache/refresh/time sync remain M6.
-Use [workspace commands](../AGENTS.md#commands) and [local catalogue tools](../tools/README.md).
+## Next step
+Run `cargo run -p overhead-sim -- --demo`, then the denser weather/GPS example
+in [sim/README.md](../sim/README.md). Review moving-marker legibility, wheel/arrow
+zoom, Tab identification and 200/240-pixel radar allocations with the user before
+fixing density or panel contents. Initial inspected snapshots show 4 visible
+markers for the 16-object pool, 22 for weather/GPS at 8,000 km and 6 at 2,500 km.
+Not accepted catalogue sizes or target capacity. M3 feedback remains open in
+[PLAN](PLAN.md); do not jump into M4/M5 polish.
 
-## Evidence / open risks
-All frozen `m2-bounded-20-v1` S3 gates pass; preserve sources, fixtures and evidence.
-[Results](evaluations/s3-m2.md), [raw provenance/regeneration](evaluations/s3-m2/README.md),
-[host/build commands](../firmware/M2_CAPTURE.md#sources-and-build).
-Measured workloads are not general capacity or whole-device guarantees. Production
-limits/cadences/overload behavior, bounded scheduling, whole-device RAM/safe stack
-and RWX remain open. Simulator visual success is not target performance evidence.
-No extra measurement matrix without a specific unanswered question; Sharp is separate.
+## Contracts / open risks
+Markers use ground positions, true elevation > 0, then map/view clipping. Map
+radius is projected distance; readouts remain true. Failures replace old markers
+and stay explicit. Sources are historical local data, not live tracking.
+M2 production limits/cadences/overload/scheduling and whole-device RAM/safe stack
+remain open. Preserve [frozen S3 evidence](evaluations/s3-m2.md); no new measurement
+matrix without a specific question. Sharp bring-up and RWX remain separate.
 
-## Hardware / verification
-No hardware accessed this session. Board holds `m2_diagnostic`; reset reruns it.
-No monitor active; UART `/dev/cu.usbserial-110`. Display/PSRAM remain unused;
-new hardware access requires approval and new images require their own image gate.
-Documentation-only changes verified from a clean staged-source export: offline
-workspace check/default/all-feature tests, no_std core, strict Clippy/fmt, simulator
-build, catalogue smoke test, 52 Python tests and frozen manifest/capture tables pass.
-No simulator window opened or target images rebuilt. Prior firmware/image gates
-remain historical evidence. Tracked sources suffice; ignored binaries are not archives.
-Existing toolchains/cached dependencies, Python 3.11+ and Homebrew SDL2 are prerequisites.
+## Verification / hardware
+Clean staged-source export, empty build directory: offline locked workspace
+check/default/all-feature tests, core/app/render no-default checks, Clippy/fmt,
+simulator build/help/snapshots and outside-checkout demo pass. SDL dummy loop
+passes; interactive input review pending. Cached tools/dependencies and SDL2 required.
+Per [0023](decisions/0023-frozen-m2-revision-isolation.md), current Cargo.lock
+intentionally fails the old freeze. At pinned revision `ab267ae`, all 52 Python
+tests, frozen preparation gates and capture-derived tables pass unchanged.
+No hardware/target build/toolchain change; board retains diagnostic image, no monitor active.

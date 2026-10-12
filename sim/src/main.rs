@@ -1,36 +1,165 @@
-use embedded_graphics::{
-    mono_font::{MonoTextStyle, ascii::FONT_6X10},
-    pixelcolor::BinaryColor,
-    prelude::*,
-    primitives::{Circle, PrimitiveStyle},
-    text::Text,
-};
+mod config;
+
+use config::{Config, USAGE, replay_time};
+use embedded_graphics::pixelcolor::BinaryColor;
 use embedded_graphics_simulator::{
-    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, Window,
+    BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
+    sdl2::{Keycode, MouseWheelDirection},
+};
+use overhead_app::RadarApp;
+use std::{
+    env,
+    process::ExitCode,
+    thread,
+    time::{Duration, Instant},
 };
 
-fn main() -> Result<(), core::convert::Infallible> {
-    // A framebuffer with the real panel's size and colour depth.
-    let mut display = SimulatorDisplay::<BinaryColor>::new(Size::new(400, 240));
-
-    // The radar circle: 240 px across, flush left.
-    Circle::new(Point::new(0, 0), 240)
-        .into_styled(PrimitiveStyle::with_stroke(BinaryColor::On, 1))
-        .draw(&mut display)?;
-
-    // The readout panel's first label.
-    Text::new(
-        "OVERHEAD",
-        Point::new(252, 16),
-        MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
-    )
-    .draw(&mut display)?;
-
-    // Scale 2x and use a grey-LCD palette, close to the Sharp look.
+fn run(config: Config) -> Result<(), String> {
+    let loaded = overhead_tools::catalogue::load(&config.manifest)?;
+    eprint!("{}{}", loaded.report, loaded.diagnostics);
+    let ingestion_warning = !loaded.diagnostics.is_empty();
+    let mut app =
+        RadarApp::new(loaded.catalogue, config.observer, config.view).map_err(|e| e.to_string())?;
+    app.update(config.start).map_err(|e| e.to_string())?;
+    let mut previous_failures = Vec::new();
+    report_failures(&app, &mut previous_failures);
+    eprintln!(
+        "REPLAY start={}Z observer={:.6},{:.6},{:.3}km; local data only; no freshness guarantee",
+        config.start,
+        config.observer.latitude_rad.to_degrees(),
+        config.observer.longitude_rad.to_degrees(),
+        config.observer.altitude_km
+    );
+    let mut display = SimulatorDisplay::<BinaryColor>::new(overhead_render::DISPLAY_SIZE);
+    overhead_render::draw(&mut display, &app, config.layout, ingestion_warning)
+        .map_err(|e| e.to_string())?;
+    if let Some(path) = config.snapshot {
+        display
+            .to_rgb_output_image(
+                &OutputSettingsBuilder::new()
+                    .scale(1)
+                    .pixel_spacing(0)
+                    .theme(BinaryColorTheme::LcdWhite)
+                    .build(),
+            )
+            .save_png(&path)
+            .map_err(|e| format!("cannot save {}: {e}", path.display()))?;
+        let counts = app.counts();
+        println!(
+            "UTC={}Z catalogue={} sky={} visible={} failed={} snapshot={}",
+            config.start,
+            counts.catalogue,
+            counts.above_horizon,
+            counts.visible,
+            counts.failed,
+            path.display()
+        );
+        return Ok(());
+    }
     let settings = OutputSettingsBuilder::new()
         .theme(BinaryColorTheme::LcdWhite)
         .scale(2)
         .build();
-    Window::new("Overhead", &settings).show_static(&display);
-    Ok(())
+    let mut window = Window::new("Overhead - local replay", &settings);
+    let started = Instant::now();
+    // This is a host visual-loop target, not a production device cadence or
+    // bounded scheduler. Missed frames are not queued or caught up in a burst.
+    let frame_period = Duration::from_millis(50);
+    loop {
+        let frame_started = Instant::now();
+        // First frame is exactly the supplied start, including snapshot checks.
+        window.update(&display);
+        for event in window.events() {
+            match event {
+                SimulatorEvent::Quit
+                | SimulatorEvent::KeyDown {
+                    keycode: Keycode::Escape,
+                    ..
+                } => return Ok(()),
+                SimulatorEvent::KeyDown {
+                    keycode: Keycode::Up,
+                    ..
+                } => app.zoom(1),
+                SimulatorEvent::KeyDown {
+                    keycode: Keycode::Down,
+                    ..
+                } => app.zoom(-1),
+                SimulatorEvent::KeyDown {
+                    keycode: Keycode::Tab,
+                    repeat: false,
+                    ..
+                } => app.select_next(),
+                SimulatorEvent::MouseWheel {
+                    scroll_delta,
+                    direction,
+                } => app.zoom(wheel_steps(scroll_delta.y, direction)),
+                _ => {}
+            }
+        }
+        if let Some(remaining) = frame_period.checked_sub(frame_started.elapsed()) {
+            thread::sleep(remaining);
+        }
+        app.update(replay_time(config.start, started.elapsed())?)
+            .map_err(|e| e.to_string())?;
+        report_failures(&app, &mut previous_failures);
+        overhead_render::draw(&mut display, &app, config.layout, ingestion_warning)
+            .map_err(|e| e.to_string())?;
+    }
+}
+
+fn wheel_steps(y: i32, direction: MouseWheelDirection) -> i32 {
+    let steps = y.clamp(-64, 64);
+    if direction == MouseWheelDirection::Flipped {
+        -steps
+    } else {
+        steps
+    }
+}
+
+fn report_failures(app: &RadarApp, previous: &mut Vec<(u64, String)>) {
+    let current: Vec<_> = app
+        .objects()
+        .filter_map(|(entry, result)| {
+            result
+                .as_ref()
+                .err()
+                .map(|e| (entry.elements().norad_id, e.to_string()))
+        })
+        .collect();
+    if current != *previous {
+        if current.is_empty() {
+            eprintln!("tracking recovered at {:?}", app.time());
+        }
+        for (id, error) in &current {
+            eprintln!("tracking failed at {:?}, NORAD {id}: {error}", app.time());
+        }
+        *previous = current;
+    }
+}
+
+fn main() -> ExitCode {
+    let args: Vec<String> = env::args().skip(1).collect();
+    if args.len() == 1 && matches!(args[0].as_str(), "--help" | "-h") {
+        println!("{USAGE}");
+        return ExitCode::SUCCESS;
+    }
+    match Config::parse(&args).and_then(run) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
+            eprintln!("error: {error}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn wheel_direction_and_large_events() {
+        assert_eq!(wheel_steps(1, MouseWheelDirection::Normal), 1);
+        assert_eq!(wheel_steps(1, MouseWheelDirection::Flipped), -1);
+        assert_eq!(wheel_steps(i32::MIN, MouseWheelDirection::Flipped), 64);
+        assert_eq!(wheel_steps(0, MouseWheelDirection::Normal), 0);
+    }
 }

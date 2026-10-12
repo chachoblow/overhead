@@ -1,5 +1,10 @@
 # Host tools
 
+Current workspace Rust tests cover the active headless tools. Frozen M2 manifest,
+capture and reporting gates (including their Python tests) instead require the
+[pinned historical export](../docs/evaluations/s3-m2/README.md#offline-validation-and-table-regeneration).
+The evolving workspace lockfile intentionally fails that old source freeze.
+
 ## `overhead-catalogue`
 
 Load local OMM groups and report a nonempty, deduplicated catalogue. No network,

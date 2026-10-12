@@ -10,6 +10,12 @@ production default. Historical suites/protocols remain separately runnable.
 
 ## Sources and build
 
+**Use the historical source revision** from the
+[pinned export workflow](../docs/evaluations/s3-m2/README.md#offline-validation-and-table-regeneration)
+for this frozen harness and its gates. The current M3 workspace has a changed
+root lockfile and intentionally fails the freeze guard. Do not renew old evidence
+or bypass its hashes; current simulator checks are a separate verification scope.
+
 `generate_m2.py --check` checks the entire frozen manifest, then compares
 `src/m2_fixtures.rs` with a lossless conversion of archived document strings.
 Each distinct document is embedded once; repeated groups still parse/count it

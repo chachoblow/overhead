@@ -16,8 +16,12 @@ past context.
 - `core/` → `overhead-core`: ingestion, propagation, coordinates, observer geometry,
   and catalogue assembly. Default no_std/allocation-free; optional `omm` parsing
   and `catalogue` (implies `omm`) require alloc, not std.
-- `render/` → `overhead-render`: no_std, embedded-graphics `BinaryColor`; stub.
-- `sim/` → `overhead-sim`: static SDL2 simulator, 400×240 at 2×, LcdWhite theme.
+- `app/` → `overhead-app`: no_std + alloc, clockless radar state, ground-map
+  projection, zoom and basic identification; no I/O or scheduling.
+- `render/` → `overhead-render`: no_std, embedded-graphics `BinaryColor`;
+  400×240 radar/readouts consuming shared app state.
+- `sim/` → `overhead-sim`: real-data SDL2 replay, 400×240 at 2×, LcdWhite theme;
+  explicit inputs and headless PNG snapshots. Usage in sim/README.md.
 - `tools/` → `overhead-tools`: headless tracking/catalogue tools and offline fixture generators;
   usage in tools/README.md. Default binary is still a placeholder.
 - `firmware/` → `overhead-s3-benchmark`: isolated no_std S3 kernel benchmark,
@@ -27,10 +31,14 @@ past context.
 ## Commands
 - Check: `cargo check --workspace`
 - Test: `cargo test --workspace`
-- Simulator: `cargo run -p overhead-sim` (opens an SDL2 window; needs Homebrew
+- Simulator: `cargo run -p overhead-sim -- --demo` (historical replay; opens an SDL2 window; needs Homebrew
   SDL2, linker path set in .cargo/config.toml)
 - Firmware build: `cd firmware && . "$HOME/export-esp.sh" && cargo build --release --locked`
 - Firmware host tests (from repo root): `cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked`
+
+Frozen M2 evidence gates require the pinned source revision, not the evolving
+workspace lockfile: follow docs/evaluations/s3-m2/README.md. Current simulator
+verification is separate; never refresh the historical freeze to hide drift.
 
 Never flash hardware or change the toolchain without asking first.
 

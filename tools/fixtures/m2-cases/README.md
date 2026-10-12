@@ -45,6 +45,11 @@ metadata/diagnostic representation and pins the separate numerical references.
 
 ## Offline regeneration
 
+**Historical revision required:** the frozen manifest includes the root lockfile.
+Use the [pinned source export workflow](../../../docs/evaluations/s3-m2/README.md#offline-validation-and-table-regeneration)
+before running the frozen gates below. They intentionally reject the evolving M3
+workspace; do not refresh the freeze. Current simulator checks are separate.
+
 A fresh session starts with `docs/HANDOFF.md`, `docs/PLAN.md`, and `docs/DESIGN.md`.
 Preparation is complete; target implementation is next. Running these host gates
 does not establish target fit or authorize flashing. Run the additional numerical

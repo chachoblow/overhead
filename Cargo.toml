@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["core", "render", "sim", "tools"]
+members = ["core", "app", "render", "sim", "tools"]
 exclude = ["firmware"]
 
 [workspace.dependencies]

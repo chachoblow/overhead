@@ -41,10 +41,22 @@ The board was left on the diagnostic image, with no monitor process running.
 
 ## Offline validation and table regeneration
 
-Use the matching frozen preparation source revision; do not renew the manifest
-to make old evidence pass after unrelated source changes. From repository root:
+Use the complete pinned source revision under
+[0023](../../decisions/0023-frozen-m2-revision-isolation.md). The evolving workspace's
+`Cargo.lock` no longer matches this historical freeze; running its manifest gate
+or freeze-dependent Python tests in the current tree is expected to fail. Do not
+renew the manifest or weaken the guard to make old evidence pass.
+
+From a Git checkout containing the pinned commit, export a separate clean tree:
 
 ```sh
+frozen=$(mktemp -d /tmp/overhead-m2-frozen.XXXXXX)
+git archive ab267ae587585d1a0fa9983e49bad49537055c0d | tar -x -C "$frozen"
+cd "$frozen"
+python3 tools/prepare_m2_manifest.py --check
+python3 firmware/generate_m2.py --check
+python3 -m unittest discover -s tools -p 'test_*.py'
+python3 -m unittest discover -s firmware -p 'test_*.py'
 python3 firmware/m2_capture.py validate-set \
   --measure docs/evaluations/s3-m2/measure-boot-1.log docs/evaluations/s3-m2/measure-boot-2.log \
   --diagnostic docs/evaluations/s3-m2/diagnostic-boot-1.log docs/evaluations/s3-m2/diagnostic-boot-2.log
@@ -54,6 +66,15 @@ python3 tools/summarize_m2_capture.py \
   --output-prefix docs/evaluations/s3-m2/results --check
 python3 -m unittest discover -s tools -p 'test_summarize_m2_capture.py'
 ```
+
+The archive contains tracked sources, original lockfiles and raw captures, not
+ignored binaries or a `.git` directory. A latest-source-only tarball or shallow
+clone without the pinned Git object cannot reproduce this workflow; obtain that
+revision first. Python checks use only the standard library. For full host/build
+preflight, follow that exported revision's fixture/harness instructions with the
+existing Rust/Espressif toolchains, cached dependencies and SDL2; no hardware
+access or toolchain installation is implicit. Current simulator verification
+remains in [sim/README.md](../../../sim/README.md#verify), outside this archive.
 
 Without `--check`, choose a new output prefix; existing evidence is never overwritten.
 The helper validates the complete four-log set before extracting any results. It

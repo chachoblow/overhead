@@ -270,3 +270,15 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Exported staged tracked sources without ignored build/capture artifacts; offline workspace check/default/all-feature tests, no_std core, strict Clippy/fmt, simulator build and local catalogue smoke test pass.
 - All 52 Python tests, frozen manifest/source checks and exact capture-table regeneration pass. No simulator window opened, target images rebuilt, hardware accessed or tools/dependencies changed.
 - Refreshed HANDOFF with current static-simulator/renderer-stub state, startup links and verification. Next session refines M3 under 0021; M2 limits/scheduling remain open.
+
+## 2026-10-12 UTC (minimal real-data ground-map simulator)
+- User chose a map-like ground-track radar; implemented shared no_std + alloc app state, orthographic projection, 1-bit rendering and explicit 1× replay under 0022. Core/prediction/firmware sources and frozen data are unchanged.
+- Added zoom, basic identification, typed per-object failures, local catalogue examples and deterministic PNG snapshots; inspected 16-object and 105-object replays at two layouts/zoom scales. No product capacity or cadence selected.
+- Workspace check/default and all-feature tests, no-default-feature core/app/render checks, strict Clippy/fmt and diff checks pass; 21 app/render/simulator tests cover state, geometry, rendering and real CLI behavior.
+- SDL dummy loop ran for two seconds; no interactive input review, hardware access, firmware build or toolchain change. Next: user feedback on moving radar/density/layout; M2 budgets/scheduling remain open.
+
+## 2026-10-12 UTC (M3 fresh-session verification before commit)
+- Exported staged tracked sources to a new directory with an empty build target; offline locked workspace check/default/all-feature tests, core/app/render no-default-feature checks and strict Clippy/fmt pass.
+- Built the simulator there; documented snapshots reproduce 4/22/6 visible markers, demo works from an unrelated directory, and SDL dummy-loop smoke passes. Cached dependencies/toolchains and Homebrew SDL2 remain prerequisites; no interactive review or hardware access.
+- Found the current-tree frozen Python gate rejects the new workspace lockfile; confirmed this is the only pinned-source mismatch and external locked packages are unchanged. Accepted 0023: historical evidence uses full revision ab267ae587585d1a0fa9983e49bad49537055c0d, without weakening guards or renewing the freeze.
+- From that pinned Git archive, all 52 Python tests, pool/case/numerical/source/manifest/table gates, four-log validation and exact derived-table regeneration pass. Documented separate current/historical verification; no target images rebuilt or evidence changed.

@@ -1,0 +1,8 @@
+{
+  "groups": [
+    {
+      "name": "historical-m2-pool",
+      "path": "../../tools/fixtures/m2-pool/pool.json"
+    }
+  ]
+}

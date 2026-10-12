@@ -1,0 +1,13 @@
+[package]
+name = "overhead-app"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Shared clockless application state uses the checked allocating catalogue.
+overhead-core = { path = "../core", features = ["catalogue"] }
+# Already used by core; no_std presentation math, separate from physical geometry.
+libm = "0.2"
+
+[dev-dependencies]
+serde_json = "1"

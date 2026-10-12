@@ -22,6 +22,12 @@ count. Curate and tune density on the small 1-bit display: tens may work better
 than hundreds. Pass prediction remains useful but secondary to radar quality
 ([0021](decisions/0021-radar-first-iteration-on-verified-engine.md)).
 
+The initial radar is a north-up, map-like ground-track view, not an elevation/
+azimuth sky chart. Its observer-centered orthographic projection and projected
+kilometre zoom are defined in [0022](decisions/0022-minimal-ground-map-simulator.md).
+Markers show where satellites are over Earth; altitude/range/elevation readouts
+remain true physical measurements. Projection and layout remain iterative.
+
 Only satellites above the local geometric horizon are eligible for markers,
 then clipped to the current view—even at whole-Earth zoom. This is the observer's
 sky, not a global satellite tracker. Zooming out can reveal additional eligible

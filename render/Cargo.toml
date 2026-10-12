@@ -6,3 +6,7 @@ edition = "2024"
 [dependencies]
 embedded-graphics.workspace = true
 overhead-core = { version = "0.1.0", path = "../core" }
+overhead-app = { path = "../app" }
+
+[dev-dependencies]
+serde_json = "1"

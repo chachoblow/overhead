@@ -1,6 +1,6 @@
 # Overhead — Plan
 
-**Current: begin the minimal M3 simulator slice on the verified engine; M2 operating-budget and scheduling work remains open.**
+**Current: review the implemented M3 real-data simulator; M2 operating-budget and scheduling work remains open.**
 All frozen S3 capture gates pass. Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -109,18 +109,21 @@ hardware; the first S3 kernel baseline alone does not justify capacity or cadenc
 **Done when:** a curated catalogue and upcoming passes are testable headlessly,
 with measured costs justifying supported size, cadence, and prediction accuracy.
 
-## M3 — Minimal real-data radar (next)
-Refine this slice before implementing: consume verified physical state, preserve
-explicit failures, and keep presentation separate. No pass-prediction integration
-or live fetching is required. Simulator throughput is not target capacity evidence.
+## M3 — Minimal real-data radar (in progress)
+The initial ground-map slice is implemented under
+[0022](decisions/0022-minimal-ground-map-simulator.md); see [simulator usage](../sim/README.md).
+Shared state consumes verified physical outputs, preserving failures separately
+from presentation. No pass-prediction integration or live fetching is required.
+Simulator throughput is not target capacity evidence.
 
-- [ ] Add shared app state, renderer entry point, simulator loop, explicit clock,
+- [x] Add shared app state, renderer entry point, simulator loop, explicit clock,
   and convenient observer/local-catalogue configuration.
-- [ ] Implement/test location-centered projection, clipping, and zoom from
+- [x] Implement/test location-centered projection, clipping, and zoom from
   local scales to wider than Earth; settle spatial-view semantics.
-- [ ] Show real markers and basic identification; wire scroll wheel/up/down zoom.
+- [x] Show real markers and basic identification; wire scroll wheel/up/down zoom.
 - [ ] Compare catalogue selections/densities and radar/information-area proportions
-  on the 400×240 view before fixing product counts or panel contents.
+  on the 400×240 view before fixing product counts or panel contents. Initial
+  deterministic snapshots inspected; moving-view/input review with the user remains.
 
 **Done when:** satellites move through a zoomable view traceable to verified
 engine outputs, with initial visual feedback on density and layout. Coastlines,
