@@ -352,3 +352,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Corrected stale firmware/fixture status and separated current Python checks from pinned M2 reproduction. Accepted decisions, frozen document bytes, fixture data and evidence remain unchanged.
 - Added the cleanup prompt and AGENTS routing, including a safeguard for manifest-hashed documentation; guarded completed bootstrap setup against accidental reuse. User confirmed inclusion of the pre-existing prompt/routing in the wrap-up commit.
 - Docs-only verification: final diff, whitespace, local links/anchors/paths and instruction consistency checked; command contracts reviewed statically. No Rust/runtime checks, hardware/toolchain changes or evidence regeneration; older records and external sources were not exhaustively revalidated.
+
+## 2026-10-13 UTC (retire completed bootstrap prompt)
+- Deleted `.pi/prompts/bootstrap.md` at the user's request; setup is complete and `/resume`/`/next` cover ongoing orientation. Historical bootstrap mentions are retained.
+- Updated HANDOFF for the next session; PLAN, DESIGN and accepted decisions remain unchanged. Next product work is still scoping M3 panel exploration with the user.
+- Checked final diff, whitespace, handoff local links/anchors/paths, remaining bootstrap references and instruction consistency. No Rust checks rerun: no code/build inputs changed; no runtime/hardware checks, toolchain changes or frozen-evidence renewal.
