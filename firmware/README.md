@@ -216,8 +216,17 @@ cargo test --workspace
 cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked
 cargo +stable clippy --manifest-path firmware/Cargo.toml --lib --tests --examples -- -D warnings
 cargo fmt --manifest-path firmware/Cargo.toml -- --check
-python3 -m unittest discover -s firmware -p 'test_*.py'
+python3 -m unittest discover -s firmware -p 'test_capture.py'
+python3 -m unittest discover -s firmware -p 'test_catalogue_capture.py'
+python3 -m unittest discover -s firmware -p 'test_image_gate.py'
 ```
+
+These Python suites cover the historical protocols and image gate without the
+frozen M2 source guard. Full discovery (`test_*.py`) also includes
+`test_m2_capture.py` and must run in the
+[pinned historical export](../docs/evaluations/s3-m2/README.md#offline-validation-and-table-regeneration),
+not the evolving workspace. Keep current-source checks separate from frozen
+capture reproduction; do not bypass or renew the freeze to make a test pass.
 
 Run the separate [image regression runner](IMAGE_GATE.md#complete-regression-run--no-hardware)
 to check both binaries, alignment stress, and a source-generated negative control.

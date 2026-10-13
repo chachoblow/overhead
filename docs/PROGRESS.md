@@ -346,3 +346,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - AGENTS routes equivalent natural-language requests to these prompts. Ambiguous scope, unresolved checks, unsafe Git recovery and unclear push destinations require a pause; unrelated work is preserved.
 - Refreshed HANDOFF while retaining the unapproved-panel boundary and M3 next step. PLAN unchanged: no milestone work completed or product decisions altered.
 - Docs/prompts only: whitespace, local paths/links and instruction consistency reviewed; no Rust checks rerun, hardware/toolchain changes or frozen-evidence renewal.
+
+## 2026-10-13 UTC (documentation consolidation)
+- Shortened the default reading path: grouped completed PLAN work, separated resume context from DESIGN intent, and linked simulator verification to dated history. M3 panel exploration and M2 budgets/scheduling remain open; no product scope changed.
+- Corrected stale firmware/fixture status and separated current Python checks from pinned M2 reproduction. Accepted decisions, frozen document bytes, fixture data and evidence remain unchanged.
+- Added the cleanup prompt and AGENTS routing, including a safeguard for manifest-hashed documentation; guarded completed bootstrap setup against accidental reuse. User confirmed inclusion of the pre-existing prompt/routing in the wrap-up commit.
+- Docs-only verification: final diff, whitespace, local links/anchors/paths and instruction consistency checked; command contracts reviewed statically. No Rust/runtime checks, hardware/toolchain changes or evidence regeneration; older records and external sources were not exhaustively revalidated.

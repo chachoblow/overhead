@@ -1,7 +1,8 @@
 # Overhead — Plan
 
-**Current: M3 panel design deferred to another session; normal/debug separation and field reduction agreed, not implemented. M2 operating-budget and scheduling work remains open.**
-All frozen S3 capture gates pass. Engine-first correctness remains the foundation
+**Current: M3 panel design; normal/debug separation and field reduction agreed,
+not implemented. M2 operating-budget and scheduling work remains open.**
+Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
 Refine each slice before starting; later checkboxes are scope, not session-sized tasks.
@@ -26,81 +27,40 @@ Ask before flashing or changing toolchains. Simulator work need not wait for
 hardware; the first S3 kernel baseline alone does not justify capacity or cadence.
 
 ## M2 — Catalogue, pass prediction, and operating budget
-- [x] Settle catalogue conflicts, invalid records, provenance, and nonempty
-  acceptance ([0011](decisions/0011-catalogue-ingestion-and-provenance.md)).
-- [x] Implement/test local group configuration and checked NORAD-ID merge in
-  shared core plus the [headless catalogue tool](../tools/README.md).
-  Live fetching and active-catalogue refresh remain M6.
-- [x] Settle physical-pass product semantics and configurable defaults
-  ([0012](decisions/0012-physical-pass-semantics.md), detection limits clarified
-  by [0013](decisions/0013-pass-detection-resolution.md)); keep passes independent
-  of screen traversal.
-- [x] Settle the bounded search baseline, boundary handling, and partial-result
-  behavior ([0014](decisions/0014-pass-search-baseline.md)).
-- [x] Finalize the allocation-free shared-core API, configuration validation,
-  and synthetic test matrix ([0015](decisions/0015-pass-search-api.md)).
-- [x] Implement/test the synthetic elevation search kernel, including boundaries,
-  short-event detection limits, refinement, failures, and evaluation budgets.
-- [x] Integrate orbital elevation evaluation with orbital pipeline, pass-bracket,
-  failure, and budget tests.
-- [x] Add headless catalogue pass aggregation/reporting per 0012–0015,
-  preserving partial results and unsearched satellite details; uncertain
-  arrival ordering follows [0016](decisions/0016-catalogue-pass-aggregation.md).
-- [x] Evaluate representative orbital detection intervals separately from
-  crossing tolerance ([results and limits](evaluations/detection-intervals.md));
-  no detection default selected.
-- [x] Add reproducible host propagation/geometry/prediction benchmarks by orbit
-  class and repeated mixed workload size ([results](evaluations/host-costs.md));
-  kernel throughput only, not catalogue capacity or device limits.
-- [x] Establish the first S3 propagation/prediction baseline: 14 workloads with
-  matching host work counts; no display/PSRAM dependency ([results](evaluations/s3-costs.md)).
-- [x] Prepare separately runnable age/search/scaling suites and capture the first
-  16-slot S3 workload ([results](evaluations/s3-scaling-16.md)); repeated slots
-  remain compute evidence, not catalogue capacity.
-- [x] Capture V2 baseline, 64-slot scaling, and all prepared signed-age/search-setting
-  suites: 120 workloads × three samples, matching host counts
-  ([results and evidence](evaluations/s3-expanded.md)).
-- [x] Measure 4/8 distinct historical catalogues at common UTC on host: checked
-  initialization, retained aggregation, and requested heap peaks, including
-  partial/unsearched work ([results](evaluations/catalogue-costs.md)); not target RAM.
-- [x] Prepare a separate bounded S3 catalogue/heap/written-stack experiment with
-  host work expectations and strict capture validation
-  ([method](../firmware/CATALOGUE_MEMORY.md)).
-- [x] Capture first 4/8-object S3 initialization/aggregation heap costs and observed
-  stack writes: two runs × eight cases × three samples, matching host counts
-  ([results and limits](evaluations/s3-catalogue-memory.md)); not whole-device peak RAM.
-- [x] Investigate the multiple-DROM boot diagnostic offline: section-gap cause
-  reproduced and this image's mapping explained ([findings](evaluations/s3-drom-diagnostic.md));
-  source remedy and corrected target verification below.
-- [x] Prepare a source-level DROM remedy/image gate: both firmware binaries,
-  64 KiB stress builds, four alignment fixtures and a NOBITS negative control
-  pass offline ([method](../firmware/IMAGE_GATE.md), [0018](decisions/0018-source-level-drom-remedy-and-image-gate.md)).
-- [x] Verify a corrected normal-build boot/capture with approval: two complete
-  catalogue-memory runs, no multiple-DROM diagnostic ([evidence](evaluations/s3-drom-diagnostic.md#corrected-normal-build-target-verification)).
-  The separate RWX warning remains.
-- [x] Refine/freeze the bounded evidence **preparation scope**, preserving historical
-  controls and adding a separately pinned real-orbit cohort
-  ([0019](decisions/0019-bounded-m2-evidence-preparation.md)); not a capture-ready manifest.
-- [x] Pin the separate 16-object source pool and verify initialized paths, epochs,
-  growth searches and all density-site candidates on host
-  ([initial suitability evidence](evaluations/m2-pool-suitability.md)); not full preflight.
-- [x] Preflight all 20 candidate host ingestion/work cases with retained diagnostics,
-  collection observations, RAM-input overlap/lifetimes and full requested-memory
-  release ([evidence/limits](evaluations/m2-host-preflight.md)); not a frozen manifest.
-- [x] Pin numerical references and identical host/target check selection, finish
-  target metadata/representation review, and freeze the exact 20-case manifest
-  ([frozen annex](evaluations/m2-frozen-manifest.md), [0020](decisions/0020-m2-capture-manifest-freeze.md));
-  all 75 numerical rows pass on host; accepted target evidence is below.
-- [x] Implement the frozen timed/diagnostic harness, strict capture validation and
-  exact normal-image gates; preserve pinned sources and fixed heap
-  ([usage, frame review and limits](../firmware/M2_CAPTURE.md)).
-- [x] With approval, capture the frozen suite: two timed and two diagnostic boots,
-  120 measured samples, 75 numerical rows per diagnostic boot and 252 two-pattern
-  phase-stack observations; work/heap/collection counters agree and fully release
-  ([results and limits](evaluations/s3-m2.md)). No new matrix or production policy.
-- [x] Agree the transition to radar-first simulator iteration on the verified
-  engine; retain prediction and leave numeric product limits open
-  ([0021](decisions/0021-radar-first-iteration-on-verified-engine.md)).
+- [x] Checked local group configuration, catalogue merge/provenance and headless
+  reporting under [0011](decisions/0011-catalogue-ingestion-and-provenance.md).
+  [Tool usage](../tools/README.md#overhead-catalogue); live fetching/refresh remain M6.
+- [x] Allocation-free physical-pass search and orbital integration, including
+  boundaries, refinement, failures and evaluation budgets. Contracts:
+  [semantics](decisions/0012-physical-pass-semantics.md),
+  [detection limits](decisions/0013-pass-detection-resolution.md),
+  [baseline](decisions/0014-pass-search-baseline.md),
+  [API](decisions/0015-pass-search-api.md). Catalogue aggregation retains partial/
+  unsearched work and [uncertain arrival ordering](decisions/0016-catalogue-pass-aggregation.md).
+- [x] [Detection-interval study](evaluations/detection-intervals.md), separate from
+  crossing tolerance; no detection default selected.
+- [x] Kernel cost evidence on [host](evaluations/host-costs.md) and S3:
+  [baseline](evaluations/s3-costs.md), [16-slot follow-up](evaluations/s3-scaling-16.md),
+  [expanded age/search/scaling suites](evaluations/s3-expanded.md). Repeated slots
+  measure compute, not distinct-catalogue capacity.
+- [x] Distinct 4/8-object initialization, retained aggregation and heap experiments
+  on [host](evaluations/catalogue-costs.md) and [S3](evaluations/s3-catalogue-memory.md),
+  including partial/unsearched work and observed stack writes. Host heap is not
+  target RAM; target observations are not whole-device peaks or safe-stack bounds.
+- [x] Source-level DROM remedy and [offline image gate](../firmware/IMAGE_GATE.md)
+  under [0018](decisions/0018-source-level-drom-remedy-and-image-gate.md), with
+  [diagnosis and corrected catalogue-memory boots](evaluations/s3-drom-diagnostic.md).
+  The separate RWX warning remains open.
+- [x] Bounded preparation under [0019](decisions/0019-bounded-m2-evidence-preparation.md):
+  [pinned-pool suitability](evaluations/m2-pool-suitability.md),
+  [host ingestion/work/memory preflight](evaluations/m2-host-preflight.md), and
+  [20-case manifest/numerical freeze](evaluations/m2-frozen-manifest.md) under
+  [0020](decisions/0020-m2-capture-manifest-freeze.md).
+- [x] [Frozen harness/image gates](../firmware/M2_CAPTURE.md) and approved target
+  captures. All frozen gates pass; exact sample counts, numerical checks, memory/
+  stack observations and limitations live in the [results](evaluations/s3-m2.md).
+  Reproduce only at the [pinned revision](evaluations/s3-m2/README.md#offline-validation-and-table-regeneration),
+  not the evolving workspace. No new matrix or production policy is implied.
 - [ ] Use the visual workload and measured target costs to set catalogue/input/result
   limits, lookahead, calculation/prediction cadences and explicit over-budget behavior.
 - [ ] Select scheduling and verify bounded latency separately. Production prediction
@@ -110,51 +70,28 @@ hardware; the first S3 kernel baseline alone does not justify capacity or cadenc
 with measured costs justifying supported size, cadence, and prediction accuracy.
 
 ## M3 — Minimal real-data radar (in progress)
-The initial ground map under [0022](decisions/0022-minimal-ground-map-simulator.md)
-has been replaced by [0024's actual-3D perspective direction](decisions/0024-perspective-orbital-view-direction.md)
-and [0025's fixed-camera lens zoom](decisions/0025-fixed-camera-lens-zoom.md),
-implemented under [0026](decisions/0026-fixed-camera-perspective-slice.md) with
-[0027's higher fixed camera](decisions/0027-higher-fixed-camera-overview.md).
-[0028](decisions/0028-borderless-square-viewport.md) now selects borderless square
-clipping, retaining the 240×240 allocation and provisional 20° default.
-See [current simulator usage and review examples](../sim/README.md).
-Physical outputs, observer-horizon counts and explicit failures remain separate
-from presentation. The user prefers the higher camera and breathing room;
-removing the ring is not a reason to fill the view. [0029](decisions/0029-normal-and-debug-presentation-direction.md)
-records normal/debug separation and field reduction as direction only. The user
-deferred visual iteration; neither panel mockup is approved. Refine the next
-slice before implementation, without choosing a production population.
-No pass-prediction integration or live fetching is required; simulator throughput
-is not target capacity evidence.
+[DESIGN](DESIGN.md#interface-intent) owns the visual brief and open panel questions;
+[simulator usage](../sim/README.md) owns controls and comparison examples.
 
-- [x] Add shared app state, renderer entry point, simulator loop, explicit clock,
-  and convenient observer/local-catalogue configuration.
-- [x] Implement/test the initial location-centered ground-map projection,
-  clipping and zoom from local scales to wider than Earth (0022).
-- [x] Show real markers and basic identification; wire scroll wheel/up/down zoom.
-- [x] Gather first user feedback: busier weather/GPS view is a good first pass;
-  clarify actual 3D perspective-camera intent rather than ground tracks (0024).
-- [x] Reconsider camera travel versus lens zoom; select a fixed camera with
-  variable FOV for observer-centered inspection (0025); settle initial settings (0026).
-- [x] Implement/test the fixed perspective camera, lens zoom, actual-position
-  projection, WGS-84 Earth outline and clipping; migrate controls/readout/CLI
-  semantics without changing physical state or observer-horizon eligibility.
-  Headless snapshots and first user motion/zoom feedback reviewed.
-- [x] Gather perspective feedback: user likes zoom-magnified screen motion and
-  the fuller wide view; raise the fixed camera to 75,000 km for a smaller Earth
-  overview (0027).
-- [x] Review the higher camera: user prefers it and likes the empty outer band
-  as framing; retain that breathing room rather than auto-fitting or adding objects.
-- [x] Compare view sizing and shape: user retains 240×240 and provisional 20°,
-  selects borderless square after reviewing circular/borderless/square examples
-  (0028). Shared projection/rendering and CLI defaults reflect the choice.
-- [x] Agree normal/debug presentation separation and reduction of routine
-  diagnostic fields in the normal view (0029). Record the alive/active-but-not-busy
-  visual brief; this is feedback, not an implemented split or approved mockup.
-- [ ] Resume panel design in a later session and scope a normal/debug slice:
+- [x] Shared clockless app state, 1-bit renderer and explicit-time/local-catalogue
+  replay with real markers and basic identification ([0022](decisions/0022-minimal-ground-map-simulator.md)).
+- [x] Replace the initial ground map with actual-3D fixed-camera perspective,
+  lens zoom and a shared WGS-84 Earth outline under
+  [0026](decisions/0026-fixed-camera-perspective-slice.md). Physical outputs,
+  true observer-horizon eligibility and explicit failures remain independent.
+- [x] Review motion, overview and viewport comparisons; implement
+  [0027's higher camera](decisions/0027-higher-fixed-camera-overview.md) and
+  [0028's borderless square](decisions/0028-borderless-square-viewport.md).
+- [x] Agree normal/debug separation and routine field reduction under
+  [0029](decisions/0029-normal-and-debug-presentation-direction.md), as direction
+  only. Neither panel mockup is approved; the diagnostic panel is unchanged.
+- [ ] Resume deferred panel design and scope a normal/debug slice with the user:
   layout/graphics, remaining fields, access controls and failure communication
-  remain open. Reassess density alongside it before fixing product counts;
-  the busier example is a visual reference, not a production population.
+  remain open. Reassess density without treating the busier example as a
+  production population.
+
+No prediction integration, slowdown or live fetching is required for this slice.
+Simulator throughput is not target capacity evidence.
 
 **Done when:** satellites move through a zoomable view traceable to verified
 engine outputs, with initial visual feedback on density and layout. Coastlines,

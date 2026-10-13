@@ -50,10 +50,10 @@ Use the [pinned source export workflow](../../../docs/evaluations/s3-m2/README.m
 before running the frozen gates below. They intentionally reject the evolving M3
 workspace; do not refresh the freeze. Current simulator checks are separate.
 
-A fresh session starts with `docs/HANDOFF.md`, `docs/PLAN.md`, and `docs/DESIGN.md`.
-Preparation is complete; target implementation is next. Running these host gates
-does not establish target fit or authorize flashing. Run the additional numerical
-and manifest checks below as well as the original host regressions.
+These are preparation-reproduction gates, not the next implementation task.
+The subsequent [target harness and capture guide](../../../firmware/M2_CAPTURE.md)
+is separate. Host gates alone do not establish target fit or authorize flashing;
+run the numerical and manifest checks as well as the original host regressions.
 
 From the repo root with the existing Rust toolchain/cached dependencies, Python
 3.11+ (standard library only), and Homebrew SDL2 (linker path in `.cargo/config.toml`):

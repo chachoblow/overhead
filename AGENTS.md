@@ -55,6 +55,8 @@ Never flash hardware or change the toolchain without asking first.
   DESIGN = product intent, decisions = rationale/contracts, fixture README =
   provenance/regeneration. Link rather than repeat; code/tests own API details.
 - When asked what's next: follow .pi/prompts/next.md (recommend, don't implement).
+- When asked to audit, clean up or consolidate documentation: follow
+  .pi/prompts/docs-cleanup.md; preserve history and ask about substantive ambiguity.
 - When asked to wrap up or prepare a fresh-session handoff: follow
   .pi/prompts/handoff.md, including commit and push without another approval
   unless there is ambiguity or a concern.

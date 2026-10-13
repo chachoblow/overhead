@@ -29,13 +29,14 @@ Review this override explicitly on any HAL/linker/espflash upgrade.
 
 Host/workspace checks are in [README](README.md#offline-checks); optional-feature
 host checks are in [CATALOGUE_MEMORY](CATALOGUE_MEMORY.md#offline-verification--next-step).
-These and the image runner pass from a clean source snapshot without ignored artifacts.
+These and the image runner passed during remedy preparation from a clean source
+snapshot without ignored artifacts; that is not verification of later changes.
 
 From repository root, with the installed toolchain:
 
 ```sh
 . "$HOME/export-esp.sh"
-python3 -m unittest discover -s firmware -p 'test_*.py'
+python3 -m unittest discover -s firmware -p 'test_image_gate.py'
 python3 firmware/check_images.py firmware/target/image-gate-new-run
 ```
 

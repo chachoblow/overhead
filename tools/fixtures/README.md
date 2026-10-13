@@ -3,16 +3,18 @@
 ## `m2-pool/`
 Separate pinned 16-object real-orbit acquisition set for bounded M2 preparation.
 Source bytes/URLs/retrieval timestamps/hashes, deterministic selection rules and
-offline regeneration live in its [fixture README](m2-pool/README.md). Initial
-[source suitability](../../docs/evaluations/m2-pool-suitability.md) passes; the full
-host preflight/capture manifest is not frozen. Historical files below are unchanged.
+offline regeneration live in its [fixture README](m2-pool/README.md).
+[Source suitability](../../docs/evaluations/m2-pool-suitability.md) records the
+initial preparation gate; the frozen case manifest is separate, below.
+Historical files below are unchanged.
 
 ## `m2-cases/`
-Candidate document archive for all 20 bounded M2 host cases, including explicitly
-synthetic historical ingestion variants. Exact bytes/hashes/order and offline
-regeneration live in its [README](m2-cases/README.md); [host evidence](../../docs/evaluations/m2-host-preflight.md)
-covers retained diagnostics, work, collection capacities, RAM lifetimes, requested
-peaks and full release. Numerical preparation/final manifest freeze remain open.
+Document archive and frozen manifest for all 20 bounded M2 cases, including
+explicitly synthetic historical ingestion variants. Exact bytes/hashes/order and
+revision-isolated regeneration live in its [README](m2-cases/README.md).
+The [host report](../../docs/evaluations/m2-host-preflight.md) retains its original
+candidate-stage schema; [target capture results](../../docs/evaluations/s3-m2.md)
+are separate evidence, not production limits.
 
 ## `catalogue-costs.tle`
 Eight distinct historical records from the same pinned [Vallado/CelesTrak

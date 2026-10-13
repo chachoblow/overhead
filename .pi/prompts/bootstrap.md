@@ -1,9 +1,13 @@
 ---
-description: One-time setup — fill in the docs from the actual workspace
+description: One-time setup only — completed in Overhead; use /resume normally
 ---
-This is the first session using the project docs.
+Overhead's bootstrap is complete. If AGENTS.md has no `TODO(bootstrap)` sections,
+stop and recommend `/resume` for orientation or `/next` for a bounded task;
+do not rerun setup or reopen settled product choices. The procedure below applies
+only to an explicitly requested, unfinished bootstrap.
 
-1. Read AGENTS.md and everything in docs/.
+1. Read AGENTS.md, docs/HANDOFF.md, docs/PLAN.md, and docs/DESIGN.md, then
+   decisions and usage docs relevant to the missing setup information.
 2. Inspect the Cargo workspace: Cargo.toml files, crate layout, entry points.
    Don't change any code.
 3. Fill in the TODO(bootstrap) sections in AGENTS.md: the crate list and the

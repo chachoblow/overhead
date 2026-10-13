@@ -1,39 +1,39 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-13 UTC. Next product session: revisit M3 panel design._
+_Last updated: 2026-10-13 UTC. Next product session: M3 panel design._
 
 ## Current state / user direction
-Implemented: 240×240 borderless square, provisional 20° FOV, fixed 75,000 km
-camera under [0028](decisions/0028-borderless-square-viewport.md). Keep breathing
-room. [0029](decisions/0029-normal-and-debug-presentation-direction.md) agrees
-normal/debug separation and routine diagnostic-field reduction, not a layout.
-The brief is **alive and active, but not busy**; Are.na references inform DESIGN.
-Both normal-panel mockups remain unapproved. Normal/debug splitting, debug
-controls, graphical readouts and prediction integration are NOT implemented.
-Physical tracking, true horizon eligibility and the diagnostic panel are unchanged.
+The borderless-square perspective simulator is implemented under
+[0028](decisions/0028-borderless-square-viewport.md); the diagnostic panel is unchanged.
+[0029](decisions/0029-normal-and-debug-presentation-direction.md) agrees normal/debug
+separation and routine field reduction, not a layout. Neither panel mockup is
+approved. The split, debug controls, graphical readouts and prediction integration
+are NOT implemented. [DESIGN](DESIGN.md#interface-intent) owns the visual brief and
+breathing-room preference; physical tracking and true horizon eligibility remain unchanged.
 
-## This session / workflow
-Added `.pi/prompts/next.md`; expanded `.pi/prompts/handoff.md` and routed natural
-language equivalents from `AGENTS.md` under
-[0030](decisions/0030-session-orientation-and-wrap-up.md). `/next` recommends only;
-`/handoff` verifies, updates resumable context, commits and pushes without another
-approval unless ambiguity or concern arises. Run `/reload` in an existing Pi
-session to refresh prompt commands. No application code or product scope changed.
+## This session
+Consolidated `PLAN.md`/`DESIGN.md` and simulator verification history; corrected
+stale status and current-versus-frozen check guidance in firmware/fixture guides.
+Added [docs-cleanup](../.pi/prompts/docs-cleanup.md) with frozen-document byte
+protection, routed it from `AGENTS.md`, and guarded the completed bootstrap prompt.
+No application, milestone or accepted-decision changes. `/next` and `/handoff`
+retain [0030's workflow](decisions/0030-session-orientation-and-wrap-up.md).
+Run `/reload` in an existing Pi session to refresh prompt commands.
 
 ## Next step / boundaries
 Read DESIGN/0029, then scope panel exploration or a small normal/debug split and
-field-reduction slice with the user. Layout/graphics, remaining fields (including
-range), access controls and failure communication remain open. Do not implement
-an earlier mockup by default; disposable `/tmp` mockups are not specifications
-or required assets. Stay in M3; no slowdown, fetching or production population/
-cadence decision. [Simulator usage](../sim/README.md) owns run/comparison commands.
+field-reduction slice with the user. Do not implement an earlier mockup by default;
+disposable `/tmp` mockups are not specifications or required assets. Stay in M3;
+no slowdown, fetching or production population/cadence decision.
+[Simulator usage](../sim/README.md) owns run/comparison commands.
 
 ## Verification / risks
-This session: docs/prompt whitespace, local paths/links and instruction review;
-no Rust checks rerun because only workflow/docs changed. Prior 2026-10-12 staged
-source export passed workspace check/tests, no-default checks, Clippy/fmt,
-simulator build and headless/dummy-loop checks; details in [PROGRESS](PROGRESS.md).
-No new runtime, interactive or hardware verification. M2 budgets/scheduling,
-whole-device RAM/safe stack, Sharp bring-up and RWX remain open. Frozen evidence
-uses [0023's pinned revision](decisions/0023-frozen-m2-revision-isolation.md), not
-this workspace. Host throughput is not target capacity; no evidence renewed.
+Docs/prompts only: final diff, whitespace, local links/anchors/paths and instruction
+consistency checked; commands reviewed statically. No Rust/runtime, interactive or
+hardware checks rerun. Historical records/external sources were not exhaustively
+revalidated. Prior runtime checks remain in
+[2026-10-12 verification](PROGRESS.md#2026-10-12-utc-square-default-fresh-session-verification-before-commit),
+not evidence of later changes.
+M2 budgets/scheduling, whole-device RAM/safe stack, Sharp bring-up and RWX remain
+open. Frozen evidence uses [0023's pinned revision](decisions/0023-frozen-m2-revision-isolation.md),
+not this workspace. Host throughput is not target capacity; no evidence renewed.

@@ -133,7 +133,6 @@ From repository root, in addition to the default checks in [README](README.md):
 cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked --features catalogue-memory
 cargo +stable clippy --manifest-path firmware/Cargo.toml --lib --tests --examples \
   --locked --features catalogue-memory -- -D warnings
-python3 -m unittest discover -s firmware -p 'test_*.py'
 ```
 
 Preparation passed workspace check/tests (150 + 6 doctests), default/feature
@@ -147,7 +146,8 @@ completing. The [source remedy and image gate](IMAGE_GATE.md) now pass offline a
 in two approved corrected target captures without that diagnostic; historical
 results are unchanged. See the linked corrected-boot evidence above.
 
-Next: prepare pinned fixtures/host preflight and freeze the exact expanded manifest
-under the accepted [preparation contract](../docs/evaluations/m2-next-evidence.md).
-The existing eight-case implementation above is unchanged; the expanded suite is
-not implemented. Broader measurements and M2 operating policies remain pending.
+The separate expanded suite has since been implemented and captured under
+[M2_CAPTURE](M2_CAPTURE.md); the eight-case experiment above is unchanged.
+[PLAN](../docs/PLAN.md#m2--catalogue-pass-prediction-and-operating-budget) owns
+remaining operating-budget and scheduling work. Frozen-suite checks require its
+pinned revision, not this experiment's current-source commands.

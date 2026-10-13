@@ -93,6 +93,10 @@ as a complete empty sky. Fatal configuration/load/clock/output errors exit 1;
 success/help exits 0. A rendered snapshot containing per-object failures still
 exits 0, with its nonzero `failed` count reported explicitly.
 
+The panel described here is still the diagnostic presentation. The agreed
+[normal/debug direction](../docs/decisions/0029-normal-and-debug-presentation-direction.md)
+is not implemented; no panel mockup or debug-access control is approved.
+
 The synchronous loop targets 20 Hz on the host, without a catch-up queue. This
 is a visual test loop, **not a selected device cadence or bounded scheduler**.
 No pass countdown, motion slow-down or hardware access is included.
@@ -124,10 +128,8 @@ there is no hidden accelerated clock. At the example time/site:
 Weather/GPS has zero markers at the tightest 0.1°. All these examples have zero
 calculation failures. Counts are checked against an independent physical-look-angle
 projection, not copied from the old ground map. These are reproducible observations,
-not capacity or density targets. User feedback on the initial perspective view
-favored zoom-magnified motion and the fuller overview. The user also prefers the
-higher camera and its breathing room, and subsequently selected the 240×240
-borderless square. Right-panel contents remain open.
+not capacity or density targets. Visual feedback and open panel questions live
+in [DESIGN](../docs/DESIGN.md#interface-intent), not in these example populations.
 
 Both manifests reference existing immutable snapshots; they do not copy or
 modify orbital data. `catalogue.json` uses the selected 16-object pool;
@@ -178,23 +180,18 @@ magnification, near-plane/circular/square boundaries, poles/dateline, independen
 ellipsoid tangency, true-state traceability, horizon counts, failed-frame
 replacement, selection/zoom, clipped outline/glyph pixels, explicit clock/config,
 and real CLI PNG snapshots with SDL unavailable. Existing engine/prediction
-regression tests remain unchanged. From a fresh staged-source Git export with
-an empty build target, offline locked workspace check/default/all-feature tests,
-core/app/render no-default-feature checks, strict workspace Clippy/fmt and the
-simulator build pass. CLI tests compare explicit/default square snapshots,
-corner counts against independent physical-look-angle references, and determinism.
+regression tests remain unchanged. CLI tests compare explicit/default square
+snapshots, corner counts against independent physical-look-angle references,
+and determinism.
 
-The fresh executable runs from an unrelated directory with SDL unavailable:
-pool 20°/100° shows 0/4 markers; weather/GPS 20°/40°/100°/5°/0.1° shows
-6/18/22/4/0, with circular modes showing 17 at 40°. All have zero failures.
-The 20° default PNG matches the reviewed square comparison byte-for-byte;
-a two-second SDL dummy-loop smoke also passes.
+The [2026-10-12 verification record](../docs/PROGRESS.md#2026-10-12-utc-square-default-fresh-session-verification-before-commit)
+contains the prior fresh-source build, broader check suite, headless counts,
+reviewed-image comparison and SDL dummy-loop result. Those historical passes
+are not verification of later changes or an agent interactive input/hardware test.
 
 Existing Rust tool/dependency caches and Homebrew SDL2 remain prerequisites;
 no ignored build artifacts or disposable panel mockups are needed. `--demo`
-uses the checkout's paths when built there. The user reviewed snapshots and
-selected square; no agent interactive input review or hardware test was
-performed. Verification history is in [PROGRESS](../docs/PROGRESS.md).
+uses the checkout's paths when built there.
 
 Frozen M2 evidence is a separate historical verification scope: use its
 [pinned revision workflow](../docs/evaluations/s3-m2/README.md#offline-validation-and-table-regeneration),

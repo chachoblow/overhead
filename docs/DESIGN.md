@@ -15,8 +15,8 @@ area. The user prefers the 240×240 view allocation; the remaining 160×240
 right-hand area is still open for exploration, not a settled set of readouts.
 [0028](decisions/0028-borderless-square-viewport.md) records the shape choice.
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
-fast markers have a minimum on-screen traversal time. **Readouts always use
-true positions, never visually slowed markers.**
+minimum on-screen traversal time for fast markers is planned, not implemented.
+**Readouts always use true positions, never visually slowed markers.**
 
 The visual brief is **alive and active, but not busy**. User-supplied Are.na
 references span purpose-built audio instruments, aviation/GPS readouts, compact
@@ -37,18 +37,15 @@ onto its surface. Objects outside the view or behind the camera are clipped;
 zoom alone cannot move an object behind the camera.
 [0024](decisions/0024-perspective-orbital-view-direction.md) records the 3D direction,
 with lens zoom selected in [0025](decisions/0025-fixed-camera-lens-zoom.md).
-The simulator implements [0026's perspective contract](decisions/0026-fixed-camera-perspective-slice.md)
-with [0027's higher fixed camera](decisions/0027-higher-fixed-camera-overview.md)
-and a WGS-84 Earth outline through that same camera, replacing the ground map.
-The viewport is now borderless square under 0028, preserving the same lens
-scale while admitting corners. Circular modes remain simulator comparisons.
-User feedback favors the faster apparent motion when zoomed in and the fuller
-satellite overview when zoomed out. The higher fixed viewpoint makes Earth
-smaller at the widest lens setting; zoom itself still never moves the camera.
-The user likes breathing room in the overview, not space that must be filled;
-the later borderless-square choice removes the drawn ring, not that preference.
-The provisional default remains 20° with room to zoom in and out. These visual
-choices do not select production counts or capacity.
+The implemented contract is [0026](decisions/0026-fixed-camera-perspective-slice.md),
+amended by [0027's higher camera](decisions/0027-higher-fixed-camera-overview.md)
+and 0028's square clipping. See [simulator usage](../sim/README.md#controls-and-view)
+for current settings, readout units and comparison modes.
+
+User feedback favors zoom-magnified motion and a fuller satellite overview with
+smaller Earth at wide FOV. Preserve breathing room rather than auto-fitting or
+adding satellites to fill it; the square choice removes the ring, not that
+preference. These choices do not select production counts or capacity.
 
 Only satellites above the local geometric horizon are eligible for markers,
 then clipped to the current view—even at whole-Earth zoom. This is the observer's
@@ -59,11 +56,11 @@ elevation threshold, independent of zoom
 ([pass semantics](decisions/0012-physical-pass-semantics.md)).
 
 The normal information area should reflect the radar, with no menus or pages.
-[0029](decisions/0029-normal-and-debug-presentation-direction.md) separates this
-from objective diagnostics: omit branding, replay/date/time labels, catalogue/
-error counts, NORAD ID and diagnostic footer from the normal view. Debug access
-and normal-view failure communication remain open. This split is not yet
-implemented; neither reviewed panel mockup is an accepted visual specification.
+[0029](decisions/0029-normal-and-debug-presentation-direction.md) owns the agreed
+normal/debug separation and routine diagnostic-field removals. Debug access and
+normal-view failure communication remain open; removing counters must not conceal
+incomplete tracking. This split is not yet implemented, and neither reviewed
+panel mockup is an accepted visual specification.
 
 Keep view/sky information, but redesign its presentation. Other candidate
 contents, not a mandatory checklist:
@@ -73,8 +70,7 @@ contents, not a mandatory checklist:
 - Next pass and countdown to its start, especially when the local sky is empty,
   if useful without compromising the radar. A graphical rise/peak/set profile
   is also a candidate, not an approved layout or prediction-integration task.
-- Lens-zoom readout: the current simulator shows the full horizontal/vertical
-  field of view in degrees, not a map radius or physical distance.
+- Lens-zoom readout, expressed as a field-of-view angle rather than a distance.
 
 No pass lists, radio information, or battery indicator. Layout, selection, and
 projection policies should evolve with simulator feedback.
