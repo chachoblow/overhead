@@ -340,3 +340,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Fresh executable runs from an unrelated directory with SDL unavailable: pool 0/4 at 20°/100°, weather/GPS square 6/18/22/4/0 at 20°/40°/100°/5°/0.1°, circular modes 17 at 40°, all with zero failures. Default 20° PNG matches the reviewed square image; two-second SDL dummy-loop smoke passes.
 - Updated HANDOFF and simulator verification notes. Existing Rust caches and Homebrew SDL2 are prerequisites; no ignored builds or disposable mockups are required. Normal/debug split remains direction only; panel design is deferred.
 - No new application code, dependencies, hardware access, firmware/toolchain changes or frozen-evidence renewal; no agent interactive review. Documentation whitespace/local links checked.
+
+## 2026-10-13 UTC (session orientation and automatic wrap-up)
+- Added `/next` for a bounded, read-only next-task recommendation; expanded `/handoff` to verify, preserve fresh-session context, then commit and push without routine approval (0030).
+- AGENTS routes equivalent natural-language requests to these prompts. Ambiguous scope, unresolved checks, unsafe Git recovery and unclear push destinations require a pause; unrelated work is preserved.
+- Refreshed HANDOFF while retaining the unapproved-panel boundary and M3 next step. PLAN unchanged: no milestone work completed or product decisions altered.
+- Docs/prompts only: whitespace, local paths/links and instruction consistency reviewed; no Rust checks rerun, hardware/toolchain changes or frozen-evidence renewal.

@@ -54,4 +54,7 @@ Never flash hardware or change the toolchain without asking first.
 - Keep each doc focused: HANDOFF = next-session context, PLAN = scope/status,
   DESIGN = product intent, decisions = rationale/contracts, fixture README =
   provenance/regeneration. Link rather than repeat; code/tests own API details.
-- End of session: follow the steps in .pi/prompts/handoff.md.
+- When asked what's next: follow .pi/prompts/next.md (recommend, don't implement).
+- When asked to wrap up or prepare a fresh-session handoff: follow
+  .pi/prompts/handoff.md, including commit and push without another approval
+  unless there is ambiguity or a concern.
