@@ -357,3 +357,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Deleted `.pi/prompts/bootstrap.md` at the user's request; setup is complete and `/resume`/`/next` cover ongoing orientation. Historical bootstrap mentions are retained.
 - Updated HANDOFF for the next session; PLAN, DESIGN and accepted decisions remain unchanged. Next product work is still scoping M3 panel exploration with the user.
 - Checked final diff, whitespace, handoff local links/anchors/paths, remaining bootstrap references and instruction consistency. No Rust checks rerun: no code/build inputs changed; no runtime/hardware checks, toolchain changes or frozen-evidence renewal.
+
+## 2026-10-13 UTC (consolidate orientation prompts)
+- Deleted `.pi/prompts/resume.md` at the user's request; `/next` remains unchanged and covers orientation plus a bounded task recommendation (0031).
+- Updated HANDOFF and recorded the choice in `docs/decisions/0031-consolidate-orientation-prompts.md`; historical prompt mentions are retained. PLAN/DESIGN unchanged; next product work remains scoping M3 panel design with the user.
+- Checked final diff, whitespace, changed-document local links/anchors/paths, remaining resume references and instruction consistency. No Rust checks rerun because no code/build inputs changed; no runtime/hardware checks, toolchain changes or frozen-evidence renewal.
