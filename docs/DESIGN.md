@@ -10,13 +10,16 @@ used an LED matrix and a position API.
   Handle the panel/ribbon gently during bring-up.
 
 ## Interface intent
-A location-centered borderless square orbital view with a secondary information
-area. The user prefers the 240×240 view allocation; the remaining 160×240
-right-hand area is still open for exploration, not a settled set of readouts.
-[0028](decisions/0028-borderless-square-viewport.md) records the shape choice.
+A location-centered, wide borderless orbital view with a narrow right-hand
+strip of selected-satellite glyphs. [0032](decisions/0032-wide-radar-and-selected-satellite-glyphs.md)
+records the agreed next direction, not an implemented interface. The current
+simulator still has [0028's 240×240 square](decisions/0028-borderless-square-viewport.md)
+and the original diagnostic panel. Exact new proportions and rectangular FOV
+semantics remain open.
+
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 minimum on-screen traversal time for fast markers is planned, not implemented.
-**Readouts always use true positions, never visually slowed markers.**
+**Readouts always use true physical state, never visually slowed markers.**
 
 The visual brief is **alive and active, but not busy**. User-supplied Are.na
 references span purpose-built audio instruments, aviation/GPS readouts, compact
@@ -55,25 +58,69 @@ Physical passes use a separate configurable
 elevation threshold, independent of zoom
 ([pass semantics](decisions/0012-physical-pass-semantics.md)).
 
-The normal information area should reflect the radar, with no menus or pages.
-[0029](decisions/0029-normal-and-debug-presentation-direction.md) owns the agreed
-normal/debug separation and routine diagnostic-field removals. Debug access and
-normal-view failure communication remain open; removing counters must not conceal
-incomplete tracking. This split is not yet implemented, and neither reviewed
-panel mockup is an accepted visual specification.
+### Selected-satellite presentation
 
-Keep view/sky information, but redesign its presentation. Other candidate
-contents, not a mandatory checklist:
-- Local time and orbit-data age.
-- Selected satellite: name, altitude, elevation, travel direction. Selection
-  behavior remains open; range was questioned as low-value, not finally ruled out.
-- Next pass and countdown to its start, especially when the local sky is empty,
-  if useful without compromising the radar. A graphical rise/peak/set profile
-  is also a candidate, not an approved layout or prediction-integration task.
-- Lens-zoom readout, expressed as a field-of-view angle rather than a distance.
+The accepted starting direction is the reference below, not the earlier panel
+iterations. It is deliberately symbol-led and minimally labelled, with no menus
+or pages. Normal/debug separation from
+[0029](decisions/0029-normal-and-debug-presentation-direction.md) remains agreed;
+0032 amends which information belongs in the normal view.
 
-No pass lists, radio information, or battery indicator. Layout, selection, and
-projection policies should evolve with simulator feedback.
+![Four schematic examples of the wide radar and selected-satellite glyph strip](mockups/0032-glyph-radar.png)
+
+**Reference only:** four independent 400×240, strictly 1-bit mockups, prepared
+2026-10-15 with Pillow from invented positions and illustrative glyph states.
+Top left: five-digit weather ID; top right: navigation; bottom left: ISS/station;
+bottom right: six-digit weather ID. IDs are examples, not corresponding measured
+states. The PNG is a retained design reference, not a simulator snapshot, golden
+test, or physically consistent scene. No `/tmp` assets or generation scripts are
+needed to continue; this text owns the intent, not the drawing's exact pixels.
+
+- **Radar:** use the space left of the narrow glyph strip, with a centered aim
+  point and shared Earth/satellite projection. The mock uses 352×240 plus a
+  48-pixel strip; these dimensions are provisional. Keep breathing room and no
+  perimeter border. Earth is not stretched to fill the rectangle.
+- **Outside-view context:** small hollow, outward-pointing edge indicators for
+  above-horizon satellites outside the viewport. Wider zoom brings them into
+  view as actual markers. Convey that there is more to explore, not a precise
+  tally. No separate population-dot summary, normal-view counts, or FOV text.
+- **Identification:** bare NORAD ID beside the selected marker, with a small
+  curated familiar-name exception set beginning with ISS. The ID stays with the
+  marker, not at the top of the strip. Full names remain diagnostic information.
+- **Glyph strip, top to bottom:** category pictogram, elevation, altitude,
+  orbital speed, orbital period. Align it near the display's right edge, without
+  boxes, routine field labels or required numeric values. Category icons in the
+  reference are proposals, not a finalized taxonomy.
+- **Elevation:** an invisible square footprint, origin at lower left, with the
+  region below a ray at the elevation angle filled black. Only the filled shape
+  is drawn; its sloping boundary represents the angle. This is the strongest
+  accepted glyph treatment.
+- **Altitude:** satellite point/diamond separated from a surface bar by a
+  variable gap. **Speed:** variable-length motion marks, still exploratory;
+  their direction is not a heading. **Period:** a vertical slinky-like coil,
+  not an inward-winding spiral; more winding means a shorter period. Favor
+  legible, separated turns over dense texture. Non-elevation scales are open.
+- **Transitions:** favor glyphs animating toward the new selected satellite's
+  values. Intermediate shapes are presentation only, never new physical samples.
+  This has not been implemented or given timing/interruption rules.
+
+### Open questions and boundaries
+
+Resolve rectangular aspect/FOV semantics, edge-indicator collisions and invalid
+camera-depth cases, label collisions and selection leaving the view before a
+real-data implementation. Define glyph ranges/mappings and unknown/ambiguous
+category handling explicitly; don't turn illustrative mock values into defaults.
+
+Empty-view explanations and incomplete-data/tracking notices are parked for
+focused design, not removed as a correctness requirement. Debug access remains
+open. A normal view must not conceal failed/omitted tracking as a complete empty
+sky, including when some valid markers remain.
+
+The selected-satellite start/end/peak pass graphic is interesting but deferred;
+upcoming-pass lists are not desired. Local time, orbit-data age, range and bearing
+are not part of this starting layout. Camera movement/panning, marker slowdown,
+new automatic selection policy, fetching and production population/cadence
+choices are outside this slice. No radio information or battery indicator.
 
 ## Controls
 - Simulator: continuous zoom via scroll wheel and up/down arrows.

@@ -362,3 +362,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Deleted `.pi/prompts/resume.md` at the user's request; `/next` remains unchanged and covers orientation plus a bounded task recommendation (0031).
 - Updated HANDOFF and recorded the choice in `docs/decisions/0031-consolidate-orientation-prompts.md`; historical prompt mentions are retained. PLAN/DESIGN unchanged; next product work remains scoping M3 panel design with the user.
 - Checked final diff, whitespace, changed-document local links/anchors/paths, remaining resume references and instruction consistency. No Rust checks rerun because no code/build inputs changed; no runtime/hardware checks, toolchain changes or frozen-evidence renewal.
+
+## 2026-10-15 UTC (wide radar and selected-satellite glyph direction)
+- Accepted 0032's future presentation direction: wide borderless radar, off-screen indicators, marker-adjacent bare ID/ISS exception, and right-hand category/elevation/altitude/speed/vertical-coil period glyphs; normal counts/FOV removed from the brief, not the executable.
+- Retained one final schematic in `docs/mockups/0032-glyph-radar.png`; DESIGN and 0032 preserve the starting point and open contracts without requiring chat, `/tmp` scripts or the iteration history. Updated PLAN/HANDOFF and clarified current simulator usage.
+- Docs/static-image changes only; square radar and diagnostic panel remain implemented. Reviewed source/tests and generated synthetic 1-bit mockups, not real-data/target validation; no Rust checks rerun because code/build inputs did not change.
+- Verified final/staged whitespace, changed-document local links/anchors/paths, retained PNG dimensions/mode and instruction consistency. No interactive/hardware checks, toolchain changes or frozen-evidence renewal; M2 budgets and M3 implementation remain open.

@@ -95,7 +95,10 @@ exits 0, with its nonzero `failed` count reported explicitly.
 
 The panel described here is still the diagnostic presentation. The agreed
 [normal/debug direction](../docs/decisions/0029-normal-and-debug-presentation-direction.md)
-is not implemented; no panel mockup or debug-access control is approved.
+and [wide-radar/glyph direction](../docs/decisions/0032-wide-radar-and-selected-satellite-glyphs.md)
+are not implemented. [DESIGN's retained schematic](../docs/DESIGN.md#selected-satellite-presentation)
+is a future starting point, not this executable's output or a golden test.
+Debug-access controls remain open; the commands/settings here describe current code.
 
 The synchronous loop targets 20 Hz on the host, without a catch-up queue. This
 is a visual test loop, **not a selected device cadence or bounded scheduler**.

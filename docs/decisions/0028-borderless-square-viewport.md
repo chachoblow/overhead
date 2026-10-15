@@ -1,7 +1,7 @@
 # 0028 — Borderless square viewport
 
 Date: 2026-10-12
-Status: accepted
+Status: accepted (future layout direction amended by [0032](0032-wide-radar-and-selected-satellite-glyphs.md); this remains the implemented viewport)
 
 ## Decision
 Use a borderless square viewport by default, retaining the 240×240 working

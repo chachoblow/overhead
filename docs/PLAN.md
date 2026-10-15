@@ -1,7 +1,8 @@
 # Overhead — Plan
 
-**Current: M3 panel design; normal/debug separation and field reduction agreed,
-not implemented. M2 operating-budget and scheduling work remains open.**
+**Current: M3 wide-radar/glyph presentation direction agreed under 0032;
+implementation still uses the square radar and diagnostic panel. M2
+operating-budget and scheduling work remains open.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -84,11 +85,16 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
   [0028's borderless square](decisions/0028-borderless-square-viewport.md).
 - [x] Agree normal/debug separation and routine field reduction under
   [0029](decisions/0029-normal-and-debug-presentation-direction.md), as direction
-  only. Neither panel mockup is approved; the diagnostic panel is unchanged.
-- [ ] Resume deferred panel design and scope a normal/debug slice with the user:
-  layout/graphics, remaining fields, access controls and failure communication
-  remain open. Reassess density without treating the busier example as a
-  production population.
+  only; the diagnostic panel is unchanged.
+- [x] Agree [0032's wide-radar/glyph direction](decisions/0032-wide-radar-and-selected-satellite-glyphs.md):
+  off-screen indicators, marker-adjacent ID and a right-hand category/data-glyph
+  strip. [Retained reference](DESIGN.md#selected-satellite-presentation) is a
+  starting point, not an implemented or fully specified UI.
+- [ ] Scope a bounded real-data comparison with the user, starting with the wide
+  viewport and off-screen indicators. Resolve rectangular FOV, invalid-depth
+  and crowding behavior before coding; glyph mappings, transitions, normal/debug
+  access and explicit failure communication remain open. Do not treat the
+  synthetic mock population as a production size or capacity.
 
 No prediction integration, slowdown or live fetching is required for this slice.
 Simulator throughput is not target capacity evidence.
@@ -98,8 +104,9 @@ engine outputs, with initial visual feedback on density and layout. Coastlines,
 visual slow-down and pass countdowns are not prerequisites.
 
 ## M4 — Useful display behavior
-- [ ] Refine secondary information contents with visual feedback; add stable
-  automatic selection and the chosen true satellite/time/data-age/zoom readouts.
+- [ ] Refine secondary information with visual feedback; add stable automatic
+  selection and the chosen true-state readouts. 0032 removes routine normal-view
+  FOV/counts; time and data age are not requirements of its starting layout.
 - [ ] Refine empty-sky behavior; evaluate next-pass countdown integration where
   useful, without sacrificing radar quality or responsiveness.
 - [ ] Prepare coastlines offline and render them legibly across zoom levels.
