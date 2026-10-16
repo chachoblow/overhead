@@ -1,7 +1,7 @@
 # 0033 — Wide-radar comparison contract
 
 Date: 2026-10-15
-Status: accepted (bounded M3 comparison; implemented as opt-in and visually approved)
+Status: accepted (bounded M3 comparison; implemented as opt-in and visually approved; label deferral amended by [0034](0034-selected-marker-identification.md))
 
 ## Decision
 Implement the first real-data comparison of [0032](0032-wide-radar-and-selected-satellite-glyphs.md):

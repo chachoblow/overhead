@@ -55,9 +55,13 @@ Missing fetch metadata remains unknown; it is not inferred from filenames.
 - `--viewport`: `square` (default, no outer border), `circle` (circular clipping
   and ring), or `borderless-circle` (circular clipping, no ring).
   See [comparison](#viewport-shape-comparison).
-- `--wide`: opt-in 352×240 borderless radar with per-satellite off-screen arrows
-  and a reserved 48-pixel strip. Incompatible with `--radar-size` and `--viewport`.
+- `--wide`: opt-in 352×240 borderless radar with per-satellite off-screen arrows,
+  selected-marker identification and a reserved 48-pixel strip. Incompatible with
+  `--radar-size` and `--viewport`.
   See [wide comparison](#wide-radar-comparison).
+- `--label-hide-deg` / `--label-show-deg`: wide-view ID visibility thresholds,
+  default 70°/60° vertical FOV. Both require `--wide`; see
+  [label zoom visibility](#label-zoom-visibility).
 
 The [perspective contract](../docs/decisions/0026-fixed-camera-perspective-slice.md)
 owns lens semantics, with square clipping now selected by
@@ -98,11 +102,13 @@ success/help exits 0. A rendered snapshot containing per-object failures still
 exits 0, with its nonzero `failed` count reported explicitly.
 
 The default panel described here is still the diagnostic presentation. The
-opt-in wide comparison implements only the viewport/arrows portion of
+opt-in wide comparison implements the viewport/arrows portion of
 [0032](../docs/decisions/0032-wide-radar-and-selected-satellite-glyphs.md), under
-[0033](../docs/decisions/0033-wide-radar-comparison-contract.md).
-The full normal/debug split, glyphs and marker-adjacent identifiers are not
-implemented. [DESIGN's retained schematic](../docs/DESIGN.md#selected-satellite-presentation)
+[0033](../docs/decisions/0033-wide-radar-comparison-contract.md), plus selected-marker
+identification under [0034](../docs/decisions/0034-selected-marker-identification.md)
+and [0035's zoom visibility](../docs/decisions/0035-label-zoom-visibility.md).
+The full normal/debug split and glyphs are not implemented.
+[DESIGN's retained schematic](../docs/DESIGN.md#selected-satellite-presentation)
 remains a design reference, not this executable's output or a golden test.
 Final debug-access controls remain open.
 
@@ -213,7 +219,17 @@ baseline; arrows never count as visible markers. The snapshot report adds
 symbols (zero in baseline modes). All physical diagnostics remain available in
 host reports and the baseline panel.
 
-No selected ID or data glyphs are drawn yet. The reserved strip shows `NO MARKERS`
+When the zoom gate permits it, the selected visible marker carries its bare NORAD
+ID, except `25544` shows `ISS`.
+Only identity controls this exception, not the catalogue name. The 6×10 text
+prefers the diamond's right side, flips left if needed, and clamps vertically to
+keep the entire label inside the drawable radar. Longer IDs are not truncated to
+five or six digits. Text is transparent: overlaps with scene graphics are allowed,
+without a clearing mask or collision search. Selection/zoom updates the label
+immediately; arrows are never labelled. Wide zoom hides the label as described
+below; the selected diamond and square baseline are unchanged.
+
+No data glyphs are drawn yet. The reserved strip shows `NO MARKERS`
 when there are no in-view markers, not a claim of a complete empty sky. `NO FRAME`,
 `TRACK ERROR` and `INGEST WARN` preserve explicit missing/incomplete-state notices;
 warnings remain present alongside valid markers. These are comparison notices,
@@ -237,6 +253,61 @@ both catalogues, both times, these zooms, independent visibility/arrow counts,
 and deterministic snapshots with SDL unavailable. Tight-view images show some
 overlapping arrows; no collision policy has been added to make them countable.
 
+### Label zoom visibility
+
+Under [0035](../docs/decisions/0035-label-zoom-visibility.md), the wide-view label
+hides at **≥70° vertical FOV** and restores at **≤60°**. Between those thresholds,
+it retains its previous visibility. The selected diamond remains visible. This
+is clean hide/show with hysteresis: no fade, dithering or animation.
+
+At launch, including headless snapshots, the label is shown below the hide
+threshold and hidden at/above it; the intervening band starts visible. Frame
+updates, Tab selection and empty/invalid frames do not reset zoom history.
+
+Tune either threshold independently with `--label-hide-deg` and
+`--label-show-deg`; omitted values retain their defaults. Both options require
+`--wide`, and the pair must satisfy finite `0.1 <= show < hide <= 100` degrees.
+For a same-frame comparison at 70° (default hidden versus configured visible):
+
+```sh
+cargo run -p overhead-sim -- sim/examples/weather-gps.json \
+  2026-10-10T00:00:00Z 39.007 -104.883 2.187 \
+  --wide --fov-deg 70 --snapshot /tmp/overhead-label-hidden.png
+cargo run -p overhead-sim -- sim/examples/weather-gps.json \
+  2026-10-10T00:00:00Z 39.007 -104.883 2.187 \
+  --wide --fov-deg 70 --label-hide-deg 80 --label-show-deg 50 \
+  --snapshot /tmp/overhead-label-visible.png
+```
+
+The thresholds are provisional visual tuning, not density/collision guarantees
+or device controls. Labels may still overlap scene graphics below the cutoff.
+
+### Identification review
+
+Reproduce right-edge fallback, ISS and a real six-digit ID with existing local
+catalogues (no generated input files). These are historical visual checks, not
+independent geometry references or production observer choices:
+
+```sh
+cargo run -p overhead-sim -- sim/examples/weather-gps.json \
+  2026-10-10T00:00:00Z 39.007 -104.883 2.187 \
+  --wide --fov-deg 9.4 --snapshot /tmp/overhead-label-edge.png
+cargo run -p overhead-sim -- tools/examples/catalogue.json \
+  2026-10-04T12:43:41.833056Z 0.000017409 -85.180357315 0 \
+  --wide --fov-deg 20 --snapshot /tmp/overhead-label-iss.png
+cargo run -p overhead-sim -- sim/examples/weather-gps.json \
+  2026-10-10T00:00:00Z 0.926636747 3.630339358 0 \
+  --wide --fov-deg 0.1 --snapshot /tmp/overhead-label-six-digit.png
+```
+
+The first shows `32711` left of its near-right-edge diamond (5 markers, 17 arrows).
+The others show `ISS` (1 marker, no arrows) and `100530` (1 marker, 25 arrows)
+near the aim point; all have zero tracking failures. The latter sites approximate
+those satellites' subpoints from `overhead-track` at the supplied UTC. Repeat the
+weather/GPS comparison at 100° to review the now-unlabelled overview: user review
+of its formerly crowded label led to 0035. Below the hide cutoff, transparent
+overlap remains allowed by 0034; no collision avoidance has been added.
+
 ## Verify
 
 ```sh
@@ -254,6 +325,13 @@ snapshots, corner counts against independent physical-look-angle references,
 and determinism. Wide tests additionally cover rectangular aspect and pixel scale,
 per-object arrows despite coincident positions, directional glyph clipping,
 marker entry, and visible warnings in empty and partially successful frames.
+Identification tests cover ISS/five-/six-/longer IDs, complete edge/corner fit,
+transparent overlaps, selection changes and stale-label clearing, baseline
+isolation, and headless identity-versus-name behavior using a real orbit with
+explicitly synthetic identity metadata. Zoom-label tests cover inclusive
+thresholds, retained history in both directions, startup in the intervening band,
+validated CLI overrides, unchanged selection/physical state, retained diamonds
+and warnings, and unchanged baseline diagnostics.
 
 The [2026-10-12 verification record](../docs/PROGRESS.md#2026-10-12-utc-square-default-fresh-session-verification-before-commit)
 contains the prior fresh-source build, broader check suite, headless counts,

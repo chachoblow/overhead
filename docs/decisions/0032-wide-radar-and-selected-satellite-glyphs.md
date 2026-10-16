@@ -1,7 +1,7 @@
 # 0032 — Wide radar and selected-satellite glyphs
 
 Date: 2026-10-15
-Status: accepted (design direction; viewport/arrows implemented as an opt-in comparison under [0033](0033-wide-radar-comparison-contract.md); labels/glyphs remain unimplemented)
+Status: accepted (design direction; viewport/arrows implemented as an opt-in comparison under [0033](0033-wide-radar-comparison-contract.md), selected-marker labels under [0034](0034-selected-marker-identification.md); glyphs remain unimplemented)
 
 ## Decision
 Pursue a wide borderless radar with off-screen indicators, a compact identifier

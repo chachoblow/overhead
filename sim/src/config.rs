@@ -1,4 +1,7 @@
-use overhead_app::projection::{DEFAULT_FOV_DEG, View, Viewport};
+use overhead_app::{
+    identification::{DEFAULT_LABEL_HIDE_DEG, DEFAULT_LABEL_SHOW_DEG, LabelZoom},
+    projection::{DEFAULT_FOV_DEG, View, Viewport},
+};
 use overhead_core::{
     GeodeticPosition,
     sgp4::chrono::{NaiveDateTime, TimeDelta},
@@ -21,6 +24,8 @@ Options (each at most once):
   --radar-size N   Square radar allocation, 180..240 pixels (default 240)
   --viewport MODE  square (default, borderless), circle, borderless-circle
   --wide          352x240 comparison with off-screen arrows; no --radar-size/--viewport
+  --label-hide-deg N  Hide wide-view ID at/above this vertical FOV (default 70)
+  --label-show-deg N  Restore ID at/below this FOV (default 60); requires --wide
   --snapshot PNG  Render exactly the start UTC to a 400x240 PNG; no window
   --help, -h      Show this help
 
@@ -33,6 +38,9 @@ The default panel's ERR counts failed objects; --wide shows TRACK ERROR and
 INGEST WARN notices. One arrow per eligible off-screen satellite; overlaps are
 allowed, never merged or suppressed. No arrows for depth < 1 km. Wide horizontal
 FOV follows drawable aspect, preserving pixel scale and Earth's proportions.
+Both label options require --wide and 0.1 <= show < hide <= 100. Between thresholds,
+keep the previous visibility; at launch show below hide. Only the ID/ISS text is
+hidden, never the selected diamond. No fade or dithering.
 The former --radius-km option is no longer supported.
 
 --demo uses the pinned 16-object historical M2 pool at 2026-10-10T00:00:00Z,
@@ -51,6 +59,7 @@ pub struct Config {
     pub observer: GeodeticPosition,
     pub view: View,
     pub layout: Layout,
+    pub label_zoom: LabelZoom,
     pub snapshot: Option<PathBuf>,
 }
 
@@ -100,6 +109,8 @@ impl Config {
         let mut size = None;
         let mut viewport = None;
         let mut snapshot = None;
+        let mut label_hide = None;
+        let mut label_show = None;
         let mut wide = false;
         let mut options = options.iter();
         while let Some(flag) = options.next() {
@@ -115,6 +126,12 @@ impl Config {
                 .ok_or_else(|| format!("missing value for {flag}"))?;
             match flag.as_str() {
                 "--fov-deg" if fov.is_none() => fov = Some(number(value, "field of view")?),
+                "--label-hide-deg" if label_hide.is_none() => {
+                    label_hide = Some(number(value, "label hide threshold")?);
+                }
+                "--label-show-deg" if label_show.is_none() => {
+                    label_show = Some(number(value, "label show threshold")?);
+                }
                 "--radius-km" => {
                     return Err(
                         "--radius-km was removed; use --fov-deg (lens angle, not map distance)"
@@ -145,6 +162,13 @@ impl Config {
         if wide && (size.is_some() || viewport.is_some()) {
             return Err("--wide cannot be combined with --radar-size or --viewport".into());
         }
+        if !wide && (label_hide.is_some() || label_show.is_some()) {
+            return Err("--label-hide-deg and --label-show-deg require --wide".into());
+        }
+        let label_zoom = LabelZoom::new(
+            label_show.unwrap_or(DEFAULT_LABEL_SHOW_DEG),
+            label_hide.unwrap_or(DEFAULT_LABEL_HIDE_DEG),
+        )?;
         let layout = if wide {
             Layout::wide()
         } else {
@@ -162,6 +186,7 @@ impl Config {
             observer,
             view,
             layout,
+            label_zoom,
             snapshot,
         })
     }
@@ -230,6 +255,44 @@ mod tests {
         let config = parse("--demo --wide --snapshot wide.png --fov-deg 100").unwrap();
         assert!((config.view.fov_deg() - 100.0).abs() < 1e-12);
         assert_eq!(config.snapshot, Some(PathBuf::from("wide.png")));
+    }
+
+    #[test]
+    fn label_thresholds_are_configurable_and_wide_only() {
+        assert_eq!(
+            parse("--demo --wide").unwrap().label_zoom,
+            LabelZoom::default()
+        );
+        for (args, show, hide) in [
+            (
+                "--demo --wide --label-show-deg 50 --label-hide-deg 80",
+                50.0,
+                80.0,
+            ),
+            ("--demo --label-hide-deg 80 --wide", 60.0, 80.0),
+            ("--demo --wide --label-show-deg 50", 50.0, 70.0),
+        ] {
+            assert_eq!(
+                parse(args).unwrap().label_zoom,
+                LabelZoom::new(show, hide).unwrap()
+            );
+        }
+        for args in [
+            "--demo --label-hide-deg 80",
+            "--demo --label-show-deg 50",
+            "--demo --wide --label-hide-deg",
+            "--demo --wide --label-show-deg",
+            "--demo --wide --label-hide-deg NaN",
+            "--demo --wide --label-show-deg inf",
+            "--demo --wide --label-show-deg 0",
+            "--demo --wide --label-hide-deg 100.1",
+            "--demo --wide --label-hide-deg 60",
+            "--demo --wide --label-show-deg 80",
+            "--demo --wide --label-show-deg 50 --label-show-deg 55",
+            "--demo --wide --label-hide-deg 80 --label-hide-deg 90",
+        ] {
+            assert!(parse(args).is_err(), "{args}");
+        }
     }
 
     #[test]

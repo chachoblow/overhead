@@ -91,9 +91,15 @@ needed to continue; this text owns the intent, not the drawing's exact pixels.
   or displacement. Convey that there is more to explore, not a guaranteed
   countable tally. No separate population-dot summary, normal-view counts, or
   FOV text.
-- **Identification:** bare NORAD ID beside the selected marker, with a small
-  curated familiar-name exception set beginning with ISS. The ID stays with the
-  marker, not at the top of the strip. Full names remain diagnostic information.
+- **Identification:** bare NORAD ID beside the selected marker, with the sole
+  familiar-name exception `25544 -> ISS`. Implemented in the opt-in wide view
+  under [0034](decisions/0034-selected-marker-identification.md): right-side text,
+  left-side fallback, vertical clamping and transparent overlaps allowed. The
+  complete ID stays inside the radar, with the marker rather than at the top of
+  the strip. [0035](decisions/0035-label-zoom-visibility.md) hides the text at ≥70°
+  vertical FOV and restores it at ≤60°, retaining visibility between thresholds.
+  These are configurable comparison defaults. Keep the selected diamond visible;
+  no fade or dithering. Full names remain diagnostic information.
 - **Glyph strip, top to bottom:** category pictogram, elevation, altitude,
   orbital speed, orbital period. Align it near the display's right edge, without
   boxes, routine field labels or required numeric values. Category icons in the
@@ -116,10 +122,11 @@ needed to continue; this text owns the intent, not the drawing's exact pixels.
 0033 settles the first comparison's vertical FOV/aspect, no-arrow invalid-depth
 handling, overlaps-allowed arrow policy and unchanged visible-only selection.
 The user approved the current wide layout and allowed arrow overlaps; retain
-these rather than adding collision avoidance. Marker-adjacent label placement
-and collisions are the next bounded design question, deferred to the next session.
-Define glyph ranges/mappings and unknown/ambiguous category handling explicitly;
-don't turn illustrative mock values into defaults.
+these rather than adding collision avoidance. 0034 settles the first marker-adjacent
+label's placement and overlaps-allowed policy. User review of the crowded overview
+led to 0035's configurable clean hide/show refinement; review its behavior before
+further tuning. Define glyph ranges/mappings and unknown/ambiguous category handling
+explicitly; don't turn illustrative mock values into defaults.
 
 Refined empty-view explanations and incomplete-data/tracking notices are parked
 for focused design, not removed as a correctness requirement. The comparison

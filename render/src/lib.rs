@@ -8,7 +8,7 @@ use embedded_graphics::{
     pixelcolor::BinaryColor,
     prelude::*,
     primitives::{Circle, Line, PrimitiveStyle, Rectangle},
-    text::Text,
+    text::{Baseline, Text},
 };
 use overhead_app::{
     RadarApp,
@@ -116,13 +116,21 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
         }
     }
 
+    let mut selected_marker = None;
     for (entry, _, point) in app.markers() {
         let marker = layout.marker(point);
-        let selected = app.selected_id() == Some(entry.elements().norad_id);
+        let id = entry.elements().norad_id;
+        let selected = app.selected_id() == Some(id);
         draw_marker(&mut display, marker, selected, layout, viewport)?;
+        if selected {
+            selected_marker = Some((id, marker));
+        }
     }
 
     if viewport == Viewport::Rectangle {
+        if let Some((id, marker)) = selected_marker.filter(|_| app.selected_label_visible()) {
+            draw_selected_label(&mut display, id, marker, layout)?;
+        }
         return draw_wide_status(&mut display, app, layout, ingestion_warning);
     }
 
@@ -313,6 +321,58 @@ fn draw_indicator<D: DrawTarget<Color = BinaryColor>>(
     Ok(())
 }
 
+/// Familiar names are keyed by identity, never inferred from catalogue names.
+fn selected_label(id: u64) -> LineBuffer {
+    // A u64 needs at most 20 decimal digits; no five-/six-digit truncation.
+    let mut label = LineBuffer::new(20);
+    if id == 25544 {
+        let _ = label.write_str("ISS");
+    } else {
+        let _ = write!(label, "{id}");
+    }
+    label
+}
+
+fn selected_label_origin(marker: Point, size: Size, layout: Layout) -> Point {
+    let left = layout.center().x - layout.horizontal_radius();
+    let right = layout.center().x + layout.horizontal_radius();
+    let top = layout.center().y - layout.radius();
+    let bottom = layout.center().y + layout.radius();
+    let width = size.width as i32;
+    let height = size.height as i32;
+    // Two blank columns between the diamond's three-pixel extent and text.
+    // Even a full u64 label fits on one side in the wide radar.
+    let x = if marker.x + 6 + width - 1 <= right {
+        marker.x + 6
+    } else {
+        marker.x - 6 - width + 1
+    };
+    Point::new(
+        x.max(left),
+        (marker.y - height / 2).clamp(top, bottom - height + 1),
+    )
+}
+
+fn draw_selected_label<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    id: u64,
+    marker: Point,
+    layout: Layout,
+) -> Result<(), D::Error> {
+    let label = selected_label(id);
+    let text = Text::with_baseline(
+        label.as_str(),
+        Point::zero(),
+        MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+        Baseline::Top,
+    );
+    let origin = selected_label_origin(marker, text.bounding_box().size, layout);
+    // Transparent ink only: scene overlaps are allowed, with no clearing mask,
+    // collision search, leader line or displacement of markers/arrows.
+    text.translate(origin).draw(display)?;
+    Ok(())
+}
+
 /// Temporary comparison notices, not the final normal/debug presentation.
 /// Warnings remain visible even when some valid markers are present.
 fn draw_wide_status<D: DrawTarget<Color = BinaryColor>>(
@@ -447,16 +507,22 @@ mod tests {
         app_with_failure(viewport, false)
     }
     fn app_with_failure(viewport: Viewport, failure: bool) -> RadarApp {
+        app_with_ids(viewport, failure, &[25544])
+    }
+    fn app_with_ids(viewport: Viewport, failure: bool, ids: &[u64]) -> RadarApp {
         let mut builder = CatalogueBuilder::new();
-        let elements: Vec<OmmElements> =
+        let mut data: serde_json::Value =
             serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
-        builder.push(
-            RecordOrigin {
-                group: 0,
-                record: 0,
-            },
-            elements.into_iter().next().unwrap(),
-        );
+        // Deliberately coincident test objects exercise identification separately
+        // from propagation. Full names stay identical, so only ID can select ISS.
+        for (record, &id) in ids.iter().enumerate() {
+            data[0]["NORAD_CAT_ID"] = serde_json::json!(id);
+            let elements: Vec<OmmElements> = serde_json::from_value(data.clone()).unwrap();
+            builder.push(
+                RecordOrigin { group: 0, record },
+                elements.into_iter().next().unwrap(),
+            );
+        }
         if failure {
             let mut data: serde_json::Value =
                 serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json"))
@@ -837,6 +903,294 @@ mod tests {
             .unwrap();
         assert!(healthy.update(invalid).is_err());
         assert_wide_notice(&healthy, true, &["NO", "FRAME", "INGEST", "WARN"]);
+    }
+
+    #[test]
+    fn selected_identity_is_bare_complete_and_only_25544_is_iss() {
+        for (id, expected) in [
+            (25544, "ISS"),
+            (38771, "38771"),
+            (100530, "100530"),
+            (1_234_567, "1234567"),
+            (0, "0"),
+            (u64::MAX, "18446744073709551615"),
+        ] {
+            assert_eq!(selected_label(id).as_str(), expected);
+        }
+    }
+
+    #[test]
+    fn selected_label_fits_edges_corners_and_full_id_without_clipping() {
+        let layout = Layout::wide();
+        for id in [25544, 38771, 100530, 1_234_567, u64::MAX] {
+            let label = selected_label(id);
+            let text = Text::with_baseline(
+                label.as_str(),
+                Point::zero(),
+                MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+                Baseline::Top,
+            );
+            let size = text.bounding_box().size;
+            // Every integer x tests both sides of the flip threshold; y includes
+            // all edges/corners and the vertically centered interior.
+            for x in 3..=349 {
+                for y in [3, 7, 120, 233, 237] {
+                    let marker = Point::new(x, y);
+                    let origin = selected_label_origin(marker, size, layout);
+                    let bounds = Rectangle::new(origin, size);
+                    assert!(layout.contains(origin, Viewport::Rectangle));
+                    assert!(layout.contains(bounds.bottom_right().unwrap(), Viewport::Rectangle));
+                    if x + 6 + size.width as i32 - 1 <= 349 {
+                        assert_eq!(origin.x, x + 6);
+                    } else {
+                        assert_eq!(bounds.bottom_right().unwrap().x, x - 6);
+                    }
+                    assert_eq!(origin.y, (y - 5).clamp(3, 228));
+                    // Compare with un-clipped reference text to detect lost
+                    // characters, not merely out-of-bounds pixels.
+                    let mut actual = Screen {
+                        pixels: [[false; 400]; 240],
+                    };
+                    draw_selected_label(&mut actual, id, marker, layout).unwrap();
+                    let mut expected = Screen {
+                        pixels: [[false; 400]; 240],
+                    };
+                    text.translate(origin).draw(&mut expected).unwrap();
+                    assert_eq!(actual.pixels, expected.pixels);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn selected_label_is_transparent_over_scene_graphics() {
+        let layout = Layout::wide();
+        let mut scene = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        // Put an arrow and another marker directly under the label footprint.
+        let marker = Point::new(300, 120);
+        draw_marker(
+            &mut scene,
+            Point::new(312, 120),
+            false,
+            layout,
+            Viewport::Rectangle,
+        )
+        .unwrap();
+        let arrow = EdgeIndicator {
+            edge: ViewPoint {
+                east: 1.0,
+                north: 0.0,
+            },
+            direction: ViewPoint {
+                east: 1.0,
+                north: 0.0,
+            },
+        };
+        draw_indicator(&mut scene, arrow, layout).unwrap();
+        let before = scene.pixels;
+        let mut ink = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw_selected_label(&mut ink, 1_234_567, marker, layout).unwrap();
+        draw_selected_label(&mut scene, 1_234_567, marker, layout).unwrap();
+        for (y, row) in before.iter().enumerate() {
+            for (x, &was_on) in row.iter().enumerate() {
+                assert_eq!(scene.pixels[y][x], was_on || ink.pixels[y][x]);
+            }
+        }
+    }
+
+    #[test]
+    fn wide_label_follows_selection_and_clears_on_reselection_and_missing_frame() {
+        let layout = Layout::wide();
+        let mut app = app_with_ids(Viewport::Rectangle, false, &[25544, 100530]);
+        let samples: Vec<_> = app.objects().map(|(_, s)| s.clone()).collect();
+        let counts = app.counts();
+        let mut screen = Screen {
+            pixels: [[true; 400]; 240],
+        };
+        draw(&mut screen, &app, layout, false).unwrap();
+        let iss = screen.pixels;
+        app.select_next();
+        assert_eq!(app.selected_id(), Some(100530));
+        draw(&mut screen, &app, layout, false).unwrap();
+        assert_ne!(screen.pixels, iss);
+        let mut label_reference = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        Text::with_baseline(
+            "100530",
+            Point::new(182, 115),
+            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+            Baseline::Top,
+        )
+        .draw(&mut label_reference)
+        .unwrap();
+        for (y, row) in screen.pixels.iter().enumerate() {
+            for (x, &pixel) in row.iter().enumerate() {
+                if (182..218).contains(&x) && (115..125).contains(&y) {
+                    assert_eq!(pixel, label_reference.pixels[y][x]);
+                } else {
+                    assert_eq!(pixel, iss[y][x]); // Only the selected label changes.
+                }
+            }
+        }
+        let mut fresh = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw(&mut fresh, &app, layout, false).unwrap();
+        assert_eq!(screen.pixels, fresh.pixels);
+        assert_eq!(app.counts(), counts);
+        assert_eq!(
+            app.objects().map(|(_, s)| s.clone()).collect::<Vec<_>>(),
+            samples
+        );
+        app.select_next();
+        draw(&mut screen, &app, layout, false).unwrap();
+        assert_eq!(screen.pixels, iss);
+
+        let invalid = overhead_core::sgp4::chrono::NaiveDate::from_ymd_opt(2101, 1, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        assert!(app.update(invalid).is_err());
+        draw(&mut screen, &app, layout, false).unwrap();
+        draw(&mut fresh, &app, layout, false).unwrap();
+        assert_eq!(screen.pixels, fresh.pixels);
+        assert_eq!(app.selected_id(), None);
+        let label_origin = selected_label_origin(layout.center(), Size::new(18, 10), layout);
+        assert!(
+            screen.pixels[label_origin.y as usize..(label_origin.y + 10) as usize]
+                .iter()
+                .all(
+                    |row| row[label_origin.x as usize..(label_origin.x + 36) as usize]
+                        .iter()
+                        .all(|&on| !on)
+                )
+        );
+    }
+
+    #[test]
+    fn zooming_selected_marker_offscreen_removes_label_without_labelling_arrow() {
+        let layout = Layout::wide();
+        let mut app = app_with_viewport(Viewport::Rectangle);
+        let later = app.time().unwrap() + overhead_core::sgp4::chrono::Duration::seconds(30);
+        app.update(later).unwrap();
+        assert_eq!(app.selected_id(), Some(25544));
+        let mut screen = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw(&mut screen, &app, layout, false).unwrap();
+        let before = screen.pixels;
+        app.zoom(64);
+        assert_eq!(app.selected_id(), None);
+        assert_eq!(app.counts().visible, 0);
+        assert_eq!(app.indicators().count(), 1);
+        draw(&mut screen, &app, layout, false).unwrap();
+        assert_ne!(screen.pixels, before);
+        let mut fresh = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw(&mut fresh, &app, layout, false).unwrap();
+        assert_eq!(screen.pixels, fresh.pixels);
+        app.zoom(-64);
+        assert_eq!(app.selected_id(), Some(25544));
+        draw(&mut screen, &app, layout, false).unwrap();
+        draw(&mut fresh, &app, layout, false).unwrap();
+        assert_eq!(screen.pixels, fresh.pixels);
+    }
+
+    #[test]
+    fn hiding_label_changes_only_text_not_diamond_scene_or_diagnostics() {
+        use overhead_app::identification::LabelZoom;
+        for viewport in [
+            Viewport::Rectangle,
+            Viewport::Square,
+            Viewport::Circle,
+            Viewport::BorderlessCircle,
+        ] {
+            let layout = if viewport == Viewport::Rectangle {
+                Layout::wide()
+            } else {
+                Layout::new(240).unwrap()
+            };
+            let app = app_with_failure(viewport, true);
+            let selected = app.selected_id();
+            let physical = app.selected().unwrap().1.physical;
+            let counts = app.counts();
+            let mut screen = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            draw(&mut screen, &app, layout, true).unwrap();
+            let labelled = screen.pixels;
+            // Same lens, frame, markers, warnings and selection; only the label
+            // gate changes. This also verifies constructor configuration.
+            let app = app.with_label_zoom(LabelZoom::new(10.0, 15.0).unwrap());
+            assert!(!app.selected_label_visible());
+            draw(&mut screen, &app, layout, true).unwrap();
+            assert_eq!(app.selected_id(), selected);
+            assert_eq!(app.selected().unwrap().1.physical, physical);
+            assert_eq!(app.counts(), counts);
+            let marker = layout.marker(app.markers().next().unwrap().2);
+            let mut diamond = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            draw_marker(&mut diamond, marker, true, layout, viewport).unwrap();
+            for (y, row) in diamond.pixels.iter().enumerate() {
+                for (x, &on) in row.iter().enumerate() {
+                    if on {
+                        assert!(screen.pixels[y][x]);
+                    }
+                }
+            }
+            if viewport == Viewport::Rectangle {
+                assert_ne!(screen.pixels, labelled);
+                let mut fresh = Screen {
+                    pixels: [[false; 400]; 240],
+                };
+                draw(&mut fresh, &app, layout, true).unwrap();
+                assert_eq!(screen.pixels, fresh.pixels); // No stale text.
+                draw_selected_label(&mut screen, selected.unwrap(), marker, layout).unwrap();
+            }
+            assert_eq!(screen.pixels, labelled);
+        }
+    }
+
+    #[test]
+    fn baseline_radar_has_no_marker_adjacent_identity() {
+        for viewport in [
+            Viewport::Circle,
+            Viewport::BorderlessCircle,
+            Viewport::Square,
+        ] {
+            let mut a = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            let mut b = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            let layout = Layout::new(240).unwrap();
+            draw(
+                &mut a,
+                &app_with_ids(viewport, false, &[25544]),
+                layout,
+                false,
+            )
+            .unwrap();
+            draw(
+                &mut b,
+                &app_with_ids(viewport, false, &[100530]),
+                layout,
+                false,
+            )
+            .unwrap();
+            assert_ne!(a.pixels, b.pixels); // Diagnostic NORAD field differs.
+            for y in 0..240 {
+                assert_eq!(a.pixels[y][..240], b.pixels[y][..240]);
+            }
+        }
     }
 
     #[test]

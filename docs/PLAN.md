@@ -1,8 +1,9 @@
 # Overhead — Plan
 
 **Current: M3 opt-in wide radar and per-satellite off-screen arrows implemented
-and visually approved under 0033; square/diagnostic default retained. Marker
-identification is next to scope; glyphs remain unimplemented. M2 operating-budget
+and visually approved under 0033; square/diagnostic default retained. Selected-marker
+identification is implemented under 0034, refined by 0035's configurable 70°/60°
+hide/show hysteresis after review of crowding. Glyphs remain unimplemented. M2 operating-budget
 and scheduling work remains open.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
@@ -99,9 +100,13 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
 - [x] User reviewed and approved the wide comparison, retaining the current
   layout and overlaps-allowed arrows. No collision avoidance or default-mode
   change follows from that approval.
-- [ ] Scope selected-marker identification next: bare NORAD ID and the ISS
-  exception under 0032, with bounded edge placement and collision behavior
-  agreed before implementation. Deferred to the next session at user request.
+- [x] Agree and implement [0034's selected-marker identification](decisions/0034-selected-marker-identification.md)
+  in the opt-in wide view: bare NORAD ID / ISS, right-side placement with left-side
+  fallback, vertical clamping and transparent overlaps allowed. Baseline unchanged.
+- [x] Refine crowded overview identification under [0035](decisions/0035-label-zoom-visibility.md):
+  clean label hide at ≥70° / restore at ≤60° vertical FOV with hysteresis,
+  configurable launch thresholds, selected diamond retained. No dithering.
+- [ ] Review the zoom-visibility refinement before further UI work.
   Glyph mappings/transitions, final normal/debug access and refined empty/
   incomplete-state communication remain open. Neither the synthetic mock
   population nor the replay examples select production capacity.

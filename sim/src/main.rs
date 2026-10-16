@@ -18,8 +18,9 @@ fn run(config: Config) -> Result<(), String> {
     let loaded = overhead_tools::catalogue::load(&config.manifest)?;
     eprint!("{}{}", loaded.report, loaded.diagnostics);
     let ingestion_warning = !loaded.diagnostics.is_empty();
-    let mut app =
-        RadarApp::new(loaded.catalogue, config.observer, config.view).map_err(|e| e.to_string())?;
+    let mut app = RadarApp::new(loaded.catalogue, config.observer, config.view)
+        .map_err(|e| e.to_string())?
+        .with_label_zoom(config.label_zoom);
     app.update(config.start).map_err(|e| e.to_string())?;
     let mut previous_failures = Vec::new();
     report_failures(&app, &mut previous_failures);

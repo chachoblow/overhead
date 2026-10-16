@@ -13,7 +13,9 @@ use overhead_core::{
     sgp4::chrono::NaiveDateTime,
     validate_utc_time,
 };
+pub mod identification;
 pub mod projection;
+use identification::LabelZoom;
 use projection::{Camera, CameraError, CameraPoint, EarthLimb, EdgeIndicator, View, ViewPoint};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -82,6 +84,8 @@ pub struct RadarApp {
     time: Option<NaiveDateTime>,
     samples: Vec<Result<Sample, TrackingError>>,
     selected: Option<u64>,
+    label_zoom: LabelZoom,
+    label_visible: bool,
 }
 
 impl RadarApp {
@@ -92,6 +96,7 @@ impl RadarApp {
     ) -> Result<Self, CameraError> {
         let camera = Camera::new(observer)?;
         let samples = Vec::with_capacity(catalogue.entries().len());
+        let label_zoom = LabelZoom::default();
         Ok(Self {
             catalogue,
             observer,
@@ -100,7 +105,23 @@ impl RadarApp {
             time: None,
             samples,
             selected: None,
+            label_zoom,
+            label_visible: label_zoom.initially_visible(view),
         })
+    }
+
+    /// Configure label zoom policy, resetting its history using the current lens.
+    /// Intended for construction; it never changes selection or physical state.
+    pub fn with_label_zoom(mut self, policy: LabelZoom) -> Self {
+        self.label_zoom = policy;
+        self.label_visible = policy.initially_visible(self.view);
+        self
+    }
+
+    /// Presentation-only gate for the wide renderer. The selected diamond and
+    /// baseline diagnostics do not use this gate.
+    pub fn selected_label_visible(&self) -> bool {
+        self.label_visible && self.selected.is_some()
     }
 
     /// Compute a complete synchronous frame at caller-supplied UTC. Each entry
@@ -189,6 +210,7 @@ impl RadarApp {
 
     pub fn zoom(&mut self, steps: i32) {
         self.view.zoom(steps);
+        self.label_visible = self.label_zoom.after_zoom(self.view, self.label_visible);
         self.reconcile_selection();
     }
 
@@ -604,6 +626,46 @@ mod tests {
         assert!(app.update(invalid).is_err());
         assert_eq!(app.indicators().count(), 0);
         assert_eq!(app.selected_id(), None);
+    }
+
+    #[test]
+    fn label_zoom_history_survives_frames_selection_and_missing_data() {
+        let mut app = app();
+        let time = app.catalogue.entries()[0].satellite().epoch();
+        app.update(time).unwrap();
+        let samples = app.samples.clone();
+        let counts = app.counts();
+        let selected = app.selected_id();
+        assert!(app.selected_label_visible());
+        app.zoom(-64);
+        assert!(!app.selected_label_visible());
+        assert_eq!(app.selected_id(), selected);
+        assert_eq!(app.counts(), counts);
+        assert_eq!(app.samples, samples);
+        // From 100 degrees, three zoom-in steps reach the hysteresis interval.
+        app.zoom(3);
+        assert!((60.0..70.0).contains(&app.view().fov_deg()));
+        assert!(!app.selected_label_visible());
+        app.select_next();
+        app.update(time).unwrap();
+        app.zoom(0);
+        assert!(!app.selected_label_visible());
+        let invalid = NaiveDate::from_ymd_opt(2101, 1, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        assert!(app.update(invalid).is_err());
+        app.update(time).unwrap();
+        assert!(!app.selected_label_visible());
+        assert_eq!(app.selected_id(), selected);
+        app.zoom(1);
+        assert!(app.view().fov_deg() <= 60.0);
+        assert!(app.selected_label_visible());
+        app.zoom(-1);
+        assert!((60.0..70.0).contains(&app.view().fov_deg()));
+        assert!(app.selected_label_visible());
+        assert_eq!(app.samples, samples);
+        assert_eq!(app.counts(), counts);
     }
 
     #[test]

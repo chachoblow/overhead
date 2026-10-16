@@ -269,6 +269,9 @@ impl View {
     pub fn viewport(self) -> Viewport {
         self.viewport
     }
+    pub(crate) fn vertical_half_span(self) -> f64 {
+        self.half_span
+    }
     pub fn fov_deg(self) -> f64 {
         (2.0 * libm::atan(self.half_span)).to_degrees()
     }
