@@ -1,7 +1,7 @@
 # 0032 — Wide radar and selected-satellite glyphs
 
 Date: 2026-10-15
-Status: accepted (design direction; not implemented)
+Status: accepted (design direction; viewport/arrows implemented as an opt-in comparison under [0033](0033-wide-radar-comparison-contract.md); labels/glyphs remain unimplemented)
 
 ## Decision
 Pursue a wide borderless radar with off-screen indicators, a compact identifier
@@ -12,8 +12,10 @@ fully specified implementation contract.
 
 This amends [0028's square allocation](0028-borderless-square-viewport.md) as the
 future presentation direction and [0029's normal readout direction](0029-normal-and-debug-presentation-direction.md),
-including its exclusion of NORAD ID. The current simulator still implements
-0028 and the original diagnostic panel; normal/debug separation is not implemented.
+including its exclusion of NORAD ID. The default simulator retains 0028 and the
+original diagnostic panel. 0033 refines the initially open spatial behavior below
+for an opt-in real-data comparison; the full normal/debug presentation remains
+unimplemented.
 
 ## Why
 The user prefers spatial context in the radar itself rather than exact population

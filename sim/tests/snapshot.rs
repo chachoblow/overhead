@@ -219,11 +219,105 @@ fn real_catalogue_zoom_changes_visibility_not_sky_count() {
 }
 
 #[test]
+fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
+    use overhead_core::{
+        GeodeticPosition, ecef_to_look_angles,
+        sgp4::chrono::{Duration, NaiveDate},
+    };
+    let scratch = Scratch::new();
+    let observer = GeodeticPosition {
+        latitude_rad: 39.007_f64.to_radians(),
+        longitude_rad: (-104.883_f64).to_radians(),
+        altitude_km: 2.187,
+    };
+    let start = NaiveDate::from_ymd_opt(2026, 10, 10)
+        .unwrap()
+        .and_hms_opt(0, 0, 0)
+        .unwrap();
+    for name in ["catalogue.json", "weather-gps.json"] {
+        let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("examples")
+            .join(name);
+        let loaded = overhead_tools::catalogue::load(&manifest).unwrap();
+        for seconds in [0, 30] {
+            let time = start + Duration::seconds(seconds);
+            let utc = format!("{time}Z").replace(' ', "T");
+            let looks: Vec<_> = loaded
+                .catalogue
+                .entries()
+                .iter()
+                .map(|entry| {
+                    let ecef = entry.satellite().state_at(time).unwrap().to_ecef().unwrap();
+                    ecef_to_look_angles(ecef, observer).unwrap()
+                })
+                .collect();
+            let sky = looks.iter().filter(|look| look.elevation_rad > 0.0).count();
+            for fov in [0.1_f64, 5.0, 20.0, 40.0, 100.0] {
+                let mut visible = 0;
+                let mut indicators = 0;
+                for look in &looks {
+                    let up = look.range_km * look.elevation_rad.sin();
+                    let depth = 75_000.0 - up;
+                    if look.elevation_rad <= 0.0 || depth < 1.0 {
+                        continue;
+                    }
+                    let horizontal = look.range_km * look.elevation_rad.cos();
+                    let azimuth = look.azimuth_rad.unwrap_or(0.0);
+                    // Independent pixel focal length: same 117px vertical half-
+                    // extent as square, with the added horizontal area at 173px.
+                    let focal_length = 117.0 / (fov.to_radians() / 2.0).tan();
+                    let x = horizontal * azimuth.sin() / depth * focal_length;
+                    let y = horizontal * azimuth.cos() / depth * focal_length;
+                    if x.abs() <= 173.0 && y.abs() <= 117.0 {
+                        visible += 1;
+                    } else {
+                        indicators += 1;
+                    }
+                }
+                let fov = fov.to_string();
+                let args = [
+                    manifest.to_str().unwrap(),
+                    &utc,
+                    "39.007",
+                    "-104.883",
+                    "2.187",
+                    "--wide",
+                    "--fov-deg",
+                    &fov,
+                    "--snapshot",
+                    "wide.png",
+                ];
+                let report = success(scratch.run(&args));
+                assert!(
+                    report.contains(&format!(
+                        "catalogue={} sky={sky} visible={visible} failed=0 indicators={indicators}",
+                        looks.len()
+                    )),
+                    "{report}"
+                );
+                let expected = scratch.png("wide.png");
+                assert_eq!(success(scratch.run(&args)), report);
+                assert_eq!(scratch.png("wide.png"), expected);
+            }
+        }
+    }
+}
+
+#[test]
 fn malformed_inputs_fail_before_creating_a_snapshot() {
     let scratch = Scratch::new();
     for args in [
         vec!["--demo", "--fov-deg", "NaN", "--snapshot", "bad.png"],
         vec!["--demo", "--viewport", "triangle", "--snapshot", "bad.png"],
+        vec![
+            "--demo",
+            "--wide",
+            "--viewport",
+            "square",
+            "--snapshot",
+            "bad.png",
+        ],
+        vec!["--demo", "--wide", "--wide", "--snapshot", "bad.png"],
         vec!["--demo", "--radius-km", "8000", "--snapshot", "bad.png"],
         vec![
             "absent.json",
@@ -309,6 +403,12 @@ fn propagation_errors_and_ingestion_warnings_remain_explicit() {
     assert!(String::from_utf8_lossy(&output.stderr).contains("NORAD 25544: propagation:"));
     assert!(success(output).contains("catalogue=1 sky=0 visible=0 failed=1"));
     scratch.png("error.png");
+    let mut wide_args = args.to_vec();
+    wide_args.push("--wide");
+    let output = scratch.run(&wide_args);
+    assert!(String::from_utf8_lossy(&output.stderr).contains("NORAD 25544: propagation:"));
+    assert!(success(output).contains("catalogue=1 sky=0 visible=0 failed=1 indicators=0"));
+    scratch.png("error.png");
 
     let mut records: Value =
         serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
@@ -320,4 +420,8 @@ fn propagation_errors_and_ingestion_warnings_remain_explicit() {
     let output = scratch.run(&args);
     assert!(String::from_utf8_lossy(&output.stderr).contains("warning: skipped"));
     assert!(success(output).contains("catalogue=1"));
+    let output = scratch.run(&wide_args);
+    assert!(String::from_utf8_lossy(&output.stderr).contains("warning: skipped"));
+    assert!(success(output).contains("catalogue=1"));
+    scratch.png("error.png");
 }

@@ -17,9 +17,10 @@ Replay advances from explicit UTC at 1x using monotonic elapsed time, not now.
 No network, freshness cutoff, pass prediction, or production scheduling.
 
 Options (each at most once):
-  --fov-deg N     Full width/height field of view, 0.1..100 degrees (default 20)
-  --radar-size N   Radar allocation, 180..240 pixels (default 240)
+  --fov-deg N     Full vertical field of view, 0.1..100 degrees (default 20)
+  --radar-size N   Square radar allocation, 180..240 pixels (default 240)
   --viewport MODE  square (default, borderless), circle, borderless-circle
+  --wide          352x240 comparison with off-screen arrows; no --radar-size/--viewport
   --snapshot PNG  Render exactly the start UTC to a 400x240 PNG; no window
   --help, -h      Show this help
 
@@ -28,7 +29,11 @@ Actual 3D positions use a north-up perspective camera fixed 75000 km above the
 observer along local up. Zoom changes the lens, not camera position. Earth is a
 WGS-84 outline through the same camera. Only true elevation > 0 is eligible;
 near-plane (1 km) and viewport clipping also apply. Readouts use true state;
-ERR counts failed objects. The former --radius-km option is no longer supported.
+The default panel's ERR counts failed objects; --wide shows TRACK ERROR and
+INGEST WARN notices. One arrow per eligible off-screen satellite; overlaps are
+allowed, never merged or suppressed. No arrows for depth < 1 km. Wide horizontal
+FOV follows drawable aspect, preserving pixel scale and Earth's proportions.
+The former --radius-km option is no longer supported.
 
 --demo uses the pinned 16-object historical M2 pool at 2026-10-10T00:00:00Z,
 observer 39.007 -104.883 2.187, from this build's checkout. Not live data or a
@@ -95,8 +100,16 @@ impl Config {
         let mut size = None;
         let mut viewport = None;
         let mut snapshot = None;
+        let mut wide = false;
         let mut options = options.iter();
         while let Some(flag) = options.next() {
+            if flag == "--wide" {
+                if wide {
+                    return Err("repeated option: --wide".into());
+                }
+                wide = true;
+                continue;
+            }
             let value = options
                 .next()
                 .ok_or_else(|| format!("missing value for {flag}"))?;
@@ -129,13 +142,26 @@ impl Config {
                 _ => return Err(format!("unknown, repeated or invalid option: {flag}")),
             }
         }
+        if wide && (size.is_some() || viewport.is_some()) {
+            return Err("--wide cannot be combined with --radar-size or --viewport".into());
+        }
+        let layout = if wide {
+            Layout::wide()
+        } else {
+            Layout::new(size.unwrap_or(240))?
+        };
+        let fov = fov.unwrap_or(DEFAULT_FOV_DEG);
+        let view = if wide {
+            View::rectangular(fov, layout.aspect_ratio())?
+        } else {
+            View::new(fov)?.with_viewport(viewport.unwrap_or_default())
+        };
         Ok(Self {
             manifest,
             start,
             observer,
-            view: View::new(fov.unwrap_or(DEFAULT_FOV_DEG))?
-                .with_viewport(viewport.unwrap_or_default()),
-            layout: Layout::new(size.unwrap_or(240))?,
+            view,
+            layout,
             snapshot,
         })
     }
@@ -193,6 +219,20 @@ mod tests {
         }
     }
     #[test]
+    fn wide_comparison_preserves_vertical_fov_and_has_explicit_aspect() {
+        for args in ["--demo --wide", "--demo --fov-deg 20 --wide"] {
+            let config = parse(args).unwrap();
+            assert_eq!(config.view.viewport(), Viewport::Rectangle);
+            assert!((config.view.fov_deg() - 20.0).abs() < 1e-12);
+            assert_eq!(config.layout.aspect_ratio(), 173.0 / 117.0);
+            assert_eq!(config.view, View::rectangular(20.0, 173.0 / 117.0).unwrap());
+        }
+        let config = parse("--demo --wide --snapshot wide.png --fov-deg 100").unwrap();
+        assert!((config.view.fov_deg() - 100.0).abs() < 1e-12);
+        assert_eq!(config.snapshot, Some(PathBuf::from("wide.png")));
+    }
+
+    #[test]
     fn reject_invalid_and_repeated_inputs() {
         for args in [
             "",
@@ -211,6 +251,11 @@ mod tests {
             "--demo --viewport triangle",
             "--demo --viewport square --viewport circle",
             "--demo --snapshot a --snapshot b",
+            "--demo --wide --wide",
+            "--demo --wide --viewport square",
+            "--demo --radar-size 240 --wide",
+            "--demo --wide 352",
+            "--demo --wide --fov-deg",
             "x 2026-10-10T00:00:00 0 0 0",
             "x 2101-01-01T00:00:00Z 0 0 0",
             "x 2026-10-10T00:00:60Z 0 0 0",

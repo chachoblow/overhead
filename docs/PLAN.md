@@ -1,8 +1,9 @@
 # Overhead — Plan
 
-**Current: M3 wide-radar/glyph presentation direction agreed under 0032;
-implementation still uses the square radar and diagnostic panel. M2
-operating-budget and scheduling work remains open.**
+**Current: M3 opt-in wide radar and per-satellite off-screen arrows implemented
+and visually approved under 0033; square/diagnostic default retained. Marker
+identification is next to scope; glyphs remain unimplemented. M2 operating-budget
+and scheduling work remains open.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -90,11 +91,20 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
   off-screen indicators, marker-adjacent ID and a right-hand category/data-glyph
   strip. [Retained reference](DESIGN.md#selected-satellite-presentation) is a
   starting point, not an implemented or fully specified UI.
-- [ ] Scope a bounded real-data comparison with the user, starting with the wide
-  viewport and off-screen indicators. Resolve rectangular FOV, invalid-depth
-  and crowding behavior before coding; glyph mappings, transitions, normal/debug
-  access and explicit failure communication remain open. Do not treat the
-  synthetic mock population as a production size or capacity.
+- [x] Agree and implement [0033's bounded wide-radar comparison](decisions/0033-wide-radar-comparison-contract.md):
+  opt-in 352×240, vertical FOV preserving pixel scale, one arrow per eligible
+  off-screen satellite with overlaps allowed, no invalid-depth arrows, existing
+  visible-only selection, and minimal explicit warning notices. Default square
+  diagnostics retained; [usage/comparisons](../sim/README.md#wide-radar-comparison).
+- [x] User reviewed and approved the wide comparison, retaining the current
+  layout and overlaps-allowed arrows. No collision avoidance or default-mode
+  change follows from that approval.
+- [ ] Scope selected-marker identification next: bare NORAD ID and the ISS
+  exception under 0032, with bounded edge placement and collision behavior
+  agreed before implementation. Deferred to the next session at user request.
+  Glyph mappings/transitions, final normal/debug access and refined empty/
+  incomplete-state communication remain open. Neither the synthetic mock
+  population nor the replay examples select production capacity.
 
 No prediction integration, slowdown or live fetching is required for this slice.
 Simulator throughput is not target capacity evidence.

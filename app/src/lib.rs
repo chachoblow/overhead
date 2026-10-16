@@ -14,7 +14,7 @@ use overhead_core::{
     validate_utc_time,
 };
 pub mod projection;
-use projection::{Camera, CameraError, CameraPoint, EarthLimb, View, ViewPoint};
+use projection::{Camera, CameraError, CameraPoint, EarthLimb, EdgeIndicator, View, ViewPoint};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TrackingError {
@@ -57,6 +57,12 @@ impl Sample {
             return None;
         }
         view.locate(self.camera)
+    }
+    pub fn edge_indicator(&self, view: View) -> Option<EdgeIndicator> {
+        if !self.above_horizon() {
+            return None;
+        }
+        view.edge_indicator(self.camera)
     }
 }
 
@@ -143,6 +149,14 @@ impl RadarApp {
         self.objects().filter_map(|(entry, result)| {
             let sample = result.as_ref().ok()?;
             Some((entry, sample, sample.marker(self.view)?))
+        })
+    }
+
+    /// One candidate per eligible off-screen object, even if arrows overlap.
+    /// Indicators are not visible markers and do not participate in selection.
+    pub fn indicators(&self) -> impl Iterator<Item = (&CatalogueEntry, EdgeIndicator)> {
+        self.objects().filter_map(|(entry, result)| {
+            Some((entry, result.as_ref().ok()?.edge_indicator(self.view)?))
         })
     }
 
@@ -297,22 +311,34 @@ mod tests {
         let time = app.catalogue.entries()[0].satellite().epoch();
         app.update(time).unwrap();
         let mut s = *app.samples[0].as_ref().unwrap();
-        for elevation in [-0.1, 0.0, -0.0] {
-            s.physical.look.elevation_rad = elevation;
-            for fov in [0.1, 20.0, 100.0] {
-                assert!(s.marker(View::new(fov).unwrap()).is_none());
-            }
-        }
-        s.physical.look.elevation_rad = 0.1;
         s.camera = CameraPoint {
             east_km: 500.0,
             north_km: 0.0,
             depth_km: 30_000.0,
         };
+        for elevation in [-0.1, 0.0, -0.0] {
+            s.physical.look.elevation_rad = elevation;
+            for fov in [0.1, 20.0, 100.0] {
+                assert!(s.marker(View::new(fov).unwrap()).is_none());
+                assert!(
+                    s.edge_indicator(View::rectangular(fov, 173.0 / 117.0).unwrap())
+                        .is_none()
+                );
+            }
+        }
+        s.physical.look.elevation_rad = 0.1;
         assert!(s.marker(View::new(0.1).unwrap()).is_none());
+        assert!(
+            s.edge_indicator(View::rectangular(0.1, 173.0 / 117.0).unwrap())
+                .is_some()
+        );
         assert!(s.marker(View::new(20.0).unwrap()).is_some());
         s.camera.depth_km = -1.0;
         assert!(s.marker(View::new(100.0).unwrap()).is_none());
+        assert!(
+            s.edge_indicator(View::rectangular(0.1, 173.0 / 117.0).unwrap())
+                .is_none()
+        );
     }
 
     #[test]
@@ -493,6 +519,90 @@ mod tests {
         app.samples[0].as_mut().unwrap().physical.look.elevation_rad = 0.0;
         app.reconcile_selection();
         assert_eq!(app.counts().visible, 0);
+        assert_eq!(app.selected_id(), None);
+    }
+
+    #[test]
+    fn overlapping_indicators_are_per_object_and_do_not_change_counts_or_selection() {
+        let elements: Vec<OmmElements> =
+            serde_json::from_str(include_str!("../../tools/fixtures/m2-pool/pool.json")).unwrap();
+        let mut builder = CatalogueBuilder::new();
+        for (record, e) in elements.into_iter().enumerate() {
+            builder.push(RecordOrigin { group: 0, record }, e);
+        }
+        let mut app = RadarApp::new(
+            builder.finish().unwrap(),
+            GeodeticPosition {
+                latitude_rad: 0.0,
+                longitude_rad: 0.0,
+                altitude_km: 0.0,
+            },
+            View::rectangular(20.0, 173.0 / 117.0).unwrap(),
+        )
+        .unwrap();
+        let time = NaiveDate::from_ymd_opt(2026, 10, 10)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        app.update(time).unwrap();
+        // Deliberately coincident image positions isolate arrow multiplicity.
+        for result in &mut app.samples {
+            let sample = result.as_mut().unwrap();
+            sample.physical.look.elevation_rad = 0.1;
+            sample.camera = CameraPoint {
+                east_km: 1.0,
+                north_km: 0.0,
+                depth_km: 1.0,
+            };
+        }
+        app.reconcile_selection();
+        assert_eq!(app.indicators().count(), 16);
+        assert_eq!(app.counts().visible, 0);
+        assert_eq!(app.selected_id(), None);
+        let arrows: Vec<_> = app.indicators().collect();
+        assert!(arrows.windows(2).all(|pair| pair[0].1 == pair[1].1));
+        app.samples[0] = Err(TrackingError::Coordinates(CoordinateError::NonFinite));
+        app.samples[1].as_mut().unwrap().physical.look.elevation_rad = 0.0;
+        app.samples[2].as_mut().unwrap().camera.depth_km = 0.999;
+        app.samples[3].as_mut().unwrap().camera.east_km = 0.0;
+        let original = app.samples.clone();
+        app.reconcile_selection();
+        let selected = app.catalogue.entries()[3].elements().norad_id;
+        assert_eq!(app.selected_id(), Some(selected));
+        assert_eq!(
+            app.counts(),
+            Counts {
+                catalogue: 16,
+                above_horizon: 14,
+                visible: 1,
+                failed: 1
+            }
+        );
+        assert_eq!(app.indicators().count(), 12);
+        app.select_next();
+        assert_eq!(app.selected_id(), Some(selected));
+        app.zoom(-64);
+        assert_eq!(app.indicators().count(), 0);
+        assert_eq!(
+            app.counts(),
+            Counts {
+                catalogue: 16,
+                above_horizon: 14,
+                visible: 13,
+                failed: 1
+            }
+        );
+        assert_eq!(app.selected_id(), Some(selected));
+        assert_eq!(app.samples, original);
+        app.zoom(64);
+        assert_eq!(app.indicators().count(), 12);
+        assert_eq!(app.samples, original);
+        let invalid = NaiveDate::from_ymd_opt(2101, 1, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        assert!(app.update(invalid).is_err());
+        assert_eq!(app.indicators().count(), 0);
         assert_eq!(app.selected_id(), None);
     }
 

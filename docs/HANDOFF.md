@@ -1,40 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-15 UTC. Next session: scope the first M3 wide-radar slice._
+_Last updated: 2026-10-15 UTC. Next session: scope selected-marker identification._
 
 ## Current state / agreed direction
-Code still implements [0028's square radar](decisions/0028-borderless-square-viewport.md)
-and the original diagnostic panel. Normal/debug separation, wide viewport,
-edge indicators, glyphs and glyph transitions are NOT implemented.
-[0032](decisions/0032-wide-radar-and-selected-satellite-glyphs.md) records the agreed
-future direction; [DESIGN + retained mockup](DESIGN.md#selected-satellite-presentation)
-are the starting point. No chat, earlier iterations or `/tmp` files are needed.
-Wide borderless radar; bare ID beside selection (ISS exception); right-aligned
-category/elevation/altitude/speed/vertical-coil period glyphs. Edge indicators
-replace exact population counts; normal FOV text is also dropped. Preserve true
-state, horizon eligibility and explicit failure honesty. Exact proportions,
-category mapping and non-elevation encodings are not settled.
+[0033's opt-in `--wide` comparison](decisions/0033-wide-radar-comparison-contract.md)
+is implemented and visually approved by the user: 352×240, vertical FOV preserving
+pixel scale, one hollow arrow per eligible off-screen satellite, overlaps allowed.
+No suppression, grouping or displacement; no invalid-depth arrows. Selection
+stays visible-marker-only. Minimal missing-frame/empty-marker/tracking/ingestion
+notices remain explicit, including warnings alongside valid markers.
+The default remains the square radar/diagnostic panel. Marker-adjacent IDs,
+category/data glyphs, transitions and the full normal/debug view are NOT implemented.
 
 ## This session
-Design only: added 0032 and `docs/mockups/0032-glyph-radar.png`; updated DESIGN,
-PLAN and decision cross-references, and clarified the distinction from current
-[simulator usage](../sim/README.md). Retained only the final schematic, not the
-iteration history. The scene/glyph values are invented, not real-data evidence.
+Changed `app/src/{lib,projection}.rs`, `render/src/lib.rs`, simulator config/reporting
+and `sim/tests/snapshot.rs`; recorded 0033 and updated design/plan/usage.
+[Comparison commands and counts](../sim/README.md#wide-radar-comparison) reproduce
+real-data snapshots without this chat or `/tmp` assets. No engine, dependency,
+lockfile, fixture, firmware or frozen-M2 changes.
 
 ## Next step / boundaries
-Scope one real-data comparison: wide viewport plus off-screen indicators first.
-Before coding, agree rectangular FOV/aspect semantics and minimal invalid-depth/
-crowding behavior with the user; don't silently turn mock geometry into policy.
-Likely code: `app/src/projection.rs`, `app/src/lib.rs`, `render/src/lib.rs`, and
-sim config/tests. Defer glyph animation/mappings to a bounded follow-up as needed.
-Empty/incomplete-state treatment and debug access are parked, not waived.
-No prediction integration, panning, slowdown, fetching or production limits.
+User deferred further implementation to next session. Scope one bounded
+selected-marker identification slice: bare NORAD ID and `25544 -> ISS` under
+[0032 / DESIGN](DESIGN.md#selected-satellite-presentation). Agree edge placement
+and label-collision behavior before coding; keep approved radar/arrows unchanged.
+Glyph mappings/transitions, final debug access and refined empty/incomplete-state
+treatment remain open. No prediction integration, panning, slowdown, fetching,
+new selection ranking or production limits.
 
 ## Verification / risks
-Docs/static PNG only: final/staged diff and whitespace, local links/anchors/paths,
-image mode/dimensions and instruction consistency checked. No Rust checks rerun:
-no application code/build inputs changed. No runtime, interactive or hardware
-verification; no physical-display legibility or performance claim.
-M2 budgets/scheduling, whole-device RAM/safe stack, Sharp bring-up and RWX remain
-open. Frozen evidence uses [0023's pinned revision](decisions/0023-frozen-m2-revision-isolation.md),
-not this workspace; no evidence renewed.
+Wrap-up reran `cargo fmt --all -- --check`, `cargo check --workspace` and
+`cargo test --workspace`: all pass, including deterministic headless CLI tests
+at start/+30 seconds against independent geometry. Earlier this session generated
+square/wide weather/GPS and wide demo PNGs; selected PNGs visually inspected.
+No agent interactive replay, hardware, physical-display or performance validation.
+An earlier concurrent `cargo run` relink caused CLI spawn ENOENT; serial reruns
+pass. Do not rebuild the executable while its CLI tests run. M2 budgets/scheduling,
+whole-device RAM/safe stack, Sharp bring-up and RWX remain open; frozen evidence
+still uses [0023's pinned revision](decisions/0023-frozen-m2-revision-isolation.md).

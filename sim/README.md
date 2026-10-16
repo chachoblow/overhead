@@ -47,13 +47,17 @@ Missing fetch metadata remains unknown; it is not inferred from filenames.
 - Tab: select the next visible NORAD ID, wrapping. Selection stays while visible;
   otherwise the first visible ID is used. This is inspection, not final ranking.
 - Escape/window close: quit.
-- `--fov-deg`: full angle across viewport width/height, 0.1°–100°; default 20°.
+- `--fov-deg`: full vertical angle, 0.1°–100°; default 20°. Also the horizontal
+  angle in square/circular modes; wide mode derives horizontal coverage from aspect.
   The former `--radius-km` option is rejected with migration guidance.
 - `--radar-size`: left-hand radar allocation, 180–240 pixels; default 240.
   The viewport stays vertically centered. Smaller values give more panel width.
 - `--viewport`: `square` (default, no outer border), `circle` (circular clipping
   and ring), or `borderless-circle` (circular clipping, no ring).
   See [comparison](#viewport-shape-comparison).
+- `--wide`: opt-in 352×240 borderless radar with per-satellite off-screen arrows
+  and a reserved 48-pixel strip. Incompatible with `--radar-size` and `--viewport`.
+  See [wide comparison](#wide-radar-comparison).
 
 The [perspective contract](../docs/decisions/0026-fixed-camera-perspective-slice.md)
 owns lens semantics, with square clipping now selected by
@@ -93,12 +97,14 @@ as a complete empty sky. Fatal configuration/load/clock/output errors exit 1;
 success/help exits 0. A rendered snapshot containing per-object failures still
 exits 0, with its nonzero `failed` count reported explicitly.
 
-The panel described here is still the diagnostic presentation. The agreed
-[normal/debug direction](../docs/decisions/0029-normal-and-debug-presentation-direction.md)
-and [wide-radar/glyph direction](../docs/decisions/0032-wide-radar-and-selected-satellite-glyphs.md)
-are not implemented. [DESIGN's retained schematic](../docs/DESIGN.md#selected-satellite-presentation)
-is a future starting point, not this executable's output or a golden test.
-Debug-access controls remain open; the commands/settings here describe current code.
+The default panel described here is still the diagnostic presentation. The
+opt-in wide comparison implements only the viewport/arrows portion of
+[0032](../docs/decisions/0032-wide-radar-and-selected-satellite-glyphs.md), under
+[0033](../docs/decisions/0033-wide-radar-comparison-contract.md).
+The full normal/debug split, glyphs and marker-adjacent identifiers are not
+implemented. [DESIGN's retained schematic](../docs/DESIGN.md#selected-satellite-presentation)
+remains a design reference, not this executable's output or a golden test.
+Final debug-access controls remain open.
 
 The synchronous loop targets 20 Hz on the host, without a catch-up queue. This
 is a visual test loop, **not a selected device cadence or bounded scheduler**.
@@ -171,6 +177,66 @@ For a visible corner comparison, repeat at 40°: circular modes show 17 markers,
 square shows 18. All have SKY 22 and zero failures. This does not select 40° as
 the default or change the production population.
 
+## Wide-radar comparison
+
+`--wide` is a bounded real-data experiment, not a new default or the finished
+normal view. Compare at the same explicit UTC, observer and **vertical** FOV:
+
+```sh
+cargo run -p overhead-sim -- sim/examples/weather-gps.json \
+  2026-10-10T00:00:00Z 39.007 -104.883 2.187 \
+  --fov-deg 20 --snapshot /tmp/overhead-square.png
+cargo run -p overhead-sim -- sim/examples/weather-gps.json \
+  2026-10-10T00:00:00Z 39.007 -104.883 2.187 \
+  --wide --fov-deg 20 --snapshot /tmp/overhead-wide.png
+cargo run -p overhead-sim -- --demo --wide --snapshot /tmp/overhead-demo-wide.png
+```
+
+The 352×240 radar has an aim point at (176, 120) and drawable half-extents
+173×117 pixels. Horizontal FOV is
+`2 * atan(tan(vertical_fov / 2) * 173 / 117)`, not a second independent zoom.
+Earth and satellites keep the square baseline's pixel magnification; more space
+is admitted horizontally. The 48-pixel strip is reserved for later glyph work.
+
+One hollow outward arrow is drawn for each successful, above-horizon satellite
+whose finite projection is outside the view and whose camera depth is at least
+1 km. Arrows follow the projection direction, inset to fit the complete glyph.
+They are not velocities, physical edge positions, or distance encodings.
+**Overlaps are allowed: no arrows are suppressed, merged, or spread apart.**
+Exact overlaps can look like a single arrow. Near-plane/behind-camera objects
+receive no arrow; zoom cannot change their depth. Objects become ordinary
+markers when their true projections enter the viewport.
+
+Selection remains visible-marker-only, with the same Tab/zoom behavior as the
+baseline; arrows never count as visible markers. The snapshot report adds
+`indicators=N`: the number of arrows submitted, not necessarily distinguishable
+symbols (zero in baseline modes). All physical diagnostics remain available in
+host reports and the baseline panel.
+
+No selected ID or data glyphs are drawn yet. The reserved strip shows `NO MARKERS`
+when there are no in-view markers, not a claim of a complete empty sky. `NO FRAME`,
+`TRACK ERROR` and `INGEST WARN` preserve explicit missing/incomplete-state notices;
+warnings remain present alongside valid markers. These are comparison notices,
+not the final empty-state or debug-access design. No routine FOV/count text is
+shown in the wide image.
+
+At the pinned weather/GPS time/site above, all frames have SKY 22 and zero failures:
+
+| Vertical FOV | Square markers | Wide markers | Wide arrows |
+|---|---:|---:|---:|
+| 0.1° | 0 | 0 | 22 |
+| 5° | 4 | 4 | 18 |
+| 20° | 6 | 8 | 14 |
+| 40° | 18 | 18 | 4 |
+| 100° | 22 | 22 | 0 |
+
+The demo at 20° has zero markers and four arrows; at 100° it has four markers
+and no arrows. These are historical replay observations, not capacity targets.
+Repeat with UTC `2026-10-10T00:00:30Z` for another physical frame. CLI tests cover
+both catalogues, both times, these zooms, independent visibility/arrow counts,
+and deterministic snapshots with SDL unavailable. Tight-view images show some
+overlapping arrows; no collision policy has been added to make them countable.
+
 ## Verify
 
 ```sh
@@ -185,7 +251,9 @@ replacement, selection/zoom, clipped outline/glyph pixels, explicit clock/config
 and real CLI PNG snapshots with SDL unavailable. Existing engine/prediction
 regression tests remain unchanged. CLI tests compare explicit/default square
 snapshots, corner counts against independent physical-look-angle references,
-and determinism.
+and determinism. Wide tests additionally cover rectangular aspect and pixel scale,
+per-object arrows despite coincident positions, directional glyph clipping,
+marker entry, and visible warnings in empty and partially successful frames.
 
 The [2026-10-12 verification record](../docs/PROGRESS.md#2026-10-12-utc-square-default-fresh-session-verification-before-commit)
 contains the prior fresh-source build, broader check suite, headless counts,

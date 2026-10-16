@@ -7,7 +7,7 @@ use overhead_core::{CoordinateError, EcefPosition, GeodeticPosition};
 /// Along the observer's geodetic local up, relative to the observer, not MSL.
 pub const CAMERA_HEIGHT_KM: f64 = 75_000.0;
 pub const NEAR_PLANE_KM: f64 = 1.0;
-/// Full angle across the viewport width/height; provisional simulator settings.
+/// Full vertical angle (also horizontal in square/circular views).
 pub const DEFAULT_FOV_DEG: f64 = 20.0;
 pub const MIN_FOV_DEG: f64 = 0.1;
 pub const MAX_FOV_DEG: f64 = 100.0;
@@ -64,6 +64,15 @@ pub struct ViewPoint {
     pub north: f64,
 }
 
+/// Per-object directional context, not a physical position on the perimeter.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct EdgeIndicator {
+    /// Intersection of the center-to-projection ray with the viewport boundary.
+    pub edge: ViewPoint,
+    /// Unit direction in the undistorted image plane, east/right and north/up.
+    pub direction: ViewPoint,
+}
+
 pub struct Camera {
     observer: Vector,
     east: Vector,
@@ -114,7 +123,7 @@ impl Camera {
     pub fn earth_limb(&self, view: View) -> EarthLimb {
         EarthLimb {
             north_center: self.limb.north_center / view.half_span,
-            east_radius: self.limb.east_radius / view.half_span,
+            east_radius: self.limb.east_radius / view.half_span / view.aspect_ratio,
             north_radius: self.limb.north_radius / view.half_span,
         }
     }
@@ -199,14 +208,15 @@ impl EarthLimb {
     }
 }
 
-/// Borderless square is the current UI default. The circular comparison modes
-/// share clipping; Square admits corners at the same horizontal/vertical scale.
+/// Borderless square remains the default. Rectangle is an opt-in comparison;
+/// its aspect ratio belongs to View, with each axis normalized to [-1, 1].
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum Viewport {
     Circle,
     BorderlessCircle,
     #[default]
     Square,
+    Rectangle,
 }
 impl Viewport {
     pub fn contains(self, point: ViewPoint) -> bool {
@@ -215,7 +225,7 @@ impl Viewport {
         }
         match self {
             Self::Circle | Self::BorderlessCircle => libm::hypot(point.east, point.north) <= 1.0,
-            Self::Square => point.east.abs() <= 1.0 && point.north.abs() <= 1.0,
+            Self::Square | Self::Rectangle => point.east.abs() <= 1.0 && point.north.abs() <= 1.0,
         }
     }
 }
@@ -223,8 +233,9 @@ impl Viewport {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct View {
     // tan(full FOV / 2), allowing geometric magnification steps, not linear
-    // degree steps. x_screen = (east/depth) / half_span.
+    // degree steps. y_screen = (north/depth) / half_span.
     half_span: f64,
+    aspect_ratio: f64,
     viewport: Viewport,
 }
 impl View {
@@ -234,11 +245,25 @@ impl View {
         }
         Ok(Self {
             half_span: libm::tan(fov_deg.to_radians() / 2.0),
+            aspect_ratio: 1.0,
             viewport: Viewport::default(),
         })
     }
+    /// Aspect is the drawable horizontal/vertical half-extent ratio, including
+    /// the renderer's inset, not the outer allocation's nominal width/height.
+    pub fn rectangular(fov_deg: f64, aspect_ratio: f64) -> Result<Self, &'static str> {
+        if !aspect_ratio.is_finite() || aspect_ratio <= 0.0 {
+            return Err("viewport aspect ratio must be finite and positive");
+        }
+        let mut view = Self::new(fov_deg)?;
+        view.viewport = Viewport::Rectangle;
+        view.aspect_ratio = aspect_ratio;
+        Ok(view)
+    }
+    /// Legacy equal-axis comparison shapes; resets the aspect to one.
     pub fn with_viewport(mut self, viewport: Viewport) -> Self {
         self.viewport = viewport;
+        self.aspect_ratio = 1.0;
         self
     }
     pub fn viewport(self) -> Viewport {
@@ -256,9 +281,9 @@ impl View {
             libm::tan(MAX_FOV_DEG.to_radians() / 2.0),
         );
     }
-    /// Include near-plane equality and marker centers on the viewport edge.
-    /// Glyph pixels are additionally clipped by the renderer. No far plane.
-    pub fn locate(self, point: CameraPoint) -> Option<ViewPoint> {
+    /// Unclipped lens coordinates. Invalid depth/nonfinite projection has no
+    /// meaningful screen direction; it must never become a reversed arrow.
+    fn project(self, point: CameraPoint) -> Option<ViewPoint> {
         if ![point.east_km, point.north_km, point.depth_km]
             .iter()
             .all(|v| v.is_finite())
@@ -266,10 +291,45 @@ impl View {
         {
             return None;
         }
-        let east = (point.east_km / point.depth_km) / self.half_span;
+        let east = (point.east_km / point.depth_km) / self.half_span / self.aspect_ratio;
         let north = (point.north_km / point.depth_km) / self.half_span;
-        let point = ViewPoint { east, north };
+        (east.is_finite() && north.is_finite()).then_some(ViewPoint { east, north })
+    }
+
+    /// Include near-plane equality and marker centers on the viewport edge.
+    /// Glyph pixels are additionally clipped by the renderer. No far plane.
+    pub fn locate(self, point: CameraPoint) -> Option<ViewPoint> {
+        let point = self.project(point)?;
         self.viewport.contains(point).then_some(point)
+    }
+
+    pub fn edge_indicator(self, camera: CameraPoint) -> Option<EdgeIndicator> {
+        let point = self.project(camera)?;
+        if self.viewport.contains(point) {
+            return None;
+        }
+        // Scale first to avoid overflowing the length of extreme finite inputs.
+        let extent = point.east.abs().max(point.north.abs());
+        let mut edge = ViewPoint {
+            east: point.east / extent,
+            north: point.north / extent,
+        };
+        if matches!(self.viewport, Viewport::Circle | Viewport::BorderlessCircle) {
+            let length = libm::hypot(edge.east, edge.north);
+            edge.east /= length;
+            edge.north /= length;
+        }
+        let scale = camera.east_km.abs().max(camera.north_km.abs());
+        let east = camera.east_km / scale;
+        let north = camera.north_km / scale;
+        let length = libm::hypot(east, north);
+        Some(EdgeIndicator {
+            edge,
+            direction: ViewPoint {
+                east: east / length,
+                north: north / length,
+            },
+        })
     }
 }
 
@@ -531,6 +591,123 @@ mod tests {
         assert!(Camera::new(geo(0.0, 181.0, 0.0)).is_err());
         assert!(Camera::new(geo(0.0, 0.0, -CAMERA_HEIGHT_KM)).is_err());
         assert!(Camera::new(geo(0.0, 0.0, f64::MAX)).is_err());
+    }
+
+    #[test]
+    fn rectangular_view_expands_horizontal_coverage_without_stretching_earth() {
+        let aspect = 173.0 / 117.0;
+        let camera = Camera::new(geo(39.007, -104.883, 2.187)).unwrap();
+        for fov in [MIN_FOV_DEG, DEFAULT_FOV_DEG, MAX_FOV_DEG] {
+            let square = View::new(fov).unwrap();
+            let wide = View::rectangular(fov, aspect).unwrap();
+            let point = CameraPoint {
+                east_km: square.half_span * 1.25,
+                north_km: square.half_span * 0.5,
+                depth_km: 1.0,
+            };
+            assert!(square.locate(point).is_none());
+            let marker = wide.locate(point).unwrap();
+            near(marker.east * 173.0, 1.25 * 117.0);
+            near(marker.north * 117.0, 0.5 * 117.0);
+            let a = camera.earth_limb(square);
+            let b = camera.earth_limb(wide);
+            near(a.east_radius * 117.0, b.east_radius * 173.0);
+            near(a.north_radius, b.north_radius);
+            near(a.north_center, b.north_center);
+            // Corresponding rows and columns trace the same undistorted ellipse.
+            for fraction in [-1.0, -0.5, 0.0, 0.5, 1.0] {
+                let north = a.north_center + a.north_radius * fraction;
+                if let (Some(a), Some(b)) = (a.east_at(north), b.east_at(north)) {
+                    near(a[1] * 117.0, b[1] * 173.0);
+                }
+                let east = a.east_radius * fraction;
+                let aa = a.north_at(east).unwrap();
+                let bb = b.north_at(east / aspect).unwrap();
+                near(aa[0], bb[0]);
+                near(aa[1], bb[1]);
+            }
+            let mut zoomed = wide;
+            zoomed.zoom(1);
+            assert_eq!(zoomed.aspect_ratio, aspect);
+            assert_eq!(zoomed.viewport(), Viewport::Rectangle);
+        }
+        for aspect in [0.0, -1.0, f64::NAN, f64::INFINITY] {
+            assert!(View::rectangular(20.0, aspect).is_err());
+        }
+    }
+
+    #[test]
+    fn rectangular_indicators_follow_direction_and_become_markers_at_the_boundary() {
+        let view = View::rectangular(20.0, 173.0 / 117.0).unwrap();
+        for (east, north) in [
+            (1.0, 0.0),
+            (-1.0, 0.0),
+            (0.0, 1.0),
+            (0.0, -1.0),
+            (1.0, 1.0),
+            (-1.0, 1.0),
+            (-1.0, -1.0),
+            (1.0, -1.0),
+            (1.0, 0.4),
+            (0.2, -1.0),
+        ] {
+            let boundary = CameraPoint {
+                east_km: east * view.half_span * view.aspect_ratio,
+                north_km: north * view.half_span,
+                depth_km: 1.0,
+            };
+            let outside = CameraPoint {
+                east_km: boundary.east_km * 2.0,
+                north_km: boundary.north_km * 2.0,
+                ..boundary
+            };
+            let arrow = view.edge_indicator(outside).unwrap();
+            near(arrow.edge.east, east);
+            near(arrow.edge.north, north);
+            near(
+                libm::hypot(arrow.direction.east, arrow.direction.north),
+                1.0,
+            );
+            near(
+                arrow.direction.east * outside.north_km,
+                arrow.direction.north * outside.east_km,
+            );
+            assert!(
+                arrow.direction.east * outside.east_km + arrow.direction.north * outside.north_km
+                    > 0.0
+            );
+            assert!(view.locate(outside).is_none());
+            assert!(view.locate(boundary).is_some());
+            assert!(view.edge_indicator(boundary).is_none());
+            let mut zoomed = view;
+            zoomed.zoom(-4);
+            assert!(zoomed.locate(outside).is_some());
+            assert!(zoomed.edge_indicator(outside).is_none());
+            for depth in [-10.0, 0.0, 0.999, f64::NAN, f64::INFINITY] {
+                let clipped = CameraPoint {
+                    depth_km: depth,
+                    ..outside
+                };
+                assert!(view.locate(clipped).is_none());
+                assert!(view.edge_indicator(clipped).is_none());
+            }
+            for invalid in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+                assert!(
+                    view.edge_indicator(CameraPoint {
+                        east_km: invalid,
+                        ..outside
+                    })
+                    .is_none()
+                );
+                assert!(
+                    view.edge_indicator(CameraPoint {
+                        north_km: invalid,
+                        ..outside
+                    })
+                    .is_none()
+                );
+            }
+        }
     }
 
     #[test]

@@ -12,10 +12,12 @@ used an LED matrix and a position API.
 ## Interface intent
 A location-centered, wide borderless orbital view with a narrow right-hand
 strip of selected-satellite glyphs. [0032](decisions/0032-wide-radar-and-selected-satellite-glyphs.md)
-records the agreed next direction, not an implemented interface. The current
-simulator still has [0028's 240×240 square](decisions/0028-borderless-square-viewport.md)
-and the original diagnostic panel. Exact new proportions and rectangular FOV
-semantics remain open.
+records the overall direction, not a completed interface. The simulator retains
+[0028's 240×240 square](decisions/0028-borderless-square-viewport.md) and diagnostic
+panel by default. [0033's opt-in comparison](decisions/0033-wide-radar-comparison-contract.md)
+implements a 352×240 comparison radar with vertical FOV and per-satellite
+off-screen arrows. The user approved this layout and overlaps-allowed treatment;
+final glyph-strip proportions and presentation remain open.
 
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 minimum on-screen traversal time for fast markers is planned, not implemented.
@@ -41,8 +43,9 @@ zoom alone cannot move an object behind the camera.
 [0024](decisions/0024-perspective-orbital-view-direction.md) records the 3D direction,
 with lens zoom selected in [0025](decisions/0025-fixed-camera-lens-zoom.md).
 The implemented contract is [0026](decisions/0026-fixed-camera-perspective-slice.md),
-amended by [0027's higher camera](decisions/0027-higher-fixed-camera-overview.md)
-and 0028's square clipping. See [simulator usage](../sim/README.md#controls-and-view)
+amended by [0027's higher camera](decisions/0027-higher-fixed-camera-overview.md),
+0028's default square clipping, and 0033's opt-in rectangular comparison.
+See [simulator usage](../sim/README.md#controls-and-view)
 for current settings, readout units and comparison modes.
 
 User feedback favors zoom-magnified motion and a fuller satellite overview with
@@ -78,12 +81,16 @@ needed to continue; this text owns the intent, not the drawing's exact pixels.
 
 - **Radar:** use the space left of the narrow glyph strip, with a centered aim
   point and shared Earth/satellite projection. The mock uses 352×240 plus a
-  48-pixel strip; these dimensions are provisional. Keep breathing room and no
-  perimeter border. Earth is not stretched to fill the rectangle.
+  48-pixel strip; these dimensions are provisional and now used by the opt-in
+  comparison. Keep breathing room and no perimeter border. Earth is not stretched
+  to fill the rectangle.
 - **Outside-view context:** small hollow, outward-pointing edge indicators for
   above-horizon satellites outside the viewport. Wider zoom brings them into
-  view as actual markers. Convey that there is more to explore, not a precise
-  tally. No separate population-dot summary, normal-view counts, or FOV text.
+  view as actual markers. Use one arrow per eligible off-screen satellite;
+  overlaps are allowed for the first comparison, without suppression, merging
+  or displacement. Convey that there is more to explore, not a guaranteed
+  countable tally. No separate population-dot summary, normal-view counts, or
+  FOV text.
 - **Identification:** bare NORAD ID beside the selected marker, with a small
   curated familiar-name exception set beginning with ISS. The ID stays with the
   marker, not at the top of the strip. Full names remain diagnostic information.
@@ -106,15 +113,19 @@ needed to continue; this text owns the intent, not the drawing's exact pixels.
 
 ### Open questions and boundaries
 
-Resolve rectangular aspect/FOV semantics, edge-indicator collisions and invalid
-camera-depth cases, label collisions and selection leaving the view before a
-real-data implementation. Define glyph ranges/mappings and unknown/ambiguous
-category handling explicitly; don't turn illustrative mock values into defaults.
+0033 settles the first comparison's vertical FOV/aspect, no-arrow invalid-depth
+handling, overlaps-allowed arrow policy and unchanged visible-only selection.
+The user approved the current wide layout and allowed arrow overlaps; retain
+these rather than adding collision avoidance. Marker-adjacent label placement
+and collisions are the next bounded design question, deferred to the next session.
+Define glyph ranges/mappings and unknown/ambiguous category handling explicitly;
+don't turn illustrative mock values into defaults.
 
-Empty-view explanations and incomplete-data/tracking notices are parked for
-focused design, not removed as a correctness requirement. Debug access remains
-open. A normal view must not conceal failed/omitted tracking as a complete empty
-sky, including when some valid markers remain.
+Refined empty-view explanations and incomplete-data/tracking notices are parked
+for focused design, not removed as a correctness requirement. The comparison
+uses minimal explicit notices; final debug access remains open. A normal view
+must not conceal failed/omitted tracking as a complete empty sky, including when
+some valid markers remain.
 
 The selected-satellite start/end/peak pass graphic is interesting but deferred;
 upcoming-pass lists are not desired. Local time, orbit-data age, range and bearing

@@ -12,7 +12,7 @@ use embedded_graphics::{
 };
 use overhead_app::{
     RadarApp,
-    projection::{EarthLimb, ViewPoint, Viewport},
+    projection::{EarthLimb, EdgeIndicator, ViewPoint, Viewport},
 };
 use overhead_core::sgp4::chrono::Timelike;
 
@@ -20,7 +20,8 @@ pub const DISPLAY_SIZE: Size = Size::new(400, 240);
 
 #[derive(Debug, Clone, Copy)]
 pub struct Layout {
-    radar_size: u32,
+    radar_width: u32,
+    radar_height: u32,
 }
 
 impl Layout {
@@ -30,13 +31,29 @@ impl Layout {
         if !(180..=240).contains(&radar_size) {
             return Err("radar size must be in [180, 240] pixels");
         }
-        Ok(Self { radar_size })
+        Ok(Self {
+            radar_width: radar_size,
+            radar_height: radar_size,
+        })
+    }
+    /// Provisional 352x240 radar plus a reserved 48-pixel strip. No glyphs yet.
+    pub fn wide() -> Self {
+        Self {
+            radar_width: 352,
+            radar_height: 240,
+        }
+    }
+    pub fn aspect_ratio(self) -> f64 {
+        f64::from(self.horizontal_radius()) / f64::from(self.radius())
     }
     fn center(self) -> Point {
-        Point::new(self.radar_size as i32 / 2, 120)
+        Point::new(self.radar_width as i32 / 2, 120)
     }
     fn radius(self) -> i32 {
-        self.radar_size as i32 / 2 - 3
+        self.radar_height as i32 / 2 - 3
+    }
+    fn horizontal_radius(self) -> i32 {
+        self.radar_width as i32 / 2 - 3
     }
     fn contains(self, pixel: Point, viewport: Viewport) -> bool {
         let delta = pixel - self.center();
@@ -45,14 +62,16 @@ impl Layout {
             Viewport::Circle | Viewport::BorderlessCircle => {
                 delta.x * delta.x + delta.y * delta.y <= radius * radius
             }
-            Viewport::Square => delta.x.abs() <= radius && delta.y.abs() <= radius,
+            Viewport::Square | Viewport::Rectangle => {
+                delta.x.abs() <= self.horizontal_radius() && delta.y.abs() <= radius
+            }
         }
     }
     fn marker(self, p: ViewPoint) -> Point {
         let round = |v: f64| (v + if v < 0.0 { -0.5 } else { 0.5 }) as i32;
         self.center()
             + Point::new(
-                round(p.east * f64::from(self.radius())),
+                round(p.east * f64::from(self.horizontal_radius())),
                 -round(p.north * f64::from(self.radius())),
             )
     }
@@ -91,13 +110,23 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
     )
     .draw(&mut display)?;
 
+    if viewport == Viewport::Rectangle {
+        for (_, indicator) in app.indicators() {
+            draw_indicator(&mut display, indicator, layout)?;
+        }
+    }
+
     for (entry, _, point) in app.markers() {
         let marker = layout.marker(point);
         let selected = app.selected_id() == Some(entry.elements().norad_id);
         draw_marker(&mut display, marker, selected, layout, viewport)?;
     }
 
-    let x = layout.radar_size as i32 + 10;
+    if viewport == Viewport::Rectangle {
+        return draw_wide_status(&mut display, app, layout, ingestion_warning);
+    }
+
+    let x = layout.radar_width as i32 + 10;
     let columns = (400 - x) as usize / 6;
     let mut panel = Panel {
         display: &mut display,
@@ -182,40 +211,40 @@ fn draw_earth<D: DrawTarget<Color = BinaryColor>>(
     viewport: Viewport,
 ) -> Result<(), D::Error> {
     let radius = layout.radius();
+    let horizontal_radius = layout.horizontal_radius();
     // Sample both rows and columns for a continuous one-bit ellipse. Work is
     // bounded by viewport diameter, not the zoomed ellipse's enormous extent.
     // All clipping happens before float-to-pixel conversion, then again after
     // rounding so neither the outline nor a glyph can leak out of the radar.
-    let pixels = (-radius..=radius)
-        .flat_map(|offset| {
-            let coordinate = f64::from(offset) / f64::from(radius);
-            let rows = limb
-                .east_at(coordinate)
-                .into_iter()
-                .flatten()
-                .map(move |east| ViewPoint {
-                    east,
-                    north: coordinate,
-                });
-            let columns = limb
-                .north_at(coordinate)
-                .into_iter()
-                .flatten()
-                .map(move |north| ViewPoint {
-                    east: coordinate,
-                    north,
-                });
-            rows.chain(columns)
-        })
-        .filter_map(|point| {
-            if !viewport.contains(point) {
-                return None;
-            }
-            let pixel = layout.marker(point);
-            layout
-                .contains(pixel, viewport)
-                .then_some(Pixel(pixel, BinaryColor::On))
-        });
+    let rows = (-radius..=radius).flat_map(|offset| {
+        let coordinate = f64::from(offset) / f64::from(radius);
+        limb.east_at(coordinate)
+            .into_iter()
+            .flatten()
+            .map(move |east| ViewPoint {
+                east,
+                north: coordinate,
+            })
+    });
+    let columns = (-horizontal_radius..=horizontal_radius).flat_map(|offset| {
+        let coordinate = f64::from(offset) / f64::from(horizontal_radius);
+        limb.north_at(coordinate)
+            .into_iter()
+            .flatten()
+            .map(move |north| ViewPoint {
+                east: coordinate,
+                north,
+            })
+    });
+    let pixels = rows.chain(columns).filter_map(|point| {
+        if !viewport.contains(point) {
+            return None;
+        }
+        let pixel = layout.marker(point);
+        layout
+            .contains(pixel, viewport)
+            .then_some(Pixel(pixel, BinaryColor::On))
+    });
     display.draw_iter(pixels)
 }
 
@@ -241,6 +270,81 @@ fn draw_marker<D: DrawTarget<Color = BinaryColor>>(
             (ink && layout.contains(p, viewport)).then_some(Pixel(p, BinaryColor::On))
         });
     display.draw_iter(pixels)
+}
+
+/// Hollow triangle pointing along the true image-plane direction. Intersect
+/// the same ray with a slightly inset rectangle so the complete glyph fits.
+/// No sorting, suppression, grouping or displacement to avoid other arrows.
+fn draw_indicator<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    indicator: EdgeIndicator,
+    layout: Layout,
+) -> Result<(), D::Error> {
+    let rx = f64::from(layout.horizontal_radius());
+    let ry = f64::from(layout.radius());
+    let x = indicator.edge.east * rx;
+    let y = -indicator.edge.north * ry;
+    let scale = ((rx - 3.0) / x.abs()).min((ry - 3.0) / y.abs());
+    let x = x * scale;
+    let y = y * scale;
+    let dx = indicator.direction.east;
+    let dy = -indicator.direction.north;
+    let pixel = |x: f64, y: f64| {
+        let round = |v: f64| (v + if v < 0.0 { -0.5 } else { 0.5 }) as i32;
+        layout.center() + Point::new(round(x), round(y))
+    };
+    let tip = pixel(x, y);
+    let a = pixel(x - 5.0 * dx - 2.0 * dy, y - 5.0 * dy + 2.0 * dx);
+    let b = pixel(x - 5.0 * dx + 2.0 * dy, y - 5.0 * dy - 2.0 * dx);
+    let bounds = Rectangle::new(
+        layout.center() - Point::new(layout.horizontal_radius(), layout.radius()),
+        Size::new(
+            (2 * layout.horizontal_radius() + 1) as u32,
+            (2 * layout.radius() + 1) as u32,
+        ),
+    );
+    let mut clipped = display.clipped(&bounds);
+    let stroke = PrimitiveStyle::with_stroke(BinaryColor::On, 1);
+    for (start, end) in [(tip, a), (a, b), (b, tip)] {
+        Line::new(start, end)
+            .into_styled(stroke)
+            .draw(&mut clipped)?;
+    }
+    Ok(())
+}
+
+/// Temporary comparison notices, not the final normal/debug presentation.
+/// Warnings remain visible even when some valid markers are present.
+fn draw_wide_status<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    app: &RadarApp,
+    layout: Layout,
+    ingestion_warning: bool,
+) -> Result<(), D::Error> {
+    let x = layout.radar_width as i32 + 4;
+    let mut panel = Panel {
+        display,
+        x,
+        columns: (400 - x) as usize / 6,
+        y: 16,
+    };
+    let counts = app.counts();
+    if app.time().is_none() {
+        panel.line(format_args!("NO"))?;
+        panel.line(format_args!("FRAME"))?;
+    } else if counts.visible == 0 {
+        panel.line(format_args!("NO"))?;
+        panel.line(format_args!("MARKERS"))?;
+    }
+    if counts.failed > 0 {
+        panel.line(format_args!("TRACK"))?;
+        panel.line(format_args!("ERROR"))?;
+    }
+    if ingestion_warning {
+        panel.line(format_args!("INGEST"))?;
+        panel.line(format_args!("WARN"))?;
+    }
+    Ok(())
 }
 
 struct Panel<'a, D> {
@@ -340,6 +444,9 @@ mod tests {
         app_with_viewport(Viewport::Circle)
     }
     fn app_with_viewport(viewport: Viewport) -> RadarApp {
+        app_with_failure(viewport, false)
+    }
+    fn app_with_failure(viewport: Viewport, failure: bool) -> RadarApp {
         let mut builder = CatalogueBuilder::new();
         let elements: Vec<OmmElements> =
             serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
@@ -350,6 +457,21 @@ mod tests {
             },
             elements.into_iter().next().unwrap(),
         );
+        if failure {
+            let mut data: serde_json::Value =
+                serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json"))
+                    .unwrap();
+            data[0]["NORAD_CAT_ID"] = serde_json::json!(99999);
+            data[0]["MEAN_MOTION"] = serde_json::json!(1e300);
+            let elements: Vec<OmmElements> = serde_json::from_value(data).unwrap();
+            builder.push(
+                RecordOrigin {
+                    group: 0,
+                    record: 1,
+                },
+                elements.into_iter().next().unwrap(),
+            );
+        }
         let catalogue = builder.finish().unwrap();
         let entry = &catalogue.entries()[0];
         let time = entry.satellite().epoch();
@@ -361,7 +483,11 @@ mod tests {
                 altitude_km: 0.0,
                 ..geo
             },
-            View::new(20.0).unwrap().with_viewport(viewport),
+            if viewport == Viewport::Rectangle {
+                View::rectangular(20.0, Layout::wide().aspect_ratio()).unwrap()
+            } else {
+                View::new(20.0).unwrap().with_viewport(viewport)
+            },
         )
         .unwrap();
         app.update(time).unwrap();
@@ -543,6 +669,174 @@ mod tests {
             }
             assert!(corner_limb);
         }
+    }
+
+    #[test]
+    fn wide_earth_preserves_pixel_scale_and_every_glyph_stays_in_the_rectangle() {
+        let camera = overhead_app::projection::Camera::new(GeodeticPosition {
+            latitude_rad: 39.007_f64.to_radians(),
+            longitude_rad: (-104.883_f64).to_radians(),
+            altitude_km: 2.187,
+        })
+        .unwrap();
+        let wide = Layout::wide();
+        let square = Layout::new(240).unwrap();
+        for fov in [0.1, 5.0, 8.0, 9.0, 20.0, 100.0] {
+            let mut a = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            let mut b = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            draw_earth(
+                &mut a,
+                camera.earth_limb(View::new(fov).unwrap()),
+                square,
+                Viewport::Square,
+            )
+            .unwrap();
+            draw_earth(
+                &mut b,
+                camera.earth_limb(View::rectangular(fov, wide.aspect_ratio()).unwrap()),
+                wide,
+                Viewport::Rectangle,
+            )
+            .unwrap();
+            // Compare the shared interior. The old vertical clipping edges can
+            // gain a rounded limb pixel when formerly outside geometry is admitted.
+            for y in 3..=237 {
+                for x in 4..237 {
+                    assert_eq!(a.pixels[y][x], b.pixels[y][x + 56], "fov={fov} at {x},{y}");
+                }
+            }
+            let ink = b.pixels.iter().flatten().filter(|&&on| on).count();
+            assert!(ink <= 2 * (2 * wide.horizontal_radius() + 1 + 2 * wide.radius() + 1) as usize);
+            for east in [-1.0, 1.0] {
+                for north in [-1.0, 1.0] {
+                    let pixel = wide.marker(ViewPoint { east, north });
+                    draw_marker(&mut b, pixel, true, wide, Viewport::Rectangle).unwrap();
+                    assert!(b.pixels[pixel.y as usize][pixel.x as usize]);
+                }
+            }
+            for (y, row) in b.pixels.iter().enumerate() {
+                for (x, &on) in row.iter().enumerate() {
+                    if on {
+                        assert!(wide.contains(Point::new(x as i32, y as i32), Viewport::Rectangle));
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn arrows_are_hollow_outward_and_clipped_including_corner_directions() {
+        use overhead_app::projection::CameraPoint;
+        let layout = Layout::wide();
+        let view = View::rectangular(20.0, layout.aspect_ratio()).unwrap();
+        for angle in (0..360).step_by(5) {
+            let (north, east) = (angle as f64).to_radians().sin_cos();
+            let arrow = view
+                .edge_indicator(CameraPoint {
+                    east_km: east,
+                    north_km: north,
+                    depth_km: 1.0,
+                })
+                .unwrap();
+            let mut screen = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            draw_indicator(&mut screen, arrow, layout).unwrap();
+            assert!(screen.pixels.iter().flatten().filter(|&&on| on).count() >= 10);
+            for (y, row) in screen.pixels.iter().enumerate() {
+                for (x, &on) in row.iter().enumerate() {
+                    if on {
+                        assert!(
+                            layout.contains(Point::new(x as i32, y as i32), Viewport::Rectangle)
+                        );
+                        let delta = Point::new(x as i32, y as i32) - layout.center();
+                        assert!(f64::from(delta.x) * east - f64::from(delta.y) * north > 0.0);
+                    }
+                }
+            }
+            if angle == 0 {
+                assert!(screen.pixels[120][346]); // Outward tip.
+                assert!(screen.pixels[118][341]); // Base corners.
+                assert!(screen.pixels[122][341]);
+                assert!(!screen.pixels[120][343]); // Hollow interior.
+            }
+            let expected = screen.pixels;
+            draw_indicator(&mut screen, arrow, layout).unwrap();
+            assert_eq!(screen.pixels, expected); // Exact overlaps are permitted.
+        }
+    }
+
+    fn assert_wide_notice(app: &RadarApp, warning: bool, lines: &[&str]) {
+        let mut screen = Screen {
+            pixels: [[true; 400]; 240],
+        };
+        draw(&mut screen, app, Layout::wide(), warning).unwrap();
+        let expected = screen.pixels;
+        draw(&mut screen, app, Layout::wide(), warning).unwrap();
+        assert_eq!(screen.pixels, expected);
+        let mut reference = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        for (row, line) in lines.iter().enumerate() {
+            Text::new(
+                line,
+                Point::new(356, 16 + row as i32 * 13),
+                MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+            )
+            .draw(&mut reference)
+            .unwrap();
+        }
+        for y in 0..240 {
+            assert_eq!(screen.pixels[y][352..], reference.pixels[y][352..]);
+        }
+    }
+
+    #[test]
+    fn wide_notices_remain_visible_with_valid_markers_and_clear_on_recovery() {
+        let mut healthy = app_with_viewport(Viewport::Rectangle);
+        assert_eq!(healthy.counts().visible, 1);
+        assert_wide_notice(&healthy, false, &[]);
+        assert_wide_notice(&healthy, true, &["INGEST", "WARN"]);
+        let mut failed = app_with_failure(Viewport::Rectangle, true);
+        assert_eq!(failed.counts().visible, 1);
+        assert_eq!(failed.counts().failed, 1);
+        assert_wide_notice(&failed, false, &["TRACK", "ERROR"]);
+        assert_wide_notice(&failed, true, &["TRACK", "ERROR", "INGEST", "WARN"]);
+        let mut screen = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw(&mut screen, &failed, Layout::wide(), true).unwrap();
+        draw(&mut screen, &healthy, Layout::wide(), false).unwrap();
+        assert!(
+            screen
+                .pixels
+                .iter()
+                .all(|row| row[352..].iter().all(|&on| !on))
+        );
+        // About half an ISS orbit later, the formerly overhead object is below
+        // this fixed site's horizon. Empty-marker text is not an empty-sky claim.
+        let later = healthy.time().unwrap() + overhead_core::sgp4::chrono::Duration::minutes(45);
+        healthy.update(later).unwrap();
+        failed.update(later).unwrap();
+        assert_eq!(healthy.counts().visible, 0);
+        assert_eq!(failed.counts().visible, 0);
+        assert_eq!(failed.counts().failed, 1);
+        assert_wide_notice(&healthy, false, &["NO", "MARKERS"]);
+        assert_wide_notice(
+            &failed,
+            true,
+            &["NO", "MARKERS", "TRACK", "ERROR", "INGEST", "WARN"],
+        );
+        let invalid = overhead_core::sgp4::chrono::NaiveDate::from_ymd_opt(2101, 1, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        assert!(healthy.update(invalid).is_err());
+        assert_wide_notice(&healthy, true, &["NO", "FRAME", "INGEST", "WARN"]);
     }
 
     #[test]

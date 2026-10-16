@@ -46,12 +46,17 @@ fn run(config: Config) -> Result<(), String> {
             .map_err(|e| format!("cannot save {}: {e}", path.display()))?;
         let counts = app.counts();
         println!(
-            "UTC={}Z catalogue={} sky={} visible={} failed={} snapshot={}",
+            "UTC={}Z catalogue={} sky={} visible={} failed={} indicators={} snapshot={}",
             config.start,
             counts.catalogue,
             counts.above_horizon,
             counts.visible,
             counts.failed,
+            if app.view().viewport() == overhead_app::projection::Viewport::Rectangle {
+                app.indicators().count()
+            } else {
+                0
+            },
             path.display()
         );
         return Ok(());
