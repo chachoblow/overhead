@@ -1,7 +1,7 @@
 # 0040 — White-backed bottom-left notice contract
 
 Date: 2026-10-17
-Status: accepted (bounded M3 contract; implemented, executable visual review pending)
+Status: accepted (bounded M3 contract; implemented and user visually accepted)
 
 ## Decision
 Implement [0039's bottom-left condition-driven notices](0039-bottom-left-condition-driven-notices.md)
@@ -9,6 +9,11 @@ in the existing opt-in wide renderer, without waiting for the revised glyph
 stack. The user approved a small borderless white backing drawn over crossing
 scene graphics and authorized the notice-only implementation slice. Keep the
 current elevation capsule, glyph, square diagnostics and all app/physics behavior.
+
+Subsequently, [0041](0041-circular-elevation-only-contract.md) replaces the
+capsule/filled elevation with a circular cutout, label and separator. That
+separate slice leaves this accepted notice contract unchanged; references to
+preserving 0037 below describe the original notice-only implementation scope.
 
 ## Why
 Transparent corner text can become unreadable when scene graphics cross it.
@@ -85,8 +90,14 @@ radar differences are confined to the new notice backing; the old strip notices
 are removed. Actual selected-plus-warnings, empty-plus-warnings and an ISS
 marker/ID crossing the backing were inspected. Fault/omission inputs in those
 warning examples are explicit synthetic controls. User visual acceptance of the
-executable output remains separate and pending. Wrap-up additionally reran
-workspace check/tests, formatting, app/render no-default-feature checks and strict
-all-target app/render/sim Clippy successfully. The fresh-checkout README recipe
+executable output was still pending at that implementation handoff. Wrap-up
+additionally reran workspace check/tests, formatting, app/render no-default-feature
+checks and strict all-target app/render/sim Clippy successfully. The fresh-checkout README recipe
 was executed headlessly and reproduced all four warning/crossing examples
 byte-for-byte.
+
+The user subsequently confirmed that they reviewed the executable snapshots in
+the preceding session and that they look good. This closes the executable notice
+visual-review gate; it does not approve the revised glyph stack or establish
+physical-display legibility or target performance. No new implementation or
+check/test run accompanied that confirmation.

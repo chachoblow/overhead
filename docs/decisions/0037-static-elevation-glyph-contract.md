@@ -1,15 +1,17 @@
 # 0037 — Static elevation glyph contract
 
 Date: 2026-10-17
-Status: accepted (bounded M3 contract; implemented in the opt-in wide view and user visually accepted)
+Status: superseded by 0041 (original bounded M3 slice was implemented and user visually accepted)
 
 ## Subsequent visual direction
 [0038](0038-labelled-borderless-glyph-direction.md) selects a future outlined
-circular elevation cutout in a labelled borderless stack. It is not implemented
-and does not yet replace this bounded elevation/capsule contract or its
-no-selection clearing. [0040](0040-white-backed-bottom-left-notice-contract.md)
-subsequently replaces only the strip-notice placement with a bottom-left,
-white-backed overlay; the original notice geometry below remains history.
+circular elevation cutout in a labelled borderless stack.
+[0040](0040-white-backed-bottom-left-notice-contract.md) subsequently replaced
+only the strip-notice placement with a bottom-left, white-backed overlay.
+[0041](0041-circular-elevation-only-contract.md) now implements the circular
+cutout, `Elev` label and separator, replacing this capsule/filled-glyph drawing
+and retaining the separator without selection. The original contract and
+verification below remain history; the full stack is still unimplemented.
 
 ## Decision
 Implement one unanimated true-elevation glyph inside a shortened shared capsule

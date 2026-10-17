@@ -1,40 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-17 UTC. Next: user review of executable notice snapshots._
+_Last updated: 2026-10-17 UTC. Next: propose one bounded altitude-glyph contract._
 
 ## Current state / agreed direction
-Implemented: [0037's elevation capsule](decisions/0037-static-elevation-glyph-contract.md)
-plus [0040's bottom-left white-backed notices](decisions/0040-white-backed-bottom-left-notice-contract.md)
-in the opt-in wide view; square diagnostics remain default. The user approved
-bottom-left placement, condition-driven clearing and local visual occlusion of
-crossing graphics. Physical state, counts, selection and ID hysteresis are unchanged.
-Executable visual acceptance is pending; implementation approval is not that review.
-[0038's labelled borderless stack](decisions/0038-labelled-borderless-glyph-direction.md),
-circular data glyphs, separator and 10px padding remain agreed but unimplemented.
+[0041's circular elevation](decisions/0041-circular-elevation-only-contract.md)
+is implemented and user visually accepted: static true-elevation cutout, `Elev`
+label and padded separator in the opt-in wide view. Without selection the label/
+glyph clear, retaining the separator. [0040's notices](decisions/0040-white-backed-bottom-left-notice-contract.md)
+are unchanged and visually accepted. Square diagnostics remain default; physical
+state, counts, selection and ID hysteresis are unchanged. Other glyphs remain
+absent; [0038](decisions/0038-labelled-borderless-glyph-direction.md) is full-stack
+direction, not a completed implementation contract.
 
 ## Session changes
-Added 0039/0040 and `docs/mockups/0039-bottom-left-*.png`; [DESIGN](DESIGN.md#bottom-left-notice-reference)
-owns mock provenance. Relocated notices in `render/src/lib.rs`; added renderer
-and `sim/tests/snapshot.rs` coverage. Old strip notices are gone; capsule unchanged.
-Updated DESIGN/PLAN, decision cross-references and `sim/README.md`; no dependencies,
-core/app runtime, fixtures, lockfiles, firmware or frozen-M2 evidence changed.
+Added 0041 and `docs/mockups/0041-*.png`; [DESIGN](DESIGN.md#circular-elevation-only-contract)
+owns illustrative-reference provenance. Replaced the capsule/fill in
+`render/src/glyphs.rs` and `render/src/lib.rs`; updated raster/lifecycle and
+`sim/tests/snapshot.rs` coverage. Updated `sim/README.md`, PLAN and decision
+cross-references. No dependencies, core/app runtime, fixtures, lockfiles or firmware changes.
 
 ## Next step / boundaries
-Regenerate and review the four [notice overlay examples](../sim/README.md#notice-overlay-review):
-selected/empty plus warnings, and an ISS marker/ID crossing with/without a notice.
-The self-contained recipe needs no prior temporary files; its faults are synthetic.
-After review, propose one bounded glyph contract rather than coding the full stack.
-Glyph scales/raster rules, speed/period semantics, category assignment and full-stack
-lifecycle remain open. No-selection clearing/retained separator and weather/unknown
-icons are proposals; the old diamond/bar altitude mapping is not approved for circles.
-No new animation, selection policy, displacement/collision search, prediction,
-panning, slowdown, fetching, production policy or hardware scope is approved.
+Recommend a **contract-design session**, not implementation, for 0038's static
+concentric-circle altitude glyph using true WGS-84 altitude. Agree scale/range,
+rounding/saturation, exact raster and invalid/no-selection behavior first; the
+old diamond/bar logarithmic mapping is not approved for circles. This next slice
+is a recommendation, not authorization. Category rules, speed/period semantics,
+full-stack lifecycle, transitions and final debug access remain open. No new
+animation, selection policy, collision search, prediction, fetching or hardware.
 
 ## Verification / risks
-Wrap-up passed serial workspace check/tests, fmt, app/render no-default-feature
-checks and strict all-target app/render/sim Clippy; local links/anchors and whitespace
-checked. The README recipe freshly reproduced all four earlier reviewed PNGs exactly.
-Earlier pre/post healthy square and wide 20°/100° PNGs were byte-identical; empty-view
-radar changed only within the notice backing. No interactive/display/performance
-validation. Keep build/CLI checks serial (prior relink ENOENT). M2 budgets/scheduling,
-RAM/safe stack, Sharp bring-up and RWX remain open; preserve [0023's frozen revision](decisions/0023-frozen-m2-revision-isolation.md).
+Wrap-up freshly passed serial workspace check/tests, fmt, app/render no-default-
+feature checks and strict all-target app/render/sim Clippy; links/anchors, PNGs
+and whitespace checked. Earlier 12-case pre/post captures preserved all square
+PNG bytes and wide radar/notice pixels; counts/diagnostics unchanged (0041 records
+details). [Elevation](../sim/README.md#static-elevation-glyph) and
+[notice](../sim/README.md#notice-overlay-review) recipes are self-contained;
+fault controls are synthetic. No interactive/display/performance validation.
+Keep checks serial (prior relink ENOENT). M2 budgets/scheduling, RAM/safe stack,
+Sharp bring-up and RWX remain open; preserve [0023's frozen revision](decisions/0023-frozen-m2-revision-isolation.md).

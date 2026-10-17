@@ -20,11 +20,13 @@ off-screen arrows. The user approved this layout and overlaps-allowed treatment.
 [0038](decisions/0038-labelled-borderless-glyph-direction.md) now selects a
 borderless labelled glyph stack, circular data glyphs and a padded vertical
 separator. The retained mocks below are the current visual direction, not an
-implementation contract. The executable retains
-[0037's static true elevation](decisions/0037-static-elevation-glyph-contract.md)
-in a shorter [0036 capsule](decisions/0036-shared-glyph-capsule.md), now with
-[0040's white-backed bottom-left notices](decisions/0040-white-backed-bottom-left-notice-contract.md).
-The elevation/capsule slice was visually accepted; the revised stack is unimplemented.
+implementation contract. The executable now implements
+[0041's static circular elevation](decisions/0041-circular-elevation-only-contract.md),
+a bitmap `Elev` label and padded separator, replacing
+[0037's visually accepted elevation capsule](decisions/0037-static-elevation-glyph-contract.md).
+[0040's white-backed bottom-left notices](decisions/0040-white-backed-bottom-left-notice-contract.md)
+remain unchanged and visually accepted. The user also reviewed and accepted the
+new executable elevation slice; the other glyphs and full stack are unimplemented.
 
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 minimum on-screen traversal time for fast markers is planned, not implemented.
@@ -138,8 +140,9 @@ recover this direction; the retained PNGs and text are sufficient.
   from the rightward horizontal radius; outline the remaining circle and both
   radial edges, not the isolated wedge. Keep the radial strokes single-pixel,
   avoiding the doubled edges seen in the initial mock. True observer elevation
-  remains the intended input; endpoint/raster rules need a bounded contract.
-  This replaces the filled-square visual direction, not yet the executable.
+  supplies the input. [0041](decisions/0041-circular-elevation-only-contract.md)
+  now implements the bounded static circular cutout, endpoint/raster rules,
+  label and separator, replacing the filled-square executable.
 - **Altitude:** fixed outer circle with an outlined inner circle that shrinks
   as true WGS-84 altitude rises. **Speed:** an increasing circle-outline arc,
   absent at zero and complete at maximum; the mock grows clockwise from the top,
@@ -150,6 +153,42 @@ recover this direction; the retained PNGs and text are sufficient.
 - **Transitions:** favor glyphs animating toward the new selected satellite's
   values. Intermediate shapes are presentation only, never new physical samples.
   This has not been implemented or given timing/interruption rules.
+
+### Circular elevation-only contract
+
+[0041](decisions/0041-circular-elevation-only-contract.md) now implements the bounded
+comparison: just `Elev`, a circular cutout and the separator, with all other
+slots blank. The elevation stays in its future stack slot rather than
+moving into the category position. The user approved a 23px circle inside the
+24×24 footprint for a single-pixel hub, a crisp `FONT_6X10` label, immediate
+true-state updates, and glyph/label clearing without selection while retaining
+the separator. Implementation is complete and the user accepted the fresh
+executable output. The retained references below are not that output;
+[simulator usage](../sim/README.md#static-elevation-glyph) owns reproduction.
+
+![Elevation-only contract reference with illustrative 45-degree reading](mockups/0041-elevation-only-proposal.png)
+
+![Native strips and 4x raster details for 0, 15, 45, 75, 90 degrees and no selection](mockups/0041-elevation-raster-proposal.png)
+
+**Contract references only:** retained and approved on 2026-10-17, both strictly
+1-bit. The first is a native 400×240 composite preserving every pixel of the radar portion (`x<352`)
+of the retained 0038 navigation mock above. Its 45° glyph is illustrative and
+is **not** a measurement of selected `32711`. The second is a 672×416 contact
+sheet: six native 48×240 strips, angle/empty headings outside those strips, and
+4× nearest-neighbor label/glyph details below. `EMPTY` shows only the no-selection
+strip, not a complete empty-sky radar or an ingestion warning.
+The 0° case is a defensive/raster endpoint, not an above-horizon selected sample.
+
+Pillow composed these previews using 0041's explicit integer circle/line rules;
+label pixels came from the existing embedded-graphics 0.8.2 `FONT_6X10` ASCII
+bitmap, not a system-font approximation. No package was added. Circle endpoints
+are quantized to its outline pixels; intermediate examples need not have an
+exactly 15°/75° raster slope. These approved contract references are neither
+simulator output, golden tests, independent physical evidence nor executable
+visual acceptance. The retained images, 0041's raster specification and the
+existing font asset suffice to recover the references without the disposable
+generation script. Notice behavior remains 0040's accepted executable behavior,
+not a new mock treatment.
 
 ### Bottom-left notice reference
 
@@ -164,8 +203,11 @@ these notices independently of the full glyph stack. A small borderless white
 backing keeps the text readable over crossing graphics. It may visually cover
 markers (including the selected diamond), IDs, arrows or Earth within its bounds;
 this does not change eligibility, counts, physical state or selection. Neither
-text nor backing remains when no notice applies. The right-hand elevation capsule
-is unchanged, and its former notice area is blank.
+text nor backing remains when no notice applies. 0040 originally preserved the
+right-hand elevation capsule; 0041 now changes only that strip, leaving notices
+unchanged. The user confirmed review and acceptance of the executable notice
+snapshots; the composites below remain historical layout references, not that
+executable evidence.
 
 ![Selected marker and illustrative warnings at bottom-left](mockups/0039-bottom-left-selected.png)
 
@@ -223,10 +265,11 @@ No temporary assets or generation scripts are needed to continue.
 The user subsequently approved [0037's elevation-only slice](decisions/0037-static-elevation-glyph-contract.md):
 a shortened capsule with separate space below for explicit notices, immediate
 true-elevation updates, and no capsule or glyph without selection. This temporary
-layout is not the full-stack mock's final geometry. Other glyphs remain absent;
-the decision owns exact drawing and lifecycle rules. This slice is implemented
-and the user accepted the rendered snapshot set. 0040 subsequently relocates
-only its notices to bottom-left. Reproduce the current state through the
+layout was not the full-stack mock's final geometry. The slice was implemented
+and the user accepted its rendered snapshot set. 0040 subsequently relocated
+only its notices to bottom-left; 0041 now replaces the capsule and filled glyph
+with labelled circular elevation and the separator. Other glyphs remain absent.
+Reproduce the current state through the
 [simulator's wide view](../sim/README.md#static-elevation-glyph).
 
 ### Open questions and boundaries
@@ -239,12 +282,13 @@ label's placement and overlaps-allowed policy. User review of the crowded overvi
 led to 0035's configurable clean hide/show refinement, now user-reviewed and
 accepted for the current comparison. Define glyph ranges/mappings and unknown/
 ambiguous category handling explicitly; don't turn illustrative mock values into
-defaults. 0038 replaces 0036's wrapper and the earlier glyph visual brief; 0037
-still bounds the implemented elevation-only capsule, with warning placement and
-compositing now owned by 0040. The revised stack needs exact raster/font geometry,
-glyph mappings, lifecycle and transition
-rules before coding. Existing no-selection clearing is recommended for the full
-stack, but that lifecycle has not yet been specified.
+defaults. 0038 replaces 0036's wrapper and the earlier glyph visual brief.
+[0041](decisions/0041-circular-elevation-only-contract.md) now bounds and implements
+only the unanimated elevation label/cutout and separator, superseding 0037;
+warning placement/compositing remain owned by 0040. The full stack still needs
+exact raster/font geometry, glyph mappings, lifecycle and transition rules
+before coding. Elevation-only no-selection clearing is implemented, but the
+full-stack lifecycle has not yet been specified.
 
 Circular radar with an info brick, surrounding noise fields and unlabelled
 visible-population graphs were explored, not selected as replacements. For any

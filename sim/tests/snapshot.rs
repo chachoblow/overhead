@@ -311,7 +311,12 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
 }
 
 fn assert_snapshot_elevation(scratch: &Scratch, path: &str, elevation: Option<f64>) {
-    use embedded_graphics::{pixelcolor::Rgb888, prelude::*};
+    use embedded_graphics::{
+        mono_font::{MonoTextStyle, ascii::FONT_6X10},
+        pixelcolor::{BinaryColor, Rgb888},
+        prelude::*,
+        text::Text,
+    };
     use embedded_graphics_simulator::SimulatorDisplay;
     let image = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join(path)).unwrap();
     let ink = Rgb888::new(32, 32, 32); // Existing LcdWhite theme, two states only.
@@ -321,31 +326,75 @@ fn assert_snapshot_elevation(scratch: &Scratch, path: &str, elevation: Option<f6
             assert!([ink, paper].contains(&image.get_pixel(Point::new(x, y))));
         }
     }
-    assert_eq!(
-        image.get_pixel(Point::new(375, 7)) == ink,
-        elevation.is_some()
-    );
-    for row in 0..24 {
-        for col in 0..24 {
-            let angle = (23.5 - f64::from(row)).atan2(f64::from(col) + 0.5);
-            assert_eq!(
-                image.get_pixel(Point::new(364 + col, 60 + row)) == ink,
-                elevation.is_some_and(|e| angle <= e),
-                "glyph column={col}, row={row}, elevation={elevation:?}"
-            );
-        }
-    }
-    // Notice relocation must not leave status ink below the existing capsule.
-    for y in 153..240 {
-        for x in 352..400 {
-            assert_eq!(image.get_pixel(Point::new(x, y)), paper);
-        }
-    }
-    if elevation.is_none() {
-        for y in 0..153 {
-            for x in 352..400 {
-                assert_eq!(image.get_pixel(Point::new(x, y)), paper);
+    let mut reference = SimulatorDisplay::<BinaryColor>::new(Size::new(400, 240));
+    reference.clear(BinaryColor::Off).unwrap();
+    reference
+        .draw_iter((12..=227).map(|y| Pixel(Point::new(352, y), BinaryColor::On)))
+        .unwrap();
+    if let Some(elevation) = elevation {
+        Text::new(
+            "Elev",
+            Point::new(364, 64),
+            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+        )
+        .draw(&mut reference)
+        .unwrap();
+        // Physical elevation was calculated independently from the app above.
+        // This reference also avoids the renderer's octant table, integer
+        // angular clipping and Bresenham accumulator: classify a rounded-sqrt
+        // ring, choose its nearest polar angle, then round major-axis slopes.
+        let on_ring = |x: i32, y: i32| {
+            let minor = x.abs().min(y.abs());
+            let major = x.abs().max(y.abs());
+            minor <= 8 && major == f64::from(121 - minor * minor).sqrt().round() as i32
+        };
+        let (ex, ey) = (0..=11)
+            .flat_map(|x| (0..=11).map(move |y| (x, y)))
+            .filter(|&(x, y)| on_ring(x, y))
+            .min_by(|&(ax, ay), &(bx, by)| {
+                let a = f64::from(ay).atan2(f64::from(ax));
+                let b = f64::from(by).atan2(f64::from(bx));
+                (a - elevation)
+                    .abs()
+                    .total_cmp(&(b - elevation).abs())
+                    .then_with(|| a.total_cmp(&b))
+            })
+            .unwrap();
+        let angle = f64::from(ey).atan2(f64::from(ex));
+        for y in -11..=11 {
+            for x in -11..=11 {
+                let a = f64::from(y).atan2(f64::from(x));
+                let arc = on_ring(x, y) && !(a > 0.0 && a < angle);
+                let radial = ey > 0
+                    && ((y == 0 && (0..=11).contains(&x))
+                        || ((0..=ex).contains(&x)
+                            && (0..=ey).contains(&y)
+                            && if ex >= ey {
+                                y == (2 * x * ey + ex) / (2 * ex)
+                            } else {
+                                x == (2 * y * ex + ey) / (2 * ey)
+                            }));
+                if arc || radial {
+                    Pixel(Point::new(376 + x, 80 - y), BinaryColor::On)
+                        .draw(&mut reference)
+                        .unwrap();
+                }
             }
+        }
+    }
+    for y in 0..240 {
+        for x in 352..400 {
+            let point = Point::new(x, y);
+            let expected = if reference.get_pixel(point) == BinaryColor::On {
+                ink
+            } else {
+                paper
+            };
+            assert_eq!(
+                image.get_pixel(point),
+                expected,
+                "strip pixel {point:?}, elevation={elevation:?}"
+            );
         }
     }
 }
@@ -384,12 +433,15 @@ fn assert_snapshot_notices(scratch: &Scratch, path: &str, lines: &[&str]) {
             assert_eq!(image.get_pixel(point), expected, "notice pixel {point:?}");
         }
     }
+    // The former strip warning area contains only the new separator.
     for y in 153..240 {
         for x in 352..400 {
-            assert_eq!(
-                image.get_pixel(Point::new(x, y)),
+            let expected = if x == 352 && y <= 227 {
+                Rgb888::new(32, 32, 32)
+            } else {
                 Rgb888::new(245, 245, 245)
-            );
+            };
+            assert_eq!(image.get_pixel(Point::new(x, y)), expected);
         }
     }
 }

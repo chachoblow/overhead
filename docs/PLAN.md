@@ -4,13 +4,13 @@
 and visually approved under 0033; square/diagnostic default retained. Selected-marker
 identification is implemented under 0034, refined by 0035's configurable 70°/60°
 hide/show hysteresis after review of crowding; the user has now accepted that behavior.
-0037's static elevation-only capsule remains implemented and visually accepted.
-0038 revises the future direction to a labelled borderless stack, circular data
-glyphs and a padded separator; retained mocks only, not an implementation contract.
-0039 selects bottom-left condition-driven notices, now implemented with 0040's
-approved white-backed overlay. User review of the executable notice snapshots is
-pending. Other glyphs remain unimplemented. M2 operating-budget and scheduling
-work remains open.**
+0037's visually accepted elevation-only capsule is now replaced by 0041's
+static circular cutout, bitmap `Elev` label and padded separator. This is the
+first bounded implementation of 0038's labelled borderless direction, not the
+full glyph stack. The user reviewed and accepted 0041's executable output.
+0039's bottom-left condition-driven notices remain implemented under 0040's
+white-backed overlay and visually accepted. Other glyphs remain unimplemented.
+M2 operating-budget and scheduling work remains open.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -129,7 +129,7 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
   borderless labelled stack, padded vertical separator, outlined circular
   elevation cutout, concentric altitude circles, speed arc and period spiral;
   thin navigation cross and simple station body-and-wings icon. This amends the
-  earlier capsule/shapes/no-label direction, not the current executable.
+  earlier capsule/shapes/no-label direction; 0041 below implements one field.
 - [x] Select [0039's bottom-left condition-driven notices](decisions/0039-bottom-left-condition-driven-notices.md)
   after reviewing top-left/bottom-left mocks; preserve existing notice meanings
   and clear only resolved conditions, not on a timeout. Retained composites are
@@ -139,12 +139,22 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
   explicit permission to visually cover crossing graphics without changing
   eligibility/selection. Preserve the elevation capsule and square diagnostics;
   pixel/lifecycle/real-marker-overlap and headless warning tests pass.
-- [ ] User review of the executable notice snapshots, then scope the next bounded
-  glyph contract. Glyph scales/raster rules, speed/period semantics, category
-  assignment, full-stack no-selection/lifecycle behavior, transitions and final
-  normal/debug access remain open. No scene displacement or collision search
-  is approved. Circular-radar/field/graph alternatives remain exploration;
-  neither mocks nor replay populations select production capacity.
+- [x] User confirmed review and acceptance of 0040's executable notice snapshots.
+- [x] Agree [0041's circular elevation-only contract](decisions/0041-circular-elevation-only-contract.md):
+  one static cutout, bitmap `Elev` label and separator, with explicit endpoint,
+  raster and selection-loss rules, including retaining the separator without
+  selection. User approved the contract; implementation is a separate step.
+- [x] Implement 0041, preserving radar/notices and square diagnostics. Exact
+  raster/lifecycle/real-data snapshot tests pass; pre/post captures preserve all
+  radar pixels and square output. No other glyphs or animation were added.
+- [x] User reviewed and accepted 0041's fresh executable output, separately
+  from the earlier illustrative comparisons and contract approval.
+- [ ] Scope and agree the next bounded glyph contract before implementation.
+  Other glyph scales/raster rules, speed/period semantics, category assignment,
+  full-stack no-selection/lifecycle behavior, transitions and final normal/debug
+  access remain open. No scene displacement or collision search is approved.
+  Circular-radar/field/graph alternatives remain exploration; neither mocks nor
+  replay populations select production capacity.
 
 No prediction integration, slowdown or live fetching is required for this slice.
 Simulator throughput is not target capacity evidence.

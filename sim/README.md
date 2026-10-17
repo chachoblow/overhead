@@ -108,8 +108,8 @@ opt-in wide comparison implements the viewport/arrows portion of
 [0033](../docs/decisions/0033-wide-radar-comparison-contract.md), plus selected-marker
 identification under [0034](../docs/decisions/0034-selected-marker-identification.md)
 and [0035's zoom visibility](../docs/decisions/0035-label-zoom-visibility.md).
-[0037's static elevation glyph](../docs/decisions/0037-static-elevation-glyph-contract.md)
-and shortened shared capsule are implemented in the wide view, with
+[0041's static circular elevation](../docs/decisions/0041-circular-elevation-only-contract.md),
+`Elev` label and padded separator are implemented in the wide view, with
 [0040's bottom-left notice overlay](../docs/decisions/0040-white-backed-bottom-left-notice-contract.md).
 Other glyphs and the full normal/debug split are not implemented.
 [DESIGN's retained schematic](../docs/DESIGN.md#selected-satellite-presentation)
@@ -235,8 +235,8 @@ without a clearing mask or collision search. Selection/zoom updates the label
 immediately; arrows are never labelled. Wide zoom hides the label as described
 below; the selected diamond and square baseline are unchanged.
 
-The strip shows a static true-elevation glyph inside a shortened capsule when a
-visible satellite is selected. Under
+The strip shows a labelled static circular cutout of true elevation when a
+visible satellite is selected; its separator remains without selection. Under
 [0040](../docs/decisions/0040-white-backed-bottom-left-notice-contract.md), complete
 notice lines are bottom-left at `x=12`, ending at baseline `y=222`, with 13px
 spacing. A borderless white backing pads the active text block by 2px and is drawn
@@ -327,34 +327,48 @@ printf 'Review images: %s\n' "$review_dir"
 `combined.png` has one valid selected ISS marker, one tracking failure and an
 ingestion warning. `failed.png` has no valid markers and all three notice lines.
 Compare `crossing-clean.png` with `crossing-ingest.png`: the overlay can cover the
-ISS diamond/ID while the capsule and `visible=1` report remain. Clean loading
-restores that scene; this is not a live ingestion-warning timeout. `NO FRAME`
-and same-app redraw/recovery are covered by renderer tests, not these CLI images.
+ISS diamond/ID while the elevation glyph/label and `visible=1` report remain.
+Clean loading restores that scene; this is not a live ingestion-warning timeout.
+`NO FRAME` and same-app redraw/recovery are covered by renderer tests, not these CLI images.
 These are executable snapshots, unlike DESIGN's illustrative full-stack mocks.
 
 ### Static elevation glyph
 
-Under [0037](../docs/decisions/0037-static-elevation-glyph-contract.md), `--wide`
-draws one 24×24 elevation glyph inside a shortened, 1px rounded capsule with a
-centered opening on each long side. The invisible square's lower-left corner is
-the origin; the region below the true-elevation ray is filled. At 45° it is a
-triangle; at 90° it fills the square. There is no glyph box, number or field label.
-The decision owns exact geometry and raster rules.
+Under [0041](../docs/decisions/0041-circular-elevation-only-contract.md), `--wide`
+draws a 23px circle within a 24×24 footprint, with a crisp `Elev` label and padded
+vertical separator. There is no capsule, glyph box, fill or numeric value. The
+cutout opens upward from the rightward radius: at 0° the circle is complete
+without a spoke, at 45° it has an eighth-circle opening, and at 90° a quarter-circle
+opening. Both radial edges and the remaining circle are outlined. The decision
+owns exact geometry, angular snapping and single-pixel raster rules; quantization
+never changes the true physical sample.
 
 The glyph reads the selected satellite's current physical elevation directly.
 Tab selection, frame updates and zoom-driven reselection update it immediately,
-without animation. Hiding the marker's ID at wide zoom does **not** hide the glyph.
-When there is no selection, both capsule and glyph disappear, with no stale
-reading. Notices use their independent bottom-left overlay, even when the capsule
-is absent.
+without animation. Hiding the marker's ID at wide zoom does **not** hide `Elev`
+or the glyph. Without selection, clear both label and glyph while retaining the
+separator; no stale reading remains. Nonfinite input likewise suppresses the
+label/glyph. Notices retain their independent bottom-left overlay.
 
-The existing wide comparison commands exercise this slice without another flag:
-weather/GPS at 20° shows a selected glyph; 100° retains it while hiding the ID;
-0.1° has no selected glyph and shows `NO MARKERS`. The demo at 20° also has no
-selection. These use true historical samples, unlike DESIGN's illustrative stack.
-Category, altitude, speed, period and transitions remain absent. The shorter
-capsule is temporary, not the completed full-stack layout; its old warning area
-is now blank.
+To review selected, ID-hidden overview and no-selection executable output:
+
+```sh
+review_dir="$(mktemp -d "${TMPDIR:-/tmp}/overhead-elevation-review.XXXXXX")"
+for fov in 20 100 0.1; do
+  cargo run -p overhead-sim -- sim/examples/weather-gps.json \
+    2026-10-10T00:00:00Z 39.007 -104.883 2.187 \
+    --wide --fov-deg "$fov" --snapshot "$review_dir/elevation-$fov.png"
+done
+printf 'Review images: %s\n' "$review_dir"
+```
+
+Repeat with UTC `2026-10-10T00:00:30Z` for a later physical frame. The demo at
+20° also has no selection. The [notice review recipe](#notice-overlay-review)
+exercises a selected ISS near 90° with synthetic warnings, empty/failure state,
+and a real selected marker/ID visually covered by the notice backing. These
+executable glyphs use true historical samples, unlike DESIGN's illustrative
+stack and endpoint references. Category, altitude, speed, period and transitions
+remain absent; their slots stay blank.
 
 ### Label zoom visibility
 
@@ -434,10 +448,13 @@ isolation, and headless identity-versus-name behavior using a real orbit with
 explicitly synthetic identity metadata. Zoom-label tests cover inclusive
 thresholds, retained history in both directions, startup in the intervening band,
 validated CLI overrides, unchanged selection/physical state, retained diamonds
-and warnings, and unchanged baseline diagnostics. Elevation tests cover capsule bounds/openings,
-endpoint and intermediate-angle pixels, monotonic fill, defensive input handling,
-true selected-state updates, missing-frame/selection clearing, warning coexistence
-and recovery. Notice tests additionally cover exact bottom-left backing bounds,
+and warnings, and unchanged baseline diagnostics. Elevation tests cover exact
+outline/radial pixels, snapping boundaries and downward ties, single-pixel lines,
+8-connectivity, monotonic arc removal, label/separator geometry, finite saturation
+and nonfinite suppression. Lifecycle tests cover true selected-state updates,
+ID-hidden independence, missing-frame/selection clearing, actual propagation
+failure after a successful selection, warning coexistence and recovery. Notice
+tests additionally cover exact bottom-left backing bounds,
 opaque padding/gaps, a real selected marker/ID crossing under the overlay,
 unchanged app state and pixels outside the backing, shrinking/missing-frame
 recovery, and no stale white mask. CLI tests check notice pixels with valid

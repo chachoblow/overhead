@@ -1,7 +1,7 @@
 # 0038 — Labelled borderless glyph direction
 
 Date: 2026-10-17
-Status: accepted (revised M3 visual direction; retained mocks, not implemented)
+Status: accepted (M3 visual direction; elevation-only portion implemented under 0041, full stack unimplemented)
 
 ## Decision
 Use a borderless selected-satellite glyph stack with short centered labels and
@@ -18,10 +18,12 @@ retain the mock and record this revised direction before further work.
 This amends [0032's glyph shapes and no-routine-label direction](0032-wide-radar-and-selected-satellite-glyphs.md)
 and replaces [0036's shared capsule direction](0036-shared-glyph-capsule.md).
 It also changes the intended elevation appearance from
-[0037's filled square](0037-static-elevation-glyph-contract.md), but does **not**
-replace that executable contract yet. The current opt-in wide renderer still
-implements 0037's elevation-only capsule; [0040](0040-white-backed-bottom-left-notice-contract.md)
-subsequently moves notices to a bottom-left overlay. Square diagnostics remain default.
+[0037's filled square](0037-static-elevation-glyph-contract.md), but did **not**
+itself replace that executable contract. [0040](0040-white-backed-bottom-left-notice-contract.md)
+subsequently moved notices to a bottom-left overlay.
+[0041](0041-circular-elevation-only-contract.md) now implements the bounded
+circular elevation-only slice, label and separator; the other glyphs and full
+stack lifecycle remain open. Square diagnostics remain default.
 
 ## Why
 The user iterated through circular glyphs, outlined elevation, continuous

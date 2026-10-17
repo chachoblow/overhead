@@ -38,7 +38,7 @@ impl Layout {
             radar_height: radar_size,
         })
     }
-    /// Opt-in 352x240 radar plus the elevation capsule and explicit notices.
+    /// Opt-in 352x240 radar plus labelled circular elevation and explicit notices.
     pub fn wide() -> Self {
         Self {
             radar_width: 352,
@@ -133,10 +133,11 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
         if let Some((id, marker)) = selected_marker.filter(|_| app.selected_label_visible()) {
             draw_selected_label(&mut display, id, marker, layout)?;
         }
-        if let Some((_, sample)) = app.selected() {
-            glyphs::draw_capsule(&mut display)?;
-            glyphs::draw_elevation(&mut display, sample.physical.look.elevation_rad)?;
-        }
+        glyphs::draw_strip(
+            &mut display,
+            app.selected()
+                .map(|(_, sample)| sample.physical.look.elevation_rad),
+        )?;
         return draw_wide_status(&mut display, app, ingestion_warning);
     }
 
@@ -871,103 +872,187 @@ mod tests {
         }
     }
 
-    #[test]
-    fn capsule_has_bounded_one_pixel_outline_and_only_two_centered_openings() {
-        let mut screen = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        glyphs::draw_capsule(&mut screen).unwrap();
-        for (y, row) in screen.pixels.iter().enumerate() {
-            for (x, &on) in row.iter().enumerate() {
-                if on {
-                    assert!((355..=396).contains(&x) && (7..=152).contains(&y));
-                    assert_eq!(on, screen.pixels[y][751 - x]);
-                    assert_eq!(on, screen.pixels[159 - y][x]);
+    fn reference_elevation(elevation: f64) -> [[bool; 24]; 24] {
+        use std::collections::BTreeSet;
+        let mut pixels = [[false; 24]; 24];
+        if !elevation.is_finite() {
+            return pixels;
+        }
+        // Independent circle construction: nearest integer sqrt samples, not
+        // the production octant table. Reference lines use major-axis rounding,
+        // not the production Bresenham error accumulator.
+        let mut circle = BTreeSet::new();
+        for minor in 0..=8 {
+            let major = ((121 - minor * minor) as f64).sqrt().round() as i32;
+            for (x, y) in [(major, minor), (minor, major)] {
+                for sx in [-1, 1] {
+                    for sy in [-1, 1] {
+                        circle.insert((sx * x, sy * y));
+                    }
                 }
             }
         }
-        for y in 17..143 {
-            for x in 355..=396 {
-                assert_eq!(
-                    screen.pixels[y][x],
-                    (x == 355 || x == 396) && !(77..=82).contains(&y),
-                    "side/interior at {x},{y}"
-                );
+        let elevation = elevation.clamp(0.0, core::f64::consts::FRAC_PI_2);
+        let &(ex, ey) = circle
+            .iter()
+            .filter(|&&(x, y)| x >= 0 && y >= 0)
+            .min_by(|&&(ax, ay), &&(bx, by)| {
+                let a = (ay as f64).atan2(ax as f64);
+                let b = (by as f64).atan2(bx as f64);
+                (a - elevation)
+                    .abs()
+                    .total_cmp(&(b - elevation).abs())
+                    .then_with(|| a.total_cmp(&b))
+            })
+            .unwrap();
+        let endpoint_angle = (ey as f64).atan2(ex as f64);
+        for (x, y) in circle {
+            let angle = (y as f64).atan2(x as f64);
+            if !(angle > 0.0 && angle < endpoint_angle) {
+                pixels[(12 - y) as usize][(12 + x) as usize] = true;
             }
         }
-        for x in 365..387 {
-            for y in 7..=152 {
-                assert_eq!(screen.pixels[y][x], y == 7 || y == 152);
+        if ey != 0 {
+            for (x, y) in [(11, 0), (ex, ey)] {
+                for step in 0..=x.max(y) {
+                    let (u, v) = if x >= y {
+                        (step, (2 * step * y + x) / (2 * x))
+                    } else {
+                        ((2 * step * x + y) / (2 * y), step)
+                    };
+                    pixels[(12 - v) as usize][(12 + u) as usize] = true;
+                }
             }
         }
-        // Corners turn inward within the ten-pixel radius, with no square tips.
-        assert!(!screen.pixels[7][355]);
-        assert!(screen.pixels[7][365]);
-        assert!(screen.pixels[17][355]);
-        for y in 7..17 {
-            assert!(screen.pixels[y][355..365].iter().any(|&on| on));
+        pixels
+    }
+
+    fn assert_strip_pixels(screen: &Screen, elevation: Option<f64>) {
+        let mut expected = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        for y in 12..=227 {
+            expected.pixels[y][352] = true;
+        }
+        if let Some(elevation) = elevation.filter(|e| e.is_finite()) {
+            Text::new(
+                "Elev",
+                Point::new(364, 64),
+                MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+            )
+            .draw(&mut expected)
+            .unwrap();
+            for (row, pixels) in reference_elevation(elevation).iter().enumerate() {
+                expected.pixels[68 + row][364..388].copy_from_slice(pixels);
+            }
+        }
+        for y in 0..240 {
+            assert_eq!(
+                screen.pixels[y][352..],
+                expected.pixels[y][352..],
+                "strip row={y}, elevation={elevation:?}"
+            );
         }
     }
 
     fn assert_elevation_pixels(screen: &Screen, elevation: f64) {
-        // Independent angle reference, not the renderer's sin/cos inequality.
-        for row in 0..24 {
-            for col in 0..24 {
-                let angle = (23.5 - row as f64).atan2(col as f64 + 0.5);
-                assert_eq!(
-                    screen.pixels[60 + row][364 + col],
-                    elevation.is_finite() && angle <= elevation,
-                    "elevation={elevation}, column={col}, row={row}"
-                );
-            }
-        }
+        assert_strip_pixels(screen, Some(elevation));
     }
 
     #[test]
-    fn elevation_fill_matches_angles_endpoints_and_monotonic_area_without_a_box() {
-        let mut previous = [[false; 400]; 240];
+    fn circular_elevation_matches_reference_and_has_connected_monotonic_cutout() {
+        let circle = reference_elevation(0.0);
+        assert_eq!(circle.iter().flatten().filter(|&&p| p).count(), 64);
+        let mut previous = circle;
         for degrees in 0..=90 {
             let mut screen = Screen {
                 pixels: [[false; 400]; 240],
             };
             let elevation = (degrees as f64).to_radians();
-            glyphs::draw_elevation(&mut screen, elevation).unwrap();
+            glyphs::draw_strip(&mut screen, Some(elevation)).unwrap();
             assert_elevation_pixels(&screen, elevation);
-            let mut count = 0;
-            for (y, row) in screen.pixels.iter().enumerate() {
-                for (x, &on) in row.iter().enumerate() {
-                    assert!(!previous[y][x] || on, "fill decreased at {degrees} degrees");
-                    if on {
-                        count += 1;
-                        assert!((364..388).contains(&x) && (60..84).contains(&y));
+            assert!(
+                screen
+                    .pixels
+                    .iter()
+                    .all(|row| row[..352].iter().all(|&on| !on))
+            );
+            let mut glyph = [[false; 24]; 24];
+            for row in 0..24 {
+                glyph[row].copy_from_slice(&screen.pixels[68 + row][364..388]);
+                for col in 0..24 {
+                    if circle[row][col] && !previous[row][col] {
+                        assert!(
+                            !glyph[row][col],
+                            "removed arc restored at {degrees} degrees"
+                        );
                     }
                 }
             }
+            // Check 8-connectivity without assuming any particular traversal.
+            let mut visited = [[false; 24]; 24];
+            let mut pending = std::vec![(23_i32, 12_i32)];
+            while let Some((x, y)) = pending.pop() {
+                if !(0..24).contains(&x)
+                    || !(0..24).contains(&y)
+                    || visited[y as usize][x as usize]
+                    || !glyph[y as usize][x as usize]
+                {
+                    continue;
+                }
+                visited[y as usize][x as usize] = true;
+                for dy in -1..=1 {
+                    for dx in -1..=1 {
+                        pending.push((x + dx, y + dy));
+                    }
+                }
+            }
+            assert_eq!(visited, glyph, "disconnected outline at {degrees} degrees");
             match degrees {
-                0 => assert_eq!(count, 0),
-                45 => assert_eq!(count, 300),
-                90 => assert_eq!(count, 576),
+                0 => assert!(!glyph[12][12]), // No radial at the zero endpoint.
+                45 => {
+                    assert!(glyph[4][20]); // Exact diagonal endpoint (8,8).
+                    for step in 0..=8 {
+                        assert!(glyph[12 - step][12 + step]);
+                    }
+                }
+                90 => {
+                    for step in 0..=11 {
+                        assert!(glyph[12 - step][12]);
+                    }
+                    assert!(!glyph[4][20]); // Open upper-right quadrant.
+                }
                 _ => {}
             }
-            previous = screen.pixels;
+            previous = glyph;
         }
+    }
+
+    #[test]
+    fn elevation_saturates_finite_input_and_retains_only_separator_without_valid_input() {
         for elevation in [
-            -1.0,
-            -0.0,
-            f64::MAX,
-            f64::NAN,
-            f64::INFINITY,
-            f64::NEG_INFINITY,
+            None,
+            Some(-f64::MAX),
+            Some(-0.0),
+            Some(f64::MAX),
+            Some(f64::NAN),
+            Some(f64::INFINITY),
+            Some(f64::NEG_INFINITY),
         ] {
             let mut screen = Screen {
                 pixels: [[false; 400]; 240],
             };
-            glyphs::draw_elevation(&mut screen, elevation).unwrap();
-            assert_elevation_pixels(&screen, elevation);
-            assert_eq!(
-                screen.pixels.iter().flatten().filter(|&&on| on).count(),
-                if elevation == f64::MAX { 576 } else { 0 }
+            glyphs::draw_strip(&mut screen, elevation).unwrap();
+            assert_strip_pixels(&screen, elevation);
+            assert!(
+                screen
+                    .pixels
+                    .iter()
+                    .all(|row| row[..352].iter().all(|&on| !on))
             );
+            if elevation.is_none_or(|e| !e.is_finite()) {
+                assert_eq!(screen.pixels.iter().flatten().filter(|&&p| p).count(), 216);
+            }
         }
     }
 
@@ -1007,11 +1092,7 @@ mod tests {
         app.zoom(64);
         assert_eq!(app.selected_id(), None);
         draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        assert!(
-            screen.pixels[..153]
-                .iter()
-                .all(|row| row[352..].iter().all(|&on| !on))
-        );
+        assert_strip_pixels(&screen, None);
         app.zoom(-64);
         assert!(app.selected().is_some());
         assert!(!app.selected_label_visible());
@@ -1020,7 +1101,7 @@ mod tests {
             &screen,
             app.selected().unwrap().1.physical.look.elevation_rad,
         );
-        assert!(screen.pixels[7][375]); // Capsule is independent of the ID gate.
+        assert!(screen.pixels[80][387]); // Elevation is independent of the ID gate.
 
         let invalid = overhead_core::sgp4::chrono::NaiveDate::from_ymd_opt(2101, 1, 1)
             .unwrap()
@@ -1028,18 +1109,84 @@ mod tests {
             .unwrap();
         assert!(app.update(invalid).is_err());
         draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        assert!(
-            screen.pixels[..153]
-                .iter()
-                .all(|row| row[352..].iter().all(|&on| !on))
-        );
+        assert_strip_pixels(&screen, None);
         app.update(time).unwrap();
         draw(&mut screen, &app, Layout::wide(), false).unwrap();
         assert_elevation_pixels(
             &screen,
             app.selected().unwrap().1.physical.look.elevation_rad,
         );
-        assert!(screen.pixels[7][375]);
+        assert!(screen.pixels[80][387]);
+    }
+
+    #[test]
+    fn selected_elevation_clears_on_actual_propagation_failure_and_recovers() {
+        use overhead_core::sgp4::{Elements, chrono::Duration};
+        // Existing Vallado failure control: valid at +20 min, fails at +25.
+        // Place the observer under the valid sample so the former selection is
+        // demonstrably visible, rather than merely losing an off-screen object.
+        let elements = Elements::from_tle(
+            None,
+            b"1 33333U 05037B   05333.02012661  .25992681  00000-0  24476-3 0  1532",
+            b"2 33333  96.4736 157.9986 9950000 244.0492 110.6523  4.00004038 10700",
+        )
+        .unwrap();
+        let epoch = elements.datetime;
+        let checked: OmmElements =
+            serde_json::from_str(&serde_json::to_string(&elements).unwrap()).unwrap();
+        let mut builder = CatalogueBuilder::new();
+        builder.push(
+            RecordOrigin {
+                group: 0,
+                record: 0,
+            },
+            checked,
+        );
+        let catalogue = builder.finish().unwrap();
+        let time = epoch + Duration::minutes(20);
+        let mut observer = ecef_to_geodetic(
+            catalogue.entries()[0]
+                .satellite()
+                .state_at(time)
+                .unwrap()
+                .to_ecef()
+                .unwrap(),
+        )
+        .unwrap();
+        observer.altitude_km = 0.0;
+        let layout = Layout::wide();
+        let mut app = RadarApp::new(
+            catalogue,
+            observer,
+            View::rectangular(20.0, layout.aspect_ratio()).unwrap(),
+        )
+        .unwrap();
+        app.update(time).unwrap();
+        assert_eq!(app.selected_id(), Some(33333));
+        let counts = app.counts();
+        let physical = app.selected().unwrap().1.physical;
+        let mut screen = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw(&mut screen, &app, layout, false).unwrap();
+        assert_elevation_pixels(&screen, physical.look.elevation_rad);
+        let healthy = screen.pixels;
+        assert_eq!(app.counts(), counts);
+        assert_eq!(app.selected().unwrap().1.physical, physical);
+
+        app.update(epoch + Duration::minutes(25)).unwrap();
+        assert_eq!(app.counts().failed, 1);
+        assert_eq!(app.selected_id(), None);
+        draw(&mut screen, &app, layout, false).unwrap();
+        assert_strip_pixels(&screen, None);
+        assert_wide_notice(&app, false, &["NO MARKERS", "TRACK ERROR"]);
+
+        app.update(time).unwrap();
+        draw(&mut screen, &app, layout, false).unwrap();
+        assert_eq!(screen.pixels, healthy);
+        assert_eq!(app.selected_id(), Some(33333));
+        assert_eq!(app.counts(), counts);
+        assert_eq!(app.selected().unwrap().1.physical, physical);
     }
 
     fn assert_wide_notice(app: &RadarApp, warning: bool, lines: &[&str]) {
@@ -1053,13 +1200,11 @@ mod tests {
         let mut reference = Screen {
             pixels: [[false; 400]; 240],
         };
-        if let Some((_, sample)) = app.selected() {
-            glyphs::draw_capsule(&mut reference).unwrap();
-            glyphs::draw_elevation(&mut reference, sample.physical.look.elevation_rad).unwrap();
-        }
-        for y in 0..240 {
-            assert_eq!(screen.pixels[y][352..], reference.pixels[y][352..]);
-        }
+        assert_strip_pixels(
+            &screen,
+            app.selected()
+                .map(|(_, sample)| sample.physical.look.elevation_rad),
+        );
         if !lines.is_empty() {
             let top = 213 - (lines.len() - 1) * 13;
             let right = 10 + lines.iter().map(|line| line.len()).max().unwrap() * 6 + 4;
