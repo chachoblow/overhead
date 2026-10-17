@@ -2,6 +2,7 @@
   "groups": [
     {
       "name": "iss-fixture",
+      "category": "station",
       "path": "../../core/tests/fixtures/iss-25544.json"
     }
   ]

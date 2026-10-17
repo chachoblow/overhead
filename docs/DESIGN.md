@@ -35,8 +35,12 @@ authorization; the user subsequently reviewed and accepted its fresh executable
 output. [0044](decisions/0044-static-period-glyph-contract.md) now adds the static
 nominal-period spiral after approval of its meaning, scale, 2½-turn appearance
 and lifecycle, plus implementation authorization. The user subsequently reviewed
-and accepted fresh executable period output. Category and the full stack remain
-unimplemented.
+and accepted fresh executable period output. [0045's static category](decisions/0045-static-group-category-contract.md)
+now completes the five static fields using explicitly configured group roles and
+Station > Navigation > Weather > Unknown priority. The icons, assignment direction
+and lifecycle are approved and implementation authorized; the user subsequently
+accepted fresh executable category output. Transitions and final debug access
+remain open.
 
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 minimum on-screen traversal time for fast markers is planned, not implemented.
@@ -144,8 +148,10 @@ recover this direction; the retained PNGs and text are sufficient.
   borders; one padded vertical line separates it from the radar. Center short
   labels above each glyph. No routine numeric values. Navigation uses a thin
   square-ended cross; station uses a small outlined body with straight horizontal
-  wings (selected option B). Weather-cloud and unknown-question-mark icons remain
-  proposals, not selected categories or a finalized taxonomy.
+  wings (selected option B). [0045](decisions/0045-static-group-category-contract.md)
+  adds the approved weather cloud and unknown question mark, group-based assignment
+  and display priority. These four roles are a bounded comparison taxonomy, not
+  comprehensive mission or operational-status metadata.
 - **Elevation:** a 1px circle outline with an angular cutout opening upward
   from the rightward horizontal radius; outline the remaining circle and both
   radial edges, not the isolated wedge. Keep the radial strokes single-pixel,
@@ -330,6 +336,47 @@ without a disposable script. No dependency was added. These are not executable
 snapshots, golden tests, independent physical-period evidence or target
 legibility/performance validation. Category and animation remain outside scope.
 
+### Static category contract
+
+[0045](decisions/0045-static-group-category-contract.md) adds `Cat` and a static
+Station, Navigation, Weather or Unknown icon. The user accepted the native cloud
+and question mark alongside the previously selected navigation cross and station
+body-and-wings. They chose explicit source-group roles with priority **Station >
+Navigation > Weather > Unknown**, replacing the initial per-ID-only proposal and
+conflict-to-Unknown suggestion. This selects one display role, not an exclusive
+purpose or active-status claim. Uncategorized memberships do not override known
+roles; no recognized role yields Unknown. The user authorized implementation,
+then separately reviewed and accepted the fresh executable four-category comparison.
+
+![Four native scenes comparing the approved category icons](mockups/0045-category-native-proposal.png)
+
+![Native selected/no-selection strips and five-times category details](mockups/0045-category-raster-proposal.png)
+
+**Approved illustrative references only:** four 400×240 scenes within an 832×574
+sheet, and an 852×500 strip/detail sheet. All are strictly 1-bit. Each scene reuses
+the retained 0044 period proposal above, preserving every pixel outside Cat's
+label/icon. Navigation/station pixels are exact copies of 0038's retained 24×24
+footprints at (364,19). Pillow constructed the new cloud and question mark;
+0045 records their exact row sets. Cat uses the existing embedded-graphics 0.8.2
+FONT_6X10 bitmap at (367,10), baseline (367,17), with decoding checked against the
+retained Elev pixels. Enlargements are 5× nearest-neighbor; headings outside the
+scenes/strips are review annotations. No dependency was added for the previews.
+
+The repeated selected 32711 does **not** acquire four roles, and the data values
+remain illustrative. External research subsequently identified it as GPS BIIRM-6,
+but that does not turn the old composites into executable or physical evidence.
+The empty strip depicts no selection, not a complete empty-sky scene. Generation
+checks confirmed binary pixels, font parity and unchanged pixels outside the
+category slot. These images are not golden tests, target-performance evidence or
+physical-display validation. The retained pixels, existing font and 0045 suffice
+to reproduce them without disposable scripts.
+
+The current implementation uses [group configuration](../tools/README.md#display-categories)
+and immediate selected-state lifecycle. No selection clears all five fields,
+retaining the separator; selected Unknown keeps Cat and the question mark. ID
+hiding and notices do not change availability. [Simulator usage](../sim/README.md#static-category-glyph)
+owns fresh executable review recipes; no animation is implied.
+
 ### Bottom-left notice reference
 
 [0039](decisions/0039-bottom-left-condition-driven-notices.md) selects bottom-left
@@ -367,9 +414,9 @@ Notice ink starts at `x=12`, with 13px line spacing and the last line's ink at
 `y=216..222`; the two-line example starts at `y=203`, the three-line example at
 `y=190`. These observations informed 0040's subsequent geometry contract.
 The retained mocks use transparent text, not the implemented white backing.
-The strip retains 10px outer padding and the separator; clearing labels/glyphs
-without selection while retaining that
-separator is still a proposal for the full stack, not a newly accepted lifecycle.
+The strip retains 10px outer padding and the separator. This historical reference
+did not settle full-stack clearing; 0045 subsequently accepts clearing all five
+labels/glyphs without selection while retaining the separator.
 
 The [synthetic overlap stress mock](mockups/0039-bottom-left-overlap.png) adds a
 marker, ID and arrow near the notices to expose possible collisions. Those added
@@ -409,9 +456,9 @@ layout was not the full-stack mock's final geometry. The slice was implemented
 and the user accepted its rendered snapshot set. 0040 subsequently relocated
 only its notices to bottom-left; 0041 now replaces the capsule and filled glyph
 with labelled circular elevation and the separator. 0042 adds static altitude;
-0043 adds static speed and 0044 adds static nominal period. Category remains
-absent. Reproduce the current state through the
-[simulator's wide view](../sim/README.md#static-period-glyph).
+0043 adds static speed, 0044 adds static nominal period and 0045 adds static
+group-derived category. Reproduce the current state through the
+[simulator's wide view](../sim/README.md#static-category-glyph).
 
 ### Open questions and boundaries
 
@@ -421,9 +468,9 @@ The user approved the current wide layout and allowed arrow overlaps; retain
 these rather than adding collision avoidance. 0034 settles the first marker-adjacent
 label's placement and overlaps-allowed policy. User review of the crowded overview
 led to 0035's configurable clean hide/show refinement, now user-reviewed and
-accepted for the current comparison. Define glyph ranges/mappings and unknown/
-ambiguous category handling explicitly; don't turn illustrative mock values into
-defaults. 0038 replaces 0036's wrapper and the earlier glyph visual brief.
+accepted for the current comparison. 0041–0045 now specify the static field
+mappings and category handling; illustrative mock values are not defaults.
+0038 replaces 0036's wrapper and the earlier glyph visual brief.
 [0041](decisions/0041-circular-elevation-only-contract.md) now bounds and implements
 only the unanimated elevation label/cutout and separator, superseding 0037;
 warning placement/compositing remain owned by 0040.
@@ -435,9 +482,12 @@ speed with an approved scale/raster/lifecycle; the user also accepted its fresh
 executable output. [0044](decisions/0044-static-period-glyph-contract.md) now
 implements nominal period with the approved scale/appearance/lifecycle and
 explicit raster rules; the user subsequently accepted fresh executable output.
-Category and the full stack still need their remaining semantics, raster
-geometry, lifecycle and transition rules before coding. The current four-field executable clears
-all fields without selection, retaining the separator.
+[0045](decisions/0045-static-group-category-contract.md) now specifies and implements
+static group-derived category, completing the five static fields. The category
+icons, hierarchy and lifecycle are approved; the user also accepted the fresh
+executable output. No selection clears all five fields, retaining the separator.
+Full-stack transition rules and final normal/debug access still need design
+before coding.
 
 Circular radar with an info brick, surrounding noise fields and unlabelled
 visible-population graphs were explored, not selected as replacements. For any

@@ -56,8 +56,8 @@ Missing fetch metadata remains unknown; it is not inferred from filenames.
   and ring), or `borderless-circle` (circular clipping, no ring).
   See [comparison](#viewport-shape-comparison).
 - `--wide`: opt-in 352×240 borderless radar with per-satellite off-screen arrows,
-  selected-marker identification, a 48-pixel elevation/altitude/speed strip and bottom-left
-  white-backed notices. Incompatible with
+  selected-marker identification, a 48-pixel category/elevation/altitude/speed/period
+  strip and bottom-left white-backed notices. Incompatible with
   `--radar-size` and `--viewport`.
   See [wide comparison](#wide-radar-comparison).
 - `--label-hide-deg` / `--label-show-deg`: wide-view ID visibility thresholds,
@@ -117,8 +117,10 @@ and `Spd` label, plus
 [0044's static nominal-period spiral](../docs/decisions/0044-static-period-glyph-contract.md)
 and `Per` label, with
 [0040's bottom-left notice overlay](../docs/decisions/0040-white-backed-bottom-left-notice-contract.md).
-Category and the full normal/debug split are not implemented. Elevation,
-altitude and speed are visually accepted. The period meaning, scale, 2½-turn
+[0045's static group-derived category](../docs/decisions/0045-static-group-category-contract.md)
+and `Cat` label are also implemented; the user subsequently accepted the fresh
+executable category output. The full normal/debug split and transitions remain
+open. Elevation, altitude and speed are visually accepted. The period meaning, scale, 2½-turn
 appearance and lifecycle are approved; implementation is complete and the user
 subsequently accepted fresh executable period output.
 [DESIGN's retained schematic](../docs/DESIGN.md#selected-satellite-presentation)
@@ -216,8 +218,9 @@ The 352×240 radar has an aim point at (176, 120) and drawable half-extents
 `2 * atan(tan(vertical_fov / 2) * 173 / 117)`, not a second independent zoom.
 Earth and satellites keep the square baseline's pixel magnification; more space
 is admitted horizontally. The 48-pixel strip holds the selected satellite's
-[static elevation](#static-elevation-glyph), [altitude](#static-altitude-glyph)
-and [speed](#static-speed-glyph) glyphs; status notices are at bottom-left
+[category](#static-category-glyph), [elevation](#static-elevation-glyph),
+[altitude](#static-altitude-glyph), [speed](#static-speed-glyph) and
+[period](#static-period-glyph) glyphs; status notices are at bottom-left
 inside the radar, not in the strip.
 
 One hollow outward arrow is drawn for each successful, above-horizon satellite
@@ -380,8 +383,8 @@ exercises a selected ISS near 90° with synthetic warnings, empty/failure state,
 and a real selected marker/ID visually covered by the notice backing. These
 executable glyphs use true historical samples, unlike DESIGN's illustrative
 stack and endpoint references. The same snapshots now include altitude under
-0042, speed under 0043 and nominal period under 0044; category and transitions
-remain absent.
+0042, speed under 0043, nominal period under 0044 and category under 0045;
+transitions remain absent.
 
 ### Static altitude glyph
 
@@ -478,7 +481,7 @@ All selected fields update immediately on frames and selection changes, without
 animation. Nominal period is constant for a given element set. ID-hidden views
 still show the fields. No selection clears the labels/glyphs while retaining the separator; no stale speed survives a failed
 frame or former selection. Notices remain explicit alongside valid fields.
-Category remains absent; 0044 now adds nominal period. Speed implementation is
+0044 adds nominal period and 0045 adds group-derived category. Speed implementation is
 complete and the user accepted its executable output separately from the
 contract/mocks. The user also subsequently accepted fresh executable period output.
 
@@ -496,7 +499,8 @@ printf 'Review images: %s\n' "$review_dir"
 
 Repeat at `2026-10-10T00:00:30Z` for a later physical frame. The self-contained
 [low/navigation/GEO comparison recipe](#static-altitude-glyph) now renders all
-four fields and prints TEME speed derived from the rounded tracking report;
+five fields (Unknown category for its unclassified inputs) and prints TEME speed
+derived from the rounded tracking report;
 its orbital records are unchanged. The [notice recipe](#notice-overlay-review)
 adds selected-plus-warning, failed/no-selection and real-marker-under-overlay
 cases, with explicitly synthetic faults. Zero/nonfinite speed controls are
@@ -515,9 +519,9 @@ A fixed logarithmic scale runs from 90 minutes/2½ turns to 24 hours/one turn;
 12 hours gives 1⅜ turns. Shorter/longer periods saturate only the drawing. The
 same elements give the same period across frames, observer and zoom; selection
 changes may change the reading. Nonfinite/nonpositive/unavailable period clears
-only its label/spiral. No selection clears all four fields, retaining the
+only its label/spiral. No selection clears all selected fields, retaining the
 separator. ID hiding does not hide the fields, and notices remain explicit.
-No animation or new CLI option. Category is still absent.
+No animation or new CLI option. 0045 now adds category above the four data fields.
 
 The user approved meaning, scale, 2½-turn appearance and static lifecycle, then
 authorized documentation and implementation. They subsequently reviewed and
@@ -535,6 +539,90 @@ covers valid period alongside synthetic faults and a real notice-covered marker.
 The exact raster uses a bounded 4097-point curve in the approved footprint;
 reducing samples can change pixels. This has not been timed on S3 or validated
 on the physical display. No 20 Hz target-budget claim follows from host output.
+
+### Static category glyph
+
+[0045](../docs/decisions/0045-static-group-category-contract.md) adds a static
+`Cat` label and Station body-and-wings, Navigation cross, Weather cloud or Unknown
+question mark. The user approved the icons and behavior and authorized
+implementation, then separately reviewed and accepted the fresh executable
+four-category comparison.
+
+Roles come from [explicit group configuration](../tools/README.md#display-categories),
+not OMM purpose metadata, names, URLs or a per-ID lookup. The app considers all
+retained valid memberships (including older contributing records) and chooses
+**Station > Navigation > Weather > Unknown**. Missing group roles contribute
+nothing; overlapping known roles do not become Unknown. Invalid records cannot
+establish membership. This is a display preference, not active status or exclusive
+mission purpose; loading only a subset of groups also limits known membership.
+
+The weather/GPS example assigns Weather and Navigation; the ISS-only tools
+example assigns Station. The mixed `--demo` pool is uncategorized, so selected
+objects show Unknown. Old manifests still work. A successful selection always
+shows Cat and one icon, independently of the four data fields and ID visibility.
+No selection clears all five fields, retaining the separator. Notices, counts,
+physical state and square diagnostics are unchanged. No animation or fetching.
+
+For fresh real-orbit examples of all icons, run from the workspace root. This
+creates disposable **single-object review groups**, not a production per-ID map.
+It uses the existing pinned records and deliberately chosen subpoint observers;
+no fixture is refreshed or changed. The unknown example has no assigned role,
+not an assertion that its actual mission is unknowable. The source identities
+were checked during design: ISS (25544), GPS BIIRM-6 (32711), Metop-B (38771).
+
+```sh
+review_dir="$(mktemp -d "${TMPDIR:-/tmp}/overhead-category-review.XXXXXX")"
+cargo build -p overhead-sim -p overhead-tools --bin overhead-sim --bin overhead-track
+python3 - "$review_dir" <<'PY'
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+out = Path(sys.argv[1])
+cases = [
+    ("station", "core/tests/fixtures/iss-25544.json", 25544),
+    ("navigation", "tools/fixtures/m2-pool/sources/gnss.json", 32711),
+    ("weather", "tools/fixtures/m2-pool/sources/leo.json", 38771),
+    ("unknown", "tools/fixtures/m2-pool/pool.json", 19548),
+]
+for role, source, norad in cases:
+    record = next(r for r in json.loads(Path(source).read_text()) if r["NORAD_CAT_ID"] == norad)
+    utc = record["EPOCH"].removesuffix("Z") + "Z"
+    data = out / f"{role}-data.json"
+    data.write_text(json.dumps([record]))
+    group = {"name": "category-review", "path": data.name}
+    if role != "unknown":
+        group["category"] = role
+    manifest = out / f"{role}.json"
+    manifest.write_text(json.dumps({"groups": [group]}))
+    report = subprocess.check_output([
+        "target/debug/overhead-track", str(data), utc, "0", "0", "0"
+    ], text=True)
+    fields = dict(line.split(": ", 1) for line in report.splitlines() if ": " in line)
+    subprocess.run([
+        "target/debug/overhead-sim", str(manifest), utc,
+        fields["Satellite WGS-84 latitude (deg)"],
+        fields["Satellite WGS-84 longitude (deg east)"], "0",
+        "--wide", "--snapshot", str(out / f"{role}.png")
+    ], check=True)
+PY
+for fov in 0.1 20 100; do
+  target/debug/overhead-sim sim/examples/weather-gps.json \
+    2026-10-10T00:00:00Z 39.007 -104.883 2.187 \
+    --wide --fov-deg "$fov" --snapshot "$review_dir/replay-$fov.png"
+done
+printf 'Review images: %s\n' "$review_dir"
+```
+
+The replay cases cover no selection, selected Navigation and ID-hidden readings.
+The [notice recipe](#notice-overlay-review) exercises Unknown beside synthetic
+faults and a real notice-covered selected marker; assigning `"category":"station"`
+to those disposable review groups instead supplies Station without changing
+notices. Renderer tests cover same-app selection/frame loss and recovery; loader
+and executable tests cover hierarchy, duplicate/reordered groups and valid versus
+invalid membership. Exact pixel tests use independent geometric references, not
+production packed masks. No target/display validation follows from host images.
 
 ### Label zoom visibility
 

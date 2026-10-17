@@ -13,6 +13,8 @@ use overhead_core::{
     sgp4::chrono::NaiveDateTime,
     validate_utc_time,
 };
+pub mod category;
+use category::Category;
 pub mod identification;
 pub mod projection;
 use identification::LabelZoom;
@@ -82,6 +84,7 @@ pub struct Counts {
 
 pub struct RadarApp {
     catalogue: Catalogue,
+    group_categories: Vec<Category>,
     observer: GeodeticPosition,
     camera: Camera,
     view: View,
@@ -103,6 +106,7 @@ impl RadarApp {
         let label_zoom = LabelZoom::default();
         Ok(Self {
             catalogue,
+            group_categories: Vec::new(),
             observer,
             camera,
             view,
@@ -112,6 +116,22 @@ impl RadarApp {
             label_zoom,
             label_visible: label_zoom.initially_visible(view),
         })
+    }
+
+    /// Supply explicit roles indexed by the catalogue's source-group indices.
+    /// Omitted/out-of-range entries contribute Unknown. Intended for construction;
+    /// it changes neither physical samples nor selection. No per-ID role cache.
+    pub fn with_group_categories(mut self, categories: Vec<Category>) -> Self {
+        self.group_categories = categories;
+        self
+    }
+
+    /// No selection is distinct from a selected but unclassified object.
+    pub fn selected_category(&self) -> Option<Category> {
+        Some(Category::from_groups(
+            self.selected()?.0.groups(),
+            &self.group_categories,
+        ))
     }
 
     /// Configure label zoom policy, resetting its history using the current lens.
@@ -336,6 +356,36 @@ mod tests {
         assert_eq!(app.selected_period_minutes(), None);
         app.update(time).unwrap();
         assert_eq!(app.selected_period_minutes(), Some(expected));
+    }
+
+    #[test]
+    fn category_follows_selection_not_frame_motion_zoom_or_label_visibility() {
+        let mut app = app().with_group_categories(alloc::vec![Category::Station]);
+        let time = app.catalogue.entries()[0].satellite().epoch();
+        assert_eq!(app.selected_category(), None);
+        app.update(time).unwrap();
+        assert_eq!(app.selected_category(), Some(Category::Station));
+        let counts = app.counts();
+        let samples = app.samples.clone();
+        app = app.with_group_categories(alloc::vec![Category::Navigation]);
+        assert_eq!(app.selected_category(), Some(Category::Navigation));
+        assert_eq!(app.samples, samples);
+        assert_eq!(app.counts(), counts);
+        app.zoom(-100);
+        assert!(!app.selected_label_visible());
+        assert_eq!(app.selected_category(), Some(Category::Navigation));
+        app.update(time + Duration::seconds(30)).unwrap();
+        assert_eq!(app.selected_category(), Some(Category::Navigation));
+        let invalid = NaiveDate::from_ymd_opt(2101, 1, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        assert!(app.update(invalid).is_err());
+        assert_eq!(app.selected_category(), None);
+        app.update(time).unwrap();
+        assert_eq!(app.selected_category(), Some(Category::Navigation));
+        app = app.with_group_categories(Vec::new());
+        assert_eq!(app.selected_category(), Some(Category::Unknown));
     }
 
     #[test]

@@ -1,4 +1,5 @@
 //! Real executable tests: no SDL window, network, wall clock, or hardware.
+use overhead_app::category::Category;
 use serde_json::{Value, json};
 use std::{
     fs,
@@ -254,12 +255,23 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                         ecef_to_geodetic(ecef).unwrap().altitude_km,
                         state.velocity().iter().map(|v| v * v).sum::<f64>().sqrt(),
                         1440.0 / entry.elements().mean_motion,
+                        // Explicit expected roles for these two local manifests,
+                        // not the app resolver or the loader's category table.
+                        if name == "weather-gps.json" {
+                            if entry.groups().contains(&1) {
+                                Category::Navigation
+                            } else {
+                                Category::Weather
+                            }
+                        } else {
+                            Category::Unknown
+                        },
                     )
                 })
                 .collect();
             let sky = physical
                 .iter()
-                .filter(|(look, _, _, _)| look.elevation_rad > 0.0)
+                .filter(|(look, _, _, _, _)| look.elevation_rad > 0.0)
                 .count();
             for fov in [0.1_f64, 5.0, 20.0, 40.0, 100.0] {
                 let mut visible = 0;
@@ -268,7 +280,8 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                 let mut selected_altitude = None;
                 let mut selected_speed = None;
                 let mut selected_period = None;
-                for (look, altitude, speed, period) in &physical {
+                let mut selected_category = None;
+                for (look, altitude, speed, period, category) in &physical {
                     let up = look.range_km * look.elevation_rad.sin();
                     let depth = 75_000.0 - up;
                     if look.elevation_rad <= 0.0 || depth < 1.0 {
@@ -288,6 +301,7 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                         selected_altitude.get_or_insert(*altitude);
                         selected_speed.get_or_insert(*speed);
                         selected_period.get_or_insert(*period);
+                        selected_category.get_or_insert(*category);
                     } else {
                         indicators += 1;
                     }
@@ -323,6 +337,7 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                     selected_altitude,
                     selected_speed,
                     selected_period,
+                    selected_category,
                 );
                 if visible == 0 {
                     assert_snapshot_notices(&scratch, "wide.png", &["NO MARKERS"]);
@@ -390,11 +405,109 @@ fn selected_fields_span_real_low_navigation_and_geo_orbits() {
             Some(altitude),
             Some(speed),
             Some(period),
+            Some(Category::Unknown),
         );
     }
     assert_eq!(period_regimes, [true; 3]);
     assert_eq!(regimes, [true; 3]);
     assert_eq!(speed_regimes, [true; 3]);
+}
+
+#[test]
+fn configured_categories_reach_executable_with_hierarchy_and_no_other_pixel_changes() {
+    use embedded_graphics::{pixelcolor::Rgb888, prelude::*};
+    use embedded_graphics_simulator::SimulatorDisplay;
+    use overhead_core::{OmmElements, Satellite, ecef_to_geodetic, ecef_to_look_angles};
+    let scratch = Scratch::new();
+    let records: Value =
+        serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
+    scratch.manifest(records.clone());
+    let elements: Vec<OmmElements> = serde_json::from_value(records).unwrap();
+    let satellite = Satellite::from_elements(elements[0].elements()).unwrap();
+    let time = satellite.epoch();
+    let state = satellite.state_at(time).unwrap();
+    let ecef = state.to_ecef().unwrap();
+    let geodetic = ecef_to_geodetic(ecef).unwrap();
+    let mut observer = geodetic;
+    observer.altitude_km = 0.0;
+    let look = ecef_to_look_angles(ecef, observer).unwrap();
+    let speed = state.velocity().iter().map(|v| v * v).sum::<f64>().sqrt();
+    let utc = format!("{time}Z").replace(' ', "T");
+    let lat = observer.latitude_rad.to_degrees().to_string();
+    let lon = observer.longitude_rad.to_degrees().to_string();
+    let run = |wide: bool| {
+        let mut args = vec![
+            "catalogue.json",
+            &utc,
+            &lat,
+            &lon,
+            "0",
+            "--snapshot",
+            "category.png",
+        ];
+        if wide {
+            args.push("--wide");
+        }
+        success(scratch.run(&args))
+    };
+    run(false);
+    let square = scratch.png("category.png");
+    run(true);
+    let baseline = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join("category.png")).unwrap();
+    for (roles, expected) in [
+        (vec![None], Category::Unknown),
+        (vec![Some("weather")], Category::Weather),
+        (vec![Some("navigation")], Category::Navigation),
+        (vec![Some("station")], Category::Station),
+        (
+            vec![Some("weather"), None, Some("navigation")],
+            Category::Navigation,
+        ),
+        (
+            vec![Some("navigation"), Some("weather"), None],
+            Category::Navigation,
+        ),
+        (
+            vec![Some("navigation"), Some("station"), Some("weather")],
+            Category::Station,
+        ),
+        (
+            vec![Some("weather"), Some("station"), Some("navigation")],
+            Category::Station,
+        ),
+        (vec![Some("weather"), Some("weather")], Category::Weather),
+    ] {
+        let groups: Vec<_> = roles.iter().enumerate().map(|(i, role)| {
+            json!({"name":format!("stations-{i}"), "path":"data.json", "category":role})
+        }).collect();
+        fs::write(
+            scratch.0.join("catalogue.json"),
+            json!({"groups":groups}).to_string(),
+        )
+        .unwrap();
+        let report = run(true);
+        assert!(report.contains("catalogue=1 sky=1 visible=1 failed=0 indicators=0"));
+        assert_snapshot_fields(
+            &scratch,
+            "category.png",
+            Some(look.elevation_rad),
+            Some(geodetic.altitude_km),
+            Some(speed),
+            Some(1440.0 / elements[0].elements().mean_motion),
+            Some(expected),
+        );
+        let image = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join("category.png")).unwrap();
+        for y in 0..240 {
+            for x in 0..400 {
+                if !(364..388).contains(&x) || !(10..43).contains(&y) {
+                    let point = Point::new(x, y);
+                    assert_eq!(image.get_pixel(point), baseline.get_pixel(point));
+                }
+            }
+        }
+        run(false);
+        assert_eq!(scratch.png("category.png"), square);
+    }
 }
 
 fn assert_snapshot_fields(
@@ -404,6 +517,7 @@ fn assert_snapshot_fields(
     altitude: Option<f64>,
     speed: Option<f64>,
     period: Option<f64>,
+    category: Option<Category>,
 ) {
     use embedded_graphics::{
         mono_font::{MonoTextStyle, ascii::FONT_6X10},
@@ -425,6 +539,24 @@ fn assert_snapshot_fields(
     reference
         .draw_iter((12..=227).map(|y| Pixel(Point::new(352, y), BinaryColor::On)))
         .unwrap();
+    if let Some(category) = category {
+        Text::new(
+            "Cat",
+            Point::new(367, 17),
+            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+        )
+        .draw(&mut reference)
+        .unwrap();
+        for y in 0..24 {
+            for x in 0..24 {
+                if category_reference_ink(category, x, y) {
+                    Pixel(Point::new(364 + x, 19 + y), BinaryColor::On)
+                        .draw(&mut reference)
+                        .unwrap();
+                }
+            }
+        }
+    }
     if let Some(elevation) = elevation {
         Text::new(
             "Elev",
@@ -601,6 +733,45 @@ fn assert_snapshot_fields(
     }
 }
 
+// Review glyphs expressed as local geometry, independent of packed renderer masks.
+fn category_reference_ink(category: Category, x: i32, y: i32) -> bool {
+    match category {
+        Category::Navigation => {
+            (x == 11 && (2..=21).contains(&y)) || (y == 11 && (2..=21).contains(&x))
+        }
+        Category::Station => {
+            ((y == 8 || y == 15) && (9..=14).contains(&x))
+                || ((x == 9 || x == 14) && (8..=15).contains(&y))
+                || (y == 11 && ((2..=9).contains(&x) || (14..=21).contains(&x)))
+        }
+        Category::Weather => match y {
+            5 => (8..=11).contains(&x),
+            6 => x == 7 || x == 12,
+            7 => x == 6 || x == 13,
+            8 => x == 6 || (13..=16).contains(&x),
+            9 => x == 5 || x == 6 || x == 17,
+            10 => x == 3 || x == 4 || x == 18,
+            11 => x == 3 || (18..=20).contains(&x),
+            12..=15 => x == 2 || x == 21,
+            16 => x == 3 || x == 20,
+            17 => (4..=19).contains(&x),
+            _ => false,
+        },
+        Category::Unknown => match y {
+            3 => (10..=13).contains(&x),
+            4 => x == 9 || x == 14,
+            5..=6 => x == 8 || x == 15,
+            7..=8 => x == 15,
+            9..=10 => x == 14,
+            11 => x == 13,
+            12 => x == 12,
+            13..=16 => x == 11,
+            19..=20 => x == 11 || x == 12,
+            _ => false,
+        },
+    }
+}
+
 fn assert_snapshot_notices(scratch: &Scratch, path: &str, lines: &[&str]) {
     use embedded_graphics::{
         mono_font::{MonoTextStyle, ascii::FONT_6X10},
@@ -611,7 +782,7 @@ fn assert_snapshot_notices(scratch: &Scratch, path: &str, lines: &[&str]) {
     use embedded_graphics_simulator::SimulatorDisplay;
     assert!(!lines.is_empty());
     if lines.contains(&"NO MARKERS") || lines.contains(&"NO FRAME") {
-        assert_snapshot_fields(scratch, path, None, None, None, None);
+        assert_snapshot_fields(scratch, path, None, None, None, None, None);
     }
     let image = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join(path)).unwrap();
     let mut reference = SimulatorDisplay::<BinaryColor>::new(Size::new(400, 240));
@@ -939,6 +1110,7 @@ fn wide_warning_snapshots_preserve_valid_markers_and_clear_after_clean_load() {
         Some(altitude),
         Some(speed),
         Some(1440.0 / elements[0].elements().mean_motion),
+        Some(Category::Unknown),
     );
     let healthy_png = scratch.png("healthy.png");
     let healthy = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join("healthy.png")).unwrap();
@@ -978,6 +1150,7 @@ fn wide_warning_snapshots_preserve_valid_markers_and_clear_after_clean_load() {
             Some(altitude),
             Some(speed),
             Some(1440.0 / elements[0].elements().mean_motion),
+            Some(Category::Unknown),
         );
         let warned = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join("warned.png")).unwrap();
         let top = 213 - (lines.len() as i32 - 1) * 13;

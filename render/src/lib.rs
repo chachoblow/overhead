@@ -16,6 +16,7 @@ use overhead_app::{
 };
 use overhead_core::sgp4::chrono::Timelike;
 
+mod category;
 mod glyphs;
 
 pub const DISPLAY_SIZE: Size = Size::new(400, 240);
@@ -38,7 +39,7 @@ impl Layout {
             radar_height: radar_size,
         })
     }
-    /// Opt-in 352x240 radar, labelled elevation/altitude/speed and explicit notices.
+    /// Opt-in 352x240 radar, five labelled selected fields and explicit notices.
     pub fn wide() -> Self {
         Self {
             radar_width: 352,
@@ -133,6 +134,7 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
         if let Some((id, marker)) = selected_marker.filter(|_| app.selected_label_visible()) {
             draw_selected_label(&mut display, id, marker, layout)?;
         }
+        category::draw(&mut display, app.selected_category())?;
         glyphs::draw_strip(
             &mut display,
             app.selected()
@@ -1082,15 +1084,117 @@ mod tests {
     }
 
     fn assert_selected_strip(screen: &Screen, app: &RadarApp) {
+        assert_category_pixels(screen, app.selected_category());
+        let mut without_category = Screen {
+            pixels: screen.pixels,
+        };
+        for row in &mut without_category.pixels[10..43] {
+            row[364..388].fill(false);
+        }
         let selected = app.selected().map(|(_, s)| s.physical);
         assert_strip_pixels(
-            screen,
+            &without_category,
             selected.map(|s| s.look.elevation_rad),
             selected.map(|s| s.geodetic.altitude_km),
             selected.map(|s| s.teme_speed_km_s),
             app.selected()
                 .map(|(entry, _)| 1440.0 / entry.elements().mean_motion),
         );
+    }
+
+    fn assert_category_pixels(screen: &Screen, value: Option<overhead_app::category::Category>) {
+        let mut expected = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        if let Some(value) = value {
+            Text::new(
+                "Cat",
+                Point::new(367, 17),
+                MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+            )
+            .draw(&mut expected)
+            .unwrap();
+            for y in 0..24 {
+                for x in 0..24 {
+                    expected.pixels[19 + y][364 + x] =
+                        category::reference_ink(value, x as i32, y as i32);
+                }
+            }
+        }
+        for y in 10..43 {
+            assert_eq!(
+                screen.pixels[y][364..388],
+                expected.pixels[y][364..388],
+                "category {value:?} row {y}"
+            );
+        }
+    }
+
+    #[test]
+    fn category_exact_rasters_and_slot_isolation() {
+        use overhead_app::category::Category::*;
+        for value in [
+            None,
+            Some(Unknown),
+            Some(Weather),
+            Some(Navigation),
+            Some(Station),
+        ] {
+            let mut screen = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            category::draw(&mut screen, value).unwrap();
+            assert_category_pixels(&screen, value);
+            for y in 0..240 {
+                for x in 0..400 {
+                    if !(364..388).contains(&x) || !(10..43).contains(&y) {
+                        assert!(!screen.pixels[y][x]);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn category_does_not_change_other_fields_radar_notices_or_square() {
+        use overhead_app::category::Category::*;
+        for viewport in [Viewport::Square, Viewport::Rectangle] {
+            let mut app = app_with_orbits(viewport, false, &[25544], 2.0);
+            let layout = if viewport == Viewport::Rectangle {
+                Layout::wide()
+            } else {
+                Layout::new(240).unwrap()
+            };
+            let mut screen = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            draw(&mut screen, &app, layout, true).unwrap();
+            let baseline = screen.pixels;
+            let counts = app.counts();
+            let samples: Vec<_> = app.objects().map(|(_, s)| s.clone()).collect();
+            for role in [Station, Navigation, Weather, Unknown] {
+                app = app.with_group_categories(std::vec![role]);
+                draw(&mut screen, &app, layout, true).unwrap();
+                if viewport == Viewport::Rectangle {
+                    assert_selected_strip(&screen, &app);
+                }
+                for (y, row) in baseline.iter().enumerate() {
+                    for (x, &pixel) in row.iter().enumerate() {
+                        if viewport != Viewport::Rectangle
+                            || !(364..388).contains(&x)
+                            || !(10..43).contains(&y)
+                        {
+                            assert_eq!(screen.pixels[y][x], pixel);
+                        }
+                    }
+                }
+                assert_eq!(app.counts(), counts);
+                assert_eq!(
+                    app.objects().map(|(_, s)| s.clone()).collect::<Vec<_>>(),
+                    samples
+                );
+            }
+        }
     }
 
     #[test]
@@ -1383,7 +1487,10 @@ mod tests {
             data[0]["MEAN_ANOMALY"] = serde_json::json!(0.0);
             let elements: Vec<OmmElements> = serde_json::from_value(data.clone()).unwrap();
             builder.push(
-                RecordOrigin { group: 0, record },
+                RecordOrigin {
+                    group: record,
+                    record,
+                },
                 elements.into_iter().next().unwrap(),
             );
         }
@@ -1409,7 +1516,6 @@ mod tests {
         };
         draw(&mut screen, &app, Layout::wide(), false).unwrap();
         assert_selected_strip(&screen, &app);
-        let initial = screen.pixels;
         let altitude_pixels = |pixels: &[[bool; 400]; 240]| -> Vec<bool> {
             pixels[115..139]
                 .iter()
@@ -1428,9 +1534,23 @@ mod tests {
                 .flat_map(|row| row[364..388].iter().copied())
                 .collect()
         };
+        app = app.with_group_categories(std::vec![
+            overhead_app::category::Category::Weather,
+            overhead_app::category::Category::Station
+        ]);
+        assert_eq!(
+            app.selected_category(),
+            Some(overhead_app::category::Category::Weather)
+        );
+        draw(&mut screen, &app, Layout::wide(), false).unwrap();
+        let initial = screen.pixels;
         assert_eq!(app.selected_period_minutes(), Some(720.0));
         app.select_next();
         assert_eq!(app.selected_id(), Some(90_002));
+        assert_eq!(
+            app.selected_category(),
+            Some(overhead_app::category::Category::Station)
+        );
         assert_eq!(app.selected_period_minutes(), Some(1440.0));
         draw(&mut screen, &app, Layout::wide(), false).unwrap();
         assert_selected_strip(&screen, &app);
@@ -1459,7 +1579,8 @@ mod tests {
 
     #[test]
     fn selected_fields_follow_true_frames_and_clear_without_selection() {
-        let mut app = app_with_orbits(Viewport::Rectangle, false, &[25544, 100530], 2.0);
+        let mut app = app_with_orbits(Viewport::Rectangle, false, &[25544, 100530], 2.0)
+            .with_group_categories(std::vec![overhead_app::category::Category::Station]);
         assert_eq!(app.counts().visible, 2);
         let mut screen = Screen {
             pixels: [[true; 400]; 240],
@@ -1499,7 +1620,7 @@ mod tests {
         assert!(!app.selected_label_visible());
         draw(&mut screen, &app, Layout::wide(), false).unwrap();
         assert_selected_strip(&screen, &app);
-        assert!(screen.pixels[80][387]); // All four fields are independent of the ID gate.
+        assert!(screen.pixels[80][387]); // All five fields are independent of the ID gate.
         assert!(screen.pixels[127][387]);
         assert!(screen.pixels[163][376]); // Speed's top pixel survives the ID gate.
 

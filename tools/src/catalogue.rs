@@ -2,6 +2,7 @@
 //! validation and orbital conflict resolution live in overhead-core.
 use std::{collections::BTreeSet, fmt::Write, fs, path::Path, path::PathBuf};
 
+use overhead_app::category::Category;
 use overhead_core::{
     OmmElements,
     catalogue::{Catalogue, CatalogueBuilder, CatalogueDiagnostic, RecordOrigin},
@@ -22,6 +23,8 @@ Manifest:
     \"source_url\": \"https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=JSON\",
     \"fetched_at\": \"2026-10-06T08:00:00Z\"}]}
 source_url and fetched_at are optional; missing/null means unknown.
+category is optional: station, navigation, weather; missing/null contributes no role.
+Category is a display hint, not operational status or an orbit-selection rule.
 fetched_at: YYYY-MM-DDTHH:MM:SS[.fraction]Z, 1957–2100; no leap seconds.
 
 Invalid records and newest-epoch conflicts are skipped with stderr diagnostics.
@@ -44,6 +47,26 @@ struct Group {
     path: PathBuf,
     source_url: Option<String>,
     fetched_at: Option<String>,
+    category: Option<GroupCategory>,
+}
+
+// Serde/config syntax stays host-side; the shared app has no parser dependency.
+#[derive(Deserialize, Clone, Copy)]
+#[serde(rename_all = "lowercase")]
+enum GroupCategory {
+    Station,
+    Navigation,
+    Weather,
+}
+
+impl From<GroupCategory> for Category {
+    fn from(category: GroupCategory) -> Self {
+        match category {
+            GroupCategory::Station => Self::Station,
+            GroupCategory::Navigation => Self::Navigation,
+            GroupCategory::Weather => Self::Weather,
+        }
+    }
 }
 
 impl Manifest {
@@ -138,6 +161,9 @@ fn diagnostics_report(
 /// Fully loaded accepted catalogue with provenance report and ingestion warnings.
 pub struct LoadedCatalogue {
     pub catalogue: Catalogue,
+    /// Explicit display hints aligned with RecordOrigin::group / entry.groups().
+    /// Unknown means the group contributes no classification; never inferred.
+    pub group_categories: Vec<Category>,
     pub report: String,
     pub diagnostics: String,
 }
@@ -248,6 +274,11 @@ pub fn load(path: &Path) -> Result<LoadedCatalogue, String> {
     )
     .unwrap();
     Ok(LoadedCatalogue {
+        group_categories: manifest
+            .groups
+            .iter()
+            .map(|group| group.category.map(Category::from).unwrap_or_default())
+            .collect(),
         catalogue,
         report: output,
         diagnostics,

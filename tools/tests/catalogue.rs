@@ -296,6 +296,101 @@ fn empty_groups_are_allowed_but_empty_results_fail_with_rejection_details() {
 }
 
 #[test]
+fn category_configuration_is_optional_strict_and_never_inferred() {
+    use overhead_app::category::Category;
+    for (value, expected) in [
+        (Value::Null, Category::Unknown),
+        (json!("station"), Category::Station),
+        (json!("navigation"), Category::Navigation),
+        (json!("weather"), Category::Weather),
+    ] {
+        let input = Input::new(json!([{"name":"arbitrary", "path":"a.json", "category":value}]));
+        input.write("a.json", ISS);
+        let loaded =
+            overhead_tools::catalogue::load(std::path::Path::new(&input.manifest)).unwrap();
+        assert_eq!(loaded.group_categories, [expected]);
+        assert!(loaded.diagnostics.is_empty());
+    }
+    let input = Input::one(); // Named stations, but not classified by its name.
+    let loaded = overhead_tools::catalogue::load(std::path::Path::new(&input.manifest)).unwrap();
+    assert_eq!(loaded.group_categories, [Category::Unknown]);
+    let baseline = success(input.run());
+    input.write(
+        "catalogue.json",
+        &json!({"groups":[{"name":"stations", "path":"stations.json", "category":"station"}]})
+            .to_string(),
+    );
+    assert_eq!(success(input.run()), baseline); // Presentation metadata cannot change the provenance report.
+    for invalid in [
+        json!("unknown"),
+        json!("Station"),
+        json!("communications"),
+        json!(""),
+        json!(3),
+        json!([]),
+    ] {
+        input.write(
+            "catalogue.json",
+            &json!({"groups":[{"name":"stations", "path":"stations.json", "category":invalid}]})
+                .to_string(),
+        );
+        failure(input.run(), "invalid manifest");
+    }
+    input.write("catalogue.json", r#"{"groups":[{"name":"stations","path":"stations.json","category":"station","category":"weather"}]}"#);
+    failure(input.run(), "duplicate field `category`");
+}
+
+#[test]
+fn categories_use_all_valid_memberships_including_older_not_invalid_or_empty_groups() {
+    use overhead_app::category::Category;
+    let mut groups = vec![
+        json!({"name":"newest", "path":"new.json", "category":"weather"}),
+        json!({"name":"older", "path":"old.json", "category":"navigation"}),
+        json!({"name":"invalid", "path":"bad.json", "category":"station"}),
+        json!({"name":"empty", "path":"empty.json", "category":"station"}),
+        json!({"name":"broad", "path":"old.json"}),
+    ];
+    for reverse in [false, true] {
+        if reverse {
+            groups.reverse();
+        }
+        let input = Input::new(json!(groups));
+        input.write("old.json", ISS);
+        let mut newer = object();
+        newer["EPOCH"] = json!("2026-10-05T00:00:00");
+        input.write("new.json", &json!([newer]).to_string());
+        let mut invalid = object();
+        invalid["MEAN_MOTION"] = json!(0);
+        input.write("bad.json", &json!([invalid]).to_string());
+        input.write("empty.json", "[]");
+        let loaded =
+            overhead_tools::catalogue::load(std::path::Path::new(&input.manifest)).unwrap();
+        let entry = &loaded.catalogue.entries()[0];
+        assert_eq!(entry.groups().len(), 3);
+        assert_eq!(
+            loaded.group_categories[entry.selected_from().group],
+            Category::Weather
+        );
+        assert_eq!(
+            Category::from_groups(entry.groups(), &loaded.group_categories),
+            Category::Navigation
+        );
+        assert_eq!(loaded.diagnostics.matches("warning: skipped").count(), 1);
+        // Restoring the previously invalid record supplies Station membership.
+        input.write("bad.json", ISS);
+        let loaded =
+            overhead_tools::catalogue::load(std::path::Path::new(&input.manifest)).unwrap();
+        assert_eq!(
+            Category::from_groups(
+                loaded.catalogue.entries()[0].groups(),
+                &loaded.group_categories
+            ),
+            Category::Station
+        );
+    }
+}
+
+#[test]
 fn malformed_or_ambiguous_manifest_configuration_fails() {
     let input = Input::one();
     for bad in [

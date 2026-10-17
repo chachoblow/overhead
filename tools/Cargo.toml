@@ -6,6 +6,8 @@ edition = "2024"
 [dependencies]
 # Host-only OMM/catalogue ingestion; default core stays allocation-free.
 overhead-core = { path = "../core", features = ["catalogue"] }
+# Shared display-role type; host config does not duplicate app category policy.
+overhead-app = { path = "../app" }
 # Typed local manifest; Serde was already transitive through checked OMM.
 serde = { version = "1", features = ["derive"] }
 # Preserve each record's raw JSON so duplicate metadata keys are not erased.

@@ -18,7 +18,11 @@ fresh executable speed output. 0044's static nominal-period spiral is implemente
 after approval of meaning, fixed logarithmic scale, 2½-turn appearance and
 lifecycle, plus authorization to record exact raster rules and implement.
 The user subsequently reviewed and accepted fresh executable period output;
-category remains unimplemented.
+0045 now implements static category after approval of icons, explicit group-role
+assignment, Station > Navigation > Weather > Unknown priority and immediate
+five-field lifecycle, followed by implementation authorization. The user subsequently
+reviewed and accepted fresh executable category output; transitions/debug access
+remain open.
 M2 operating-budget and scheduling work remains open.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
@@ -189,9 +193,14 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
 - [x] User reviewed and accepted fresh executable period output, separately from
   the approved illustrative appearance and scale. No target-cost or physical-display
   validation follows.
-- [ ] Scope and agree subsequent bounded glyph contracts before implementation.
-  Category assignment/raster, full-stack no-selection/lifecycle behavior,
-  transitions and final normal/debug access remain open. No scene displacement or collision search is approved.
+- [x] Agree and implement [0045's static group-derived category](decisions/0045-static-group-category-contract.md):
+  explicit optional group roles, Station > Navigation > Weather > Unknown,
+  approved Cat/icons and immediate five-field lifecycle. No per-ID mapping,
+  inferred roles, operational-status claim or orbital-data change.
+- [x] User reviewed and accepted fresh executable category output, separately
+  from approved icons/assignment/lifecycle. [Review recipe](../sim/README.md#static-category-glyph).
+- [ ] Scope and agree subsequent bounded presentation contracts before implementation.
+  Transitions and final normal/debug access remain open. No scene displacement or collision search is approved.
   Circular-radar/field/graph alternatives remain exploration; neither mocks nor
   replay populations select production capacity.
 

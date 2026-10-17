@@ -1,7 +1,7 @@
 # 0038 — Labelled borderless glyph direction
 
 Date: 2026-10-17
-Status: accepted (M3 visual direction; four data fields implemented under 0041–0044, full stack unimplemented)
+Status: accepted (M3 visual direction; five static fields implemented under 0041–0045, transitions/debug access open)
 
 ## Decision
 Use a borderless selected-satellite glyph stack with short centered labels and
@@ -31,8 +31,11 @@ after contract/illustration approval and implementation authorization; the user
 subsequently accepted its fresh executable output.
 [0044](0044-static-period-glyph-contract.md) now implements nominal period after
 meaning/scale/appearance/lifecycle approval and implementation authorization;
-the user subsequently accepted its fresh executable output. Category and
-full-stack lifecycle remain open. Square diagnostics remain default.
+the user subsequently accepted its fresh executable output.
+[0045](0045-static-group-category-contract.md) now implements the approved static
+category icons, explicit group-role mapping, priority and five-field lifecycle;
+the user subsequently accepted its fresh executable output. Transitions and final
+debug access remain open. Square diagnostics remain default.
 
 ## Why
 The user iterated through circular glyphs, outlined elevation, continuous
@@ -68,7 +71,9 @@ with straight wings was preferred to detailed solar-panel diagrams.
   scales; 0042 subsequently supplies the approved altitude scale and 0043 the
   approved instantaneous TEME speed meaning and fixed linear scale. 0044 supplies
   nominal element-set period and its fixed logarithmic 2½-to-one-turn mapping.
-- Navigation is a 1px square-ended cross. Station is a small outlined body with
+- The category observations below record the original visual review; 0045 now
+  settles the previously open assignment, overlap and raster rules.
+  Navigation is a 1px square-ended cross. Station is a small outlined body with
   single-line horizontal wings. Weather-cloud and unknown-question-mark icons
   were shown but not explicitly selected. Category assignment, overlapping/
   unknown membership and operational-status interpretation remain unresolved;
@@ -82,8 +87,8 @@ with straight wings was preferred to detailed solar-panel diagrams.
   invalid values, geometry and static two-field lifecycle. 0043 subsequently
   bounds static speed semantics, scale, raster and three-field lifecycle.
   0044 subsequently bounds period semantics, scale, raster and static four-field
-  lifecycle. Still specify category rules/geometry, remaining bitmap geometry
-  and full-stack lifecycle/no-selection behavior.
+  lifecycle. 0045 subsequently bounds category rules/geometry and static
+  five-field lifecycle/no-selection behavior. Transitions remain unspecified.
   Existing true-state readouts must remain separate from any future animation.
 - The full-height stack occupies the old warning area. Explicit tracking and
   ingestion warnings must remain visible, including with valid markers.
@@ -93,8 +98,8 @@ with straight wings was preferred to detailed solar-panel diagrams.
   [0040](0040-white-backed-bottom-left-notice-contract.md) subsequently bounds and
   implements the white-backed overlay independently of the revised glyphs.
   Do not silently remove notices or treat a failed sky as complete.
-  Keeping the existing no-selection clearing rule is the
-  recommendation, not a newly specified full-stack lifecycle.
+  Keeping the existing no-selection clearing rule was the recommendation here;
+  0045 subsequently accepts it for the five static fields.
 - No new animation, selection policy, debug-access control, panning, slowdown,
   prediction, fetching, scheduling, production capacity, dependency, hardware
   or frozen-M2 evidence change. No physical-display legibility or performance

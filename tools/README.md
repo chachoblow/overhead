@@ -46,6 +46,30 @@ URLs are descriptive strings, never fetched. Fetch timestamps use explicit UTC
 `YYYY-MM-DDTHH:MM:SS[.fraction]Z`, 1957–2100, without leap seconds or offsets.
 They are not inferred from file metadata or used to select elements.
 
+### Display categories
+
+A group may optionally declare `"category": "station"`, `"navigation"` or
+`"weather"` under [0045](../docs/decisions/0045-static-group-category-contract.md).
+Missing/null contributes no classification; other values (including `"unknown"`),
+wrong types and duplicate configuration fields fail the load. This is explicit
+presentation metadata, not inference from group names/URLs or OMM fields, and
+not an operational-status claim. Leave broad or mixed groups uncategorized.
+
+The shared app resolves all retained **valid** memberships by **Station >
+Navigation > Weather > Unknown**, independent of manifest order and selected
+orbital-record origin. Older valid records establish membership too; invalid
+records and empty groups do not. Unknown means no recognized role. Category
+never changes orbit merging, errors, physical samples, counts or selection.
+The existing provenance report is unchanged; the loader also returns a typed,
+group-indexed role table for presentation consumers. No live role refresh or
+per-ID override mechanism is introduced.
+
+`sim/examples/weather-gps.json` declares Weather/Navigation;
+`tools/examples/catalogue.json` declares Station for its ISS-only input. The
+mixed historical demo pool intentionally has no role. Existing manifests work
+unchanged, displaying Unknown for successful selected entries in wide view.
+[Executable review](../sim/README.md#static-category-glyph) covers all four icons.
+
 ### Report and failures
 
 Reports are sorted by NORAD ID and include name, group memberships, selected
