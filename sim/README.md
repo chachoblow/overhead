@@ -56,7 +56,7 @@ Missing fetch metadata remains unknown; it is not inferred from filenames.
   and ring), or `borderless-circle` (circular clipping, no ring).
   See [comparison](#viewport-shape-comparison).
 - `--wide`: opt-in 352×240 borderless radar with per-satellite off-screen arrows,
-  selected-marker identification, a 48-pixel elevation strip and bottom-left
+  selected-marker identification, a 48-pixel elevation/altitude strip and bottom-left
   white-backed notices. Incompatible with
   `--radar-size` and `--viewport`.
   See [wide comparison](#wide-radar-comparison).
@@ -109,9 +109,11 @@ opt-in wide comparison implements the viewport/arrows portion of
 identification under [0034](../docs/decisions/0034-selected-marker-identification.md)
 and [0035's zoom visibility](../docs/decisions/0035-label-zoom-visibility.md).
 [0041's static circular elevation](../docs/decisions/0041-circular-elevation-only-contract.md),
-`Elev` label and padded separator are implemented in the wide view, with
+`Elev` label and padded separator are implemented in the wide view, alongside
+[0042's static altitude circles](../docs/decisions/0042-static-altitude-glyph-contract.md)
+and `Alt` label, with
 [0040's bottom-left notice overlay](../docs/decisions/0040-white-backed-bottom-left-notice-contract.md).
-Other glyphs and the full normal/debug split are not implemented.
+Category, speed, period and the full normal/debug split are not implemented.
 [DESIGN's retained schematic](../docs/DESIGN.md#selected-satellite-presentation)
 remains a design reference, not this executable's output or a golden test.
 Final debug-access controls remain open.
@@ -207,7 +209,8 @@ The 352×240 radar has an aim point at (176, 120) and drawable half-extents
 `2 * atan(tan(vertical_fov / 2) * 173 / 117)`, not a second independent zoom.
 Earth and satellites keep the square baseline's pixel magnification; more space
 is admitted horizontally. The 48-pixel strip holds the selected satellite's
-[static elevation glyph](#static-elevation-glyph); status notices are at bottom-left
+[static elevation](#static-elevation-glyph) and [altitude](#static-altitude-glyph)
+glyphs; status notices are at bottom-left
 inside the radar, not in the strip.
 
 One hollow outward arrow is drawn for each successful, above-horizon satellite
@@ -235,8 +238,9 @@ without a clearing mask or collision search. Selection/zoom updates the label
 immediately; arrows are never labelled. Wide zoom hides the label as described
 below; the selected diamond and square baseline are unchanged.
 
-The strip shows a labelled static circular cutout of true elevation when a
-visible satellite is selected; its separator remains without selection. Under
+The strip shows a labelled static circular cutout of true elevation and
+concentric circles of true WGS-84 altitude when a visible satellite is selected;
+its separator remains without selection. Under
 [0040](../docs/decisions/0040-white-backed-bottom-left-notice-contract.md), complete
 notice lines are bottom-left at `x=12`, ending at baseline `y=222`, with 13px
 spacing. A borderless white backing pads the active text block by 2px and is drawn
@@ -327,7 +331,7 @@ printf 'Review images: %s\n' "$review_dir"
 `combined.png` has one valid selected ISS marker, one tracking failure and an
 ingestion warning. `failed.png` has no valid markers and all three notice lines.
 Compare `crossing-clean.png` with `crossing-ingest.png`: the overlay can cover the
-ISS diamond/ID while the elevation glyph/label and `visible=1` report remain.
+ISS diamond/ID while the elevation/altitude fields and `visible=1` report remain.
 Clean loading restores that scene; this is not a live ingestion-warning timeout.
 `NO FRAME` and same-app redraw/recovery are covered by renderer tests, not these CLI images.
 These are executable snapshots, unlike DESIGN's illustrative full-stack mocks.
@@ -367,8 +371,79 @@ Repeat with UTC `2026-10-10T00:00:30Z` for a later physical frame. The demo at
 exercises a selected ISS near 90° with synthetic warnings, empty/failure state,
 and a real selected marker/ID visually covered by the notice backing. These
 executable glyphs use true historical samples, unlike DESIGN's illustrative
-stack and endpoint references. Category, altitude, speed, period and transitions
-remain absent; their slots stay blank.
+stack and endpoint references. The same snapshots now include altitude under
+0042; category, speed, period and transitions remain absent.
+
+### Static altitude glyph
+
+Under [0042](../docs/decisions/0042-static-altitude-glyph-contract.md), `--wide`
+adds `Alt` and two concentric outlines below elevation. The outer circle stays
+fixed; the inner circle shrinks as the selected sample's true WGS-84 ellipsoidal
+altitude increases. A fixed compressed 0–40,000 km scale spans low Earth,
+navigation and geostationary heights using eight inner sizes. Nearby altitudes
+can share a raster; high values saturate at the smallest ring. This is a broad
+height cue, not a precise numeric readout or a tracking limit. The decision owns
+the exact scale, rounding and pixel rules; zoom and catalogue never rescale it.
+
+Both fields update immediately with frames and selection changes, without
+animation, and remain visible when the marker ID is hidden. Nonfinite altitude
+clears only `Alt` and its circles, preserving valid elevation. Without selection,
+both labels/glyphs clear, leaving the separator. Notices and square diagnostics
+are unchanged. These behaviors are implemented, and the user reviewed and
+accepted fresh executable altitude output separately from the illustrative mocks.
+
+The [elevation recipe](#static-elevation-glyph) covers selected, ID-hidden and
+no-selection states at the usual site; repeat its UTC at `2026-10-10T00:00:30Z`
+for another frame. The [notice recipe](#notice-overlay-review) covers valid
+altitude alongside synthetic warnings and a real marker crossing under the mask.
+
+For a clean low/navigation/GEO-height comparison, run the following from the
+workspace root. It extracts three unmodified records from the existing
+[historical pool](../tools/fixtures/m2-pool/README.md), uses `overhead-track` to
+place each observer at its approximate subpoint, then captures real executable
+frames at the same explicit UTC. Python uses only its standard library; files
+are disposable and fixtures are not changed. These deliberately chosen sites
+are visual test inputs, not production settings or claims of operational status.
+The GEO-height sample need not be stationary over Earth.
+
+```sh
+review_dir="$(mktemp -d "${TMPDIR:-/tmp}/overhead-altitude-review.XXXXXX")"
+cargo build -p overhead-sim -p overhead-tools --bin overhead-sim --bin overhead-track
+python3 - "$review_dir" <<'PY'
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+out = Path(sys.argv[1])
+records = json.loads(Path("tools/fixtures/m2-pool/pool.json").read_text())
+utc = "2026-10-10T00:00:00Z"
+for name, norad in [("low", 28054), ("navigation", 26407), ("geostationary", 19548)]:
+    record = next(r for r in records if r["NORAD_CAT_ID"] == norad)
+    data = out / f"{name}-data.json"
+    data.write_text(json.dumps([record]))
+    manifest = out / f"{name}.json"
+    manifest.write_text(json.dumps({"groups": [
+        {"name": "altitude-review", "path": data.name}
+    ]}))
+    report = subprocess.check_output([
+        "target/debug/overhead-track", str(data), utc, "0", "0", "0"
+    ], text=True)
+    fields = dict(line.split(": ", 1) for line in report.splitlines() if ": " in line)
+    latitude = fields["Satellite WGS-84 latitude (deg)"]
+    longitude = fields["Satellite WGS-84 longitude (deg east)"]
+    subprocess.run([
+        "target/debug/overhead-sim", str(manifest), utc, latitude, longitude, "0",
+        "--wide", "--snapshot", str(out / f"{name}.png")
+    ], check=True)
+    print(name, "altitude km:", fields["Satellite WGS-84 ellipsoidal altitude (km)"])
+PY
+printf 'Review images: %s\n' "$review_dir"
+```
+
+These outputs use propagated altitude, not DESIGN's illustrative values.
+Independent CLI assertions additionally exercise all 16 pool objects individually
+at their epochs, plus both standard catalogues at multiple times and zooms.
 
 ### Label zoom visibility
 
@@ -459,8 +534,13 @@ opaque padding/gaps, a real selected marker/ID crossing under the overlay,
 unchanged app state and pixels outside the backing, shrinking/missing-frame
 recovery, and no stale white mask. CLI tests check notice pixels with valid
 markers plus synthetic tracking failures/omitted records and a subsequent clean
-load, without changing the strip. Headless PNG tests compare glyph pixels to an independent angle
-reference from real look angles at both times and all tested zooms.
+load, without changing the strip. Altitude tests cover all eight exact ring
+rasters, radius boundaries/ties, finite saturation, field-local nonfinite
+suppression and real frame/selection changes across radius boundaries using
+explicit synthetic orbit controls. Headless PNG tests compare both glyphs to
+independent look-angle/geodetic samples and inverse altitude thresholds, including
+real low/navigation/GEO-height selected objects. Existing elevation, notices,
+selection-loss/recovery and square regressions remain covered.
 
 The [2026-10-12 verification record](../docs/PROGRESS.md#2026-10-12-utc-square-default-fresh-session-verification-before-commit)
 contains the prior fresh-source build, broader check suite, headless counts,

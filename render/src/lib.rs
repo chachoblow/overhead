@@ -38,7 +38,7 @@ impl Layout {
             radar_height: radar_size,
         })
     }
-    /// Opt-in 352x240 radar plus labelled circular elevation and explicit notices.
+    /// Opt-in 352x240 radar, labelled elevation/altitude and explicit notices.
     pub fn wide() -> Self {
         Self {
             radar_width: 352,
@@ -137,6 +137,8 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
             &mut display,
             app.selected()
                 .map(|(_, sample)| sample.physical.look.elevation_rad),
+            app.selected()
+                .map(|(_, sample)| sample.physical.geodetic.altitude_km),
         )?;
         return draw_wide_status(&mut display, app, ingestion_warning);
     }
@@ -927,7 +929,7 @@ mod tests {
         pixels
     }
 
-    fn assert_strip_pixels(screen: &Screen, elevation: Option<f64>) {
+    fn assert_strip_pixels(screen: &Screen, elevation: Option<f64>, altitude: Option<f64>) {
         let mut expected = Screen {
             pixels: [[false; 400]; 240],
         };
@@ -946,17 +948,55 @@ mod tests {
                 expected.pixels[68 + row][364..388].copy_from_slice(pixels);
             }
         }
+        if let Some(altitude) = altitude.filter(|h| h.is_finite()) {
+            Text::new(
+                "Alt",
+                Point::new(367, 111),
+                MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+            )
+            .draw(&mut expected)
+            .unwrap();
+            // Independent inverse thresholds, not the renderer's log mapping.
+            let radius = (2..=8).fold(9, |radius, lower| {
+                let boundary = 400.0 * (101_f64.powf((8.5 - lower as f64) / 7.0) - 1.0);
+                if altitude > boundary {
+                    radius.min(lower)
+                } else {
+                    radius
+                }
+            });
+            for y in -11_i32..=11 {
+                for x in -11_i32..=11 {
+                    let minor = x.abs().min(y.abs());
+                    let major = x.abs().max(y.abs());
+                    expected.pixels[(127 + y) as usize][(376 + x) as usize] =
+                        [radius, 11].into_iter().any(|r| {
+                            minor <= r
+                                && major == f64::from(r * r - minor * minor).sqrt().round() as i32
+                        });
+                }
+            }
+        }
         for y in 0..240 {
             assert_eq!(
                 screen.pixels[y][352..],
                 expected.pixels[y][352..],
-                "strip row={y}, elevation={elevation:?}"
+                "strip row={y}, elevation={elevation:?}, altitude={altitude:?}"
             );
         }
     }
 
     fn assert_elevation_pixels(screen: &Screen, elevation: f64) {
-        assert_strip_pixels(screen, Some(elevation));
+        assert_strip_pixels(screen, Some(elevation), None);
+    }
+
+    fn assert_selected_strip(screen: &Screen, app: &RadarApp) {
+        let selected = app.selected().map(|(_, s)| s.physical);
+        assert_strip_pixels(
+            screen,
+            selected.map(|s| s.look.elevation_rad),
+            selected.map(|s| s.geodetic.altitude_km),
+        );
     }
 
     #[test]
@@ -969,7 +1009,7 @@ mod tests {
                 pixels: [[false; 400]; 240],
             };
             let elevation = (degrees as f64).to_radians();
-            glyphs::draw_strip(&mut screen, Some(elevation)).unwrap();
+            glyphs::draw_strip(&mut screen, Some(elevation), None).unwrap();
             assert_elevation_pixels(&screen, elevation);
             assert!(
                 screen
@@ -1042,8 +1082,8 @@ mod tests {
             let mut screen = Screen {
                 pixels: [[false; 400]; 240],
             };
-            glyphs::draw_strip(&mut screen, elevation).unwrap();
-            assert_strip_pixels(&screen, elevation);
+            glyphs::draw_strip(&mut screen, elevation, None).unwrap();
+            assert_strip_pixels(&screen, elevation, None);
             assert!(
                 screen
                     .pixels
@@ -1057,7 +1097,120 @@ mod tests {
     }
 
     #[test]
-    fn elevation_follows_true_selection_frames_and_clears_without_selection() {
+    fn altitude_pixels_cover_every_size_and_invalidity_is_field_local() {
+        let mut screen = Screen {
+            pixels: [[true; 400]; 240],
+        };
+        for elevation in [Some(0.7), Some(f64::NAN), None] {
+            let mut baseline = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            glyphs::draw_strip(&mut baseline, elevation, None).unwrap();
+            for altitude in [
+                Some(0.0),
+                Some(400.0),
+                Some(800.0),
+                Some(2_000.0),
+                Some(5_000.0),
+                Some(10_000.0),
+                Some(20_200.0),
+                Some(35_786.0),
+                Some(-f64::MAX),
+                Some(f64::MAX),
+                Some(f64::NAN),
+                Some(f64::INFINITY),
+                Some(f64::NEG_INFINITY),
+                None,
+            ] {
+                // As in draw(), clearing precedes each strip draw.
+                screen.clear(BinaryColor::Off).unwrap();
+                glyphs::draw_strip(&mut screen, elevation, altitude).unwrap();
+                assert_strip_pixels(&screen, elevation, altitude);
+                for y in 0..240 {
+                    for x in 0..400 {
+                        if !(364..388).contains(&x) || !(104..139).contains(&y) {
+                            assert_eq!(screen.pixels[y][x], baseline.pixels[y][x]);
+                        }
+                    }
+                }
+                if altitude.is_none_or(|h| !h.is_finite()) {
+                    assert_eq!(screen.pixels, baseline.pixels);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn altitude_raster_changes_on_selection_and_physical_frame() {
+        // Synthetic eccentric orbits ensure both Tab and frame updates cross
+        // radius boundaries, unlike small ISS height changes sharing one ring.
+        let mut data: serde_json::Value =
+            serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
+        let mut builder = CatalogueBuilder::new();
+        for (record, motion) in [2.0, 1.0].into_iter().enumerate() {
+            data[0]["NORAD_CAT_ID"] = serde_json::json!(90_001 + record);
+            data[0]["MEAN_MOTION"] = serde_json::json!(motion);
+            data[0]["ECCENTRICITY"] = serde_json::json!(0.5);
+            data[0]["MEAN_ANOMALY"] = serde_json::json!(0.0);
+            let elements: Vec<OmmElements> = serde_json::from_value(data.clone()).unwrap();
+            builder.push(
+                RecordOrigin { group: 0, record },
+                elements.into_iter().next().unwrap(),
+            );
+        }
+        let catalogue = builder.finish().unwrap();
+        let satellite = catalogue.entries()[0].satellite();
+        let time = satellite.epoch();
+        let mut observer =
+            ecef_to_geodetic(satellite.state_at(time).unwrap().to_ecef().unwrap()).unwrap();
+        observer.altitude_km = 0.0;
+        let mut app = RadarApp::new(
+            catalogue,
+            observer,
+            View::rectangular(100.0, Layout::wide().aspect_ratio()).unwrap(),
+        )
+        .unwrap();
+        app.update(time).unwrap();
+        assert_eq!(app.counts().visible, 2);
+        assert!(!app.selected_label_visible());
+        let samples: Vec<_> = app.objects().map(|(_, s)| s.clone()).collect();
+        let counts = app.counts();
+        let mut screen = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw(&mut screen, &app, Layout::wide(), false).unwrap();
+        assert_selected_strip(&screen, &app);
+        let initial = screen.pixels;
+        let altitude_pixels = |pixels: &[[bool; 400]; 240]| -> Vec<bool> {
+            pixels[115..139]
+                .iter()
+                .flat_map(|row| row[364..388].iter().copied())
+                .collect()
+        };
+        app.select_next();
+        assert_eq!(app.selected_id(), Some(90_002));
+        draw(&mut screen, &app, Layout::wide(), false).unwrap();
+        assert_selected_strip(&screen, &app);
+        assert_ne!(altitude_pixels(&screen.pixels), altitude_pixels(&initial));
+        assert_eq!(app.counts(), counts);
+        assert_eq!(
+            app.objects().map(|(_, s)| s.clone()).collect::<Vec<_>>(),
+            samples
+        );
+        app.select_next();
+        assert_eq!(app.selected_id(), Some(90_001));
+        draw(&mut screen, &app, Layout::wide(), false).unwrap();
+        assert_eq!(screen.pixels, initial);
+        app.update(time + overhead_core::sgp4::chrono::Duration::minutes(30))
+            .unwrap();
+        assert_eq!(app.selected_id(), Some(90_001));
+        draw(&mut screen, &app, Layout::wide(), false).unwrap();
+        assert_selected_strip(&screen, &app);
+        assert_ne!(altitude_pixels(&screen.pixels), altitude_pixels(&initial));
+    }
+
+    #[test]
+    fn selected_fields_follow_true_frames_and_clear_without_selection() {
         let mut app = app_with_orbits(Viewport::Rectangle, false, &[25544, 100530], 2.0);
         assert_eq!(app.counts().visible, 2);
         let mut screen = Screen {
@@ -1070,7 +1223,7 @@ mod tests {
             assert_eq!(app.selected_id(), Some(id));
             let elevation = app.selected().unwrap().1.physical.look.elevation_rad;
             draw(&mut screen, &app, Layout::wide(), false).unwrap();
-            assert_elevation_pixels(&screen, elevation);
+            assert_selected_strip(&screen, &app);
             if let Some(previous) = previous {
                 assert_ne!(elevation, previous);
             }
@@ -1086,22 +1239,20 @@ mod tests {
         draw(&mut screen, &app, Layout::wide(), false).unwrap();
         let elevation = app.selected().unwrap().1.physical.look.elevation_rad;
         assert_ne!(Some(elevation), previous);
-        assert_elevation_pixels(&screen, elevation);
+        assert_selected_strip(&screen, &app);
 
         // Tight zoom removes both objects; arrows cannot retain a selected glyph.
         app.zoom(64);
         assert_eq!(app.selected_id(), None);
         draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        assert_strip_pixels(&screen, None);
+        assert_selected_strip(&screen, &app);
         app.zoom(-64);
         assert!(app.selected().is_some());
         assert!(!app.selected_label_visible());
         draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        assert_elevation_pixels(
-            &screen,
-            app.selected().unwrap().1.physical.look.elevation_rad,
-        );
-        assert!(screen.pixels[80][387]); // Elevation is independent of the ID gate.
+        assert_selected_strip(&screen, &app);
+        assert!(screen.pixels[80][387]); // Both fields are independent of the ID gate.
+        assert!(screen.pixels[127][387]);
 
         let invalid = overhead_core::sgp4::chrono::NaiveDate::from_ymd_opt(2101, 1, 1)
             .unwrap()
@@ -1109,18 +1260,16 @@ mod tests {
             .unwrap();
         assert!(app.update(invalid).is_err());
         draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        assert_strip_pixels(&screen, None);
+        assert_selected_strip(&screen, &app);
         app.update(time).unwrap();
         draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        assert_elevation_pixels(
-            &screen,
-            app.selected().unwrap().1.physical.look.elevation_rad,
-        );
+        assert_selected_strip(&screen, &app);
         assert!(screen.pixels[80][387]);
+        assert!(screen.pixels[127][387]);
     }
 
     #[test]
-    fn selected_elevation_clears_on_actual_propagation_failure_and_recovers() {
+    fn selected_fields_clear_on_actual_propagation_failure_and_recover() {
         use overhead_core::sgp4::{Elements, chrono::Duration};
         // Existing Vallado failure control: valid at +20 min, fails at +25.
         // Place the observer under the valid sample so the former selection is
@@ -1169,7 +1318,7 @@ mod tests {
             pixels: [[false; 400]; 240],
         };
         draw(&mut screen, &app, layout, false).unwrap();
-        assert_elevation_pixels(&screen, physical.look.elevation_rad);
+        assert_selected_strip(&screen, &app);
         let healthy = screen.pixels;
         assert_eq!(app.counts(), counts);
         assert_eq!(app.selected().unwrap().1.physical, physical);
@@ -1178,7 +1327,7 @@ mod tests {
         assert_eq!(app.counts().failed, 1);
         assert_eq!(app.selected_id(), None);
         draw(&mut screen, &app, layout, false).unwrap();
-        assert_strip_pixels(&screen, None);
+        assert_selected_strip(&screen, &app);
         assert_wide_notice(&app, false, &["NO MARKERS", "TRACK ERROR"]);
 
         app.update(time).unwrap();
@@ -1200,11 +1349,7 @@ mod tests {
         let mut reference = Screen {
             pixels: [[false; 400]; 240],
         };
-        assert_strip_pixels(
-            &screen,
-            app.selected()
-                .map(|(_, sample)| sample.physical.look.elevation_rad),
-        );
+        assert_selected_strip(&screen, app);
         if !lines.is_empty() {
             let top = 213 - (lines.len() - 1) * 13;
             let right = 10 + lines.iter().map(|line| line.len()).max().unwrap() * 6 + 4;

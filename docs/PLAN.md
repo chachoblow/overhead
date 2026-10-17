@@ -9,8 +9,11 @@ static circular cutout, bitmap `Elev` label and padded separator. This is the
 first bounded implementation of 0038's labelled borderless direction, not the
 full glyph stack. The user reviewed and accepted 0041's executable output.
 0039's bottom-left condition-driven notices remain implemented under 0040's
-white-backed overlay and visually accepted. Other glyphs remain unimplemented.
-M2 operating-budget and scheduling work remains open.**
+white-backed overlay and visually accepted. 0042's static altitude addition is
+now implemented after separate authorization; the user accepted its fresh
+executable output separately from the approved contract/illustrative comparison.
+Category, speed and period remain unimplemented. M2 operating-budget and scheduling
+work remains open.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -149,10 +152,20 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
   radar pixels and square output. No other glyphs or animation were added.
 - [x] User reviewed and accepted 0041's fresh executable output, separately
   from the earlier illustrative comparisons and contract approval.
-- [ ] Scope and agree the next bounded glyph contract before implementation.
-  Other glyph scales/raster rules, speed/period semantics, category assignment,
-  full-stack no-selection/lifecycle behavior, transitions and final normal/debug
-  access remain open. No scene displacement or collision search is approved.
+- [x] Agree [0042's static altitude contract](decisions/0042-static-altitude-glyph-contract.md):
+  fixed compressed WGS-84 altitude scale, concentric outlines, bitmap `Alt` label,
+  exact raster and static lifecycle. User approved the illustrative comparison
+  and behavior rules; recording the contract does not authorize implementation.
+- [x] Separately authorize and implement 0042 alongside elevation, preserving
+  radar, notices, square diagnostics and physical/app behavior. Exact-pixel,
+  mapping, lifecycle and independent real-data altitude tests pass; pre/post
+  captures preserve all pixels outside the new altitude slot and square bytes.
+- [x] User reviewed and accepted fresh executable altitude snapshots separately
+  from the contract mocks.
+- [ ] Scope and agree subsequent bounded glyph contracts before implementation.
+  Speed/period scales and semantics, category assignment/raster, full-stack
+  no-selection/lifecycle behavior, transitions and final normal/debug access
+  remain open. No scene displacement or collision search is approved.
   Circular-radar/field/graph alternatives remain exploration; neither mocks nor
   replay populations select production capacity.
 

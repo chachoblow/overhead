@@ -13,6 +13,9 @@ endpoints, label placement and retained separator without selection. The user
 initially kept implementation as a separate step, then authorized it. This
 contract is now implemented and replaces 0037's elevation drawing/lifecycle;
 0040's notices and the square default are unchanged.
+[0042](0042-static-altitude-glyph-contract.md) subsequently adds static altitude
+beside elevation without changing this field's raster/lifecycle or the separator;
+the elevation-only/blank-slot scope below records this original slice.
 
 [DESIGN](../DESIGN.md#circular-elevation-only-contract) owns the retained reference
 images and provenance. They are illustrative composites, not executable output.

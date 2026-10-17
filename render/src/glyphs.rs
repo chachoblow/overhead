@@ -1,4 +1,4 @@
-//! The bounded, static circular-elevation strip (decision 0041).
+//! Static selected elevation and altitude (decisions 0041 and 0042).
 //! No presentation history or physical-state mutation belongs here.
 
 use core::f64::consts::FRAC_PI_2;
@@ -25,6 +25,7 @@ const OCTANT: [Point; 9] = [
 pub(super) fn draw_strip<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
     elevation: Option<f64>,
+    altitude_km: Option<f64>,
 ) -> Result<(), D::Error> {
     display.draw_iter((12..=227).map(|y| Pixel(Point::new(352, y), BinaryColor::On)))?;
     if let Some(elevation) = elevation.filter(|value| value.is_finite()) {
@@ -36,7 +37,55 @@ pub(super) fn draw_strip<D: DrawTarget<Color = BinaryColor>>(
         .draw(display)?;
         draw_elevation(display, elevation)?;
     }
+    if let Some(radius) = altitude_km.and_then(altitude_radius) {
+        Text::new(
+            "Alt",
+            Point::new(367, 111),
+            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+        )
+        .draw(display)?;
+        let mut rows = [0_u32; 23];
+        circle(&mut rows, 11);
+        circle(&mut rows, i32::from(radius));
+        draw_rows(display, rows, Point::new(365, 116))?;
+    }
     Ok(())
+}
+
+fn altitude_radius(altitude_km: f64) -> Option<u8> {
+    if !altitude_km.is_finite() {
+        return None;
+    }
+    let h = altitude_km.clamp(0.0, 40_000.0);
+    let t = libm::log1p(h / 400.0) / libm::log(101.0);
+    Some(round_radius(9.0 - 7.0 * t))
+}
+
+// Input is bounded to [2,9]; truncation after adding 0.5 rounds half ties up.
+fn round_radius(radius: f64) -> u8 {
+    (radius + 0.5) as u8
+}
+
+fn circle(rows: &mut [u32; 23], radius: i32) {
+    let mut major = radius;
+    for minor in 0..=radius {
+        let squared = radius * radius - minor * minor;
+        // Nearest sqrt using exact integer half-step boundaries, not a
+        // library stroke convention. Integer radicands cannot land on a tie.
+        while major > 0 && 4 * squared < (2 * major - 1) * (2 * major - 1) {
+            major -= 1;
+        }
+        if minor > major {
+            break;
+        }
+        for (x, y) in [(major, minor), (minor, major)] {
+            for x in [x, -x] {
+                for y in [y, -y] {
+                    mark(rows, Point::new(x, y));
+                }
+            }
+        }
+    }
 }
 
 fn draw_elevation<D: DrawTarget<Color = BinaryColor>>(
@@ -67,10 +116,18 @@ fn draw_elevation<D: DrawTarget<Color = BinaryColor>>(
         radial(&mut rows, Point::new(11, 0));
         radial(&mut rows, endpoint);
     }
+    draw_rows(display, rows, Point::new(365, 69))
+}
+
+fn draw_rows<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    rows: [u32; 23],
+    top_left: Point,
+) -> Result<(), D::Error> {
     display.draw_iter(rows.into_iter().enumerate().flat_map(|(row, bits)| {
         (0..23).filter_map(move |column| {
             (bits & (1 << column) != 0).then_some(Pixel(
-                Point::new(365 + column, 69 + row as i32),
+                top_left + Point::new(column, row as i32),
                 BinaryColor::On,
             ))
         })
@@ -99,7 +156,7 @@ fn snapped_endpoint(elevation: f64) -> Point {
 }
 
 fn mark(rows: &mut [u32; 23], p: Point) {
-    // Glyph-local coordinates are right/up around center (376,80).
+    // Glyph-local coordinates are right/up around the integer center.
     rows[(11 - p.y) as usize] |= 1 << (11 + p.x);
 }
 
@@ -127,7 +184,113 @@ fn radial(rows: &mut [u32; 23], endpoint: Point) {
 
 #[cfg(test)]
 mod tests {
+    extern crate std;
     use super::*;
+
+    #[test]
+    fn altitude_mapping_saturates_and_is_monotonic() {
+        for (altitude, radius) in [
+            (-f64::MAX, 9),
+            (-0.0, 9),
+            (0.0, 9),
+            (400.0, 8),
+            (800.0, 7),
+            (2_000.0, 6),
+            (5_000.0, 5),
+            (10_000.0, 4),
+            (20_200.0, 3),
+            (35_786.0, 2),
+            (40_000.0, 2),
+            (f64::MAX, 2),
+        ] {
+            assert_eq!(altitude_radius(altitude), Some(radius));
+        }
+        for altitude in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            assert_eq!(altitude_radius(altitude), None);
+        }
+        let mut previous = 9;
+        for altitude in 0..=40_000 {
+            let radius = altitude_radius(f64::from(altitude)).unwrap();
+            assert!((2..=9).contains(&radius) && radius <= previous);
+            previous = radius;
+        }
+    }
+
+    #[test]
+    fn altitude_boundaries_and_radius_half_ties() {
+        for lower in 2..9 {
+            let halfway = f64::from(lower) + 0.5;
+            assert_eq!(round_radius(halfway), lower + 1);
+            assert_eq!(round_radius(f64::from_bits(halfway.to_bits() - 1)), lower);
+            assert_eq!(
+                round_radius(f64::from_bits(halfway.to_bits() + 1)),
+                lower + 1
+            );
+            // Independent inverse of the log mapping. The inverse itself is
+            // rounded, so bracket the physical boundary rather than claiming
+            // its binary float is an exact transcendental tie.
+            let altitude = 400.0 * (101_f64.powf((9.0 - halfway) / 7.0) - 1.0);
+            assert_eq!(altitude_radius(altitude - 1e-7), Some(lower + 1));
+            assert_eq!(altitude_radius(altitude + 1e-7), Some(lower));
+        }
+    }
+
+    #[test]
+    fn altitude_circles_match_independent_raster_and_are_connected() {
+        for radius in (2..=9).chain(core::iter::once(11)) {
+            let mut rows = [0; 23];
+            circle(&mut rows, radius);
+            for y in -11_i32..=11 {
+                for x in -11_i32..=11 {
+                    let minor = x.abs().min(y.abs());
+                    let major = x.abs().max(y.abs());
+                    let expected = minor <= radius
+                        && major
+                            == f64::from(radius * radius - minor * minor).sqrt().round() as i32;
+                    assert_eq!(
+                        rows[(11 - y) as usize] & (1 << (11 + x)) != 0,
+                        expected,
+                        "r={radius} at {x},{y}"
+                    );
+                }
+            }
+            assert_eq!(rows[11] & (1 << 11), 0); // Hollow center.
+            let mut visited = [0_u32; 23];
+            let mut pending = std::vec![Point::new(radius, 0)];
+            while let Some(p) = pending.pop() {
+                if p.x.abs() > 11 || p.y.abs() > 11 {
+                    continue;
+                }
+                let row = (11 - p.y) as usize;
+                let bit = 1 << (11 + p.x);
+                if rows[row] & bit == 0 || visited[row] & bit != 0 {
+                    continue;
+                }
+                mark(&mut visited, p);
+                for dy in -1..=1 {
+                    for dx in -1..=1 {
+                        pending.push(p + Point::new(dx, dy));
+                    }
+                }
+            }
+            assert_eq!(visited, rows);
+            let mut outer = [0; 23];
+            for p in OCTANT {
+                for p in [p, Point::new(p.y, p.x)] {
+                    for x in [p.x, -p.x] {
+                        for y in [p.y, -p.y] {
+                            mark(&mut outer, Point::new(x, y));
+                        }
+                    }
+                }
+            }
+            if radius == 11 {
+                assert_eq!(rows, outer); // Preserve elevation's circle exactly.
+            } else {
+                assert!(rows.iter().zip(outer).all(|(a, b)| a & b == 0));
+            }
+        }
+    }
 
     #[test]
     fn snapping_includes_endpoints_and_assigns_midpoint_ties_downward() {

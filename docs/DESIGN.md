@@ -26,7 +26,10 @@ a bitmap `Elev` label and padded separator, replacing
 [0037's visually accepted elevation capsule](decisions/0037-static-elevation-glyph-contract.md).
 [0040's white-backed bottom-left notices](decisions/0040-white-backed-bottom-left-notice-contract.md)
 remain unchanged and visually accepted. The user also reviewed and accepted the
-new executable elevation slice; the other glyphs and full stack are unimplemented.
+new executable elevation slice. [0042](decisions/0042-static-altitude-glyph-contract.md)
+now implements the static altitude addition after contract review and separate
+implementation authorization. The user reviewed and accepted the fresh executable
+altitude output. Category, speed, period and the full stack remain unimplemented.
 
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 minimum on-screen traversal time for fast markers is planned, not implemented.
@@ -144,22 +147,26 @@ recover this direction; the retained PNGs and text are sufficient.
   now implements the bounded static circular cutout, endpoint/raster rules,
   label and separator, replacing the filled-square executable.
 - **Altitude:** fixed outer circle with an outlined inner circle that shrinks
-  as true WGS-84 altitude rises. **Speed:** an increasing circle-outline arc,
-  absent at zero and complete at maximum; the mock grows clockwise from the top,
-  not as a heading. **Period:** a spiral, replacing the coil; more turns mean a
-  shorter period. Scales, speed reference frame and period semantics remain open.
-  The earlier logarithmic diamond/bar altitude preview does not establish a
-  mapping for the concentric circles.
+  as true WGS-84 altitude rises. [0042](decisions/0042-static-altitude-glyph-contract.md)
+  now implements a fixed compressed scale spanning low Earth, navigation and
+  geostationary heights, exact circle pixels and static lifecycle. The contract
+  and illustrative comparison are approved, and the user separately accepted
+  the executable output. Its mapping does not inherit the earlier diamond/bar preview.
+- **Speed:** an increasing circle-outline arc, absent at zero and complete at
+  maximum; the mock grows clockwise from the top, not as a heading. **Period:**
+  a spiral, replacing the coil; more turns mean a shorter period. Their scales,
+  speed reference frame and period semantics remain open.
 - **Transitions:** favor glyphs animating toward the new selected satellite's
   values. Intermediate shapes are presentation only, never new physical samples.
   This has not been implemented or given timing/interruption rules.
 
 ### Circular elevation-only contract
 
-[0041](decisions/0041-circular-elevation-only-contract.md) now implements the bounded
+[0041](decisions/0041-circular-elevation-only-contract.md) introduced the bounded
 comparison: just `Elev`, a circular cutout and the separator, with all other
-slots blank. The elevation stays in its future stack slot rather than
-moving into the category position. The user approved a 23px circle inside the
+slots blank. [0042](decisions/0042-static-altitude-glyph-contract.md) now adds
+altitude without changing those pixels. Elevation stays in its intended stack
+slot rather than moving into the category position. The user approved a 23px circle inside the
 24×24 footprint for a single-pixel hub, a crisp `FONT_6X10` label, immediate
 true-state updates, and glyph/label clearing without selection while retaining
 the separator. Implementation is complete and the user accepted the fresh
@@ -189,6 +196,45 @@ visual acceptance. The retained images, 0041's raster specification and the
 existing font asset suffice to recover the references without the disposable
 generation script. Notice behavior remains 0040's accepted executable behavior,
 not a new mock treatment.
+
+### Static altitude contract
+
+[0042](decisions/0042-static-altitude-glyph-contract.md) now implements one static
+altitude addition alongside the accepted elevation. The user approved the
+concentric-circle appearance, bitmap `Alt` placement, fixed compressed mapping
+and lifecycle, then separately authorized implementation. The user subsequently
+reviewed and accepted the fresh executable output; the approved illustrations
+below remain contract references, not that executable evidence. [Simulator usage](../sim/README.md#static-altitude-glyph) owns fresh
+executable reproduction. Category, speed and period remain outside this slice.
+
+![Three native-size scenes with illustrative low, navigation and geostationary altitude readings](mockups/0042-altitude-native-proposal.png)
+
+![All eight altitude circle sizes, invalid altitude and no-selection strips, with enlarged raster details](mockups/0042-altitude-raster-proposal.png)
+
+**Contract references only:** retained and approved on 2026-10-17, strictly
+1-bit. The first is a 1232×280 comparison sheet containing three native 400×240
+scenes, labelled outside the scenes with illustrative 400, 20,200 and 35,786 km
+altitudes. Each preserves every radar pixel (`x<352`) from the retained
+0041 elevation-only proposal above; its elevation remains the illustrative 45°.
+Neither field is a measurement of selected `32711`. No simulator was launched
+to produce these composites.
+
+The second is a 1136×466 sheet with ten native 48×240 strips and 4× nearest-neighbor
+altitude label/glyph details. The first eight demonstrate every inner radius
+from 9px to 2px, using the illustrative values in 0042's table. `INVALID ALT`
+retains valid illustrative elevation while omitting `Alt` and both altitude
+circles. `NO SELECT` retains only the separator; it is a strip state, not a
+complete empty-sky scene or a new notice treatment. Headings and values are
+review annotations, not proposed on-device numeric readouts.
+
+Pillow composed the previews using 0042's circle/mapping rules and the existing
+embedded-graphics 0.8.2 `FONT_6X10` ASCII bitmap, verified against the retained
+`Elev` pixels. The outer-circle pixel set matches 0041; all eight inner outlines
+are connected and disjoint from it. No package was added. The retained images,
+contract and font asset suffice to reconstruct the design without the disposable
+preview script. These are not golden tests, independent physical evidence or
+physical-display legibility/performance validation. Implementation is complete;
+the user separately reviewed and accepted fresh executable output.
 
 ### Bottom-left notice reference
 
@@ -268,8 +314,8 @@ true-elevation updates, and no capsule or glyph without selection. This temporar
 layout was not the full-stack mock's final geometry. The slice was implemented
 and the user accepted its rendered snapshot set. 0040 subsequently relocated
 only its notices to bottom-left; 0041 now replaces the capsule and filled glyph
-with labelled circular elevation and the separator. Other glyphs remain absent.
-Reproduce the current state through the
+with labelled circular elevation and the separator. 0042 now adds static altitude;
+category, speed and period remain absent. Reproduce the current state through the
 [simulator's wide view](../sim/README.md#static-elevation-glyph).
 
 ### Open questions and boundaries
@@ -285,10 +331,13 @@ ambiguous category handling explicitly; don't turn illustrative mock values into
 defaults. 0038 replaces 0036's wrapper and the earlier glyph visual brief.
 [0041](decisions/0041-circular-elevation-only-contract.md) now bounds and implements
 only the unanimated elevation label/cutout and separator, superseding 0037;
-warning placement/compositing remain owned by 0040. The full stack still needs
-exact raster/font geometry, glyph mappings, lifecycle and transition rules
-before coding. Elevation-only no-selection clearing is implemented, but the
-full-stack lifecycle has not yet been specified.
+warning placement/compositing remain owned by 0040.
+[0042](decisions/0042-static-altitude-glyph-contract.md) now implements the static
+altitude mapping, raster and elevation-plus-altitude lifecycle after separate
+authorization. The user has accepted the executable output. Category,
+speed/period and the full stack still need their remaining semantics, raster
+geometry, lifecycle and transition rules before coding. The current two-field
+executable clears both fields without selection, retaining the separator.
 
 Circular radar with an info brick, surrounding noise fields and unlabelled
 visible-population graphs were explored, not selected as replacements. For any

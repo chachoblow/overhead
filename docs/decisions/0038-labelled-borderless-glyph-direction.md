@@ -1,7 +1,7 @@
 # 0038 — Labelled borderless glyph direction
 
 Date: 2026-10-17
-Status: accepted (M3 visual direction; elevation-only portion implemented under 0041, full stack unimplemented)
+Status: accepted (M3 visual direction; elevation/altitude implemented under 0041/0042, full stack unimplemented)
 
 ## Decision
 Use a borderless selected-satellite glyph stack with short centered labels and
@@ -22,8 +22,11 @@ It also changes the intended elevation appearance from
 itself replace that executable contract. [0040](0040-white-backed-bottom-left-notice-contract.md)
 subsequently moved notices to a bottom-left overlay.
 [0041](0041-circular-elevation-only-contract.md) now implements the bounded
-circular elevation-only slice, label and separator; the other glyphs and full
-stack lifecycle remain open. Square diagnostics remain default.
+circular elevation-only slice, label and separator.
+[0042](0042-static-altitude-glyph-contract.md) subsequently specifies and implements
+the static altitude mapping/raster and two-field lifecycle after illustrative
+review and separate authorization; the user subsequently accepted its executable output.
+Other glyphs and full-stack lifecycle remain open. Square diagnostics remain default.
 
 ## Why
 The user iterated through circular glyphs, outlined elevation, continuous
@@ -49,13 +52,14 @@ with straight wings was preferred to detailed solar-panel diagrams.
 - Elevation is the **outline of the circle remaining after an angular cutout**,
   not a filled disc or the isolated wedge. The reviewed example is a 45° cutout
   opening upward from the rightward horizontal radius, with single-pixel radial
-  edges. It should encode true observer elevation; endpoint and raster behavior
-  still need an implementation contract.
+  edges. It encodes true observer elevation; 0041 subsequently specifies and
+  implements the endpoint and raster behavior.
 - Altitude uses a fixed outer circle and an outlined inner circle that shrinks
   with increasing true WGS-84 altitude. Speed uses increasing circle-outline
   coverage, from absent at zero to complete at maximum; the mock starts at the
   top and grows clockwise. Period uses a spiral rather than a coil, with more
-  turns for a shorter period. These are visual encodings, not approved scales.
+  turns for a shorter period. This decision selects visual encodings, not
+  scales; 0042 subsequently supplies the approved altitude scale only.
 - Navigation is a 1px square-ended cross. Station is a small outlined body with
   single-line horizontal wings. Weather-cloud and unknown-question-mark icons
   were shown but not explicitly selected. Category assignment, overlapping/
@@ -66,9 +70,10 @@ with straight wings was preferred to detailed solar-panel diagrams.
   the isolated wedge, capsules, unlabelled variants and other station options
   were intermediate exploration, not parallel approved implementations.
 - Retaining this visual direction does not authorize coding the full stack.
-  Still specify altitude/speed/period ranges, normalization, rounding,
-  saturation and invalid values; speed reference frame and period semantics;
-  category rules; exact bitmap geometry; and lifecycle/no-selection behavior.
+  0042 subsequently bounds altitude ranges, normalization, rounding, saturation,
+  invalid values, geometry and static two-field lifecycle. Still specify
+  speed/period scales and semantics, category rules/geometry, remaining bitmap
+  geometry and full-stack lifecycle/no-selection behavior.
   Existing true-state readouts must remain separate from any future animation.
 - The full-height stack occupies the old warning area. Explicit tracking and
   ingestion warnings must remain visible, including with valid markers.

@@ -221,7 +221,7 @@ fn real_catalogue_zoom_changes_visibility_not_sky_count() {
 #[test]
 fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
     use overhead_core::{
-        GeodeticPosition, ecef_to_look_angles,
+        GeodeticPosition, ecef_to_geodetic, ecef_to_look_angles,
         sgp4::chrono::{Duration, NaiveDate},
     };
     let scratch = Scratch::new();
@@ -242,21 +242,28 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
         for seconds in [0, 30] {
             let time = start + Duration::seconds(seconds);
             let utc = format!("{time}Z").replace(' ', "T");
-            let looks: Vec<_> = loaded
+            let physical: Vec<_> = loaded
                 .catalogue
                 .entries()
                 .iter()
                 .map(|entry| {
                     let ecef = entry.satellite().state_at(time).unwrap().to_ecef().unwrap();
-                    ecef_to_look_angles(ecef, observer).unwrap()
+                    (
+                        ecef_to_look_angles(ecef, observer).unwrap(),
+                        ecef_to_geodetic(ecef).unwrap().altitude_km,
+                    )
                 })
                 .collect();
-            let sky = looks.iter().filter(|look| look.elevation_rad > 0.0).count();
+            let sky = physical
+                .iter()
+                .filter(|(look, _)| look.elevation_rad > 0.0)
+                .count();
             for fov in [0.1_f64, 5.0, 20.0, 40.0, 100.0] {
                 let mut visible = 0;
                 let mut indicators = 0;
                 let mut selected_elevation = None;
-                for look in &looks {
+                let mut selected_altitude = None;
+                for (look, altitude) in &physical {
                     let up = look.range_km * look.elevation_rad.sin();
                     let depth = 75_000.0 - up;
                     if look.elevation_rad <= 0.0 || depth < 1.0 {
@@ -273,6 +280,7 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                         visible += 1;
                         // Snapshot selection is the first visible NORAD ID.
                         selected_elevation.get_or_insert(look.elevation_rad);
+                        selected_altitude.get_or_insert(*altitude);
                     } else {
                         indicators += 1;
                     }
@@ -294,14 +302,14 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                 assert!(
                     report.contains(&format!(
                         "catalogue={} sky={sky} visible={visible} failed=0 indicators={indicators}",
-                        looks.len()
+                        physical.len()
                     )),
                     "{report}"
                 );
                 let expected = scratch.png("wide.png");
                 assert_eq!(success(scratch.run(&args)), report);
                 assert_eq!(scratch.png("wide.png"), expected);
-                assert_snapshot_elevation(&scratch, "wide.png", selected_elevation);
+                assert_snapshot_fields(&scratch, "wide.png", selected_elevation, selected_altitude);
                 if visible == 0 {
                     assert_snapshot_notices(&scratch, "wide.png", &["NO MARKERS"]);
                 }
@@ -310,7 +318,62 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
     }
 }
 
-fn assert_snapshot_elevation(scratch: &Scratch, path: &str, elevation: Option<f64>) {
+#[test]
+fn selected_altitudes_span_real_low_navigation_and_geo_heights() {
+    use overhead_core::{GeodeticPosition, ecef_to_geodetic, ecef_to_look_angles};
+    let scratch = Scratch::new();
+    let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/catalogue.json");
+    let loaded = overhead_tools::catalogue::load(&manifest).unwrap();
+    let mut regimes = [false; 3];
+    for entry in loaded.catalogue.entries() {
+        // Existing real pool elements, each alone and viewed from its subpoint.
+        // These deliberate observer sites are test inputs, not device defaults.
+        scratch.manifest(json!([entry.elements()]));
+        let time = entry.satellite().epoch();
+        let ecef = entry.satellite().state_at(time).unwrap().to_ecef().unwrap();
+        let geodetic = ecef_to_geodetic(ecef).unwrap();
+        let observer = GeodeticPosition {
+            altitude_km: 0.0,
+            ..geodetic
+        };
+        let look = ecef_to_look_angles(ecef, observer).unwrap();
+        let altitude = geodetic.altitude_km;
+        regimes[0] |= altitude < 2_000.0;
+        regimes[1] |= (15_000.0..25_000.0).contains(&altitude);
+        regimes[2] |= altitude > 30_000.0;
+        let utc = format!("{time}Z").replace(' ', "T");
+        let latitude = observer.latitude_rad.to_degrees().to_string();
+        let longitude = observer.longitude_rad.to_degrees().to_string();
+        let report = success(scratch.run(&[
+            "catalogue.json",
+            &utc,
+            &latitude,
+            &longitude,
+            "0",
+            "--wide",
+            "--snapshot",
+            "altitude.png",
+        ]));
+        assert!(
+            report.contains("catalogue=1 sky=1 visible=1 failed=0 indicators=0"),
+            "{report}"
+        );
+        assert_snapshot_fields(
+            &scratch,
+            "altitude.png",
+            Some(look.elevation_rad),
+            Some(altitude),
+        );
+    }
+    assert_eq!(regimes, [true; 3]);
+}
+
+fn assert_snapshot_fields(
+    scratch: &Scratch,
+    path: &str,
+    elevation: Option<f64>,
+    altitude: Option<f64>,
+) {
     use embedded_graphics::{
         mono_font::{MonoTextStyle, ascii::FONT_6X10},
         pixelcolor::{BinaryColor, Rgb888},
@@ -382,6 +445,38 @@ fn assert_snapshot_elevation(scratch: &Scratch, path: &str, elevation: Option<f6
             }
         }
     }
+    if let Some(altitude) = altitude {
+        Text::new(
+            "Alt",
+            Point::new(367, 111),
+            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+        )
+        .draw(&mut reference)
+        .unwrap();
+        // Independent inverse thresholds and rounded-sqrt classification,
+        // not the production log mapping or integer octant traversal.
+        let radius = (2..=8).fold(9, |radius, lower| {
+            let boundary = 400.0 * (101_f64.powf((8.5 - lower as f64) / 7.0) - 1.0);
+            if altitude > boundary {
+                radius.min(lower)
+            } else {
+                radius
+            }
+        });
+        for y in -11_i32..=11 {
+            for x in -11_i32..=11 {
+                let minor = x.abs().min(y.abs());
+                let major = x.abs().max(y.abs());
+                if [radius, 11].into_iter().any(|r| {
+                    minor <= r && major == f64::from(r * r - minor * minor).sqrt().round() as i32
+                }) {
+                    Pixel(Point::new(376 + x, 127 + y), BinaryColor::On)
+                        .draw(&mut reference)
+                        .unwrap();
+                }
+            }
+        }
+    }
     for y in 0..240 {
         for x in 352..400 {
             let point = Point::new(x, y);
@@ -393,7 +488,7 @@ fn assert_snapshot_elevation(scratch: &Scratch, path: &str, elevation: Option<f6
             assert_eq!(
                 image.get_pixel(point),
                 expected,
-                "strip pixel {point:?}, elevation={elevation:?}"
+                "strip pixel {point:?}, elevation={elevation:?}, altitude={altitude:?}"
             );
         }
     }
