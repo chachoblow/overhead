@@ -113,11 +113,14 @@ and [0035's zoom visibility](../docs/decisions/0035-label-zoom-visibility.md).
 [0042's static altitude circles](../docs/decisions/0042-static-altitude-glyph-contract.md)
 and `Alt` label, plus
 [0043's static TEME speed arc](../docs/decisions/0043-static-speed-glyph-contract.md)
-and `Spd` label, with
+and `Spd` label, plus
+[0044's static nominal-period spiral](../docs/decisions/0044-static-period-glyph-contract.md)
+and `Per` label, with
 [0040's bottom-left notice overlay](../docs/decisions/0040-white-backed-bottom-left-notice-contract.md).
-Category, period and the full normal/debug split are not implemented.
-The speed contract and illustrative comparison are approved; the user also
-reviewed and accepted the fresh executable speed output separately.
+Category and the full normal/debug split are not implemented. Elevation,
+altitude and speed are visually accepted. The period meaning, scale, 2½-turn
+appearance and lifecycle are approved; implementation is complete and the user
+subsequently accepted fresh executable period output.
 [DESIGN's retained schematic](../docs/DESIGN.md#selected-satellite-presentation)
 remains a design reference, not this executable's output or a golden test.
 Final debug-access controls remain open.
@@ -336,7 +339,7 @@ printf 'Review images: %s\n' "$review_dir"
 `combined.png` has one valid selected ISS marker, one tracking failure and an
 ingestion warning. `failed.png` has no valid markers and all three notice lines.
 Compare `crossing-clean.png` with `crossing-ingest.png`: the overlay can cover the
-ISS diamond/ID while the elevation/altitude/speed fields and `visible=1` report remain.
+ISS diamond/ID while all four data fields and the `visible=1` report remain.
 Clean loading restores that scene; this is not a live ingestion-warning timeout.
 `NO FRAME` and same-app redraw/recovery are covered by renderer tests, not these CLI images.
 These are executable snapshots, unlike DESIGN's illustrative full-stack mocks.
@@ -377,7 +380,8 @@ exercises a selected ISS near 90° with synthetic warnings, empty/failure state,
 and a real selected marker/ID visually covered by the notice backing. These
 executable glyphs use true historical samples, unlike DESIGN's illustrative
 stack and endpoint references. The same snapshots now include altitude under
-0042 and speed under 0043; category, period and transitions remain absent.
+0042, speed under 0043 and nominal period under 0044; category and transitions
+remain absent.
 
 ### Static altitude glyph
 
@@ -441,6 +445,7 @@ for name, norad in [("low", 28054), ("navigation", 26407), ("geostationary", 195
         "target/debug/overhead-sim", str(manifest), utc, latitude, longitude, "0",
         "--wide", "--snapshot", str(out / f"{name}.png")
     ], check=True)
+    print(name, "nominal period minutes:", 1440 / record["MEAN_MOTION"])
     print(name, "altitude km:", fields["Satellite WGS-84 ellipsoidal altitude (km)"])
     velocity = [float(v) for v in fields["TEME velocity (km/s)"].split()]
     print(name, "TEME speed km/s (from rounded report):",
@@ -469,12 +474,13 @@ negative inputs defensively draw as zero. Nonfinite speed clears only its label
 and arc, never substituting a plausible reading or hiding other valid fields.
 These are drawing limits, not tracking limits; physical speed is not clamped.
 
-All three fields update immediately on frames and selection changes, without
-animation. ID-hidden views still show the fields. No selection clears the
-labels/glyphs while retaining the separator; no stale speed survives a failed
+All selected fields update immediately on frames and selection changes, without
+animation. Nominal period is constant for a given element set. ID-hidden views
+still show the fields. No selection clears the labels/glyphs while retaining the separator; no stale speed survives a failed
 frame or former selection. Notices remain explicit alongside valid fields.
-Category and period remain absent. Implementation is complete; the user reviewed
-and accepted fresh executable speed output, separately from the contract/mocks.
+Category remains absent; 0044 now adds nominal period. Speed implementation is
+complete and the user accepted its executable output separately from the
+contract/mocks. The user also subsequently accepted fresh executable period output.
 
 For selected, ID-hidden and no-selection output, run from the workspace root:
 
@@ -490,12 +496,45 @@ printf 'Review images: %s\n' "$review_dir"
 
 Repeat at `2026-10-10T00:00:30Z` for a later physical frame. The self-contained
 [low/navigation/GEO comparison recipe](#static-altitude-glyph) now renders all
-three fields and prints TEME speed derived from the rounded tracking report;
+four fields and prints TEME speed derived from the rounded tracking report;
 its orbital records are unchanged. The [notice recipe](#notice-overlay-review)
 adds selected-plus-warning, failed/no-selection and real-marker-under-overlay
 cases, with explicitly synthetic faults. Zero/nonfinite speed controls are
 renderer tests, not claims about these historical samples. CLI tests independently
 propagate all 16 pool objects and both replay catalogues at multiple times/zooms.
+
+### Static period glyph
+
+Under [0044](../docs/decisions/0044-static-period-glyph-contract.md), `--wide`
+adds `Per` and a thin clockwise-outward spiral below speed. Input is the selected
+**element set's nominal period**, `1440 / MEAN_MOTION` minutes, not an
+instantaneous period, pass duration or countdown. It uses existing validated
+catalogue metadata without another propagation or retained per-sample scalar.
+
+A fixed logarithmic scale runs from 90 minutes/2½ turns to 24 hours/one turn;
+12 hours gives 1⅜ turns. Shorter/longer periods saturate only the drawing. The
+same elements give the same period across frames, observer and zoom; selection
+changes may change the reading. Nonfinite/nonpositive/unavailable period clears
+only its label/spiral. No selection clears all four fields, retaining the
+separator. ID hiding does not hide the fields, and notices remain explicit.
+No animation or new CLI option. Category is still absent.
+
+The user approved meaning, scale, 2½-turn appearance and static lifecycle, then
+authorized documentation and implementation. They subsequently reviewed and
+accepted fresh executable period output, separately from the illustrative
+comparison and numeric scale approval.
+
+For selected, ID-hidden, no-selection and later-frame comparisons, use the
+[speed recipe](#static-speed-glyph), which now renders period too. For actual
+low/half-day/day-long examples use the [mixed-orbit recipe](#static-altitude-glyph):
+it prints the source-derived nominal period alongside altitude and speed. The
+sample periods are approximately 101.80, 717.99 and 1436.20 minutes, not the
+illustrative 90/720/1440 values. The [notice recipe](#notice-overlay-review)
+covers valid period alongside synthetic faults and a real notice-covered marker.
+
+The exact raster uses a bounded 4097-point curve in the approved footprint;
+reducing samples can change pixels. This has not been timed on S3 or validated
+on the physical display. No 20 Hz target-budget claim follows from host output.
 
 ### Label zoom visibility
 
@@ -597,7 +636,12 @@ every arc boundary/tie, connected monotonic circle prefixes, exact independent
 raster comparisons, zero-label/invalid distinction, field-local suppression,
 and actual selection/frame raster changes. CLI assertions derive speed outside
 app state, including alongside synthetic warnings. Existing elevation, notices,
-selection-loss/recovery and square regressions remain covered.
+selection-loss/recovery and square regressions remain covered. Period tests
+cover source mean-motion conversion, reciprocal overflow, fixed scale and
+saturation, connected bounded hollow spirals, independent raster references,
+field-local invalid suppression, selection changes and constant period across
+physical frames. Independent CLI assertions derive period from element metadata
+for all 16 pool objects, both replay catalogues and synthetic-warning states.
 
 The [2026-10-12 verification record](../docs/PROGRESS.md#2026-10-12-utc-square-default-fresh-session-verification-before-commit)
 contains the prior fresh-source build, broader check suite, headless counts,

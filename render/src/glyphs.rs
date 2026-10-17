@@ -1,4 +1,4 @@
-//! Static selected elevation, altitude and speed (decisions 0041–0043).
+//! Static selected elevation, altitude, speed and period (decisions 0041–0044).
 //! No presentation history or physical-state mutation belongs here.
 
 use core::f64::consts::{FRAC_PI_2, TAU};
@@ -27,6 +27,7 @@ pub(super) fn draw_strip<D: DrawTarget<Color = BinaryColor>>(
     elevation: Option<f64>,
     altitude_km: Option<f64>,
     speed_km_s: Option<f64>,
+    period_minutes: Option<f64>,
 ) -> Result<(), D::Error> {
     display.draw_iter((12..=227).map(|y| Pixel(Point::new(352, y), BinaryColor::On)))?;
     if let Some(elevation) = elevation.filter(|value| value.is_finite()) {
@@ -63,7 +64,43 @@ pub(super) fn draw_strip<D: DrawTarget<Color = BinaryColor>>(
         }
         draw_rows(display, rows, Point::new(365, 163))?;
     }
+    if let Some(turns) = period_minutes.and_then(period_turns) {
+        Text::new(
+            "Per",
+            Point::new(367, 205),
+            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+        )
+        .draw(display)?;
+        draw_rows(display, period_rows(turns), Point::new(365, 209))?;
+    }
     Ok(())
+}
+
+fn period_turns(minutes: f64) -> Option<f64> {
+    if !minutes.is_finite() || minutes <= 0.0 {
+        return None;
+    }
+    Some(2.5 - 1.5 * libm::log(minutes.clamp(90.0, 1440.0) / 90.0) / libm::log(16.0))
+}
+
+// The reviewed spiral is a union of 4097 rounded parametric samples, not a
+// stroked primitive. Adjacent samples are much less than one pixel apart, so
+// their rounded centers are 8-connected without line interpolation. Fix the
+// sample count for reproducible ink; changing it can remove boundary pixels.
+// Bounded, allocation-free work, but not a measured device-frame budget.
+fn period_rows(turns: f64) -> [u32; 23] {
+    let mut rows = [0; 23];
+    for step in 0..=4096 {
+        let u = f64::from(step) / 4096.0;
+        let radius = 1.5 + 7.5 * u;
+        let angle = -FRAC_PI_2 + TAU * turns * (u - 1.0);
+        // Round absolute display coordinates, half ties toward +infinity,
+        // exactly as in the approved preview; mark() uses local right/up.
+        let x = libm::floor(376.0 + radius * libm::cos(angle) + 0.5) as i32 - 376;
+        let y = 220 - libm::floor(220.0 + radius * libm::sin(angle) + 0.5) as i32;
+        mark(&mut rows, Point::new(x, y));
+    }
+    rows
 }
 
 // First quadrant, ordered clockwise from the top, omitting the right endpoint
@@ -255,6 +292,75 @@ fn radial(rows: &mut [u32; 23], endpoint: Point) {
 mod tests {
     extern crate std;
     use super::*;
+
+    #[test]
+    fn period_scale_is_fixed_saturating_and_monotonic() {
+        for (period, turns) in [
+            (f64::from_bits(1), 2.5),
+            (90.0, 2.5),
+            (180.0, 2.125),
+            (360.0, 1.75),
+            (720.0, 1.375),
+            (1440.0, 1.0),
+            (f64::MAX, 1.0),
+        ] {
+            assert!((period_turns(period).unwrap() - turns).abs() < 1e-14);
+        }
+        for invalid in [
+            f64::NAN,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            -f64::MAX,
+            -0.0,
+            0.0,
+        ] {
+            assert_eq!(period_turns(invalid), None);
+        }
+        let mut previous = 2.5;
+        for minute in 1..=2880 {
+            let turns = period_turns(f64::from(minute)).unwrap();
+            assert!((1.0..=2.5).contains(&turns) && turns <= previous);
+            previous = turns;
+        }
+        assert_eq!(
+            period_turns(f64::from_bits(90_f64.to_bits() - 1)),
+            Some(2.5)
+        );
+        assert_eq!(
+            period_turns(f64::from_bits(1440_f64.to_bits() + 1)),
+            Some(1.0)
+        );
+    }
+
+    #[test]
+    fn period_rasters_are_bounded_connected_and_have_no_center_fill() {
+        for step in 0..=256 {
+            let turns = 1.0 + 1.5 * f64::from(step) / 256.0;
+            let rows = period_rows(turns);
+            let mut seen = [0_u32; 23];
+            // Every spiral ends at absolute (376,211), local top radius 9.
+            assert_ne!(rows[2] & (1 << 11), 0);
+            assert_eq!(rows[11] & (1 << 11), 0);
+            seen[2] = 1 << 11;
+            loop {
+                let old = seen;
+                for y in 1..22 {
+                    let neighbors = old[y - 1] | old[y] | old[y + 1];
+                    seen[y] |= rows[y] & (neighbors | (neighbors << 1) | (neighbors >> 1));
+                }
+                if seen == old {
+                    break;
+                }
+            }
+            assert_eq!(seen, rows, "turns={turns}");
+            for (y, row) in rows.iter().enumerate() {
+                if !(2..=20).contains(&y) {
+                    assert_eq!(*row, 0);
+                }
+                assert_eq!(row & !0x1ffffc, 0); // x local -9..9 only.
+            }
+        }
+    }
 
     #[test]
     fn speed_endpoints_saturation_and_all_midpoint_ties() {

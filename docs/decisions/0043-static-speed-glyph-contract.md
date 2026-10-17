@@ -12,6 +12,9 @@ a fixed linear 0–12 km/s comparison, the displayed appearance/placement and ze
 label, then the remaining raster/lifecycle rules and runtime implementation.
 The user subsequently reviewed and accepted the fresh executable output,
 closing the separate visual-acceptance gate.
+[0044](0044-static-period-glyph-contract.md) subsequently adds static nominal
+period without changing speed; the three-field/blank-period scope below records
+this original slice.
 
 [DESIGN](../DESIGN.md#static-speed-contract) owns the approved illustrations and
 provenance; [simulator usage](../../sim/README.md#static-speed-glyph) owns executable

@@ -14,8 +14,12 @@ now implemented after separate authorization; the user accepted its fresh
 executable output separately from the approved contract/illustrative comparison.
 0043's static TEME speed arc is implemented after approval of its contract,
 illustrations and implementation. The user subsequently reviewed and accepted
-fresh executable speed output. Category and period remain unimplemented. M2 operating-budget
-and scheduling work remains open.**
+fresh executable speed output. 0044's static nominal-period spiral is implemented
+after approval of meaning, fixed logarithmic scale, 2½-turn appearance and
+lifecycle, plus authorization to record exact raster rules and implement.
+The user subsequently reviewed and accepted fresh executable period output;
+category remains unimplemented.
+M2 operating-budget and scheduling work remains open.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -174,10 +178,20 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
   are preserved. No new dependency or tracking/selection policy.
 - [x] User reviewed and accepted fresh executable speed output separately from
   the mocks.
+- [x] Agree [0044's static period contract](decisions/0044-static-period-glyph-contract.md):
+  nominal element-set period, fixed logarithmic 90-minute/2½-turn to 24-hour/
+  one-turn mapping, bitmap `Per`, field-local invalid suppression and immediate
+  four-field lifecycle. The user selected 2½ turns after comparing against three.
+- [x] Authorize recording the exact raster and implementing 0044. The app reads
+  existing selected-element metadata without another propagation or retained
+  per-sample scalar; wide rendering adds only the period slot. Mapping, pixel,
+  lifecycle and independent real-data snapshot tests cover the new field.
+- [x] User reviewed and accepted fresh executable period output, separately from
+  the approved illustrative appearance and scale. No target-cost or physical-display
+  validation follows.
 - [ ] Scope and agree subsequent bounded glyph contracts before implementation.
-  Period scale/semantics, category assignment/raster, full-stack
-  no-selection/lifecycle behavior, transitions and final normal/debug access
-  remain open. No scene displacement or collision search is approved.
+  Category assignment/raster, full-stack no-selection/lifecycle behavior,
+  transitions and final normal/debug access remain open. No scene displacement or collision search is approved.
   Circular-radar/field/graph alternatives remain exploration; neither mocks nor
   replay populations select production capacity.
 

@@ -1,7 +1,7 @@
 # 0038 — Labelled borderless glyph direction
 
 Date: 2026-10-17
-Status: accepted (M3 visual direction; elevation/altitude/speed implemented under 0041–0043, full stack unimplemented)
+Status: accepted (M3 visual direction; four data fields implemented under 0041–0044, full stack unimplemented)
 
 ## Decision
 Use a borderless selected-satellite glyph stack with short centered labels and
@@ -28,8 +28,11 @@ the static altitude mapping/raster and two-field lifecycle after illustrative
 review and separate authorization; the user subsequently accepted its executable output.
 [0043](0043-static-speed-glyph-contract.md) now implements static TEME speed
 after contract/illustration approval and implementation authorization; the user
-subsequently accepted its fresh executable output. Category, period and full-stack
-lifecycle remain open. Square diagnostics remain default.
+subsequently accepted its fresh executable output.
+[0044](0044-static-period-glyph-contract.md) now implements nominal period after
+meaning/scale/appearance/lifecycle approval and implementation authorization;
+the user subsequently accepted its fresh executable output. Category and
+full-stack lifecycle remain open. Square diagnostics remain default.
 
 ## Why
 The user iterated through circular glyphs, outlined elevation, continuous
@@ -63,7 +66,8 @@ with straight wings was preferred to detailed solar-panel diagrams.
   top and grows clockwise. Period uses a spiral rather than a coil, with more
   turns for a shorter period. This decision selects visual encodings, not
   scales; 0042 subsequently supplies the approved altitude scale and 0043 the
-  approved instantaneous TEME speed meaning and fixed linear scale.
+  approved instantaneous TEME speed meaning and fixed linear scale. 0044 supplies
+  nominal element-set period and its fixed logarithmic 2½-to-one-turn mapping.
 - Navigation is a 1px square-ended cross. Station is a small outlined body with
   single-line horizontal wings. Weather-cloud and unknown-question-mark icons
   were shown but not explicitly selected. Category assignment, overlapping/
@@ -77,8 +81,9 @@ with straight wings was preferred to detailed solar-panel diagrams.
   0042 subsequently bounds altitude ranges, normalization, rounding, saturation,
   invalid values, geometry and static two-field lifecycle. 0043 subsequently
   bounds static speed semantics, scale, raster and three-field lifecycle.
-  Still specify period scale/semantics, category rules/geometry, remaining bitmap
-  geometry and full-stack lifecycle/no-selection behavior.
+  0044 subsequently bounds period semantics, scale, raster and static four-field
+  lifecycle. Still specify category rules/geometry, remaining bitmap geometry
+  and full-stack lifecycle/no-selection behavior.
   Existing true-state readouts must remain separate from any future animation.
 - The full-height stack occupies the old warning area. Explicit tracking and
   ingestion warnings must remain visible, including with valid markers.

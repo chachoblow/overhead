@@ -32,7 +32,11 @@ implementation authorization. The user reviewed and accepted the fresh executabl
 altitude output. [0043](decisions/0043-static-speed-glyph-contract.md) now adds
 static TEME speed after contract/illustration approval and explicit implementation
 authorization; the user subsequently reviewed and accepted its fresh executable
-output. Category, period and the full stack remain unimplemented.
+output. [0044](decisions/0044-static-period-glyph-contract.md) now adds the static
+nominal-period spiral after approval of its meaning, scale, 2½-turn appearance
+and lifecycle, plus implementation authorization. The user subsequently reviewed
+and accepted fresh executable period output. Category and the full stack remain
+unimplemented.
 
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 minimum on-screen traversal time for fast markers is planned, not implemented.
@@ -162,7 +166,11 @@ recover this direction; the retained PNGs and text are sufficient.
   raster/lifecycle rules and a retained `Spd` label at zero. Contract and
   illustrations are approved; the user also accepted the fresh executable output.
   **Period:** a spiral, replacing the coil; more turns mean a shorter period.
-  Its scale and period semantics remain open.
+  [0044](decisions/0044-static-period-glyph-contract.md) implements nominal
+  element-set period from mean motion, fixed logarithmic 90-minute/2½-turn to
+  24-hour/one-turn mapping, and immediate static lifecycle. The user approved
+  the design, authorized implementation and subsequently accepted fresh
+  executable output.
 - **Transitions:** favor glyphs animating toward the new selected satellite's
   values. Intermediate shapes are presentation only, never new physical samples.
   This has not been implemented or given timing/interruption rules.
@@ -282,6 +290,46 @@ them without a disposable script. They are not executable snapshots, golden
 tests, independent physical evidence or physical-display/performance validation.
 Category, period and animation remain outside this slice.
 
+### Static period contract
+
+[0044](decisions/0044-static-period-glyph-contract.md) adds one static period
+spiral alongside elevation, altitude and speed. The user approved nominal
+period from element-set mean motion, a fixed logarithmic scale, saturation and
+invalid suppression, selected 2½ turns instead of three at the short-period
+end, and approved the static lifecycle. They then authorized recording exact
+raster rules and implementation. Implementation is complete; the user
+subsequently reviewed and accepted fresh executable output, separately from
+the illustrative comparison and scale approval. [Simulator usage](../sim/README.md#static-period-glyph)
+owns reproduction.
+
+![Approved 2½-turn period appearance in an illustrative native scene](mockups/0044-period-native-proposal.png)
+
+![Three-turn exploration beside the selected 2½-turn spiral, with enlarged details](mockups/0044-period-turn-comparison.png)
+
+**Contract references only:** retained on 2026-10-17, strictly 1-bit. The first is
+a native 400×240 illustration with a 90-minute/2½-turn spiral. The second is an
+824×500 comparison with native scenes and 5× nearest-neighbor details. Its left
+three-turn variant was rejected in favor of the right 2½-turn version; three
+turns are not part of the approved scale. An earlier 90-minute/three-turn,
+12-hour/1½-turn, 24-hour/one-turn comparison was exploration. The approved scale
+now gives **1⅜ turns at 12 hours**, not 1½.
+
+Both retained images reuse the 7.7 km/s illustrative scene from 0043 above,
+preserving every existing pixel outside the period slot. Elevation is still an
+illustrative 45°, altitude 400 km, and speed 7.7 km/s. **None of these values,
+including period, describes selected `32711`.** Category remains blank. No
+simulator output or orbital calculation was used to create these composites.
+
+Pillow drew the sampled spiral with the existing embedded-graphics `FONT_6X10`
+bitmap. Checks confirmed font parity, binary pixels, connected spiral ink,
+slot bounds and unchanged pixels outside the period footprint. The 2½-turn
+version keeps the preview's center and radial extent, rather than stretching
+its smaller winding to fill the slot. 0044 records the exact sampling/rounding
+rules; these images and the existing font are sufficient to recover the design
+without a disposable script. No dependency was added. These are not executable
+snapshots, golden tests, independent physical-period evidence or target
+legibility/performance validation. Category and animation remain outside scope.
+
 ### Bottom-left notice reference
 
 [0039](decisions/0039-bottom-left-condition-driven-notices.md) selects bottom-left
@@ -361,8 +409,9 @@ layout was not the full-stack mock's final geometry. The slice was implemented
 and the user accepted its rendered snapshot set. 0040 subsequently relocated
 only its notices to bottom-left; 0041 now replaces the capsule and filled glyph
 with labelled circular elevation and the separator. 0042 adds static altitude;
-0043 adds static speed. Category and period remain absent. Reproduce the current
-state through the [simulator's wide view](../sim/README.md#static-speed-glyph).
+0043 adds static speed and 0044 adds static nominal period. Category remains
+absent. Reproduce the current state through the
+[simulator's wide view](../sim/README.md#static-period-glyph).
 
 ### Open questions and boundaries
 
@@ -383,10 +432,12 @@ altitude mapping, raster and elevation-plus-altitude lifecycle after separate
 authorization. The user has accepted that executable output.
 [0043](decisions/0043-static-speed-glyph-contract.md) now implements static TEME
 speed with an approved scale/raster/lifecycle; the user also accepted its fresh
-executable output. Category, period and the full stack still need their remaining
-semantics, raster geometry, lifecycle and transition rules before coding. The
-current three-field executable clears all fields without selection, retaining
-the separator.
+executable output. [0044](decisions/0044-static-period-glyph-contract.md) now
+implements nominal period with the approved scale/appearance/lifecycle and
+explicit raster rules; the user subsequently accepted fresh executable output.
+Category and the full stack still need their remaining semantics, raster
+geometry, lifecycle and transition rules before coding. The current four-field executable clears
+all fields without selection, retaining the separator.
 
 Circular radar with an info brick, surrounding noise fields and unlabelled
 visible-population graphs were explored, not selected as replacements. For any

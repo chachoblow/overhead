@@ -195,6 +195,14 @@ impl RadarApp {
         })
     }
 
+    /// Nominal period of the selected element set, in minutes (1440 / rev/day).
+    /// Not a propagated instantaneous period, pass duration or return countdown.
+    /// Selection gates availability; the same elements give the same value at
+    /// every frame, observer and zoom. No extra propagation or retained scalar.
+    pub fn selected_period_minutes(&self) -> Option<f64> {
+        nominal_period_minutes(self.selected()?.0.elements().mean_motion)
+    }
+
     pub fn counts(&self) -> Counts {
         let mut counts = Counts {
             catalogue: self.catalogue.entries().len(),
@@ -240,6 +248,14 @@ impl RadarApp {
     }
 }
 
+fn nominal_period_minutes(mean_motion_rev_day: f64) -> Option<f64> {
+    if !mean_motion_rev_day.is_finite() || mean_motion_rev_day <= 0.0 {
+        return None;
+    }
+    let period = 1440.0 / mean_motion_rev_day;
+    (period.is_finite() && period > 0.0).then_some(period)
+}
+
 fn sample(
     entry: &CatalogueEntry,
     time: NaiveDateTime,
@@ -280,6 +296,47 @@ mod tests {
         catalogue::{CatalogueBuilder, RecordOrigin},
         sgp4::chrono::{Duration, NaiveDate},
     };
+
+    #[test]
+    fn nominal_period_uses_element_mean_motion_and_rejects_unavailable_results() {
+        for (motion, period) in [(16.0, 90.0), (2.0, 720.0), (1.0, 1440.0), (0.5, 2880.0)] {
+            assert_eq!(nominal_period_minutes(motion), Some(period));
+        }
+        for invalid in [
+            f64::NAN,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            -1.0,
+            -0.0,
+            0.0,
+            f64::from_bits(1),
+        ] {
+            assert_eq!(nominal_period_minutes(invalid), None);
+        }
+        assert!(nominal_period_minutes(f64::MAX).unwrap() > 0.0);
+    }
+
+    #[test]
+    fn selected_period_is_element_metadata_and_follows_frame_availability() {
+        let mut app = app();
+        assert_eq!(app.selected_period_minutes(), None);
+        let time = app.catalogue.entries()[0].satellite().epoch();
+        let expected = 1440.0 / app.catalogue.entries()[0].elements().mean_motion;
+        app.update(time).unwrap();
+        assert_eq!(app.selected_period_minutes(), Some(expected));
+        app.update(time + Duration::seconds(30)).unwrap();
+        assert_eq!(app.selected_period_minutes(), Some(expected));
+        app.zoom(-8);
+        assert_eq!(app.selected_period_minutes(), Some(expected));
+        let invalid = NaiveDate::from_ymd_opt(2101, 1, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        assert!(app.update(invalid).is_err());
+        assert_eq!(app.selected_period_minutes(), None);
+        app.update(time).unwrap();
+        assert_eq!(app.selected_period_minutes(), Some(expected));
+    }
 
     #[test]
     fn speed_magnitude_is_unsigned_and_handles_extreme_components() {
@@ -453,6 +510,10 @@ mod tests {
         assert_eq!(ids.len(), 4);
         for expected in ids.iter().cycle().take(ids.len() * 2) {
             assert_eq!(app.selected_id(), Some(*expected));
+            assert_eq!(
+                app.selected_period_minutes(),
+                Some(1440.0 / app.selected().unwrap().0.elements().mean_motion)
+            );
             app.select_next();
         }
         for (entry, result) in app.objects() {

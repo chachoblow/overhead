@@ -253,12 +253,13 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                         ecef_to_look_angles(ecef, observer).unwrap(),
                         ecef_to_geodetic(ecef).unwrap().altitude_km,
                         state.velocity().iter().map(|v| v * v).sum::<f64>().sqrt(),
+                        1440.0 / entry.elements().mean_motion,
                     )
                 })
                 .collect();
             let sky = physical
                 .iter()
-                .filter(|(look, _, _)| look.elevation_rad > 0.0)
+                .filter(|(look, _, _, _)| look.elevation_rad > 0.0)
                 .count();
             for fov in [0.1_f64, 5.0, 20.0, 40.0, 100.0] {
                 let mut visible = 0;
@@ -266,7 +267,8 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                 let mut selected_elevation = None;
                 let mut selected_altitude = None;
                 let mut selected_speed = None;
-                for (look, altitude, speed) in &physical {
+                let mut selected_period = None;
+                for (look, altitude, speed, period) in &physical {
                     let up = look.range_km * look.elevation_rad.sin();
                     let depth = 75_000.0 - up;
                     if look.elevation_rad <= 0.0 || depth < 1.0 {
@@ -285,6 +287,7 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                         selected_elevation.get_or_insert(look.elevation_rad);
                         selected_altitude.get_or_insert(*altitude);
                         selected_speed.get_or_insert(*speed);
+                        selected_period.get_or_insert(*period);
                     } else {
                         indicators += 1;
                     }
@@ -319,6 +322,7 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                     selected_elevation,
                     selected_altitude,
                     selected_speed,
+                    selected_period,
                 );
                 if visible == 0 {
                     assert_snapshot_notices(&scratch, "wide.png", &["NO MARKERS"]);
@@ -336,6 +340,7 @@ fn selected_fields_span_real_low_navigation_and_geo_orbits() {
     let loaded = overhead_tools::catalogue::load(&manifest).unwrap();
     let mut regimes = [false; 3];
     let mut speed_regimes = [false; 3];
+    let mut period_regimes = [false; 3];
     for entry in loaded.catalogue.entries() {
         // Existing real pool elements, each alone and viewed from its subpoint.
         // These deliberate observer sites are test inputs, not device defaults.
@@ -344,6 +349,10 @@ fn selected_fields_span_real_low_navigation_and_geo_orbits() {
         let state = entry.satellite().state_at(time).unwrap();
         let ecef = state.to_ecef().unwrap();
         let speed = state.velocity().iter().map(|v| v * v).sum::<f64>().sqrt();
+        let period = 1440.0 / entry.elements().mean_motion;
+        period_regimes[0] |= period < 120.0;
+        period_regimes[1] |= (600.0..800.0).contains(&period);
+        period_regimes[2] |= period > 1400.0;
         speed_regimes[0] |= speed < 3.5;
         speed_regimes[1] |= (3.5..5.0).contains(&speed);
         speed_regimes[2] |= speed > 6.0;
@@ -380,8 +389,10 @@ fn selected_fields_span_real_low_navigation_and_geo_orbits() {
             Some(look.elevation_rad),
             Some(altitude),
             Some(speed),
+            Some(period),
         );
     }
+    assert_eq!(period_regimes, [true; 3]);
     assert_eq!(regimes, [true; 3]);
     assert_eq!(speed_regimes, [true; 3]);
 }
@@ -392,6 +403,7 @@ fn assert_snapshot_fields(
     elevation: Option<f64>,
     altitude: Option<f64>,
     speed: Option<f64>,
+    period: Option<f64>,
 ) {
     use embedded_graphics::{
         mono_font::{MonoTextStyle, ascii::FONT_6X10},
@@ -546,6 +558,32 @@ fn assert_snapshot_fields(
             }
         }
     }
+    if let Some(period) = period {
+        Text::new(
+            "Per",
+            Point::new(367, 205),
+            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+        )
+        .draw(&mut reference)
+        .unwrap();
+        // Element-derived input, independent of app state. Host math and
+        // absolute screen points rather than production libm/row bitsets.
+        let turns = 2.5 - 1.5 * (period.clamp(90.0, 1440.0) / 90.0).ln() / 16_f64.ln();
+        for step in 0..=4096 {
+            let u = step as f64 / 4096.0;
+            let r = 1.5 + 7.5 * u;
+            let a = -std::f64::consts::FRAC_PI_2 + std::f64::consts::TAU * turns * (u - 1.0);
+            Pixel(
+                Point::new(
+                    (376.0 + r * a.cos()).round() as i32,
+                    (220.0 + r * a.sin()).round() as i32,
+                ),
+                BinaryColor::On,
+            )
+            .draw(&mut reference)
+            .unwrap();
+        }
+    }
     for y in 0..240 {
         for x in 352..400 {
             let point = Point::new(x, y);
@@ -557,7 +595,7 @@ fn assert_snapshot_fields(
             assert_eq!(
                 image.get_pixel(point),
                 expected,
-                "strip pixel {point:?}, elevation={elevation:?}, altitude={altitude:?}, speed={speed:?}"
+                "strip pixel {point:?}, elevation={elevation:?}, altitude={altitude:?}, speed={speed:?}, period={period:?}"
             );
         }
     }
@@ -573,7 +611,7 @@ fn assert_snapshot_notices(scratch: &Scratch, path: &str, lines: &[&str]) {
     use embedded_graphics_simulator::SimulatorDisplay;
     assert!(!lines.is_empty());
     if lines.contains(&"NO MARKERS") || lines.contains(&"NO FRAME") {
-        assert_snapshot_fields(scratch, path, None, None, None);
+        assert_snapshot_fields(scratch, path, None, None, None, None);
     }
     let image = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join(path)).unwrap();
     let mut reference = SimulatorDisplay::<BinaryColor>::new(Size::new(400, 240));
@@ -600,9 +638,9 @@ fn assert_snapshot_notices(scratch: &Scratch, path: &str, lines: &[&str]) {
             assert_eq!(image.get_pixel(point), expected, "notice pixel {point:?}");
         }
     }
-    // Below speed, only the separator remains; period is still absent.
-    // Selected fields are checked separately, including alongside warnings.
-    for y in 186..240 {
+    // Below the period slot there is no ink. Selected fields are checked
+    // separately, including alongside warnings.
+    for y in 233..240 {
         for x in 352..400 {
             let expected = if x == 352 && y <= 227 {
                 Rgb888::new(32, 32, 32)
@@ -900,6 +938,7 @@ fn wide_warning_snapshots_preserve_valid_markers_and_clear_after_clean_load() {
         Some(look.elevation_rad),
         Some(altitude),
         Some(speed),
+        Some(1440.0 / elements[0].elements().mean_motion),
     );
     let healthy_png = scratch.png("healthy.png");
     let healthy = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join("healthy.png")).unwrap();
@@ -938,6 +977,7 @@ fn wide_warning_snapshots_preserve_valid_markers_and_clear_after_clean_load() {
             Some(look.elevation_rad),
             Some(altitude),
             Some(speed),
+            Some(1440.0 / elements[0].elements().mean_motion),
         );
         let warned = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join("warned.png")).unwrap();
         let top = 213 - (lines.len() as i32 - 1) * 13;

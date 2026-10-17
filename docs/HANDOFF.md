@@ -1,40 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-17 UTC. Next: propose one bounded static period contract._
+_Last updated: 2026-10-17 UTC. Next: scope one bounded category contract._
 
 ## Current state / agreed direction
-[0043's speed](decisions/0043-static-speed-glyph-contract.md) is implemented and
-user visually accepted: true TEME velocity magnitude, fixed linear 0–12 km/s
-clockwise arc, `Spd` label and immediate three-field lifecycle in opt-in wide view.
+[0044's nominal period](decisions/0044-static-period-glyph-contract.md) is
+implemented and user visually accepted: fixed logarithmic 90-minute/2½-turn to
+24-hour/one-turn spiral, `Per` label and immediate four-field lifecycle in opt-in
+wide view; executable acceptance was separate from approval of the mocks/scale.
+[0043's speed](decisions/0043-static-speed-glyph-contract.md),
 [0042's altitude](decisions/0042-static-altitude-glyph-contract.md),
 [0041's elevation](decisions/0041-circular-elevation-only-contract.md) and
 [0040's notices](decisions/0040-white-backed-bottom-left-notice-contract.md) remain
 unchanged and accepted. Square diagnostics remain default; counts, selection
-and ID hysteresis are unchanged. Category/period remain absent; [0038](decisions/0038-labelled-borderless-glyph-direction.md)
+and ID hysteresis are unchanged. Category remains absent; [0038](decisions/0038-labelled-borderless-glyph-direction.md)
 is full-stack direction, not a complete implementation contract.
 
 ## Session changes
-Added 0043 and `docs/mockups/0043-*.png`; [DESIGN](DESIGN.md#static-speed-contract)
-owns illustrative provenance. `app/src/lib.rs` retains one true-speed scalar
-from existing propagation; `render/src/{glyphs,lib}.rs` draws the static field.
-Extended app/render and independent `sim/tests/snapshot.rs` tests; updated usage/docs.
+Added 0044 and `docs/mockups/0044-*.png`; [DESIGN](DESIGN.md#static-period-contract)
+owns illustrative provenance (three turns were exploration, not the final scale).
+`app/src/lib.rs` reads existing metadata without extra propagation or storage;
+`render/src/{glyphs,lib}.rs` draws it. Extended app/render and `sim/tests/snapshot.rs` tests; updated usage/docs.
 No dependencies, core propagation, fixtures, lockfiles, firmware or frozen-evidence changes.
 
 ## Next step / boundaries
-Recommend a **static period-spiral contract-design session**: settle period
-meaning/input, fixed scale, raster and lifecycle before coding. No period metric
-or next implementation is authorized. Category semantics, full-stack lifecycle,
-transitions and debug access remain open; no animation, selection-policy,
-collision-search, prediction, fetching or hardware work. Self-contained recipes:
-[speed](../sim/README.md#static-speed-glyph), [mixed orbits](../sim/README.md#static-altitude-glyph),
-and [notices](../sim/README.md#notice-overlay-review); no temporary files needed.
+Recommend a **category contract-design session**: settle assignment, ambiguous/
+unknown membership and one bounded raster/lifecycle before coding. No category
+implementation is authorized. Full-stack transitions and debug access remain
+open; no animation, selection-policy, collision-search, prediction, fetching or hardware work.
+[Period usage](../sim/README.md#static-period-glyph) links self-contained review recipes; no /tmp files needed.
 
 ## Verification / risks
 Wrap-up freshly passed serial workspace check/tests, fmt, app/render no-default-
 feature checks and strict all-target app/render/sim Clippy. Links/anchors, retained
-PNGs and whitespace checked. Earlier 15-case comparisons preserved square bytes
-and all wide pixels outside speed; counts/diagnostics unchanged (0043). Recipes
-ran headlessly; user accepted executable output; faults are synthetic. No interactive,
-physical-display or target-performance validation. Keep checks serial (prior relink
-ENOENT). M2 budgets/scheduling, RAM/safe stack, Sharp bring-up and RWX remain open;
-the added scalar is not new RAM evidence. Preserve [0023's frozen revision](decisions/0023-frozen-m2-revision-isolation.md).
+PNGs and whitespace checked. Earlier 15-case comparisons preserved square bytes,
+all wide pixels outside period and diagnostics; synthetic 90-minute parity and
+headless recipes passed (0044). User accepted executable output; faults are synthetic.
+No interactive/display/target validation; the 4097-point raster is not a measured
+20 Hz budget. M2 budgets/scheduling, RAM/safe stack, Sharp bring-up and RWX remain
+open. Keep checks serial; preserve [0023's frozen revision](decisions/0023-frozen-m2-revision-isolation.md).

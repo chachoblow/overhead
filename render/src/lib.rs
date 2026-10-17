@@ -141,6 +141,7 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
                 .map(|(_, sample)| sample.physical.geodetic.altitude_km),
             app.selected()
                 .map(|(_, sample)| sample.physical.teme_speed_km_s),
+            app.selected_period_minutes(),
         )?;
         return draw_wide_status(&mut display, app, ingestion_warning);
     }
@@ -972,11 +973,29 @@ mod tests {
         pixels
     }
 
+    fn reference_period(minutes: f64) -> [[bool; 24]; 24] {
+        let mut pixels = [[false; 24]; 24];
+        let turns = 2.5 - 1.5 * (minutes.clamp(90.0, 1440.0) / 90.0).ln() / 16_f64.ln();
+        // Independent host trigonometry and direct screen raster, not the
+        // renderer's row bitset/local-coordinate helper or libm functions.
+        for step in 0..=4096 {
+            let fraction = step as f64 / 4096.0;
+            let radius = 1.5 + 7.5 * fraction;
+            let angle =
+                -core::f64::consts::FRAC_PI_2 + core::f64::consts::TAU * turns * (fraction - 1.0);
+            let x = (376.0 + radius * angle.cos()).round() as usize;
+            let y = (220.0 + radius * angle.sin()).round() as usize;
+            pixels[y - 209][x - 364] = true;
+        }
+        pixels
+    }
+
     fn assert_strip_pixels(
         screen: &Screen,
         elevation: Option<f64>,
         altitude: Option<f64>,
         speed: Option<f64>,
+        period: Option<f64>,
     ) {
         let mut expected = Screen {
             pixels: [[false; 400]; 240],
@@ -1037,17 +1056,29 @@ mod tests {
                 expected.pixels[162 + row][364..388].copy_from_slice(pixels);
             }
         }
+        if let Some(period) = period.filter(|p| p.is_finite() && *p > 0.0) {
+            Text::new(
+                "Per",
+                Point::new(367, 205),
+                MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+            )
+            .draw(&mut expected)
+            .unwrap();
+            for (row, pixels) in reference_period(period).iter().enumerate() {
+                expected.pixels[209 + row][364..388].copy_from_slice(pixels);
+            }
+        }
         for y in 0..240 {
             assert_eq!(
                 screen.pixels[y][352..],
                 expected.pixels[y][352..],
-                "strip row={y}, elevation={elevation:?}, altitude={altitude:?}, speed={speed:?}"
+                "strip row={y}, elevation={elevation:?}, altitude={altitude:?}, speed={speed:?}, period={period:?}"
             );
         }
     }
 
     fn assert_elevation_pixels(screen: &Screen, elevation: f64) {
-        assert_strip_pixels(screen, Some(elevation), None, None);
+        assert_strip_pixels(screen, Some(elevation), None, None, None);
     }
 
     fn assert_selected_strip(screen: &Screen, app: &RadarApp) {
@@ -1057,6 +1088,8 @@ mod tests {
             selected.map(|s| s.look.elevation_rad),
             selected.map(|s| s.geodetic.altitude_km),
             selected.map(|s| s.teme_speed_km_s),
+            app.selected()
+                .map(|(entry, _)| 1440.0 / entry.elements().mean_motion),
         );
     }
 
@@ -1070,7 +1103,7 @@ mod tests {
                 pixels: [[false; 400]; 240],
             };
             let elevation = (degrees as f64).to_radians();
-            glyphs::draw_strip(&mut screen, Some(elevation), None, None).unwrap();
+            glyphs::draw_strip(&mut screen, Some(elevation), None, None, None).unwrap();
             assert_elevation_pixels(&screen, elevation);
             assert!(
                 screen
@@ -1143,8 +1176,8 @@ mod tests {
             let mut screen = Screen {
                 pixels: [[false; 400]; 240],
             };
-            glyphs::draw_strip(&mut screen, elevation, None, None).unwrap();
-            assert_strip_pixels(&screen, elevation, None, None);
+            glyphs::draw_strip(&mut screen, elevation, None, None, None).unwrap();
+            assert_strip_pixels(&screen, elevation, None, None, None);
             assert!(
                 screen
                     .pixels
@@ -1166,7 +1199,7 @@ mod tests {
             let mut baseline = Screen {
                 pixels: [[false; 400]; 240],
             };
-            glyphs::draw_strip(&mut baseline, elevation, None, None).unwrap();
+            glyphs::draw_strip(&mut baseline, elevation, None, None, None).unwrap();
             for altitude in [
                 Some(0.0),
                 Some(400.0),
@@ -1185,8 +1218,8 @@ mod tests {
             ] {
                 // As in draw(), clearing precedes each strip draw.
                 screen.clear(BinaryColor::Off).unwrap();
-                glyphs::draw_strip(&mut screen, elevation, altitude, None).unwrap();
-                assert_strip_pixels(&screen, elevation, altitude, None);
+                glyphs::draw_strip(&mut screen, elevation, altitude, None, None).unwrap();
+                assert_strip_pixels(&screen, elevation, altitude, None, None);
                 for y in 0..240 {
                     for x in 0..400 {
                         if !(364..388).contains(&x) || !(104..139).contains(&y) {
@@ -1215,7 +1248,7 @@ mod tests {
             let mut baseline = Screen {
                 pixels: [[false; 400]; 240],
             };
-            glyphs::draw_strip(&mut baseline, elevation, altitude, None).unwrap();
+            glyphs::draw_strip(&mut baseline, elevation, altitude, None, None).unwrap();
             for speed in [
                 Some(-f64::MAX),
                 Some(-0.0),
@@ -1236,8 +1269,8 @@ mod tests {
                 None,
             ] {
                 screen.clear(BinaryColor::Off).unwrap();
-                glyphs::draw_strip(&mut screen, elevation, altitude, speed).unwrap();
-                assert_strip_pixels(&screen, elevation, altitude, speed);
+                glyphs::draw_strip(&mut screen, elevation, altitude, speed, None).unwrap();
+                assert_strip_pixels(&screen, elevation, altitude, speed, None);
                 for y in 0..240 {
                     for x in 0..400 {
                         if !(364..388).contains(&x) || !(151..186).contains(&y) {
@@ -1256,6 +1289,65 @@ mod tests {
     }
 
     #[test]
+    fn period_pixels_are_field_local_with_explicit_invalid_suppression() {
+        for (elevation, altitude, speed) in [
+            (Some(0.7), Some(400.0), Some(7.7)),
+            (Some(f64::NAN), Some(400.0), Some(7.7)),
+            (Some(0.7), Some(f64::NAN), Some(7.7)),
+            (Some(0.7), Some(400.0), Some(f64::NAN)),
+            (None, None, None),
+        ] {
+            let mut baseline = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            glyphs::draw_strip(&mut baseline, elevation, altitude, speed, None).unwrap();
+            for period in [
+                None,
+                Some(f64::NAN),
+                Some(f64::INFINITY),
+                Some(f64::NEG_INFINITY),
+                Some(-1.0),
+                Some(-0.0),
+                Some(0.0),
+                Some(f64::from_bits(1)),
+                Some(90.0),
+                Some(720.0),
+                Some(1440.0),
+                Some(f64::MAX),
+            ] {
+                let mut screen = Screen {
+                    pixels: [[false; 400]; 240],
+                };
+                glyphs::draw_strip(&mut screen, elevation, altitude, speed, period).unwrap();
+                assert_strip_pixels(&screen, elevation, altitude, speed, period);
+                for y in 0..240 {
+                    for x in 0..400 {
+                        if !(364..388).contains(&x) || !(198..233).contains(&y) {
+                            assert_eq!(screen.pixels[y][x], baseline.pixels[y][x]);
+                        }
+                    }
+                }
+                assert_eq!(
+                    screen.pixels == baseline.pixels,
+                    period.is_none_or(|p| !p.is_finite() || p <= 0.0)
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn period_raster_matches_independent_screen_reference_across_scale() {
+        for step in 0..=256 {
+            let period = 90.0 * 16_f64.powf(step as f64 / 256.0);
+            let mut screen = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            glyphs::draw_strip(&mut screen, None, None, None, Some(period)).unwrap();
+            assert_strip_pixels(&screen, None, None, None, Some(period));
+        }
+    }
+
+    #[test]
     fn speed_arc_matches_independent_pixels_and_grows_monotonically() {
         let mut previous = [[false; 24]; 24];
         for step in 0..=1200 {
@@ -1263,7 +1355,7 @@ mod tests {
             let mut screen = Screen {
                 pixels: [[false; 400]; 240],
             };
-            glyphs::draw_strip(&mut screen, None, None, Some(speed)).unwrap();
+            glyphs::draw_strip(&mut screen, None, None, Some(speed), None).unwrap();
             let expected = reference_speed(speed);
             for (row, pixels) in expected.iter().enumerate() {
                 assert_eq!(&screen.pixels[162 + row][364..388], pixels);
@@ -1278,7 +1370,7 @@ mod tests {
     }
 
     #[test]
-    fn altitude_and_speed_rasters_change_on_selection_and_physical_frame() {
+    fn selected_rasters_change_on_selection_but_period_is_constant_across_frames() {
         // Synthetic eccentric orbits ensure both Tab and frame updates cross
         // radius and speed-arc boundaries, unlike near-circular ISS samples.
         let mut data: serde_json::Value =
@@ -1330,12 +1422,21 @@ mod tests {
                 .flat_map(|row| row[364..388].iter().copied())
                 .collect()
         };
+        let period_pixels = |pixels: &[[bool; 400]; 240]| -> Vec<bool> {
+            pixels[209..233]
+                .iter()
+                .flat_map(|row| row[364..388].iter().copied())
+                .collect()
+        };
+        assert_eq!(app.selected_period_minutes(), Some(720.0));
         app.select_next();
         assert_eq!(app.selected_id(), Some(90_002));
+        assert_eq!(app.selected_period_minutes(), Some(1440.0));
         draw(&mut screen, &app, Layout::wide(), false).unwrap();
         assert_selected_strip(&screen, &app);
         assert_ne!(altitude_pixels(&screen.pixels), altitude_pixels(&initial));
         assert_ne!(speed_pixels(&screen.pixels), speed_pixels(&initial));
+        assert_ne!(period_pixels(&screen.pixels), period_pixels(&initial));
         assert_eq!(app.counts(), counts);
         assert_eq!(
             app.objects().map(|(_, s)| s.clone()).collect::<Vec<_>>(),
@@ -1352,6 +1453,8 @@ mod tests {
         assert_selected_strip(&screen, &app);
         assert_ne!(altitude_pixels(&screen.pixels), altitude_pixels(&initial));
         assert_ne!(speed_pixels(&screen.pixels), speed_pixels(&initial));
+        assert_eq!(period_pixels(&screen.pixels), period_pixels(&initial));
+        assert_eq!(app.selected_period_minutes(), Some(720.0));
     }
 
     #[test]
@@ -1396,7 +1499,7 @@ mod tests {
         assert!(!app.selected_label_visible());
         draw(&mut screen, &app, Layout::wide(), false).unwrap();
         assert_selected_strip(&screen, &app);
-        assert!(screen.pixels[80][387]); // All three fields are independent of the ID gate.
+        assert!(screen.pixels[80][387]); // All four fields are independent of the ID gate.
         assert!(screen.pixels[127][387]);
         assert!(screen.pixels[163][376]); // Speed's top pixel survives the ID gate.
 
