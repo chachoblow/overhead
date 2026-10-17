@@ -1,0 +1,90 @@
+# 0038 — Labelled borderless glyph direction
+
+Date: 2026-10-17
+Status: accepted (revised M3 visual direction; retained mocks, not implemented)
+
+## Decision
+Use a borderless selected-satellite glyph stack with short centered labels and
+one padded vertical separator from the radar. Replace the earlier glyph shapes
+with an outlined circular elevation cutout, concentric altitude circles, a speed
+arc and a period spiral. Retain the thin navigation cross and choose the simple
+outlined body-and-wings station icon (option B in the visual review).
+
+[DESIGN's retained references](../DESIGN.md#selected-satellite-presentation) own
+the current visual brief, mock provenance and layout observations. The user
+accepted the final 10px top/bottom padding and selected station B, then asked to
+retain the mock and record this revised direction before further work.
+
+This amends [0032's glyph shapes and no-routine-label direction](0032-wide-radar-and-selected-satellite-glyphs.md)
+and replaces [0036's shared capsule direction](0036-shared-glyph-capsule.md).
+It also changes the intended elevation appearance from
+[0037's filled square](0037-static-elevation-glyph-contract.md), but does **not**
+replace that executable contract yet. The current opt-in wide renderer still
+implements 0037's elevation-only capsule and separate warning area; square
+diagnostics remain default.
+
+## Why
+The user iterated through circular glyphs, outlined elevation, continuous
+capsules, separate category/data enclosures and then removed the enclosures.
+The selected treatment keeps the thin glyphs together spatially without boxes.
+Short labels help distinguish otherwise ambiguous instruments; they were
+restored after comparison with the unlabelled stack. Equal outer padding makes
+the label-plus-glyph stack, not just the symbols, sit evenly on the display.
+The elevation wedge was refined to avoid doubled raster edges. A station body
+with straight wings was preferred to detailed solar-panel diagrams.
+
+## Consequences
+- Preserve the implemented wide radar, camera, arrows and visible-only selection
+  under [0033](0033-wide-radar-comparison-contract.md), plus marker identification
+  and its configurable zoom hysteresis under
+  [0034](0034-selected-marker-identification.md) /
+  [0035](0035-label-zoom-visibility.md). The separator is not a new radar perimeter.
+- Stack category, elevation, altitude, orbital speed and orbital period, with
+  centered `Cat`, `Elev`, `Alt`, `Spd`, `Per` above them. Use black-on-white,
+  strictly 1-bit marks, no enclosing borders or routine numeric values. Use a
+  crisp bitmap font in the next executable comparison rather than copying the
+  temporary mock font's poorly rasterized small letters.
+- Elevation is the **outline of the circle remaining after an angular cutout**,
+  not a filled disc or the isolated wedge. The reviewed example is a 45° cutout
+  opening upward from the rightward horizontal radius, with single-pixel radial
+  edges. It should encode true observer elevation; endpoint and raster behavior
+  still need an implementation contract.
+- Altitude uses a fixed outer circle and an outlined inner circle that shrinks
+  with increasing true WGS-84 altitude. Speed uses increasing circle-outline
+  coverage, from absent at zero to complete at maximum; the mock starts at the
+  top and grows clockwise. Period uses a spiral rather than a coil, with more
+  turns for a shorter period. These are visual encodings, not approved scales.
+- Navigation is a 1px square-ended cross. Station is a small outlined body with
+  single-line horizontal wings. Weather-cloud and unknown-question-mark icons
+  were shown but not explicitly selected. Category assignment, overlapping/
+  unknown membership and operational-status interpretation remain unresolved;
+  group membership alone does not establish purpose or active status.
+- The initial logarithmic diamond/bar altitude preview is not the selected
+  shape or an approved mapping for the concentric circles. Filled elevation,
+  the isolated wedge, capsules, unlabelled variants and other station options
+  were intermediate exploration, not parallel approved implementations.
+- Retaining this visual direction does not authorize coding the full stack.
+  Still specify altitude/speed/period ranges, normalization, rounding,
+  saturation and invalid values; speed reference frame and period semantics;
+  category rules; exact bitmap geometry; and lifecycle/no-selection behavior.
+  Existing true-state readouts must remain separate from any future animation.
+- The full-height stack occupies the old warning area. Explicit tracking and
+  ingestion warnings must remain visible, including with valid markers.
+  A reserved radar-corner notice area was recommended but **not approved or
+  mocked**. Resolve warning and missing/empty-state placement before an
+  implementation contract; do not silently remove notices or treat a failed
+  sky as complete. Keeping the existing no-selection clearing rule is the
+  recommendation, not a newly specified full-stack lifecycle.
+- No new animation, selection policy, debug-access control, panning, slowdown,
+  prediction, fetching, scheduling, production capacity, dependency, hardware
+  or frozen-M2 evidence change. No physical-display legibility or performance
+  claim follows from these mocks.
+
+## Retained evidence
+The two native 400×240 PNGs linked from DESIGN are the final labelled navigation
+mock and the same layout with the selected station-B icon. Both are illustrative
+composites over the same replay radar, not executable snapshots, golden tests or
+physically consistent readings. No temporary scripts or chat images are needed
+to recover the chosen direction. Earlier references and decisions remain as
+history; the evolving executable is still documented in
+[simulator usage](../../sim/README.md#static-elevation-glyph).

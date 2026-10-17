@@ -3,6 +3,12 @@
 Date: 2026-10-17
 Status: accepted (bounded M3 contract; implemented in the opt-in wide view and user visually accepted)
 
+## Subsequent visual direction
+[0038](0038-labelled-borderless-glyph-direction.md) selects a future outlined
+circular elevation cutout in a labelled borderless stack. It is not implemented
+and does not yet replace this bounded executable contract, including warning
+placement and no-selection clearing. Resolve the new contract before coding.
+
 ## Decision
 Implement one unanimated true-elevation glyph inside a shortened shared capsule
 in [0033's opt-in wide view](0033-wide-radar-comparison-contract.md). The user

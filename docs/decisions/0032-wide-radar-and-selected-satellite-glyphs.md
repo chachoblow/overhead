@@ -3,6 +3,13 @@
 Date: 2026-10-15
 Status: accepted (design direction; viewport/arrows implemented as an opt-in comparison under [0033](0033-wide-radar-comparison-contract.md), selected-marker labels under [0034](0034-selected-marker-identification.md); static elevation/capsule under [0037](0037-static-elevation-glyph-contract.md); other glyphs remain unimplemented)
 
+## Subsequent amendment
+[0038](0038-labelled-borderless-glyph-direction.md) revises the visual direction
+to labelled borderless circular glyphs with a separator and period spiral.
+The shapes and no-routine-label wording below describe the original direction;
+the wide radar, identification and true-state requirements remain. The revised
+stack is not implemented; 0037 remains the executable elevation-only contract.
+
 ## Decision
 Pursue a wide borderless radar with off-screen indicators, a compact identifier
 beside the selected satellite, and a narrow right-aligned strip of category and

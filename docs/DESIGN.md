@@ -17,11 +17,13 @@ records the overall direction, not a completed interface. The simulator retains
 panel by default. [0033's opt-in comparison](decisions/0033-wide-radar-comparison-contract.md)
 implements a 352×240 comparison radar with vertical FOV and per-satellite
 off-screen arrows. The user approved this layout and overlaps-allowed treatment.
-[0036](decisions/0036-shared-glyph-capsule.md) adds a shared rounded glyph capsule.
-[0037](decisions/0037-static-elevation-glyph-contract.md) bounds the approved first
-implementation: static true elevation in a shorter capsule with a warning area
-below. This slice is implemented in the opt-in wide view and user visually
-accepted; other glyph mappings and the full-stack layout remain open.
+[0038](decisions/0038-labelled-borderless-glyph-direction.md) now selects a
+borderless labelled glyph stack, circular data glyphs and a padded vertical
+separator. The retained mocks below are the current visual direction, not an
+implementation contract. The executable remains at
+[0037](decisions/0037-static-elevation-glyph-contract.md): static true elevation
+in a shorter [0036 capsule](decisions/0036-shared-glyph-capsule.md), with a separate
+warning area. That slice was visually accepted; the revised stack is unimplemented.
 
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 minimum on-screen traversal time for fast markers is planned, not implemented.
@@ -67,21 +69,39 @@ elevation threshold, independent of zoom
 
 ### Selected-satellite presentation
 
-The accepted starting direction is the reference below, not the earlier panel
-iterations. It is deliberately symbol-led and minimally labelled, with no menus
-or pages. Normal/debug separation from
+The current accepted visual direction is [0038](decisions/0038-labelled-borderless-glyph-direction.md):
+symbol-led with short field labels, no enclosing glyph borders, and no menus or
+pages. Normal/debug separation from
 [0029](decisions/0029-normal-and-debug-presentation-direction.md) remains agreed;
-0032 amends which information belongs in the normal view.
+0032 amends which information belongs in the normal view, with glyph treatment
+subsequently revised by 0038.
 
-![Four schematic examples of the wide radar and selected-satellite glyph strip](mockups/0032-glyph-radar.png)
+![Labelled borderless glyph stack with a navigation cross and radar separator](mockups/0038-labelled-glyph-radar.png)
 
-**Reference only:** four independent 400×240, strictly 1-bit mockups, prepared
-2026-10-15 with Pillow from invented positions and illustrative glyph states.
-Top left: five-digit weather ID; top right: navigation; bottom left: ISS/station;
-bottom right: six-digit weather ID. IDs are examples, not corresponding measured
-states. The PNG is a retained design reference, not a simulator snapshot, golden
-test, or physically consistent scene. No `/tmp` assets or generation scripts are
-needed to continue; this text owns the intent, not the drawing's exact pixels.
+![The same illustrative layout with the selected station body-and-wings glyph](mockups/0038-labelled-glyph-station.png)
+
+**Reference only:** two native 400×240, strictly 1-bit composites retained on
+2026-10-17. The first preserves the final reviewed layout; the second substitutes
+the selected station-B icon without changing anything else. Both use the wide
+weather/GPS replay radar at `2026-10-10T00:00:00Z`, observer
+`39.007 -104.883 2.187`, 20° vertical FOV
+([reproduction inputs](../sim/README.md#wide-radar-comparison)). Radar pixels are
+unchanged apart from conversion to pure black/white. Pillow replaced the strip
+with illustrative glyphs: 45° elevation cutout, mid-sized altitude ring, half
+speed arc and a two-turn spiral. Neither category nor glyph values describe the
+selected `32711`; the station variant is not a claim that it is a station.
+These are not executable output, golden tests or physically consistent scenes.
+
+The reviewed layout uses 24×24 glyph footprints in the existing 48px strip,
+short centered `Cat`, `Elev`, `Alt`, `Spd`, `Per` labels, and equal **10px** blank
+space above the top label and below the period's last ink. Label tops are at
+`y=10,57,104,151,198`; glyph footprints start at `x=364`,
+`y=19,68,115,162,209`. The 1px separator is at `x=352`, `y=12..227`, leaving
+12px top/bottom margins and space on each side in the reviewed scene. These are
+mock observations for the next comparison, not a final geometry/clearance contract.
+The tiny Menlo labels are provisional rasterizations; use a crisp renderer bitmap
+font before final spacing review. No temporary assets or scripts are needed to
+recover this direction; the retained PNGs and text are sufficient.
 
 - **Radar:** use the space left of the narrow glyph strip, with a centered aim
   point and shared Earth/satellite projection. The mock uses 352×240 plus a
@@ -106,27 +126,38 @@ needed to continue; this text owns the intent, not the drawing's exact pixels.
   configurable comparison defaults. Keep the selected diamond visible;
   no fade or dithering. Full names remain diagnostic information.
 - **Glyph strip, top to bottom:** category pictogram, elevation, altitude,
-  orbital speed, orbital period. Align it near the display's right edge, inside
-  one shared rounded capsule under [0036](decisions/0036-shared-glyph-capsule.md):
-  1px outline, one centered break on each long side, black on white. No individual
-  glyph boxes, internal dividers, routine field labels or required numeric values.
-  Category icons in the references are proposals, not a finalized taxonomy.
-- **Elevation:** an invisible square footprint, origin at lower left, with the
-  region below a ray at the elevation angle filled black. Only the filled shape
-  is drawn; its sloping boundary represents the angle. This is implemented as
-  a static true-state glyph under [0037](decisions/0037-static-elevation-glyph-contract.md).
-- **Altitude:** satellite point/diamond separated from a surface bar by a
-  variable gap. **Speed:** variable-length motion marks, still exploratory;
-  their direction is not a heading. **Period:** a vertical slinky-like coil,
-  not an inward-winding spiral; more winding means a shorter period. Favor
-  legible, separated turns over dense texture. Non-elevation scales are open.
+  orbital speed, orbital period. Keep it near the right edge, without enclosing
+  borders; one padded vertical line separates it from the radar. Center short
+  labels above each glyph. No routine numeric values. Navigation uses a thin
+  square-ended cross; station uses a small outlined body with straight horizontal
+  wings (selected option B). Weather-cloud and unknown-question-mark icons remain
+  proposals, not selected categories or a finalized taxonomy.
+- **Elevation:** a 1px circle outline with an angular cutout opening upward
+  from the rightward horizontal radius; outline the remaining circle and both
+  radial edges, not the isolated wedge. Keep the radial strokes single-pixel,
+  avoiding the doubled edges seen in the initial mock. True observer elevation
+  remains the intended input; endpoint/raster rules need a bounded contract.
+  This replaces the filled-square visual direction, not yet the executable.
+- **Altitude:** fixed outer circle with an outlined inner circle that shrinks
+  as true WGS-84 altitude rises. **Speed:** an increasing circle-outline arc,
+  absent at zero and complete at maximum; the mock grows clockwise from the top,
+  not as a heading. **Period:** a spiral, replacing the coil; more turns mean a
+  shorter period. Scales, speed reference frame and period semantics remain open.
+  The earlier logarithmic diamond/bar altitude preview does not establish a
+  mapping for the concentric circles.
 - **Transitions:** favor glyphs animating toward the new selected satellite's
   values. Intermediate shapes are presentation only, never new physical samples.
   This has not been implemented or given timing/interruption rules.
 
 ### Glyph capsule reference
 
-![Wide replay with illustrative glyphs inside the chosen shared capsule](mockups/0036-glyph-capsule.png)
+**Historical direction:** 0038 replaces the capsule and earlier glyph shapes
+for future work. The images here remain provenance, not competing current briefs.
+The [original 0032 reference](mockups/0032-glyph-radar.png) contains four independent
+400×240 1-bit schematics prepared on 2026-10-15: weather/navigation/ISS/weather
+examples with invented positions and illustrative values, not measured states.
+
+![Earlier wide replay with illustrative glyphs inside the shared capsule](mockups/0036-glyph-capsule.png)
 
 **Reference only:** retained 400×240, strictly 1-bit composite from the 2026-10-16–17
 visual session. The radar is the current wide weather/GPS replay at
@@ -138,8 +169,8 @@ in the reserved 48-pixel strip. Glyph values are not measurements of the selecte
 satellite. The mock uses 6-pixel-tall side openings; its gap length, padding and
 radius did not establish an implementation contract. The initial approval covered
 only the wrapper treatment; 0037 below subsequently bounds the first implementation.
-This image supersedes the earlier reference's unboxed treatment, not its data
-semantics, and is neither executable output nor a golden test.
+At the time, this image superseded the earlier reference's unboxed treatment,
+not its data semantics. It is neither executable output nor a golden test.
 No temporary assets or generation scripts are needed to continue.
 
 The user subsequently approved [0037's elevation-only slice](decisions/0037-static-elevation-glyph-contract.md):
@@ -160,9 +191,11 @@ label's placement and overlaps-allowed policy. User review of the crowded overvi
 led to 0035's configurable clean hide/show refinement, now user-reviewed and
 accepted for the current comparison. Define glyph ranges/mappings and unknown/
 ambiguous category handling explicitly; don't turn illustrative mock values into
-defaults. 0036 settles the shared wrapper's appearance; 0037 bounds only the first
-static elevation glyph and temporary capsule/warning allocation, not the other
-glyph scales, full-stack geometry or transition timing.
+defaults. 0038 replaces 0036's wrapper and the earlier glyph visual brief; 0037
+still bounds the implemented elevation-only capsule and warning area. The revised
+stack needs exact raster/font geometry, glyph mappings, lifecycle and transition
+rules before coding. Existing no-selection clearing is recommended for the full
+stack, but that lifecycle has not yet been specified.
 
 Circular radar with an info brick, surrounding noise fields and unlabelled
 visible-population graphs were explored, not selected as replacements. For any
@@ -173,9 +206,11 @@ accepted wide/glyph direction.
 
 Refined empty-view explanations and incomplete-data/tracking notices are parked
 for focused design, not removed as a correctness requirement. The comparison
-uses minimal explicit notices; final debug access remains open. A normal view
-must not conceal failed/omitted tracking as a complete empty sky, including when
-some valid markers remain.
+uses minimal explicit notices; final debug access remains open. The revised
+full-height stack occupies the current warning area. A reserved radar-corner
+notice area has been recommended, but neither approved nor mocked; decide its
+placement before implementation. A normal view must not conceal failed/omitted
+tracking as a complete empty sky, including when some valid markers remain.
 
 The selected-satellite start/end/peak pass graphic is interesting but deferred;
 upcoming-pass lists are not desired. Local time, orbit-data age, range and bearing

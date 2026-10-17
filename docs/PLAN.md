@@ -4,10 +4,11 @@
 and visually approved under 0033; square/diagnostic default retained. Selected-marker
 identification is implemented under 0034, refined by 0035's configurable 70°/60°
 hide/show hysteresis after review of crowding; the user has now accepted that behavior.
-0036 selects a shared 1px glyph capsule; 0037's static elevation-only slice is
-implemented with a shorter capsule and separate warning area, now user visually
-accepted. Other glyphs remain unimplemented. M2 operating-budget and scheduling work
-remains open.**
+0037's static elevation-only capsule and separate warnings remain implemented
+and visually accepted. 0038 revises the future direction to a labelled borderless
+stack, circular data glyphs and a padded separator; retained mocks only, not an
+implementation contract. Other glyphs remain unimplemented. M2 operating-budget
+and scheduling work remains open.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -122,10 +123,17 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
   independent real-data glyph snapshots pass.
 - [x] User reviewed and accepted the static elevation/capsule snapshot output
   under 0037, including the shorter capsule and separate warning area.
-- [ ] Scope the next bounded glyph slice before coding. The full-stack layout,
-  other mappings/transitions, final normal/debug access and refined empty/
-  incomplete-state communication remain open. Circular/field/graph alternatives
-  remain exploration; neither mock populations nor replay examples select
+- [x] Agree and retain [0038's revised glyph direction](decisions/0038-labelled-borderless-glyph-direction.md):
+  borderless labelled stack, padded vertical separator, outlined circular
+  elevation cutout, concentric altitude circles, speed arc and period spiral;
+  thin navigation cross and simple station body-and-wings icon. This amends the
+  earlier capsule/shapes/no-label direction, not the current executable.
+- [ ] Resolve warning placement displaced by the full-height mock, then scope
+  the next bounded implementation contract. Glyph scales/raster rules,
+  speed/period semantics, category assignment, no-selection/lifecycle behavior,
+  transitions and final normal/debug access remain open. A radar-corner notice
+  area is a recommendation, not approved scope. Circular-radar/field/graph
+  alternatives remain exploration; neither mocks nor replay populations select
   production capacity.
 
 No prediction integration, slowdown or live fetching is required for this slice.
