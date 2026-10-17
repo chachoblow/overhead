@@ -1,40 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-16 UTC. Next: review label zoom visibility._
+_Last updated: 2026-10-17 UTC. Next: scope the first glyph slice._
 
 ## Current state / agreed direction
-[0033's wide radar/arrows](decisions/0033-wide-radar-comparison-contract.md) remain
-user-visually-approved; square diagnostics remain default. [0034](decisions/0034-selected-marker-identification.md)
-adds selected-marker NORAD ID / ISS, right-side placement with left fallback,
-vertical clamping and transparent overlaps. User review flagged overview crowding;
-[0035](decisions/0035-label-zoom-visibility.md) implements the approved refinement:
-hide text at ≥70° vertical FOV, restore at ≤60°, with configurable hysteresis.
-Selected diamonds stay visible. Dither mockups were exploration only; no fade or
-animation was implemented. Glyphs and final normal/debug access remain open.
+[0033's wide radar/arrows](decisions/0033-wide-radar-comparison-contract.md) and
+[0034's labels](decisions/0034-selected-marker-identification.md) are implemented;
+square diagnostics remain default. The user confirmed review and acceptance of
+[0035's 70° hide / 60° restore](decisions/0035-label-zoom-visibility.md) for now.
+Keep configurable hysteresis, selected diamonds, label placement and warnings.
+[0036](decisions/0036-shared-glyph-capsule.md) selects one shared rounded glyph
+capsule: 1px outline, one centered break on each long side, black on white.
+This is visual direction only; glyphs/capsule/transitions are not implemented.
 
 ## Session changes
-`app/src/{identification,lib,projection}.rs`: clockless label policy/state.
-`render/src/lib.rs`: labels; `sim/src/{config,main}.rs`: configurable thresholds.
-App/render and `sim/tests/snapshot.rs` test both contracts; docs record 0034/0035.
-No core, dependency, lockfile, source-fixture, firmware or frozen-M2 changes.
+Docs/static image only: `docs/{DESIGN,PLAN,HANDOFF,PROGRESS}.md`, decisions
+0032/0035/0036 and `docs/mockups/0036-glyph-capsule.png`. The retained
+[reference and provenance](DESIGN.md#glyph-capsule-reference) replace reliance on
+chat or temporary files. Circular/info-brick, noise-field and population-graph
+mocks were exploration, not an approved pivot. No code, dependency, lockfile,
+fixture, firmware or frozen-M2 changes.
 
 ## Next step / boundaries
-Review [zoom comparisons](../sim/README.md#label-zoom-visibility) at 70° and the
-60°–70° zoom round trip before further UI work; [ID examples](../sim/README.md#identification-review)
-cover edges, ISS and six-digit labels without this chat or temporary assets.
-Defaults are provisional, not collision guarantees. Startup shows below the hide
-threshold; frame/selection changes preserve history. Keep approved arrows,
-selection and warning notices unchanged. Glyph mappings/transitions need separate
-scope; no prediction, panning, slowdown, fetching or production limits/cadences.
+Agree a bounded first glyph contract before coding. Recommendation, not approved
+scope: static true-elevation glyph inside the shared capsule; decide footprint,
+position, exact enclosure geometry and absent-selection/warning coexistence.
+Category mappings, non-elevation scales, speed/period semantics and transitions
+remain open; do not copy illustrative mock values into policy. Keep approved
+radar/arrows, visible-only selection and square baseline. No history buffers,
+prediction, panning, slowdown, fetching or production limits/cadences implied.
 
 ## Verification / risks
-Wrap-up reran fmt check, `cargo check --workspace`, `cargo test --workspace`,
-app/render `--no-default-features` checks and strict all-target Clippy for
-app/render/sim: all pass. Local Markdown links/anchors and diff whitespace checked.
-Earlier headless visual/pixel comparisons: square baseline unchanged; hiding only
-removes label ink, configurable overrides restore it. Tests cover threshold/history,
-identity/placement, retained diamonds/warnings and independent geometry/determinism.
-No interactive/physical-display/performance validation; user zoom review pending.
-Build and CLI tests serially (prior relink ENOENT). M2 budgets/scheduling,
-RAM/safe stack, Sharp bring-up and RWX remain open; frozen evidence uses
+Wrap-up: Markdown local links/anchors, retained PNG dimensions/1-bit mode and
+radar-pixel provenance, instruction consistency and diff whitespace checked.
+Earlier: headless snapshots, temporary real-data mock export and a passing
+`cargo check --workspace`. No Rust checks/tests rerun for this docs/image wrap-up.
+No agent interactive, physical-display or performance validation. Build/CLI checks
+serially (prior relink ENOENT). M2 budgets/scheduling, RAM/safe stack, Sharp bring-up
+and RWX remain open; frozen evidence uses
 [0023's pinned revision](decisions/0023-frozen-m2-revision-isolation.md).

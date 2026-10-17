@@ -16,8 +16,9 @@ records the overall direction, not a completed interface. The simulator retains
 [0028's 240×240 square](decisions/0028-borderless-square-viewport.md) and diagnostic
 panel by default. [0033's opt-in comparison](decisions/0033-wide-radar-comparison-contract.md)
 implements a 352×240 comparison radar with vertical FOV and per-satellite
-off-screen arrows. The user approved this layout and overlaps-allowed treatment;
-final glyph-strip proportions and presentation remain open.
+off-screen arrows. The user approved this layout and overlaps-allowed treatment.
+[0036](decisions/0036-shared-glyph-capsule.md) adds a shared rounded glyph capsule
+as visual direction only; glyph mappings and implementation remain open.
 
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 minimum on-screen traversal time for fast markers is planned, not implemented.
@@ -98,12 +99,15 @@ needed to continue; this text owns the intent, not the drawing's exact pixels.
   complete ID stays inside the radar, with the marker rather than at the top of
   the strip. [0035](decisions/0035-label-zoom-visibility.md) hides the text at ≥70°
   vertical FOV and restores it at ≤60°, retaining visibility between thresholds.
-  These are configurable comparison defaults. Keep the selected diamond visible;
+  The user reviewed and accepted this behavior for now; thresholds remain
+  configurable comparison defaults. Keep the selected diamond visible;
   no fade or dithering. Full names remain diagnostic information.
 - **Glyph strip, top to bottom:** category pictogram, elevation, altitude,
-  orbital speed, orbital period. Align it near the display's right edge, without
-  boxes, routine field labels or required numeric values. Category icons in the
-  reference are proposals, not a finalized taxonomy.
+  orbital speed, orbital period. Align it near the display's right edge, inside
+  one shared rounded capsule under [0036](decisions/0036-shared-glyph-capsule.md):
+  1px outline, one centered break on each long side, black on white. No individual
+  glyph boxes, internal dividers, routine field labels or required numeric values.
+  Category icons in the references are proposals, not a finalized taxonomy.
 - **Elevation:** an invisible square footprint, origin at lower left, with the
   region below a ray at the elevation angle filled black. Only the filled shape
   is drawn; its sloping boundary represents the angle. This is the strongest
@@ -117,6 +121,23 @@ needed to continue; this text owns the intent, not the drawing's exact pixels.
   values. Intermediate shapes are presentation only, never new physical samples.
   This has not been implemented or given timing/interruption rules.
 
+### Glyph capsule reference
+
+![Wide replay with illustrative glyphs inside the chosen shared capsule](mockups/0036-glyph-capsule.png)
+
+**Reference only:** retained 400×240, strictly 1-bit composite from the 2026-10-16–17
+visual session. The radar is the current wide weather/GPS replay at
+`2026-10-10T00:00:00Z`, observer `39.007 -104.883 2.187`, 20° vertical FOV
+([reproduction inputs](../sim/README.md#wide-radar-comparison)); its pixels are
+unchanged apart from converting the light background to white. Pillow added the
+illustrative navigation/elevation/altitude/speed/period stack and shared capsule
+in the reserved 48-pixel strip. Glyph values are not measurements of the selected
+satellite. The mock uses 6-pixel-tall side openings; gap length, padding and radius
+are not yet implementation contracts. Only the wrapper treatment is newly
+approved. This image supersedes the earlier reference's unboxed treatment, not
+its data semantics, and is neither executable output nor a golden test.
+No temporary assets or generation scripts are needed to continue.
+
 ### Open questions and boundaries
 
 0033 settles the first comparison's vertical FOV/aspect, no-arrow invalid-depth
@@ -124,9 +145,17 @@ handling, overlaps-allowed arrow policy and unchanged visible-only selection.
 The user approved the current wide layout and allowed arrow overlaps; retain
 these rather than adding collision avoidance. 0034 settles the first marker-adjacent
 label's placement and overlaps-allowed policy. User review of the crowded overview
-led to 0035's configurable clean hide/show refinement; review its behavior before
-further tuning. Define glyph ranges/mappings and unknown/ambiguous category handling
-explicitly; don't turn illustrative mock values into defaults.
+led to 0035's configurable clean hide/show refinement, now user-reviewed and
+accepted for the current comparison. Define glyph ranges/mappings and unknown/
+ambiguous category handling explicitly; don't turn illustrative mock values into
+defaults. 0036 settles the shared wrapper's appearance, not glyph scales or timing.
+
+Circular radar with an info brick, surrounding noise fields and unlabelled
+visible-population graphs were explored, not selected as replacements. For any
+future field experiment, the user's interest is a data-driven visual fingerprint
+rather than readable text placed over texture. No field mapping, time-history
+policy or implementation is approved; keep such experiments separate from the
+accepted wide/glyph direction.
 
 Refined empty-view explanations and incomplete-data/tracking notices are parked
 for focused design, not removed as a correctness requirement. The comparison

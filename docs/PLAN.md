@@ -3,8 +3,9 @@
 **Current: M3 opt-in wide radar and per-satellite off-screen arrows implemented
 and visually approved under 0033; square/diagnostic default retained. Selected-marker
 identification is implemented under 0034, refined by 0035's configurable 70°/60°
-hide/show hysteresis after review of crowding. Glyphs remain unimplemented. M2 operating-budget
-and scheduling work remains open.**
+hide/show hysteresis after review of crowding; the user has now accepted that behavior.
+0036 selects a shared 1px glyph capsule as visual direction only; glyphs remain
+unimplemented. M2 operating-budget and scheduling work remains open.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -106,10 +107,16 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
 - [x] Refine crowded overview identification under [0035](decisions/0035-label-zoom-visibility.md):
   clean label hide at ≥70° / restore at ≤60° vertical FOV with hysteresis,
   configurable launch thresholds, selected diamond retained. No dithering.
-- [ ] Review the zoom-visibility refinement before further UI work.
-  Glyph mappings/transitions, final normal/debug access and refined empty/
-  incomplete-state communication remain open. Neither the synthetic mock
-  population nor the replay examples select production capacity.
+- [x] User reviewed and accepted 0035's 70°/60° zoom-visibility behavior for now;
+  retain configurability and existing placement/selection rules.
+- [x] Agree [0036's shared glyph capsule](decisions/0036-shared-glyph-capsule.md):
+  1px rounded outline with one centered break per long side. Visual direction
+  only; [retained mock](DESIGN.md#glyph-capsule-reference), not implemented UI.
+- [ ] Scope a bounded first glyph implementation. Mappings/transitions, capsule
+  geometry, no-selection behavior, final normal/debug access and refined empty/
+  incomplete-state communication remain open. Circular/field/graph alternatives
+  remain exploration; neither mock populations nor replay examples select
+  production capacity.
 
 No prediction integration, slowdown or live fetching is required for this slice.
 Simulator throughput is not target capacity evidence.

@@ -1,7 +1,7 @@
 # 0035 — Label zoom visibility
 
 Date: 2026-10-16
-Status: accepted (bounded M3 refinement; implemented, with configurable thresholds)
+Status: accepted (bounded M3 refinement; implemented and user-reviewed, with configurable thresholds)
 
 ## Decision
 Amend [0034's selected-marker identification](0034-selected-marker-identification.md)
@@ -17,7 +17,9 @@ hide/show with hysteresis rather than a fade/dissolve. Intermediate real-data
 snapshots showed space around the label at 60°, with little separation from
 Earth by 70°. The user approved 70°/60° as provisional defaults and asked to keep
 them configurable. These snapshots motivate a first comparison, not a universal
-collision threshold or production device policy.
+collision threshold or production device policy. In the following visual-design
+session (recorded 2026-10-17), the user confirmed having reviewed the existing
+70°/60° behavior and accepted it for now; no threshold or code change followed.
 
 ## Consequences
 - Hide/show only the selected ID/ISS text, only in the opt-in wide presentation.
