@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 embedded-graphics.workspace = true
+libm = "0.2"
 overhead-core = { version = "0.1.0", path = "../core" }
 overhead-app = { path = "../app" }
 

@@ -295,6 +295,7 @@ name = "overhead-render"
 version = "0.1.0"
 dependencies = [
  "embedded-graphics",
+ "libm",
  "overhead-app",
  "overhead-core",
  "serde_json",

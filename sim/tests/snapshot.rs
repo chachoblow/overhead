@@ -255,6 +255,7 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
             for fov in [0.1_f64, 5.0, 20.0, 40.0, 100.0] {
                 let mut visible = 0;
                 let mut indicators = 0;
+                let mut selected_elevation = None;
                 for look in &looks {
                     let up = look.range_km * look.elevation_rad.sin();
                     let depth = 75_000.0 - up;
@@ -270,6 +271,8 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                     let y = horizontal * azimuth.cos() / depth * focal_length;
                     if x.abs() <= 173.0 && y.abs() <= 117.0 {
                         visible += 1;
+                        // Snapshot selection is the first visible NORAD ID.
+                        selected_elevation.get_or_insert(look.elevation_rad);
                     } else {
                         indicators += 1;
                     }
@@ -298,6 +301,41 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                 let expected = scratch.png("wide.png");
                 assert_eq!(success(scratch.run(&args)), report);
                 assert_eq!(scratch.png("wide.png"), expected);
+                assert_snapshot_elevation(&scratch, "wide.png", selected_elevation);
+            }
+        }
+    }
+}
+
+fn assert_snapshot_elevation(scratch: &Scratch, path: &str, elevation: Option<f64>) {
+    use embedded_graphics::{pixelcolor::Rgb888, prelude::*};
+    use embedded_graphics_simulator::SimulatorDisplay;
+    let image = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join(path)).unwrap();
+    let ink = Rgb888::new(32, 32, 32); // Existing LcdWhite theme, two states only.
+    let paper = Rgb888::new(245, 245, 245);
+    for y in 0..240 {
+        for x in 0..400 {
+            assert!([ink, paper].contains(&image.get_pixel(Point::new(x, y))));
+        }
+    }
+    assert_eq!(
+        image.get_pixel(Point::new(375, 7)) == ink,
+        elevation.is_some()
+    );
+    for row in 0..24 {
+        for col in 0..24 {
+            let angle = (23.5 - f64::from(row)).atan2(f64::from(col) + 0.5);
+            assert_eq!(
+                image.get_pixel(Point::new(364 + col, 60 + row)) == ink,
+                elevation.is_some_and(|e| angle <= e),
+                "glyph column={col}, row={row}, elevation={elevation:?}"
+            );
+        }
+    }
+    if elevation.is_none() {
+        for y in 0..153 {
+            for x in 352..400 {
+                assert_eq!(image.get_pixel(Point::new(x, y)), paper);
             }
         }
     }

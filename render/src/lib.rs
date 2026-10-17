@@ -16,6 +16,8 @@ use overhead_app::{
 };
 use overhead_core::sgp4::chrono::Timelike;
 
+mod glyphs;
+
 pub const DISPLAY_SIZE: Size = Size::new(400, 240);
 
 #[derive(Debug, Clone, Copy)]
@@ -36,7 +38,7 @@ impl Layout {
             radar_height: radar_size,
         })
     }
-    /// Provisional 352x240 radar plus a reserved 48-pixel strip. No glyphs yet.
+    /// Opt-in 352x240 radar plus the elevation capsule and explicit notices.
     pub fn wide() -> Self {
         Self {
             radar_width: 352,
@@ -130,6 +132,10 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
     if viewport == Viewport::Rectangle {
         if let Some((id, marker)) = selected_marker.filter(|_| app.selected_label_visible()) {
             draw_selected_label(&mut display, id, marker, layout)?;
+        }
+        if let Some((_, sample)) = app.selected() {
+            glyphs::draw_capsule(&mut display)?;
+            glyphs::draw_elevation(&mut display, sample.physical.look.elevation_rad)?;
         }
         return draw_wide_status(&mut display, app, layout, ingestion_warning);
     }
@@ -386,7 +392,7 @@ fn draw_wide_status<D: DrawTarget<Color = BinaryColor>>(
         display,
         x,
         columns: (400 - x) as usize / 6,
-        y: 16,
+        y: 166,
     };
     let counts = app.counts();
     if app.time().is_none() {
@@ -510,13 +516,24 @@ mod tests {
         app_with_ids(viewport, failure, &[25544])
     }
     fn app_with_ids(viewport: Viewport, failure: bool, ids: &[u64]) -> RadarApp {
+        app_with_orbits(viewport, failure, ids, 0.0)
+    }
+    fn app_with_orbits(
+        viewport: Viewport,
+        failure: bool,
+        ids: &[u64],
+        anomaly_step_deg: f64,
+    ) -> RadarApp {
         let mut builder = CatalogueBuilder::new();
         let mut data: serde_json::Value =
             serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
-        // Deliberately coincident test objects exercise identification separately
-        // from propagation. Full names stay identical, so only ID can select ISS.
+        // Coincident by default for identity tests. The glyph lifecycle test
+        // offsets mean anomaly to exercise selection of distinct physical values.
+        // These synthetic orbits are test controls, not new physical references.
+        let anomaly = data[0]["MEAN_ANOMALY"].as_f64().unwrap();
         for (record, &id) in ids.iter().enumerate() {
             data[0]["NORAD_CAT_ID"] = serde_json::json!(id);
+            data[0]["MEAN_ANOMALY"] = serde_json::json!(anomaly + record as f64 * anomaly_step_deg);
             let elements: Vec<OmmElements> = serde_json::from_value(data.clone()).unwrap();
             builder.push(
                 RecordOrigin { group: 0, record },
@@ -836,6 +853,177 @@ mod tests {
         }
     }
 
+    #[test]
+    fn capsule_has_bounded_one_pixel_outline_and_only_two_centered_openings() {
+        let mut screen = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        glyphs::draw_capsule(&mut screen).unwrap();
+        for (y, row) in screen.pixels.iter().enumerate() {
+            for (x, &on) in row.iter().enumerate() {
+                if on {
+                    assert!((355..=396).contains(&x) && (7..=152).contains(&y));
+                    assert_eq!(on, screen.pixels[y][751 - x]);
+                    assert_eq!(on, screen.pixels[159 - y][x]);
+                }
+            }
+        }
+        for y in 17..143 {
+            for x in 355..=396 {
+                assert_eq!(
+                    screen.pixels[y][x],
+                    (x == 355 || x == 396) && !(77..=82).contains(&y),
+                    "side/interior at {x},{y}"
+                );
+            }
+        }
+        for x in 365..387 {
+            for y in 7..=152 {
+                assert_eq!(screen.pixels[y][x], y == 7 || y == 152);
+            }
+        }
+        // Corners turn inward within the ten-pixel radius, with no square tips.
+        assert!(!screen.pixels[7][355]);
+        assert!(screen.pixels[7][365]);
+        assert!(screen.pixels[17][355]);
+        for y in 7..17 {
+            assert!(screen.pixels[y][355..365].iter().any(|&on| on));
+        }
+    }
+
+    fn assert_elevation_pixels(screen: &Screen, elevation: f64) {
+        // Independent angle reference, not the renderer's sin/cos inequality.
+        for row in 0..24 {
+            for col in 0..24 {
+                let angle = (23.5 - row as f64).atan2(col as f64 + 0.5);
+                assert_eq!(
+                    screen.pixels[60 + row][364 + col],
+                    elevation.is_finite() && angle <= elevation,
+                    "elevation={elevation}, column={col}, row={row}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn elevation_fill_matches_angles_endpoints_and_monotonic_area_without_a_box() {
+        let mut previous = [[false; 400]; 240];
+        for degrees in 0..=90 {
+            let mut screen = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            let elevation = (degrees as f64).to_radians();
+            glyphs::draw_elevation(&mut screen, elevation).unwrap();
+            assert_elevation_pixels(&screen, elevation);
+            let mut count = 0;
+            for (y, row) in screen.pixels.iter().enumerate() {
+                for (x, &on) in row.iter().enumerate() {
+                    assert!(!previous[y][x] || on, "fill decreased at {degrees} degrees");
+                    if on {
+                        count += 1;
+                        assert!((364..388).contains(&x) && (60..84).contains(&y));
+                    }
+                }
+            }
+            match degrees {
+                0 => assert_eq!(count, 0),
+                45 => assert_eq!(count, 300),
+                90 => assert_eq!(count, 576),
+                _ => {}
+            }
+            previous = screen.pixels;
+        }
+        for elevation in [
+            -1.0,
+            -0.0,
+            f64::MAX,
+            f64::NAN,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+        ] {
+            let mut screen = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            glyphs::draw_elevation(&mut screen, elevation).unwrap();
+            assert_elevation_pixels(&screen, elevation);
+            assert_eq!(
+                screen.pixels.iter().flatten().filter(|&&on| on).count(),
+                if elevation == f64::MAX { 576 } else { 0 }
+            );
+        }
+    }
+
+    #[test]
+    fn elevation_follows_true_selection_frames_and_clears_without_selection() {
+        let mut app = app_with_orbits(Viewport::Rectangle, false, &[25544, 100530], 2.0);
+        assert_eq!(app.counts().visible, 2);
+        let mut screen = Screen {
+            pixels: [[true; 400]; 240],
+        };
+        let time = app.time().unwrap();
+        let samples: Vec<_> = app.objects().map(|(_, s)| s.clone()).collect();
+        let mut previous = None;
+        for id in [25544, 100530, 25544] {
+            assert_eq!(app.selected_id(), Some(id));
+            let elevation = app.selected().unwrap().1.physical.look.elevation_rad;
+            draw(&mut screen, &app, Layout::wide(), false).unwrap();
+            assert_elevation_pixels(&screen, elevation);
+            if let Some(previous) = previous {
+                assert_ne!(elevation, previous);
+            }
+            previous = Some(elevation);
+            app.select_next();
+        }
+        assert_eq!(
+            app.objects().map(|(_, s)| s.clone()).collect::<Vec<_>>(),
+            samples
+        );
+        app.update(time + overhead_core::sgp4::chrono::Duration::seconds(30))
+            .unwrap();
+        draw(&mut screen, &app, Layout::wide(), false).unwrap();
+        let elevation = app.selected().unwrap().1.physical.look.elevation_rad;
+        assert_ne!(Some(elevation), previous);
+        assert_elevation_pixels(&screen, elevation);
+
+        // Tight zoom removes both objects; arrows cannot retain a selected glyph.
+        app.zoom(64);
+        assert_eq!(app.selected_id(), None);
+        draw(&mut screen, &app, Layout::wide(), false).unwrap();
+        assert!(
+            screen.pixels[..153]
+                .iter()
+                .all(|row| row[352..].iter().all(|&on| !on))
+        );
+        app.zoom(-64);
+        assert!(app.selected().is_some());
+        assert!(!app.selected_label_visible());
+        draw(&mut screen, &app, Layout::wide(), false).unwrap();
+        assert_elevation_pixels(
+            &screen,
+            app.selected().unwrap().1.physical.look.elevation_rad,
+        );
+        assert!(screen.pixels[7][375]); // Capsule is independent of the ID gate.
+
+        let invalid = overhead_core::sgp4::chrono::NaiveDate::from_ymd_opt(2101, 1, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        assert!(app.update(invalid).is_err());
+        draw(&mut screen, &app, Layout::wide(), false).unwrap();
+        assert!(
+            screen.pixels[..153]
+                .iter()
+                .all(|row| row[352..].iter().all(|&on| !on))
+        );
+        app.update(time).unwrap();
+        draw(&mut screen, &app, Layout::wide(), false).unwrap();
+        assert_elevation_pixels(
+            &screen,
+            app.selected().unwrap().1.physical.look.elevation_rad,
+        );
+        assert!(screen.pixels[7][375]);
+    }
+
     fn assert_wide_notice(app: &RadarApp, warning: bool, lines: &[&str]) {
         let mut screen = Screen {
             pixels: [[true; 400]; 240],
@@ -847,10 +1035,14 @@ mod tests {
         let mut reference = Screen {
             pixels: [[false; 400]; 240],
         };
+        if let Some((_, sample)) = app.selected() {
+            glyphs::draw_capsule(&mut reference).unwrap();
+            glyphs::draw_elevation(&mut reference, sample.physical.look.elevation_rad).unwrap();
+        }
         for (row, line) in lines.iter().enumerate() {
             Text::new(
                 line,
-                Point::new(356, 16 + row as i32 * 13),
+                Point::new(356, 166 + row as i32 * 13),
                 MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
             )
             .draw(&mut reference)
@@ -878,8 +1070,7 @@ mod tests {
         draw(&mut screen, &failed, Layout::wide(), true).unwrap();
         draw(&mut screen, &healthy, Layout::wide(), false).unwrap();
         assert!(
-            screen
-                .pixels
+            screen.pixels[153..]
                 .iter()
                 .all(|row| row[352..].iter().all(|&on| !on))
         );

@@ -4,8 +4,10 @@
 and visually approved under 0033; square/diagnostic default retained. Selected-marker
 identification is implemented under 0034, refined by 0035's configurable 70°/60°
 hide/show hysteresis after review of crowding; the user has now accepted that behavior.
-0036 selects a shared 1px glyph capsule as visual direction only; glyphs remain
-unimplemented. M2 operating-budget and scheduling work remains open.**
+0036 selects a shared 1px glyph capsule; 0037's static elevation-only slice is
+implemented with a shorter capsule and separate warning area, now user visually
+accepted. Other glyphs remain unimplemented. M2 operating-budget and scheduling work
+remains open.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -112,8 +114,16 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
 - [x] Agree [0036's shared glyph capsule](decisions/0036-shared-glyph-capsule.md):
   1px rounded outline with one centered break per long side. Visual direction
   only; [retained mock](DESIGN.md#glyph-capsule-reference), not implemented UI.
-- [ ] Scope a bounded first glyph implementation. Mappings/transitions, capsule
-  geometry, no-selection behavior, final normal/debug access and refined empty/
+- [x] Agree [0037's static elevation-only contract](decisions/0037-static-elevation-glyph-contract.md):
+  24×24 true-elevation fill, shortened shared capsule, no capsule/glyph without
+  selection, and a fixed warning area below. No animation or other glyphs.
+- [x] Implement 0037 in the opt-in wide view, preserving radar pixels, square
+  diagnostics, selection, labels and explicit warnings; pixel/lifecycle tests and
+  independent real-data glyph snapshots pass.
+- [x] User reviewed and accepted the static elevation/capsule snapshot output
+  under 0037, including the shorter capsule and separate warning area.
+- [ ] Scope the next bounded glyph slice before coding. The full-stack layout,
+  other mappings/transitions, final normal/debug access and refined empty/
   incomplete-state communication remain open. Circular/field/graph alternatives
   remain exploration; neither mock populations nor replay examples select
   production capacity.

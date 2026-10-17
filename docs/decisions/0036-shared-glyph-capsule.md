@@ -1,7 +1,7 @@
 # 0036 — Shared glyph capsule
 
 Date: 2026-10-17
-Status: accepted (visual direction only; not implemented)
+Status: accepted (visual direction; shortened elevation-only capsule implemented under [0037](0037-static-elevation-glyph-contract.md), full stack unimplemented)
 
 ## Decision
 Wrap the selected-satellite glyph stack in one shared vertical rounded capsule,

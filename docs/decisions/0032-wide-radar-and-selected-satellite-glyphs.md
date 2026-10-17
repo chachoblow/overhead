@@ -1,7 +1,7 @@
 # 0032 — Wide radar and selected-satellite glyphs
 
 Date: 2026-10-15
-Status: accepted (design direction; viewport/arrows implemented as an opt-in comparison under [0033](0033-wide-radar-comparison-contract.md), selected-marker labels under [0034](0034-selected-marker-identification.md); glyphs remain unimplemented)
+Status: accepted (design direction; viewport/arrows implemented as an opt-in comparison under [0033](0033-wide-radar-comparison-contract.md), selected-marker labels under [0034](0034-selected-marker-identification.md); static elevation/capsule under [0037](0037-static-elevation-glyph-contract.md); other glyphs remain unimplemented)
 
 ## Decision
 Pursue a wide borderless radar with off-screen indicators, a compact identifier
@@ -9,7 +9,8 @@ beside the selected satellite, and a narrow right-aligned strip of category and
 physical-data glyphs. [DESIGN](../DESIGN.md#selected-satellite-presentation) and
 its retained mockup are the fresh-session starting point, not a pixel-exact or
 fully specified implementation contract. [0036](0036-shared-glyph-capsule.md)
-subsequently adds the shared rounded enclosure; glyph implementation remains open.
+subsequently adds the shared rounded enclosure; [0037](0037-static-elevation-glyph-contract.md)
+implements the first static elevation-only slice. Other glyph implementation remains open.
 
 This amends [0028's square allocation](0028-borderless-square-viewport.md) as the
 future presentation direction and [0029's normal readout direction](0029-normal-and-debug-presentation-direction.md),

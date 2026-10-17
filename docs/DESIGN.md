@@ -17,8 +17,11 @@ records the overall direction, not a completed interface. The simulator retains
 panel by default. [0033's opt-in comparison](decisions/0033-wide-radar-comparison-contract.md)
 implements a 352×240 comparison radar with vertical FOV and per-satellite
 off-screen arrows. The user approved this layout and overlaps-allowed treatment.
-[0036](decisions/0036-shared-glyph-capsule.md) adds a shared rounded glyph capsule
-as visual direction only; glyph mappings and implementation remain open.
+[0036](decisions/0036-shared-glyph-capsule.md) adds a shared rounded glyph capsule.
+[0037](decisions/0037-static-elevation-glyph-contract.md) bounds the approved first
+implementation: static true elevation in a shorter capsule with a warning area
+below. This slice is implemented in the opt-in wide view and user visually
+accepted; other glyph mappings and the full-stack layout remain open.
 
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 minimum on-screen traversal time for fast markers is planned, not implemented.
@@ -110,8 +113,8 @@ needed to continue; this text owns the intent, not the drawing's exact pixels.
   Category icons in the references are proposals, not a finalized taxonomy.
 - **Elevation:** an invisible square footprint, origin at lower left, with the
   region below a ray at the elevation angle filled black. Only the filled shape
-  is drawn; its sloping boundary represents the angle. This is the strongest
-  accepted glyph treatment.
+  is drawn; its sloping boundary represents the angle. This is implemented as
+  a static true-state glyph under [0037](decisions/0037-static-elevation-glyph-contract.md).
 - **Altitude:** satellite point/diamond separated from a surface bar by a
   variable gap. **Speed:** variable-length motion marks, still exploratory;
   their direction is not a heading. **Period:** a vertical slinky-like coil,
@@ -132,11 +135,20 @@ visual session. The radar is the current wide weather/GPS replay at
 unchanged apart from converting the light background to white. Pillow added the
 illustrative navigation/elevation/altitude/speed/period stack and shared capsule
 in the reserved 48-pixel strip. Glyph values are not measurements of the selected
-satellite. The mock uses 6-pixel-tall side openings; gap length, padding and radius
-are not yet implementation contracts. Only the wrapper treatment is newly
-approved. This image supersedes the earlier reference's unboxed treatment, not
-its data semantics, and is neither executable output nor a golden test.
+satellite. The mock uses 6-pixel-tall side openings; its gap length, padding and
+radius did not establish an implementation contract. The initial approval covered
+only the wrapper treatment; 0037 below subsequently bounds the first implementation.
+This image supersedes the earlier reference's unboxed treatment, not its data
+semantics, and is neither executable output nor a golden test.
 No temporary assets or generation scripts are needed to continue.
+
+The user subsequently approved [0037's elevation-only slice](decisions/0037-static-elevation-glyph-contract.md):
+a shortened capsule with separate space below for explicit notices, immediate
+true-elevation updates, and no capsule or glyph without selection. This temporary
+layout is not the full-stack mock's final geometry. Other glyphs remain absent;
+the decision owns exact drawing and lifecycle rules. This slice is implemented
+and the user accepted the rendered snapshot set. Reproduce it through the
+[simulator's wide view](../sim/README.md#static-elevation-glyph).
 
 ### Open questions and boundaries
 
@@ -148,7 +160,9 @@ label's placement and overlaps-allowed policy. User review of the crowded overvi
 led to 0035's configurable clean hide/show refinement, now user-reviewed and
 accepted for the current comparison. Define glyph ranges/mappings and unknown/
 ambiguous category handling explicitly; don't turn illustrative mock values into
-defaults. 0036 settles the shared wrapper's appearance, not glyph scales or timing.
+defaults. 0036 settles the shared wrapper's appearance; 0037 bounds only the first
+static elevation glyph and temporary capsule/warning allocation, not the other
+glyph scales, full-stack geometry or transition timing.
 
 Circular radar with an info brick, surrounding noise fields and unlabelled
 visible-population graphs were explored, not selected as replacements. For any

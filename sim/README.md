@@ -56,7 +56,7 @@ Missing fetch metadata remains unknown; it is not inferred from filenames.
   and ring), or `borderless-circle` (circular clipping, no ring).
   See [comparison](#viewport-shape-comparison).
 - `--wide`: opt-in 352×240 borderless radar with per-satellite off-screen arrows,
-  selected-marker identification and a reserved 48-pixel strip. Incompatible with
+  selected-marker identification and a 48-pixel elevation/status strip. Incompatible with
   `--radar-size` and `--viewport`.
   See [wide comparison](#wide-radar-comparison).
 - `--label-hide-deg` / `--label-show-deg`: wide-view ID visibility thresholds,
@@ -107,7 +107,9 @@ opt-in wide comparison implements the viewport/arrows portion of
 [0033](../docs/decisions/0033-wide-radar-comparison-contract.md), plus selected-marker
 identification under [0034](../docs/decisions/0034-selected-marker-identification.md)
 and [0035's zoom visibility](../docs/decisions/0035-label-zoom-visibility.md).
-The full normal/debug split and glyphs are not implemented.
+[0037's static elevation glyph](../docs/decisions/0037-static-elevation-glyph-contract.md)
+and shortened shared capsule are implemented in the wide view. Other glyphs and
+the full normal/debug split are not implemented.
 [DESIGN's retained schematic](../docs/DESIGN.md#selected-satellite-presentation)
 remains a design reference, not this executable's output or a golden test.
 Final debug-access controls remain open.
@@ -202,7 +204,8 @@ The 352×240 radar has an aim point at (176, 120) and drawable half-extents
 173×117 pixels. Horizontal FOV is
 `2 * atan(tan(vertical_fov / 2) * 173 / 117)`, not a second independent zoom.
 Earth and satellites keep the square baseline's pixel magnification; more space
-is admitted horizontally. The 48-pixel strip is reserved for later glyph work.
+is admitted horizontally. The 48-pixel strip holds the selected satellite's
+[static elevation glyph](#static-elevation-glyph) and explicit status notices.
 
 One hollow outward arrow is drawn for each successful, above-horizon satellite
 whose finite projection is outside the view and whose camera depth is at least
@@ -229,12 +232,13 @@ without a clearing mask or collision search. Selection/zoom updates the label
 immediately; arrows are never labelled. Wide zoom hides the label as described
 below; the selected diamond and square baseline are unchanged.
 
-No data glyphs are drawn yet. The reserved strip shows `NO MARKERS`
-when there are no in-view markers, not a claim of a complete empty sky. `NO FRAME`,
-`TRACK ERROR` and `INGEST WARN` preserve explicit missing/incomplete-state notices;
-warnings remain present alongside valid markers. These are comparison notices,
-not the final empty-state or debug-access design. No routine FOV/count text is
-shown in the wide image.
+The strip shows a static true-elevation glyph inside a shortened capsule when a
+visible satellite is selected. Notices use a separate fixed area below it:
+`NO MARKERS` when there are no in-view markers, not a claim of a complete empty
+sky; `NO FRAME`, `TRACK ERROR` and `INGEST WARN` preserve explicit missing/incomplete
+state. Warnings remain present alongside valid markers and their selected glyph.
+These are comparison notices, not the final empty-state or debug-access design.
+No routine FOV/count text is shown in the wide image.
 
 At the pinned weather/GPS time/site above, all frames have SKY 22 and zero failures:
 
@@ -252,6 +256,28 @@ Repeat with UTC `2026-10-10T00:00:30Z` for another physical frame. CLI tests cov
 both catalogues, both times, these zooms, independent visibility/arrow counts,
 and deterministic snapshots with SDL unavailable. Tight-view images show some
 overlapping arrows; no collision policy has been added to make them countable.
+
+### Static elevation glyph
+
+Under [0037](../docs/decisions/0037-static-elevation-glyph-contract.md), `--wide`
+draws one 24×24 elevation glyph inside a shortened, 1px rounded capsule with a
+centered opening on each long side. The invisible square's lower-left corner is
+the origin; the region below the true-elevation ray is filled. At 45° it is a
+triangle; at 90° it fills the square. There is no glyph box, number or field label.
+The decision owns exact geometry and raster rules.
+
+The glyph reads the selected satellite's current physical elevation directly.
+Tab selection, frame updates and zoom-driven reselection update it immediately,
+without animation. Hiding the marker's ID at wide zoom does **not** hide the glyph.
+When there is no selection, both capsule and glyph disappear, with no stale
+reading. Notices remain in their fixed area below, even when the capsule is absent.
+
+The existing wide comparison commands exercise this slice without another flag:
+weather/GPS at 20° shows a selected glyph; 100° retains it while hiding the ID;
+0.1° has no selected glyph and shows `NO MARKERS`. The demo at 20° also has no
+selection. These use true historical samples, unlike DESIGN's illustrative stack.
+Category, altitude, speed, period and transitions remain absent. The shorter
+capsule/warning allocation is temporary, not the completed full-stack layout.
 
 ### Label zoom visibility
 
@@ -331,7 +357,11 @@ isolation, and headless identity-versus-name behavior using a real orbit with
 explicitly synthetic identity metadata. Zoom-label tests cover inclusive
 thresholds, retained history in both directions, startup in the intervening band,
 validated CLI overrides, unchanged selection/physical state, retained diamonds
-and warnings, and unchanged baseline diagnostics.
+and warnings, and unchanged baseline diagnostics. Elevation tests cover capsule bounds/openings,
+endpoint and intermediate-angle pixels, monotonic fill, defensive input handling,
+true selected-state updates, missing-frame/selection clearing, warning coexistence
+and recovery. Headless PNG tests compare glyph pixels to an independent angle
+reference from real look angles at both times and all tested zooms.
 
 The [2026-10-12 verification record](../docs/PROGRESS.md#2026-10-12-utc-square-default-fresh-session-verification-before-commit)
 contains the prior fresh-source build, broader check suite, headless counts,
