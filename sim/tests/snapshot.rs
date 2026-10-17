@@ -247,23 +247,26 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                 .entries()
                 .iter()
                 .map(|entry| {
-                    let ecef = entry.satellite().state_at(time).unwrap().to_ecef().unwrap();
+                    let state = entry.satellite().state_at(time).unwrap();
+                    let ecef = state.to_ecef().unwrap();
                     (
                         ecef_to_look_angles(ecef, observer).unwrap(),
                         ecef_to_geodetic(ecef).unwrap().altitude_km,
+                        state.velocity().iter().map(|v| v * v).sum::<f64>().sqrt(),
                     )
                 })
                 .collect();
             let sky = physical
                 .iter()
-                .filter(|(look, _)| look.elevation_rad > 0.0)
+                .filter(|(look, _, _)| look.elevation_rad > 0.0)
                 .count();
             for fov in [0.1_f64, 5.0, 20.0, 40.0, 100.0] {
                 let mut visible = 0;
                 let mut indicators = 0;
                 let mut selected_elevation = None;
                 let mut selected_altitude = None;
-                for (look, altitude) in &physical {
+                let mut selected_speed = None;
+                for (look, altitude, speed) in &physical {
                     let up = look.range_km * look.elevation_rad.sin();
                     let depth = 75_000.0 - up;
                     if look.elevation_rad <= 0.0 || depth < 1.0 {
@@ -281,6 +284,7 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                         // Snapshot selection is the first visible NORAD ID.
                         selected_elevation.get_or_insert(look.elevation_rad);
                         selected_altitude.get_or_insert(*altitude);
+                        selected_speed.get_or_insert(*speed);
                     } else {
                         indicators += 1;
                     }
@@ -309,7 +313,13 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                 let expected = scratch.png("wide.png");
                 assert_eq!(success(scratch.run(&args)), report);
                 assert_eq!(scratch.png("wide.png"), expected);
-                assert_snapshot_fields(&scratch, "wide.png", selected_elevation, selected_altitude);
+                assert_snapshot_fields(
+                    &scratch,
+                    "wide.png",
+                    selected_elevation,
+                    selected_altitude,
+                    selected_speed,
+                );
                 if visible == 0 {
                     assert_snapshot_notices(&scratch, "wide.png", &["NO MARKERS"]);
                 }
@@ -319,18 +329,24 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
 }
 
 #[test]
-fn selected_altitudes_span_real_low_navigation_and_geo_heights() {
+fn selected_fields_span_real_low_navigation_and_geo_orbits() {
     use overhead_core::{GeodeticPosition, ecef_to_geodetic, ecef_to_look_angles};
     let scratch = Scratch::new();
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/catalogue.json");
     let loaded = overhead_tools::catalogue::load(&manifest).unwrap();
     let mut regimes = [false; 3];
+    let mut speed_regimes = [false; 3];
     for entry in loaded.catalogue.entries() {
         // Existing real pool elements, each alone and viewed from its subpoint.
         // These deliberate observer sites are test inputs, not device defaults.
         scratch.manifest(json!([entry.elements()]));
         let time = entry.satellite().epoch();
-        let ecef = entry.satellite().state_at(time).unwrap().to_ecef().unwrap();
+        let state = entry.satellite().state_at(time).unwrap();
+        let ecef = state.to_ecef().unwrap();
+        let speed = state.velocity().iter().map(|v| v * v).sum::<f64>().sqrt();
+        speed_regimes[0] |= speed < 3.5;
+        speed_regimes[1] |= (3.5..5.0).contains(&speed);
+        speed_regimes[2] |= speed > 6.0;
         let geodetic = ecef_to_geodetic(ecef).unwrap();
         let observer = GeodeticPosition {
             altitude_km: 0.0,
@@ -363,9 +379,11 @@ fn selected_altitudes_span_real_low_navigation_and_geo_heights() {
             "altitude.png",
             Some(look.elevation_rad),
             Some(altitude),
+            Some(speed),
         );
     }
     assert_eq!(regimes, [true; 3]);
+    assert_eq!(speed_regimes, [true; 3]);
 }
 
 fn assert_snapshot_fields(
@@ -373,6 +391,7 @@ fn assert_snapshot_fields(
     path: &str,
     elevation: Option<f64>,
     altitude: Option<f64>,
+    speed: Option<f64>,
 ) {
     use embedded_graphics::{
         mono_font::{MonoTextStyle, ascii::FONT_6X10},
@@ -477,6 +496,56 @@ fn assert_snapshot_fields(
             }
         }
     }
+    if let Some(speed) = speed {
+        Text::new(
+            "Spd",
+            Point::new(367, 158),
+            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+        )
+        .draw(&mut reference)
+        .unwrap();
+        // Independent ring classification / nearest-angle choice, without the
+        // production octant traversal or km/s midpoint comparisons. Input is
+        // independently propagated TEME speed, not app state or screen motion.
+        let mut ring: Vec<_> = (-11_i32..=11)
+            .flat_map(|y| (-11_i32..=11).map(move |x| (x, y)))
+            .filter(|&(x, y)| {
+                let minor = x.abs().min(y.abs());
+                let major = x.abs().max(y.abs());
+                major == f64::from(121 - minor * minor).sqrt().round() as i32
+            })
+            .map(|(x, y)| {
+                (
+                    (x as f64)
+                        .atan2(-f64::from(y))
+                        .rem_euclid(std::f64::consts::TAU),
+                    x,
+                    y,
+                )
+            })
+            .collect();
+        ring.sort_by(|a, b| a.0.total_cmp(&b.0));
+        if speed > 0.0 {
+            let sweep = speed.clamp(0.0, 12.0) / 12.0 * std::f64::consts::TAU;
+            let endpoint = ring
+                .iter()
+                .min_by(|a, b| {
+                    (a.0 - sweep)
+                        .abs()
+                        .total_cmp(&(b.0 - sweep).abs())
+                        .then_with(|| a.0.total_cmp(&b.0))
+                })
+                .unwrap()
+                .0;
+            for (angle, x, y) in ring {
+                if angle <= endpoint {
+                    Pixel(Point::new(376 + x, 174 + y), BinaryColor::On)
+                        .draw(&mut reference)
+                        .unwrap();
+                }
+            }
+        }
+    }
     for y in 0..240 {
         for x in 352..400 {
             let point = Point::new(x, y);
@@ -488,7 +557,7 @@ fn assert_snapshot_fields(
             assert_eq!(
                 image.get_pixel(point),
                 expected,
-                "strip pixel {point:?}, elevation={elevation:?}, altitude={altitude:?}"
+                "strip pixel {point:?}, elevation={elevation:?}, altitude={altitude:?}, speed={speed:?}"
             );
         }
     }
@@ -503,6 +572,9 @@ fn assert_snapshot_notices(scratch: &Scratch, path: &str, lines: &[&str]) {
     };
     use embedded_graphics_simulator::SimulatorDisplay;
     assert!(!lines.is_empty());
+    if lines.contains(&"NO MARKERS") || lines.contains(&"NO FRAME") {
+        assert_snapshot_fields(scratch, path, None, None, None);
+    }
     let image = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join(path)).unwrap();
     let mut reference = SimulatorDisplay::<BinaryColor>::new(Size::new(400, 240));
     reference.clear(BinaryColor::Off).unwrap();
@@ -528,8 +600,9 @@ fn assert_snapshot_notices(scratch: &Scratch, path: &str, lines: &[&str]) {
             assert_eq!(image.get_pixel(point), expected, "notice pixel {point:?}");
         }
     }
-    // The former strip warning area contains only the new separator.
-    for y in 153..240 {
+    // Below speed, only the separator remains; period is still absent.
+    // Selected fields are checked separately, including alongside warnings.
+    for y in 186..240 {
         for x in 352..400 {
             let expected = if x == 352 && y <= 227 {
                 Rgb888::new(32, 32, 32)
@@ -809,6 +882,25 @@ fn wide_warning_snapshots_preserve_valid_markers_and_clear_after_clean_load() {
     assert!(
         success(run("healthy.png")).contains("catalogue=1 sky=1 visible=1 failed=0 indicators=0")
     );
+    let state = satellite.state_at(time).unwrap();
+    let ecef = state.to_ecef().unwrap();
+    let look = overhead_core::ecef_to_look_angles(
+        ecef,
+        overhead_core::GeodeticPosition {
+            altitude_km: 0.0,
+            ..observer
+        },
+    )
+    .unwrap();
+    let altitude = overhead_core::ecef_to_geodetic(ecef).unwrap().altitude_km;
+    let speed = state.velocity().iter().map(|v| v * v).sum::<f64>().sqrt();
+    assert_snapshot_fields(
+        &scratch,
+        "healthy.png",
+        Some(look.elevation_rad),
+        Some(altitude),
+        Some(speed),
+    );
     let healthy_png = scratch.png("healthy.png");
     let healthy = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join("healthy.png")).unwrap();
     for (failure, omission, lines) in [
@@ -840,6 +932,13 @@ fn wide_warning_snapshots_preserve_valid_markers_and_clear_after_clean_load() {
             usize::from(failure),
         )));
         assert_snapshot_notices(&scratch, "warned.png", &lines);
+        assert_snapshot_fields(
+            &scratch,
+            "warned.png",
+            Some(look.elevation_rad),
+            Some(altitude),
+            Some(speed),
+        );
         let warned = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join("warned.png")).unwrap();
         let top = 213 - (lines.len() as i32 - 1) * 13;
         for y in 0..240 {

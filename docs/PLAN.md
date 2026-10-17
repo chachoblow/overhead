@@ -12,8 +12,10 @@ full glyph stack. The user reviewed and accepted 0041's executable output.
 white-backed overlay and visually accepted. 0042's static altitude addition is
 now implemented after separate authorization; the user accepted its fresh
 executable output separately from the approved contract/illustrative comparison.
-Category, speed and period remain unimplemented. M2 operating-budget and scheduling
-work remains open.**
+0043's static TEME speed arc is implemented after approval of its contract,
+illustrations and implementation. The user subsequently reviewed and accepted
+fresh executable speed output. Category and period remain unimplemented. M2 operating-budget
+and scheduling work remains open.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -162,8 +164,18 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
   captures preserve all pixels outside the new altitude slot and square bytes.
 - [x] User reviewed and accepted fresh executable altitude snapshots separately
   from the contract mocks.
+- [x] Agree [0043's static speed contract](decisions/0043-static-speed-glyph-contract.md):
+  instantaneous TEME velocity magnitude, fixed linear 0–12 km/s clockwise arc,
+  bitmap `Spd`, zero/invalid distinction and immediate three-field lifecycle.
+  The user approved the illustrative comparison and remaining behavior rules.
+- [x] Authorize and implement 0043, retaining true speed in app state and adding
+  the wide-only arc. Mapping/raster/lifecycle and independent headless tests
+  cover the field; existing radar, notices, elevation/altitude and square output
+  are preserved. No new dependency or tracking/selection policy.
+- [x] User reviewed and accepted fresh executable speed output separately from
+  the mocks.
 - [ ] Scope and agree subsequent bounded glyph contracts before implementation.
-  Speed/period scales and semantics, category assignment/raster, full-stack
+  Period scale/semantics, category assignment/raster, full-stack
   no-selection/lifecycle behavior, transitions and final normal/debug access
   remain open. No scene displacement or collision search is approved.
   Circular-radar/field/graph alternatives remain exploration; neither mocks nor

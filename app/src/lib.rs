@@ -41,6 +41,10 @@ pub struct PhysicalState {
     pub ecef: EcefPosition,
     pub geodetic: GeodeticPosition,
     pub look: LookAngles,
+    /// Instantaneous magnitude of the propagated TEME velocity, in km/s.
+    /// Not Earth-fixed ground speed, observer-relative or presentation motion.
+    /// A nonfinite magnitude is unavailable to readouts, not a new tracking failure.
+    pub teme_speed_km_s: f64,
 }
 
 /// Camera-relative position is cached separately from the physical state.
@@ -255,9 +259,17 @@ fn sample(
             ecef,
             geodetic,
             look,
+            teme_speed_km_s: teme_speed(state.velocity()),
         },
         camera,
     })
+}
+
+// Scaled hypot avoids overflow/underflow from squaring finite components.
+// If the magnitude itself is unrepresentable, leave it nonfinite so only the
+// speed readout is suppressed; do not change successful position/selection.
+fn teme_speed([x, y, z]: [f64; 3]) -> f64 {
+    libm::hypot(libm::hypot(x, y), z)
 }
 
 #[cfg(test)]
@@ -268,6 +280,19 @@ mod tests {
         catalogue::{CatalogueBuilder, RecordOrigin},
         sgp4::chrono::{Duration, NaiveDate},
     };
+
+    #[test]
+    fn speed_magnitude_is_unsigned_and_handles_extreme_components() {
+        assert_eq!(teme_speed([0.0; 3]), 0.0);
+        assert_eq!(teme_speed([3.0, -4.0, 12.0]), 13.0);
+        assert_eq!(teme_speed([-3.0, 4.0, -12.0]), 13.0);
+        for scale in [1e-200, 1e200] {
+            let speed = teme_speed([3.0 * scale, -4.0 * scale, 12.0 * scale]);
+            assert!((speed / scale - 13.0).abs() < 1e-12);
+        }
+        assert_eq!(teme_speed([f64::MAX, 0.0, 0.0]), f64::MAX);
+        assert!(!teme_speed([f64::MAX; 3]).is_finite());
+    }
 
     fn app() -> RadarApp {
         let elements: Vec<OmmElements> =
@@ -296,11 +321,14 @@ mod tests {
         assert_eq!(app.markers().count(), 0);
         let entry = &app.catalogue.entries()[0];
         let time = entry.satellite().epoch();
-        let ecef = entry.satellite().state_at(time).unwrap().to_ecef().unwrap();
+        let state = entry.satellite().state_at(time).unwrap();
+        let ecef = state.to_ecef().unwrap();
+        let reference_speed = state.velocity().iter().map(|v| v * v).sum::<f64>().sqrt();
         app.update(time).unwrap();
         let physical = app.samples[0].as_ref().unwrap().physical;
         assert_eq!(physical.ecef, ecef);
         assert_eq!(physical.geodetic, ecef_to_geodetic(ecef).unwrap());
+        assert!((physical.teme_speed_km_s - reference_speed).abs() < 1e-12);
         assert_eq!(
             physical.look,
             ecef_to_look_angles(ecef, app.observer).unwrap()
@@ -324,6 +352,14 @@ mod tests {
         app.update(time + Duration::seconds(30)).unwrap();
         assert_ne!(app.markers().next().unwrap().2, old_marker);
         assert_ne!(app.samples[0].as_ref().unwrap().physical.ecef, ecef);
+        let speed = app.samples[0].as_ref().unwrap().physical.teme_speed_km_s;
+        let later = app.catalogue.entries()[0]
+            .satellite()
+            .state_at(time + Duration::seconds(30))
+            .unwrap();
+        let reference = later.velocity().iter().map(|v| v * v).sum::<f64>().sqrt();
+        assert!((speed - reference).abs() < 1e-12);
+        assert_ne!(speed, physical.teme_speed_km_s);
         assert_eq!(app.time(), Some(time + Duration::seconds(30)));
     }
 
@@ -421,7 +457,24 @@ mod tests {
         }
         for (entry, result) in app.objects() {
             let s = result.as_ref().unwrap();
-            let ecef = entry.satellite().state_at(time).unwrap().to_ecef().unwrap();
+            let state = entry.satellite().state_at(time).unwrap();
+            let ecef = state.to_ecef().unwrap();
+            let reference = state.velocity().iter().map(|v| v * v).sum::<f64>().sqrt();
+            assert!((s.physical.teme_speed_km_s - reference).abs() < 1e-12);
+            let other_observer = GeodeticPosition {
+                latitude_rad: -0.6,
+                longitude_rad: 2.6,
+                altitude_km: 0.0,
+            };
+            let other = sample(
+                entry,
+                time,
+                other_observer,
+                &Camera::new(other_observer).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(s.physical.teme_speed_km_s, other.physical.teme_speed_km_s);
+            assert_ne!(s.physical.look, other.physical.look);
             assert_eq!(s.physical.ecef, ecef);
             assert_eq!(
                 s.physical.look,

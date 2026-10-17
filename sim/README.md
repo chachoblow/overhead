@@ -56,7 +56,7 @@ Missing fetch metadata remains unknown; it is not inferred from filenames.
   and ring), or `borderless-circle` (circular clipping, no ring).
   See [comparison](#viewport-shape-comparison).
 - `--wide`: opt-in 352×240 borderless radar with per-satellite off-screen arrows,
-  selected-marker identification, a 48-pixel elevation/altitude strip and bottom-left
+  selected-marker identification, a 48-pixel elevation/altitude/speed strip and bottom-left
   white-backed notices. Incompatible with
   `--radar-size` and `--viewport`.
   See [wide comparison](#wide-radar-comparison).
@@ -111,9 +111,13 @@ and [0035's zoom visibility](../docs/decisions/0035-label-zoom-visibility.md).
 [0041's static circular elevation](../docs/decisions/0041-circular-elevation-only-contract.md),
 `Elev` label and padded separator are implemented in the wide view, alongside
 [0042's static altitude circles](../docs/decisions/0042-static-altitude-glyph-contract.md)
-and `Alt` label, with
+and `Alt` label, plus
+[0043's static TEME speed arc](../docs/decisions/0043-static-speed-glyph-contract.md)
+and `Spd` label, with
 [0040's bottom-left notice overlay](../docs/decisions/0040-white-backed-bottom-left-notice-contract.md).
-Category, speed, period and the full normal/debug split are not implemented.
+Category, period and the full normal/debug split are not implemented.
+The speed contract and illustrative comparison are approved; the user also
+reviewed and accepted the fresh executable speed output separately.
 [DESIGN's retained schematic](../docs/DESIGN.md#selected-satellite-presentation)
 remains a design reference, not this executable's output or a golden test.
 Final debug-access controls remain open.
@@ -209,8 +213,8 @@ The 352×240 radar has an aim point at (176, 120) and drawable half-extents
 `2 * atan(tan(vertical_fov / 2) * 173 / 117)`, not a second independent zoom.
 Earth and satellites keep the square baseline's pixel magnification; more space
 is admitted horizontally. The 48-pixel strip holds the selected satellite's
-[static elevation](#static-elevation-glyph) and [altitude](#static-altitude-glyph)
-glyphs; status notices are at bottom-left
+[static elevation](#static-elevation-glyph), [altitude](#static-altitude-glyph)
+and [speed](#static-speed-glyph) glyphs; status notices are at bottom-left
 inside the radar, not in the strip.
 
 One hollow outward arrow is drawn for each successful, above-horizon satellite
@@ -238,8 +242,9 @@ without a clearing mask or collision search. Selection/zoom updates the label
 immediately; arrows are never labelled. Wide zoom hides the label as described
 below; the selected diamond and square baseline are unchanged.
 
-The strip shows a labelled static circular cutout of true elevation and
-concentric circles of true WGS-84 altitude when a visible satellite is selected;
+The strip shows a labelled static circular cutout of true elevation,
+concentric circles of true WGS-84 altitude and an arc of true TEME speed
+when a visible satellite is selected;
 its separator remains without selection. Under
 [0040](../docs/decisions/0040-white-backed-bottom-left-notice-contract.md), complete
 notice lines are bottom-left at `x=12`, ending at baseline `y=222`, with 13px
@@ -331,7 +336,7 @@ printf 'Review images: %s\n' "$review_dir"
 `combined.png` has one valid selected ISS marker, one tracking failure and an
 ingestion warning. `failed.png` has no valid markers and all three notice lines.
 Compare `crossing-clean.png` with `crossing-ingest.png`: the overlay can cover the
-ISS diamond/ID while the elevation/altitude fields and `visible=1` report remain.
+ISS diamond/ID while the elevation/altitude/speed fields and `visible=1` report remain.
 Clean loading restores that scene; this is not a live ingestion-warning timeout.
 `NO FRAME` and same-app redraw/recovery are covered by renderer tests, not these CLI images.
 These are executable snapshots, unlike DESIGN's illustrative full-stack mocks.
@@ -372,7 +377,7 @@ exercises a selected ISS near 90° with synthetic warnings, empty/failure state,
 and a real selected marker/ID visually covered by the notice backing. These
 executable glyphs use true historical samples, unlike DESIGN's illustrative
 stack and endpoint references. The same snapshots now include altitude under
-0042; category, speed, period and transitions remain absent.
+0042 and speed under 0043; category, period and transitions remain absent.
 
 ### Static altitude glyph
 
@@ -385,10 +390,10 @@ can share a raster; high values saturate at the smallest ring. This is a broad
 height cue, not a precise numeric readout or a tracking limit. The decision owns
 the exact scale, rounding and pixel rules; zoom and catalogue never rescale it.
 
-Both fields update immediately with frames and selection changes, without
+The fields update immediately with frames and selection changes, without
 animation, and remain visible when the marker ID is hidden. Nonfinite altitude
-clears only `Alt` and its circles, preserving valid elevation. Without selection,
-both labels/glyphs clear, leaving the separator. Notices and square diagnostics
+clears only `Alt` and its circles, preserving other valid fields. Without selection,
+all selected labels/glyphs clear, leaving the separator. Notices and square diagnostics
 are unchanged. These behaviors are implemented, and the user reviewed and
 accepted fresh executable altitude output separately from the illustrative mocks.
 
@@ -437,6 +442,9 @@ for name, norad in [("low", 28054), ("navigation", 26407), ("geostationary", 195
         "--wide", "--snapshot", str(out / f"{name}.png")
     ], check=True)
     print(name, "altitude km:", fields["Satellite WGS-84 ellipsoidal altitude (km)"])
+    velocity = [float(v) for v in fields["TEME velocity (km/s)"].split()]
+    print(name, "TEME speed km/s (from rounded report):",
+          sum(v * v for v in velocity) ** 0.5)
 PY
 printf 'Review images: %s\n' "$review_dir"
 ```
@@ -444,6 +452,50 @@ printf 'Review images: %s\n' "$review_dir"
 These outputs use propagated altitude, not DESIGN's illustrative values.
 Independent CLI assertions additionally exercise all 16 pool objects individually
 at their epochs, plus both standard catalogues at multiple times and zooms.
+
+### Static speed glyph
+
+Under [0043](../docs/decisions/0043-static-speed-glyph-contract.md), `--wide`
+adds `Spd` and a thin clockwise arc beginning at the top of the same 23px circle
+used by the other fields. The input is instantaneous **TEME velocity magnitude**
+in km/s, not Earth-fixed ground speed, observer range rate or apparent screen
+motion. The app derives it from the same timestamped propagation as position.
+
+A fixed linear 0–12 km/s scale does not change with zoom, observer or catalogue.
+Zero retains `Spd` with no arc; any positive speed draws at least the top pixel;
+12 km/s and higher give a full circle. Endpoint snapping means nearby speeds
+share a raster, and the circle becomes complete slightly below 12. Finite
+negative inputs defensively draw as zero. Nonfinite speed clears only its label
+and arc, never substituting a plausible reading or hiding other valid fields.
+These are drawing limits, not tracking limits; physical speed is not clamped.
+
+All three fields update immediately on frames and selection changes, without
+animation. ID-hidden views still show the fields. No selection clears the
+labels/glyphs while retaining the separator; no stale speed survives a failed
+frame or former selection. Notices remain explicit alongside valid fields.
+Category and period remain absent. Implementation is complete; the user reviewed
+and accepted fresh executable speed output, separately from the contract/mocks.
+
+For selected, ID-hidden and no-selection output, run from the workspace root:
+
+```sh
+review_dir="$(mktemp -d "${TMPDIR:-/tmp}/overhead-speed-review.XXXXXX")"
+for fov in 20 100 0.1; do
+  cargo run -p overhead-sim -- sim/examples/weather-gps.json \
+    2026-10-10T00:00:00Z 39.007 -104.883 2.187 \
+    --wide --fov-deg "$fov" --snapshot "$review_dir/speed-$fov.png"
+done
+printf 'Review images: %s\n' "$review_dir"
+```
+
+Repeat at `2026-10-10T00:00:30Z` for a later physical frame. The self-contained
+[low/navigation/GEO comparison recipe](#static-altitude-glyph) now renders all
+three fields and prints TEME speed derived from the rounded tracking report;
+its orbital records are unchanged. The [notice recipe](#notice-overlay-review)
+adds selected-plus-warning, failed/no-selection and real-marker-under-overlay
+cases, with explicitly synthetic faults. Zero/nonfinite speed controls are
+renderer tests, not claims about these historical samples. CLI tests independently
+propagate all 16 pool objects and both replay catalogues at multiple times/zooms.
 
 ### Label zoom visibility
 
@@ -539,7 +591,12 @@ rasters, radius boundaries/ties, finite saturation, field-local nonfinite
 suppression and real frame/selection changes across radius boundaries using
 explicit synthetic orbit controls. Headless PNG tests compare both glyphs to
 independent look-angle/geodetic samples and inverse altitude thresholds, including
-real low/navigation/GEO-height selected objects. Existing elevation, notices,
+real low/navigation/GEO-height selected objects. Speed tests cover true TEME
+magnitude and observer/zoom independence, robust large/small-component norms,
+every arc boundary/tie, connected monotonic circle prefixes, exact independent
+raster comparisons, zero-label/invalid distinction, field-local suppression,
+and actual selection/frame raster changes. CLI assertions derive speed outside
+app state, including alongside synthetic warnings. Existing elevation, notices,
 selection-loss/recovery and square regressions remain covered.
 
 The [2026-10-12 verification record](../docs/PROGRESS.md#2026-10-12-utc-square-default-fresh-session-verification-before-commit)

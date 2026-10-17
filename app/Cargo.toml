@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 # Shared clockless application state uses the checked allocating catalogue.
 overhead-core = { path = "../core", features = ["catalogue"] }
-# Already used by core; no_std presentation math, separate from physical geometry.
+# Already used by core; no_std projection math and true TEME speed magnitude.
 libm = "0.2"
 
 [dev-dependencies]

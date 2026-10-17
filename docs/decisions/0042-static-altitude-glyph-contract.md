@@ -16,6 +16,8 @@ executable output and confirmed visual acceptance, separately from the mocks.
 
 [DESIGN](../DESIGN.md#static-altitude-contract) owns the reviewed images and
 provenance. They are illustrative composites, not executable or physical evidence.
+[0043](0043-static-speed-glyph-contract.md) subsequently adds static speed without
+changing altitude; the two-field/blank-speed scope below records this original slice.
 
 ## Why
 True geodetic altitude is already available in selected app state and the square

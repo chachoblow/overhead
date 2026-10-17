@@ -29,7 +29,10 @@ remain unchanged and visually accepted. The user also reviewed and accepted the
 new executable elevation slice. [0042](decisions/0042-static-altitude-glyph-contract.md)
 now implements the static altitude addition after contract review and separate
 implementation authorization. The user reviewed and accepted the fresh executable
-altitude output. Category, speed, period and the full stack remain unimplemented.
+altitude output. [0043](decisions/0043-static-speed-glyph-contract.md) now adds
+static TEME speed after contract/illustration approval and explicit implementation
+authorization; the user subsequently reviewed and accepted its fresh executable
+output. Category, period and the full stack remain unimplemented.
 
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 minimum on-screen traversal time for fast markers is planned, not implemented.
@@ -153,9 +156,13 @@ recover this direction; the retained PNGs and text are sufficient.
   and illustrative comparison are approved, and the user separately accepted
   the executable output. Its mapping does not inherit the earlier diamond/bar preview.
 - **Speed:** an increasing circle-outline arc, absent at zero and complete at
-  maximum; the mock grows clockwise from the top, not as a heading. **Period:**
-  a spiral, replacing the coil; more turns mean a shorter period. Their scales,
-  speed reference frame and period semantics remain open.
+  maximum, clockwise from the top rather than a heading.
+  [0043](decisions/0043-static-speed-glyph-contract.md) implements instantaneous
+  TEME velocity magnitude on a fixed linear 0–12 km/s scale, with exact static
+  raster/lifecycle rules and a retained `Spd` label at zero. Contract and
+  illustrations are approved; the user also accepted the fresh executable output.
+  **Period:** a spiral, replacing the coil; more turns mean a shorter period.
+  Its scale and period semantics remain open.
 - **Transitions:** favor glyphs animating toward the new selected satellite's
   values. Intermediate shapes are presentation only, never new physical samples.
   This has not been implemented or given timing/interruption rules.
@@ -236,6 +243,45 @@ preview script. These are not golden tests, independent physical evidence or
 physical-display legibility/performance validation. Implementation is complete;
 the user separately reviewed and accepted fresh executable output.
 
+### Static speed contract
+
+[0043](decisions/0043-static-speed-glyph-contract.md) adds one static speed field
+alongside elevation and altitude. The user approved instantaneous TEME velocity
+magnitude, a fixed linear 0–12 km/s scale, appearance/placement, zero-label behavior
+and the remaining raster/lifecycle rules, then authorized implementation. It is
+implemented; the user subsequently reviewed and accepted the fresh executable
+output separately from the illustrations.
+[Simulator usage](../sim/README.md#static-speed-glyph) owns reproduction.
+
+![Native-size scenes with illustrative 3.1, 3.9 and 7.7 km/s speed arcs](mockups/0043-speed-native-proposal.png)
+
+![Native strips and enlarged speed details including zero, full scale, invalid and no selection](mockups/0043-speed-raster-proposal.png)
+
+**Approved contract references only:** generated and reviewed on 2026-10-17,
+retained after implementation authorization, strictly 1-bit. The first is a
+1232×280 sheet containing three native 400×240 scenes. Each preserves the radar
+pixels of the retained 0041 elevation proposal, including the selected `32711`.
+Elevation remains the illustrative 45° cutout and altitude is an illustrative
+400 km/radius-8 ring. The three speeds are illustrative too: **none of the glyph
+values is a measurement of that selected object**. No simulator produced these
+composites.
+
+The second is a 912×450 sheet of eight native 48×240 strips, with enlarged 4×
+nearest-neighbor speed details. Cases are zero, 3, 6, 7.7, 9 and 12 km/s, invalid
+speed and no selection. Zero retains `Spd` without an arc. Invalid speed omits
+only that field; no selection retains only the separator. Headings outside the
+strips/scenes are review annotations, not on-device numeric readouts. The empty
+strip is not an empty-sky scene or new notice treatment.
+
+Pillow assembled these images with the existing `FONT_6X10` bitmap and 0041's
+radius-11 pixel set, choosing the nearest clockwise endpoint. Checks confirmed
+font parity, binary pixels and selected-scene changes confined to the new speed
+slot relative to the illustrative elevation/altitude base. No dependency was
+added. The retained images, 0043 and the existing font suffice to reconstruct
+them without a disposable script. They are not executable snapshots, golden
+tests, independent physical evidence or physical-display/performance validation.
+Category, period and animation remain outside this slice.
+
 ### Bottom-left notice reference
 
 [0039](decisions/0039-bottom-left-condition-driven-notices.md) selects bottom-left
@@ -314,9 +360,9 @@ true-elevation updates, and no capsule or glyph without selection. This temporar
 layout was not the full-stack mock's final geometry. The slice was implemented
 and the user accepted its rendered snapshot set. 0040 subsequently relocated
 only its notices to bottom-left; 0041 now replaces the capsule and filled glyph
-with labelled circular elevation and the separator. 0042 now adds static altitude;
-category, speed and period remain absent. Reproduce the current state through the
-[simulator's wide view](../sim/README.md#static-elevation-glyph).
+with labelled circular elevation and the separator. 0042 adds static altitude;
+0043 adds static speed. Category and period remain absent. Reproduce the current
+state through the [simulator's wide view](../sim/README.md#static-speed-glyph).
 
 ### Open questions and boundaries
 
@@ -334,10 +380,13 @@ only the unanimated elevation label/cutout and separator, superseding 0037;
 warning placement/compositing remain owned by 0040.
 [0042](decisions/0042-static-altitude-glyph-contract.md) now implements the static
 altitude mapping, raster and elevation-plus-altitude lifecycle after separate
-authorization. The user has accepted the executable output. Category,
-speed/period and the full stack still need their remaining semantics, raster
-geometry, lifecycle and transition rules before coding. The current two-field
-executable clears both fields without selection, retaining the separator.
+authorization. The user has accepted that executable output.
+[0043](decisions/0043-static-speed-glyph-contract.md) now implements static TEME
+speed with an approved scale/raster/lifecycle; the user also accepted its fresh
+executable output. Category, period and the full stack still need their remaining
+semantics, raster geometry, lifecycle and transition rules before coding. The
+current three-field executable clears all fields without selection, retaining
+the separator.
 
 Circular radar with an info brick, surrounding noise fields and unlabelled
 visible-population graphs were explored, not selected as replacements. For any

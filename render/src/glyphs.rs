@@ -1,7 +1,7 @@
-//! Static selected elevation and altitude (decisions 0041 and 0042).
+//! Static selected elevation, altitude and speed (decisions 0041–0043).
 //! No presentation history or physical-state mutation belongs here.
 
-use core::f64::consts::FRAC_PI_2;
+use core::f64::consts::{FRAC_PI_2, TAU};
 use embedded_graphics::{
     mono_font::{MonoTextStyle, ascii::FONT_6X10},
     pixelcolor::BinaryColor,
@@ -26,6 +26,7 @@ pub(super) fn draw_strip<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
     elevation: Option<f64>,
     altitude_km: Option<f64>,
+    speed_km_s: Option<f64>,
 ) -> Result<(), D::Error> {
     display.draw_iter((12..=227).map(|y| Pixel(Point::new(352, y), BinaryColor::On)))?;
     if let Some(elevation) = elevation.filter(|value| value.is_finite()) {
@@ -49,7 +50,75 @@ pub(super) fn draw_strip<D: DrawTarget<Color = BinaryColor>>(
         circle(&mut rows, i32::from(radius));
         draw_rows(display, rows, Point::new(365, 116))?;
     }
+    if let Some(speed) = speed_km_s.filter(|value| value.is_finite()) {
+        Text::new(
+            "Spd",
+            Point::new(367, 158),
+            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+        )
+        .draw(display)?;
+        let mut rows = [0_u32; 23];
+        for index in 0..speed_pixel_count(speed) {
+            mark(&mut rows, speed_pixel(index));
+        }
+        draw_rows(display, rows, Point::new(365, 163))?;
+    }
     Ok(())
+}
+
+// First quadrant, ordered clockwise from the top, omitting the right endpoint
+// (it starts the next quadrant). Together the four quadrants have 64 pixels.
+fn speed_quadrant(index: usize) -> Point {
+    if index <= 8 {
+        Point::new(OCTANT[index].y, OCTANT[index].x)
+    } else {
+        OCTANT[16 - index]
+    }
+}
+
+fn speed_pixel(index: usize) -> Point {
+    let p = speed_quadrant(index % 16);
+    match index / 16 {
+        0 => p,
+        1 => Point::new(p.y, -p.x),
+        2 => Point::new(-p.x, -p.y),
+        _ => Point::new(-p.y, p.x),
+    }
+}
+
+fn speed_angle(index: usize) -> f64 {
+    let p = speed_quadrant(index % 16);
+    (index / 16) as f64 * FRAC_PI_2 + libm::atan2(f64::from(p.x), f64::from(p.y))
+}
+
+fn speed_boundary(next: usize) -> f64 {
+    // Express angular midpoint thresholds in km/s; exact floating-point
+    // threshold ties belong to the shorter arc. No wrapped distance at 2π.
+    12.0 * ((speed_angle(next - 1) + speed_angle(next)) / 2.0) / TAU
+}
+
+// Caller has checked finite input. Positive values always include the top
+// pixel; the last quantization bucket is already the full circle below 12.
+fn speed_pixel_count(speed: f64) -> usize {
+    if speed <= 0.0 {
+        return 0;
+    }
+    if speed >= 12.0 {
+        return 64;
+    }
+    // Lower-bound search over 63 increasing thresholds: at most six
+    // comparisons, without a runtime allocation or a rounded lookup table.
+    let mut low = 1;
+    let mut high = 64;
+    while low < high {
+        let next = (low + high) / 2;
+        if speed <= speed_boundary(next) {
+            high = next;
+        } else {
+            low = next + 1;
+        }
+    }
+    low
 }
 
 fn altitude_radius(altitude_km: f64) -> Option<u8> {
@@ -186,6 +255,62 @@ fn radial(rows: &mut [u32; 23], endpoint: Point) {
 mod tests {
     extern crate std;
     use super::*;
+
+    #[test]
+    fn speed_endpoints_saturation_and_all_midpoint_ties() {
+        for speed in [-f64::MAX, -0.0, 0.0] {
+            assert_eq!(speed_pixel_count(speed), 0);
+        }
+        assert_eq!(speed_pixel_count(f64::from_bits(1)), 1);
+        for (speed, count) in [
+            (3.0, 17),
+            (6.0, 33),
+            (9.0, 49),
+            (11.99, 64),
+            (12.0, 64),
+            (f64::MAX, 64),
+        ] {
+            assert_eq!(speed_pixel_count(speed), count);
+        }
+        let mut previous = 0.0;
+        for next in 1..64 {
+            let boundary = speed_boundary(next);
+            assert!(boundary > previous && boundary < 12.0);
+            assert_eq!(
+                speed_pixel_count(f64::from_bits(boundary.to_bits() - 1)),
+                next
+            );
+            assert_eq!(speed_pixel_count(boundary), next);
+            assert_eq!(
+                speed_pixel_count(f64::from_bits(boundary.to_bits() + 1)),
+                next + 1
+            );
+            previous = boundary;
+        }
+    }
+
+    #[test]
+    fn speed_traversal_is_the_same_circle_with_connected_unique_prefixes() {
+        let mut rows = [0; 23];
+        let mut previous = speed_pixel(63);
+        assert_eq!(speed_pixel(0), Point::new(0, 11));
+        assert_eq!(speed_pixel(16), Point::new(11, 0));
+        assert_eq!(speed_pixel(32), Point::new(0, -11));
+        assert_eq!(speed_pixel(48), Point::new(-11, 0));
+        for index in 0..64 {
+            let p = speed_pixel(index);
+            assert!((p.x - previous.x).abs() <= 1 && (p.y - previous.y).abs() <= 1);
+            mark(&mut rows, p);
+            assert_eq!(
+                rows.iter().map(|row| row.count_ones()).sum::<u32>(),
+                index as u32 + 1
+            );
+            previous = p;
+        }
+        let mut expected = [0; 23];
+        circle(&mut expected, 11);
+        assert_eq!(rows, expected);
+    }
 
     #[test]
     fn altitude_mapping_saturates_and_is_monotonic() {
