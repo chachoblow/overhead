@@ -4,11 +4,13 @@
 and visually approved under 0033; square/diagnostic default retained. Selected-marker
 identification is implemented under 0034, refined by 0035's configurable 70°/60°
 hide/show hysteresis after review of crowding; the user has now accepted that behavior.
-0037's static elevation-only capsule and separate warnings remain implemented
-and visually accepted. 0038 revises the future direction to a labelled borderless
-stack, circular data glyphs and a padded separator; retained mocks only, not an
-implementation contract. Other glyphs remain unimplemented. M2 operating-budget
-and scheduling work remains open.**
+0037's static elevation-only capsule remains implemented and visually accepted.
+0038 revises the future direction to a labelled borderless stack, circular data
+glyphs and a padded separator; retained mocks only, not an implementation contract.
+0039 selects bottom-left condition-driven notices, now implemented with 0040's
+approved white-backed overlay. User review of the executable notice snapshots is
+pending. Other glyphs remain unimplemented. M2 operating-budget and scheduling
+work remains open.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -128,13 +130,21 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
   elevation cutout, concentric altitude circles, speed arc and period spiral;
   thin navigation cross and simple station body-and-wings icon. This amends the
   earlier capsule/shapes/no-label direction, not the current executable.
-- [ ] Resolve warning placement displaced by the full-height mock, then scope
-  the next bounded implementation contract. Glyph scales/raster rules,
-  speed/period semantics, category assignment, no-selection/lifecycle behavior,
-  transitions and final normal/debug access remain open. A radar-corner notice
-  area is a recommendation, not approved scope. Circular-radar/field/graph
-  alternatives remain exploration; neither mocks nor replay populations select
-  production capacity.
+- [x] Select [0039's bottom-left condition-driven notices](decisions/0039-bottom-left-condition-driven-notices.md)
+  after reviewing top-left/bottom-left mocks; preserve existing notice meanings
+  and clear only resolved conditions, not on a timeout. Retained composites are
+  not executable warning-state snapshots.
+- [x] Agree and implement [0040's notice-only overlay](decisions/0040-white-backed-bottom-left-notice-contract.md):
+  bottom-left, complete notice lines, small borderless white backing drawn last,
+  explicit permission to visually cover crossing graphics without changing
+  eligibility/selection. Preserve the elevation capsule and square diagnostics;
+  pixel/lifecycle/real-marker-overlap and headless warning tests pass.
+- [ ] User review of the executable notice snapshots, then scope the next bounded
+  glyph contract. Glyph scales/raster rules, speed/period semantics, category
+  assignment, full-stack no-selection/lifecycle behavior, transitions and final
+  normal/debug access remain open. No scene displacement or collision search
+  is approved. Circular-radar/field/graph alternatives remain exploration;
+  neither mocks nor replay populations select production capacity.
 
 No prediction integration, slowdown or live fetching is required for this slice.
 Simulator throughput is not target capacity evidence.

@@ -56,7 +56,8 @@ Missing fetch metadata remains unknown; it is not inferred from filenames.
   and ring), or `borderless-circle` (circular clipping, no ring).
   See [comparison](#viewport-shape-comparison).
 - `--wide`: opt-in 352×240 borderless radar with per-satellite off-screen arrows,
-  selected-marker identification and a 48-pixel elevation/status strip. Incompatible with
+  selected-marker identification, a 48-pixel elevation strip and bottom-left
+  white-backed notices. Incompatible with
   `--radar-size` and `--viewport`.
   See [wide comparison](#wide-radar-comparison).
 - `--label-hide-deg` / `--label-show-deg`: wide-view ID visibility thresholds,
@@ -108,8 +109,9 @@ opt-in wide comparison implements the viewport/arrows portion of
 identification under [0034](../docs/decisions/0034-selected-marker-identification.md)
 and [0035's zoom visibility](../docs/decisions/0035-label-zoom-visibility.md).
 [0037's static elevation glyph](../docs/decisions/0037-static-elevation-glyph-contract.md)
-and shortened shared capsule are implemented in the wide view. Other glyphs and
-the full normal/debug split are not implemented.
+and shortened shared capsule are implemented in the wide view, with
+[0040's bottom-left notice overlay](../docs/decisions/0040-white-backed-bottom-left-notice-contract.md).
+Other glyphs and the full normal/debug split are not implemented.
 [DESIGN's retained schematic](../docs/DESIGN.md#selected-satellite-presentation)
 remains a design reference, not this executable's output or a golden test.
 Final debug-access controls remain open.
@@ -205,7 +207,8 @@ The 352×240 radar has an aim point at (176, 120) and drawable half-extents
 `2 * atan(tan(vertical_fov / 2) * 173 / 117)`, not a second independent zoom.
 Earth and satellites keep the square baseline's pixel magnification; more space
 is admitted horizontally. The 48-pixel strip holds the selected satellite's
-[static elevation glyph](#static-elevation-glyph) and explicit status notices.
+[static elevation glyph](#static-elevation-glyph); status notices are at bottom-left
+inside the radar, not in the strip.
 
 One hollow outward arrow is drawn for each successful, above-horizon satellite
 whose finite projection is outside the view and whose camera depth is at least
@@ -233,12 +236,32 @@ immediately; arrows are never labelled. Wide zoom hides the label as described
 below; the selected diamond and square baseline are unchanged.
 
 The strip shows a static true-elevation glyph inside a shortened capsule when a
-visible satellite is selected. Notices use a separate fixed area below it:
-`NO MARKERS` when there are no in-view markers, not a claim of a complete empty
-sky; `NO FRAME`, `TRACK ERROR` and `INGEST WARN` preserve explicit missing/incomplete
-state. Warnings remain present alongside valid markers and their selected glyph.
-These are comparison notices, not the final empty-state or debug-access design.
-No routine FOV/count text is shown in the wide image.
+visible satellite is selected. Under
+[0040](../docs/decisions/0040-white-backed-bottom-left-notice-contract.md), complete
+notice lines are bottom-left at `x=12`, ending at baseline `y=222`, with 13px
+spacing. A borderless white backing pads the active text block by 2px and is drawn
+last. It may visually cover markers (including the selected diamond), IDs, arrows
+or Earth within that small area. This does not change eligibility, physical state,
+selection or reported counts; counts are not an unoccluded-pixel tally.
+
+Notices are condition-driven, not timed pop-ups:
+- `NO MARKERS`: no in-view markers in a valid-time frame, even if arrows remain.
+  It clears when motion or zoom brings a marker into view; it does not claim a
+  complete empty sky.
+- `TRACK ERROR`: at least one current calculation failed, including when other
+  markers remain valid. It clears on a frame with no tracking failures.
+- `INGEST WARN`: the catalogue load produced diagnostics, such as omitted records.
+  It persists for the current run; a new clean load clears it. No live reload exists.
+- `NO FRAME`: the renderer has no valid-time frame; this replaces `NO MARKERS`.
+  The current simulator exits on invalid-time errors rather than waiting in that
+  state. Renderer tests exercise it directly.
+
+Active lines appear in status/tracking/ingestion order. No active notice means
+neither text nor backing. Redrawing restores scene pixels as notices disappear or
+the block shrinks; there is no timeout, dismissal control or permanently reserved
+box. The maximum three-line backing occupies only `x=10..79`, `y=187..226`.
+These remain comparison notices, not the final debug-access design. No routine
+FOV/count text is shown in the wide image.
 
 At the pinned weather/GPS time/site above, all frames have SKY 22 and zero failures:
 
@@ -257,6 +280,58 @@ both catalogues, both times, these zooms, independent visibility/arrow counts,
 and deterministic snapshots with SDL unavailable. Tight-view images show some
 overlapping arrows; no collision policy has been added to make them countable.
 
+### Notice overlay review
+
+To regenerate the selected-plus-warnings, empty-plus-warnings and crossing-marker
+examples from a fresh checkout, run this from the workspace root. Python 3's
+standard library creates disposable inputs outside the repository; it does not
+modify fixtures or fetch data. The ISS orbit is real, but the duplicate overflow
+orbit and malformed record are **synthetic fault controls**, not evidence of a
+source-catalogue incident. The crossing observer is a deliberate visual test site.
+
+```sh
+review_dir="$(mktemp -d "${TMPDIR:-/tmp}/overhead-notice-review.XXXXXX")"
+python3 - "$review_dir" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+out = Path(sys.argv[1])
+records = json.loads(Path("core/tests/fixtures/iss-25544.json").read_text())
+bad = dict(records[0], NORAD_CAT_ID=99999, MEAN_MOTION=1e300)
+for name, data in {
+    "clean": records,
+    "ingest": records + [{"bad": "record"}],
+    "combined": records + [bad, {"bad": "record"}],
+    "failed": [bad, {"bad": "record"}],
+}.items():
+    (out / f"{name}-data.json").write_text(json.dumps(data))
+    (out / f"{name}.json").write_text(json.dumps({"groups": [
+        {"name": "synthetic-notice-review", "path": f"{name}-data.json"}
+    ]}))
+PY
+cargo build -p overhead-sim
+for case in combined failed; do
+  target/debug/overhead-sim "$review_dir/$case.json" \
+    2026-10-04T12:43:41.833056Z 0.000017409 -85.180357315 0 \
+    --wide --snapshot "$review_dir/$case.png"
+done
+for case in clean ingest; do
+  target/debug/overhead-sim "$review_dir/$case.json" \
+    2026-10-04T12:43:41.833056Z 0.480017409 -84.480357315 0 \
+    --wide --fov-deg 0.1 --snapshot "$review_dir/crossing-$case.png"
+done
+printf 'Review images: %s\n' "$review_dir"
+```
+
+`combined.png` has one valid selected ISS marker, one tracking failure and an
+ingestion warning. `failed.png` has no valid markers and all three notice lines.
+Compare `crossing-clean.png` with `crossing-ingest.png`: the overlay can cover the
+ISS diamond/ID while the capsule and `visible=1` report remain. Clean loading
+restores that scene; this is not a live ingestion-warning timeout. `NO FRAME`
+and same-app redraw/recovery are covered by renderer tests, not these CLI images.
+These are executable snapshots, unlike DESIGN's illustrative full-stack mocks.
+
 ### Static elevation glyph
 
 Under [0037](../docs/decisions/0037-static-elevation-glyph-contract.md), `--wide`
@@ -270,14 +345,16 @@ The glyph reads the selected satellite's current physical elevation directly.
 Tab selection, frame updates and zoom-driven reselection update it immediately,
 without animation. Hiding the marker's ID at wide zoom does **not** hide the glyph.
 When there is no selection, both capsule and glyph disappear, with no stale
-reading. Notices remain in their fixed area below, even when the capsule is absent.
+reading. Notices use their independent bottom-left overlay, even when the capsule
+is absent.
 
 The existing wide comparison commands exercise this slice without another flag:
 weather/GPS at 20° shows a selected glyph; 100° retains it while hiding the ID;
 0.1° has no selected glyph and shows `NO MARKERS`. The demo at 20° also has no
 selection. These use true historical samples, unlike DESIGN's illustrative stack.
 Category, altitude, speed, period and transitions remain absent. The shorter
-capsule/warning allocation is temporary, not the completed full-stack layout.
+capsule is temporary, not the completed full-stack layout; its old warning area
+is now blank.
 
 ### Label zoom visibility
 
@@ -360,7 +437,12 @@ validated CLI overrides, unchanged selection/physical state, retained diamonds
 and warnings, and unchanged baseline diagnostics. Elevation tests cover capsule bounds/openings,
 endpoint and intermediate-angle pixels, monotonic fill, defensive input handling,
 true selected-state updates, missing-frame/selection clearing, warning coexistence
-and recovery. Headless PNG tests compare glyph pixels to an independent angle
+and recovery. Notice tests additionally cover exact bottom-left backing bounds,
+opaque padding/gaps, a real selected marker/ID crossing under the overlay,
+unchanged app state and pixels outside the backing, shrinking/missing-frame
+recovery, and no stale white mask. CLI tests check notice pixels with valid
+markers plus synthetic tracking failures/omitted records and a subsequent clean
+load, without changing the strip. Headless PNG tests compare glyph pixels to an independent angle
 reference from real look angles at both times and all tested zooms.
 
 The [2026-10-12 verification record](../docs/PROGRESS.md#2026-10-12-utc-square-default-fresh-session-verification-before-commit)

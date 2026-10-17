@@ -137,7 +137,7 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
             glyphs::draw_capsule(&mut display)?;
             glyphs::draw_elevation(&mut display, sample.physical.look.elevation_rad)?;
         }
-        return draw_wide_status(&mut display, app, layout, ingestion_warning);
+        return draw_wide_status(&mut display, app, ingestion_warning);
     }
 
     let x = layout.radar_width as i32 + 10;
@@ -379,36 +379,54 @@ fn draw_selected_label<D: DrawTarget<Color = BinaryColor>>(
     Ok(())
 }
 
-/// Temporary comparison notices, not the final normal/debug presentation.
-/// Warnings remain visible even when some valid markers are present.
+/// Condition-driven notices drawn last, above scene graphics (decision 0040).
+/// Their backing may cover pixels, never change eligibility, counts or selection.
 fn draw_wide_status<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
     app: &RadarApp,
-    layout: Layout,
     ingestion_warning: bool,
 ) -> Result<(), D::Error> {
-    let x = layout.radar_width as i32 + 4;
-    let mut panel = Panel {
-        display,
-        x,
-        columns: (400 - x) as usize / 6,
-        y: 166,
-    };
     let counts = app.counts();
-    if app.time().is_none() {
-        panel.line(format_args!("NO"))?;
-        panel.line(format_args!("FRAME"))?;
+    let status = if app.time().is_none() {
+        Some("NO FRAME")
     } else if counts.visible == 0 {
-        panel.line(format_args!("NO"))?;
-        panel.line(format_args!("MARKERS"))?;
-    }
-    if counts.failed > 0 {
-        panel.line(format_args!("TRACK"))?;
-        panel.line(format_args!("ERROR"))?;
-    }
-    if ingestion_warning {
-        panel.line(format_args!("INGEST"))?;
-        panel.line(format_args!("WARN"))?;
+        Some("NO MARKERS")
+    } else {
+        None
+    };
+    draw_wide_notices(
+        display,
+        &[
+            status,
+            (counts.failed > 0).then_some("TRACK ERROR"),
+            ingestion_warning.then_some("INGEST WARN"),
+        ],
+    )
+}
+
+fn draw_wide_notices<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    notices: &[Option<&str>; 3],
+) -> Result<(), D::Error> {
+    let count = notices.iter().flatten().count() as i32;
+    let Some(columns) = notices.iter().flatten().map(|line| line.len()).max() else {
+        return Ok(()); // No ink and no reserved/cleared corner in healthy views.
+    };
+    let first_baseline = 222 - (count - 1) * 13;
+    // 6x10 cells start 7px above the baseline; pad the complete block by 2px.
+    Rectangle::new(
+        Point::new(10, first_baseline - 9),
+        Size::new(columns as u32 * 6 + 4, (count as u32 - 1) * 13 + 14),
+    )
+    .into_styled(PrimitiveStyle::with_fill(BinaryColor::Off))
+    .draw(display)?;
+    for (row, line) in notices.iter().flatten().enumerate() {
+        Text::new(
+            line,
+            Point::new(12, first_baseline + row as i32 * 13),
+            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+        )
+        .draw(display)?;
     }
     Ok(())
 }
@@ -1039,18 +1057,172 @@ mod tests {
             glyphs::draw_capsule(&mut reference).unwrap();
             glyphs::draw_elevation(&mut reference, sample.physical.look.elevation_rad).unwrap();
         }
-        for (row, line) in lines.iter().enumerate() {
-            Text::new(
-                line,
-                Point::new(356, 166 + row as i32 * 13),
-                MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
-            )
-            .draw(&mut reference)
-            .unwrap();
-        }
         for y in 0..240 {
             assert_eq!(screen.pixels[y][352..], reference.pixels[y][352..]);
         }
+        if !lines.is_empty() {
+            let top = 213 - (lines.len() - 1) * 13;
+            let right = 10 + lines.iter().map(|line| line.len()).max().unwrap() * 6 + 4;
+            for (row, line) in lines.iter().enumerate() {
+                Text::new(
+                    line,
+                    Point::new(12, 222 - (lines.len() - 1 - row) as i32 * 13),
+                    MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+                )
+                .draw(&mut reference)
+                .unwrap();
+            }
+            for y in top..227 {
+                assert_eq!(screen.pixels[y][10..right], reference.pixels[y][10..right]);
+            }
+        }
+    }
+
+    #[test]
+    fn notice_backing_is_opaque_bounded_and_absent_without_notices() {
+        for notices in [
+            [None, None, None],
+            [Some("NO FRAME"), None, None],
+            [Some("NO MARKERS"), None, None],
+            [None, Some("TRACK ERROR"), Some("INGEST WARN")],
+            [Some("NO MARKERS"), Some("TRACK ERROR"), Some("INGEST WARN")],
+        ] {
+            // Fully inked background is a worst-case collision: every cell,
+            // inter-line gap and padding pixel must be cleared inside the mask.
+            let mut screen = Screen {
+                pixels: [[true; 400]; 240],
+            };
+            let mut expected = Screen {
+                pixels: [[true; 400]; 240],
+            };
+            let lines: Vec<_> = notices.iter().flatten().copied().collect();
+            if !lines.is_empty() {
+                let top = match lines.len() {
+                    1 => 213,
+                    2 => 200,
+                    3 => 187,
+                    _ => unreachable!(),
+                };
+                let right = 14 + lines.iter().map(|line| line.len()).max().unwrap() * 6;
+                for row in &mut expected.pixels[top..227] {
+                    row[10..right].fill(false);
+                }
+                for (row, line) in lines.iter().enumerate() {
+                    Text::new(
+                        line,
+                        Point::new(12, top as i32 + 9 + row as i32 * 13),
+                        MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+                    )
+                    .draw(&mut expected)
+                    .unwrap();
+                }
+            }
+            draw_wide_notices(&mut screen, &notices).unwrap();
+            assert_eq!(screen.pixels, expected.pixels);
+        }
+    }
+
+    #[test]
+    fn notices_only_change_their_backing_not_the_scene_or_app_state() {
+        let app = app_with_viewport(Viewport::Rectangle);
+        let counts = app.counts();
+        let selected = app.selected_id();
+        let samples: Vec<_> = app.objects().map(|(_, sample)| sample.clone()).collect();
+        let mut clean = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw(&mut clean, &app, Layout::wide(), false).unwrap();
+        let mut warned = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw(&mut warned, &app, Layout::wide(), true).unwrap();
+        for y in 0..240 {
+            for x in 0..400 {
+                if !(10..80).contains(&x) || !(213..227).contains(&y) {
+                    assert_eq!(clean.pixels[y][x], warned.pixels[y][x]);
+                }
+            }
+        }
+        assert_ne!(clean.pixels, warned.pixels);
+        assert_eq!(app.counts(), counts);
+        assert_eq!(app.selected_id(), selected);
+        assert_eq!(
+            app.objects().map(|(_, s)| s.clone()).collect::<Vec<_>>(),
+            samples
+        );
+        draw(&mut warned, &app, Layout::wide(), false).unwrap();
+        assert_eq!(warned.pixels, clean.pixels);
+    }
+
+    #[test]
+    fn notice_overlay_is_drawn_after_a_crossing_selected_marker_and_id() {
+        let elements: Vec<OmmElements> =
+            serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
+        let mut builder = CatalogueBuilder::new();
+        builder.push(
+            RecordOrigin {
+                group: 0,
+                record: 0,
+            },
+            elements.into_iter().next().unwrap(),
+        );
+        let catalogue = builder.finish().unwrap();
+        let satellite = catalogue.entries()[0].satellite();
+        let time = satellite.epoch();
+        let geo = ecef_to_geodetic(satellite.state_at(time).unwrap().to_ecef().unwrap()).unwrap();
+        // Deliberately choose a site/FOV putting the real ISS marker under the
+        // notice. This is a collision control, not a production observer choice.
+        let layout = Layout::wide();
+        let mut app = RadarApp::new(
+            catalogue,
+            GeodeticPosition {
+                latitude_rad: geo.latitude_rad + 0.48_f64.to_radians(),
+                longitude_rad: geo.longitude_rad + 0.70_f64.to_radians(),
+                altitude_km: 0.0,
+            },
+            View::rectangular(0.1, layout.aspect_ratio()).unwrap(),
+        )
+        .unwrap();
+        app.update(time).unwrap();
+        let marker = layout.marker(app.markers().next().unwrap().2);
+        assert!(
+            (13..77).contains(&marker.x) && (213..224).contains(&marker.y),
+            "{marker:?}"
+        );
+        let counts = app.counts();
+        let physical = app.selected().unwrap().1.physical;
+        let mut clean = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw(&mut clean, &app, layout, false).unwrap();
+        let mut expected = Screen {
+            pixels: clean.pixels,
+        };
+        for row in &mut expected.pixels[213..227] {
+            row[10..80].fill(false);
+        }
+        Text::new(
+            "INGEST WARN",
+            Point::new(12, 222),
+            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+        )
+        .draw(&mut expected)
+        .unwrap();
+        let mut warned = Screen {
+            pixels: clean.pixels,
+        };
+        draw(&mut warned, &app, layout, true).unwrap();
+        assert_eq!(warned.pixels, expected.pixels);
+        assert!((-3..=3).any(|dy| (-3..=3).any(|dx| {
+            let x = (marker.x + dx) as usize;
+            let y = (marker.y + dy) as usize;
+            clean.pixels[y][x] && !warned.pixels[y][x]
+        })));
+        assert_eq!(app.selected_id(), Some(25544));
+        assert_eq!(app.counts(), counts);
+        assert_eq!(app.selected().unwrap().1.physical, physical);
+        draw(&mut warned, &app, layout, false).unwrap();
+        assert_eq!(warned.pixels, clean.pixels);
     }
 
     #[test]
@@ -1058,22 +1230,31 @@ mod tests {
         let mut healthy = app_with_viewport(Viewport::Rectangle);
         assert_eq!(healthy.counts().visible, 1);
         assert_wide_notice(&healthy, false, &[]);
-        assert_wide_notice(&healthy, true, &["INGEST", "WARN"]);
+        assert_wide_notice(&healthy, true, &["INGEST WARN"]);
         let mut failed = app_with_failure(Viewport::Rectangle, true);
         assert_eq!(failed.counts().visible, 1);
         assert_eq!(failed.counts().failed, 1);
-        assert_wide_notice(&failed, false, &["TRACK", "ERROR"]);
-        assert_wide_notice(&failed, true, &["TRACK", "ERROR", "INGEST", "WARN"]);
+        assert_wide_notice(&failed, false, &["TRACK ERROR"]);
+        assert_wide_notice(&failed, true, &["TRACK ERROR", "INGEST WARN"]);
         let mut screen = Screen {
             pixels: [[false; 400]; 240],
         };
-        draw(&mut screen, &failed, Layout::wide(), true).unwrap();
-        draw(&mut screen, &healthy, Layout::wide(), false).unwrap();
-        assert!(
-            screen.pixels[153..]
-                .iter()
-                .all(|row| row[352..].iter().all(|&on| !on))
-        );
+        let mut clean = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        // Shrinking and disappearing overlays must restore the complete scene,
+        // not just remove old text or leave a larger white patch behind.
+        for (app, warning) in [
+            (&failed, true),
+            (&failed, false),
+            (&healthy, true),
+            (&healthy, false),
+        ] {
+            draw(&mut screen, app, Layout::wide(), warning).unwrap();
+            clean.pixels = [[false; 400]; 240];
+            draw(&mut clean, app, Layout::wide(), warning).unwrap();
+            assert_eq!(screen.pixels, clean.pixels);
+        }
         // About half an ISS orbit later, the formerly overhead object is below
         // this fixed site's horizon. Empty-marker text is not an empty-sky claim.
         let later = healthy.time().unwrap() + overhead_core::sgp4::chrono::Duration::minutes(45);
@@ -1082,18 +1263,24 @@ mod tests {
         assert_eq!(healthy.counts().visible, 0);
         assert_eq!(failed.counts().visible, 0);
         assert_eq!(failed.counts().failed, 1);
-        assert_wide_notice(&healthy, false, &["NO", "MARKERS"]);
-        assert_wide_notice(
-            &failed,
-            true,
-            &["NO", "MARKERS", "TRACK", "ERROR", "INGEST", "WARN"],
-        );
+        assert_wide_notice(&healthy, false, &["NO MARKERS"]);
+        assert_wide_notice(&failed, true, &["NO MARKERS", "TRACK ERROR", "INGEST WARN"]);
+        draw(&mut screen, &failed, Layout::wide(), true).unwrap();
+        draw(&mut screen, &healthy, Layout::wide(), false).unwrap();
+        draw(&mut clean, &healthy, Layout::wide(), false).unwrap();
+        assert_eq!(screen.pixels, clean.pixels);
         let invalid = overhead_core::sgp4::chrono::NaiveDate::from_ymd_opt(2101, 1, 1)
             .unwrap()
             .and_hms_opt(0, 0, 0)
             .unwrap();
         assert!(healthy.update(invalid).is_err());
-        assert_wide_notice(&healthy, true, &["NO", "FRAME", "INGEST", "WARN"]);
+        assert_wide_notice(&healthy, false, &["NO FRAME"]);
+        assert_wide_notice(&healthy, true, &["NO FRAME", "INGEST WARN"]);
+        draw(&mut screen, &healthy, Layout::wide(), true).unwrap();
+        healthy.update(later).unwrap();
+        draw(&mut screen, &healthy, Layout::wide(), false).unwrap();
+        draw(&mut clean, &healthy, Layout::wide(), false).unwrap();
+        assert_eq!(screen.pixels, clean.pixels);
     }
 
     #[test]

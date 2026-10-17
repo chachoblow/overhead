@@ -6,8 +6,10 @@ Status: accepted (bounded M3 contract; implemented in the opt-in wide view and u
 ## Subsequent visual direction
 [0038](0038-labelled-borderless-glyph-direction.md) selects a future outlined
 circular elevation cutout in a labelled borderless stack. It is not implemented
-and does not yet replace this bounded executable contract, including warning
-placement and no-selection clearing. Resolve the new contract before coding.
+and does not yet replace this bounded elevation/capsule contract or its
+no-selection clearing. [0040](0040-white-backed-bottom-left-notice-contract.md)
+subsequently replaces only the strip-notice placement with a bottom-left,
+white-backed overlay; the original notice geometry below remains history.
 
 ## Decision
 Implement one unanimated true-elevation glyph inside a shortened shared capsule

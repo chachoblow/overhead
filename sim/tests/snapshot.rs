@@ -302,6 +302,9 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                 assert_eq!(success(scratch.run(&args)), report);
                 assert_eq!(scratch.png("wide.png"), expected);
                 assert_snapshot_elevation(&scratch, "wide.png", selected_elevation);
+                if visible == 0 {
+                    assert_snapshot_notices(&scratch, "wide.png", &["NO MARKERS"]);
+                }
             }
         }
     }
@@ -332,11 +335,61 @@ fn assert_snapshot_elevation(scratch: &Scratch, path: &str, elevation: Option<f6
             );
         }
     }
+    // Notice relocation must not leave status ink below the existing capsule.
+    for y in 153..240 {
+        for x in 352..400 {
+            assert_eq!(image.get_pixel(Point::new(x, y)), paper);
+        }
+    }
     if elevation.is_none() {
         for y in 0..153 {
             for x in 352..400 {
                 assert_eq!(image.get_pixel(Point::new(x, y)), paper);
             }
+        }
+    }
+}
+
+fn assert_snapshot_notices(scratch: &Scratch, path: &str, lines: &[&str]) {
+    use embedded_graphics::{
+        mono_font::{MonoTextStyle, ascii::FONT_6X10},
+        pixelcolor::{BinaryColor, Rgb888},
+        prelude::*,
+        text::Text,
+    };
+    use embedded_graphics_simulator::SimulatorDisplay;
+    assert!(!lines.is_empty());
+    let image = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join(path)).unwrap();
+    let mut reference = SimulatorDisplay::<BinaryColor>::new(Size::new(400, 240));
+    reference.clear(BinaryColor::Off).unwrap();
+    let top = 213 - (lines.len() as i32 - 1) * 13;
+    let right = 14 + lines.iter().map(|line| line.len()).max().unwrap() as i32 * 6;
+    for (row, line) in lines.iter().enumerate() {
+        Text::new(
+            line,
+            Point::new(12, top + 9 + row as i32 * 13),
+            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+        )
+        .draw(&mut reference)
+        .unwrap();
+    }
+    for y in top..227 {
+        for x in 10..right {
+            let point = Point::new(x, y);
+            let expected = if reference.get_pixel(point) == BinaryColor::On {
+                Rgb888::new(32, 32, 32)
+            } else {
+                Rgb888::new(245, 245, 245)
+            };
+            assert_eq!(image.get_pixel(point), expected, "notice pixel {point:?}");
+        }
+    }
+    for y in 153..240 {
+        for x in 352..400 {
+            assert_eq!(
+                image.get_pixel(Point::new(x, y)),
+                Rgb888::new(245, 245, 245)
+            );
         }
     }
 }
@@ -541,6 +594,24 @@ fn propagation_errors_and_ingestion_warnings_remain_explicit() {
     assert!(String::from_utf8_lossy(&output.stderr).contains("NORAD 25544: propagation:"));
     assert!(success(output).contains("catalogue=1 sky=0 visible=0 failed=1 indicators=0"));
     scratch.png("error.png");
+    assert_snapshot_notices(&scratch, "error.png", &["NO MARKERS", "TRACK ERROR"]);
+    // All three notices together, using an explicit synthetic bad record.
+    let mut omitted: Value =
+        serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
+    omitted[0]["MEAN_MOTION"] = json!(1e300);
+    omitted
+        .as_array_mut()
+        .unwrap()
+        .push(json!({"bad":"record"}));
+    scratch.manifest(omitted);
+    let output = scratch.run(&wide_args);
+    assert!(String::from_utf8_lossy(&output.stderr).contains("warning: skipped"));
+    assert!(success(output).contains("catalogue=1 sky=0 visible=0 failed=1 indicators=0"));
+    assert_snapshot_notices(
+        &scratch,
+        "error.png",
+        &["NO MARKERS", "TRACK ERROR", "INGEST WARN"],
+    );
 
     let mut records: Value =
         serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
@@ -556,4 +627,87 @@ fn propagation_errors_and_ingestion_warnings_remain_explicit() {
     assert!(String::from_utf8_lossy(&output.stderr).contains("warning: skipped"));
     assert!(success(output).contains("catalogue=1"));
     scratch.png("error.png");
+}
+
+#[test]
+fn wide_warning_snapshots_preserve_valid_markers_and_clear_after_clean_load() {
+    use embedded_graphics::{pixelcolor::Rgb888, prelude::*};
+    use embedded_graphics_simulator::SimulatorDisplay;
+    let scratch = Scratch::new();
+    let records: Value =
+        serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
+    let elements: Vec<overhead_core::OmmElements> =
+        serde_json::from_value(records.clone()).unwrap();
+    let satellite = overhead_core::Satellite::from_elements(elements[0].elements()).unwrap();
+    let time = satellite.epoch();
+    let observer =
+        overhead_core::ecef_to_geodetic(satellite.state_at(time).unwrap().to_ecef().unwrap())
+            .unwrap();
+    let utc = format!("{time}Z").replace(' ', "T");
+    let latitude = observer.latitude_rad.to_degrees().to_string();
+    let longitude = observer.longitude_rad.to_degrees().to_string();
+    let run = |file| {
+        scratch.run(&[
+            "catalogue.json",
+            &utc,
+            &latitude,
+            &longitude,
+            "0",
+            "--wide",
+            "--snapshot",
+            file,
+        ])
+    };
+    scratch.manifest(records.clone());
+    assert!(
+        success(run("healthy.png")).contains("catalogue=1 sky=1 visible=1 failed=0 indicators=0")
+    );
+    let healthy_png = scratch.png("healthy.png");
+    let healthy = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join("healthy.png")).unwrap();
+    for (failure, omission, lines) in [
+        (true, false, vec!["TRACK ERROR"]),
+        (true, true, vec!["TRACK ERROR", "INGEST WARN"]),
+        (false, true, vec!["INGEST WARN"]),
+    ] {
+        let mut changed = records.clone();
+        if failure {
+            let mut bad = records[0].clone();
+            bad["NORAD_CAT_ID"] = json!(99999);
+            bad["MEAN_MOTION"] = json!(1e300);
+            changed.as_array_mut().unwrap().push(bad);
+        }
+        if omission {
+            changed
+                .as_array_mut()
+                .unwrap()
+                .push(json!({"bad":"record"}));
+        }
+        scratch.manifest(changed);
+        let output = run("warned.png");
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        assert_eq!(stderr.contains("NORAD 99999: propagation:"), failure);
+        assert_eq!(stderr.contains("warning: skipped"), omission);
+        assert!(success(output).contains(&format!(
+            "catalogue={} sky=1 visible=1 failed={} indicators=0",
+            1 + usize::from(failure),
+            usize::from(failure),
+        )));
+        assert_snapshot_notices(&scratch, "warned.png", &lines);
+        let warned = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join("warned.png")).unwrap();
+        let top = 213 - (lines.len() as i32 - 1) * 13;
+        for y in 0..240 {
+            for x in 0..400 {
+                if !(10..80).contains(&x) || !(top..227).contains(&y) {
+                    let point = Point::new(x, y);
+                    assert_eq!(warned.get_pixel(point), healthy.get_pixel(point));
+                }
+            }
+        }
+    }
+    // Ingestion recovery is a new clean load, not a timer or live reload.
+    scratch.manifest(records);
+    assert!(
+        success(run("recovered.png")).contains("catalogue=1 sky=1 visible=1 failed=0 indicators=0")
+    );
+    assert_eq!(scratch.png("recovered.png"), healthy_png);
 }

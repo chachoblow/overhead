@@ -20,8 +20,8 @@ and replaces [0036's shared capsule direction](0036-shared-glyph-capsule.md).
 It also changes the intended elevation appearance from
 [0037's filled square](0037-static-elevation-glyph-contract.md), but does **not**
 replace that executable contract yet. The current opt-in wide renderer still
-implements 0037's elevation-only capsule and separate warning area; square
-diagnostics remain default.
+implements 0037's elevation-only capsule; [0040](0040-white-backed-bottom-left-notice-contract.md)
+subsequently moves notices to a bottom-left overlay. Square diagnostics remain default.
 
 ## Why
 The user iterated through circular glyphs, outlined elevation, continuous
@@ -70,10 +70,13 @@ with straight wings was preferred to detailed solar-panel diagrams.
   Existing true-state readouts must remain separate from any future animation.
 - The full-height stack occupies the old warning area. Explicit tracking and
   ingestion warnings must remain visible, including with valid markers.
-  A reserved radar-corner notice area was recommended but **not approved or
-  mocked**. Resolve warning and missing/empty-state placement before an
-  implementation contract; do not silently remove notices or treat a failed
-  sky as complete. Keeping the existing no-selection clearing rule is the
+  A reserved radar-corner notice area was initially recommended but not approved
+  or mocked. [0039](0039-bottom-left-condition-driven-notices.md) subsequently
+  selects bottom-left placement and condition-driven notices after mock review.
+  [0040](0040-white-backed-bottom-left-notice-contract.md) subsequently bounds and
+  implements the white-backed overlay independently of the revised glyphs.
+  Do not silently remove notices or treat a failed sky as complete.
+  Keeping the existing no-selection clearing rule is the
   recommendation, not a newly specified full-stack lifecycle.
 - No new animation, selection policy, debug-access control, panning, slowdown,
   prediction, fetching, scheduling, production capacity, dependency, hardware

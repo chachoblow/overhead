@@ -20,10 +20,11 @@ off-screen arrows. The user approved this layout and overlaps-allowed treatment.
 [0038](decisions/0038-labelled-borderless-glyph-direction.md) now selects a
 borderless labelled glyph stack, circular data glyphs and a padded vertical
 separator. The retained mocks below are the current visual direction, not an
-implementation contract. The executable remains at
-[0037](decisions/0037-static-elevation-glyph-contract.md): static true elevation
-in a shorter [0036 capsule](decisions/0036-shared-glyph-capsule.md), with a separate
-warning area. That slice was visually accepted; the revised stack is unimplemented.
+implementation contract. The executable retains
+[0037's static true elevation](decisions/0037-static-elevation-glyph-contract.md)
+in a shorter [0036 capsule](decisions/0036-shared-glyph-capsule.md), now with
+[0040's white-backed bottom-left notices](decisions/0040-white-backed-bottom-left-notice-contract.md).
+The elevation/capsule slice was visually accepted; the revised stack is unimplemented.
 
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 minimum on-screen traversal time for fast markers is planned, not implemented.
@@ -123,8 +124,9 @@ recover this direction; the retained PNGs and text are sufficient.
   the strip. [0035](decisions/0035-label-zoom-visibility.md) hides the text at ≥70°
   vertical FOV and restores it at ≤60°, retaining visibility between thresholds.
   The user reviewed and accepted this behavior for now; thresholds remain
-  configurable comparison defaults. Keep the selected diamond visible;
-  no fade or dithering. Full names remain diagnostic information.
+  configurable comparison defaults. The zoom gate retains the selected diamond;
+  0040's notice overlay may locally cover it. No fade or dithering. Full names
+  remain diagnostic information.
 - **Glyph strip, top to bottom:** category pictogram, elevation, altitude,
   orbital speed, orbital period. Keep it near the right edge, without enclosing
   borders; one padded vertical line separates it from the radar. Center short
@@ -148,6 +150,51 @@ recover this direction; the retained PNGs and text are sufficient.
 - **Transitions:** favor glyphs animating toward the new selected satellite's
   values. Intermediate shapes are presentation only, never new physical samples.
   This has not been implemented or given timing/interruption rules.
+
+### Bottom-left notice reference
+
+[0039](decisions/0039-bottom-left-condition-driven-notices.md) selects bottom-left
+notices for the revised stack, replacing the earlier unapproved radar-corner
+suggestion. Notices follow their underlying conditions rather than expiring:
+`NO MARKERS`, `NO FRAME`, `TRACK ERROR` and `INGEST WARN` keep their current
+meanings. Healthy selected views have no notice ink. The decision owns lifecycle
+details and the distinction between renderer states and simulator error handling.
+[0040](decisions/0040-white-backed-bottom-left-notice-contract.md) now implements
+these notices independently of the full glyph stack. A small borderless white
+backing keeps the text readable over crossing graphics. It may visually cover
+markers (including the selected diamond), IDs, arrows or Earth within its bounds;
+this does not change eligibility, counts, physical state or selection. Neither
+text nor backing remains when no notice applies. The right-hand elevation capsule
+is unchanged, and its former notice area is blank.
+
+![Selected marker and illustrative warnings at bottom-left](mockups/0039-bottom-left-selected.png)
+
+![No in-view markers with illustrative warnings at bottom-left](mockups/0039-bottom-left-empty.png)
+
+**Reference only:** native 400×240, strictly 1-bit composites retained on
+2026-10-17 after the user chose bottom-left comparison B over top-left A.
+Backgrounds are fresh headless weather/GPS replays at the same UTC/site as the
+0038 references, at 20° and 0.1° vertical FOV respectively
+([reproduction inputs](../sim/README.md#wide-radar-comparison)). Both source
+frames are healthy: the warning strings were added for layout review, not
+reported by the replay. The selected strip reuses 0038's illustrative navigation
+and data glyphs, replacing provisional labels with the existing renderer's
+`FONT_6X10` bitmap. Glyphs still do not describe the selected satellite.
+
+Notice ink starts at `x=12`, with 13px line spacing and the last line's ink at
+`y=216..222`; the two-line example starts at `y=203`, the three-line example at
+`y=190`. These observations informed 0040's subsequent geometry contract.
+The retained mocks use transparent text, not the implemented white backing.
+The strip retains 10px outer padding and the separator; clearing labels/glyphs
+without selection while retaining that
+separator is still a proposal for the full stack, not a newly accepted lifecycle.
+
+The [synthetic overlap stress mock](mockups/0039-bottom-left-overlap.png) adds a
+marker, ID and arrow near the notices to expose possible collisions. Those added
+objects are not physical samples. Bottom-left placement alone cannot guarantee
+legible warnings; 0040 subsequently resolves this with the approved local white
+backing. No displacement or change to arrow geometry/selection rules follows.
+No temporary assets or scripts are required to recover this direction.
 
 ### Glyph capsule reference
 
@@ -178,7 +225,8 @@ a shortened capsule with separate space below for explicit notices, immediate
 true-elevation updates, and no capsule or glyph without selection. This temporary
 layout is not the full-stack mock's final geometry. Other glyphs remain absent;
 the decision owns exact drawing and lifecycle rules. This slice is implemented
-and the user accepted the rendered snapshot set. Reproduce it through the
+and the user accepted the rendered snapshot set. 0040 subsequently relocates
+only its notices to bottom-left. Reproduce the current state through the
 [simulator's wide view](../sim/README.md#static-elevation-glyph).
 
 ### Open questions and boundaries
@@ -192,8 +240,9 @@ led to 0035's configurable clean hide/show refinement, now user-reviewed and
 accepted for the current comparison. Define glyph ranges/mappings and unknown/
 ambiguous category handling explicitly; don't turn illustrative mock values into
 defaults. 0038 replaces 0036's wrapper and the earlier glyph visual brief; 0037
-still bounds the implemented elevation-only capsule and warning area. The revised
-stack needs exact raster/font geometry, glyph mappings, lifecycle and transition
+still bounds the implemented elevation-only capsule, with warning placement and
+compositing now owned by 0040. The revised stack needs exact raster/font geometry,
+glyph mappings, lifecycle and transition
 rules before coding. Existing no-selection clearing is recommended for the full
 stack, but that lifecycle has not yet been specified.
 
@@ -207,10 +256,13 @@ accepted wide/glyph direction.
 Refined empty-view explanations and incomplete-data/tracking notices are parked
 for focused design, not removed as a correctness requirement. The comparison
 uses minimal explicit notices; final debug access remains open. The revised
-full-height stack occupies the current warning area. A reserved radar-corner
-notice area has been recommended, but neither approved nor mocked; decide its
-placement before implementation. A normal view must not conceal failed/omitted
-tracking as a complete empty sky, including when some valid markers remain.
+full-height stack occupied the former strip warning area.
+[0039](decisions/0039-bottom-left-condition-driven-notices.md) selects bottom-left
+condition-driven notices, with retained comparisons [above](#bottom-left-notice-reference);
+[0040](decisions/0040-white-backed-bottom-left-notice-contract.md) now implements
+their geometry and white-backed compositing. A normal view must not conceal
+failed/omitted tracking as a complete empty sky, including when some valid markers
+remain.
 
 The selected-satellite start/end/peak pass graphic is interesting but deferred;
 upcoming-pass lists are not desired. Local time, orbit-data age, range and bearing
