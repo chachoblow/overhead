@@ -461,3 +461,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Reviewed the complete session diff and prepared a concise [handoff](HANDOFF.md); 0047 is implemented and user visually accepted. No new implementation slice or M3 closure was started.
 - Freshly reran workspace check/tests, app/render no-default-feature checks, formatting and strict all-target app/render/sim/tools Clippy successfully. Earlier six-case normal PNG/stderr parity remains distinct from these fresh checks; no SDL window or hardware access by the agent.
 - Next: assess M3's exit criteria and recommend closure or one specific remaining gap before new implementation. M2 operating budgets/scheduling and hardware risks remain open; frozen evidence is unchanged.
+
+## 2026-10-18 UTC (M3 exit verification and closure)
+- With user approval, verified M3's motion/zoom, engine traceability and recorded density/layout feedback; marked it complete in [PLAN](PLAN.md#m3--minimal-real-data-radar-complete). No source change or new implementation slice.
+- Workspace check/tests, app/render no-default-feature check and formatting passed on source `64db11a`; existing executable visual acceptance remains separate from these host checks.
+- Updated [HANDOFF](HANDOFF.md); wrap-up checks local links/anchors, instruction consistency and unstaged/staged whitespace. Rust checks are not rerun for the documentation-only wrap-up.
+- Next: propose one bounded post-M3 task and obtain scope agreement. M2 budgets/scheduling and hardware risks remain open; no SDL/hardware access, frozen-evidence changes or target-performance claim.

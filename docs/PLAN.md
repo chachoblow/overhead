@@ -1,7 +1,8 @@
 # Overhead — Plan
 
-**Current: M3 opt-in wide radar and per-satellite off-screen arrows implemented
-and visually approved under 0033; square/diagnostic default retained. Selected-marker
+**Current: M3 complete after exit verification on 2026-10-18 UTC;
+next work is not yet selected. Opt-in wide radar and per-satellite off-screen
+arrows are implemented and visually approved under 0033; square/diagnostic default retained. Selected-marker
 identification is implemented under 0034, refined by 0035's configurable 70°/60°
 hide/show hysteresis after review of crowding; the user has now accepted that behavior.
 0037's visually accepted elevation-only capsule is now replaced by 0041's
@@ -93,7 +94,7 @@ hardware; the first S3 kernel baseline alone does not justify capacity or cadenc
 **Done when:** a curated catalogue and upcoming passes are testable headlessly,
 with measured costs justifying supported size, cadence, and prediction accuracy.
 
-## M3 — Minimal real-data radar (in progress)
+## M3 — Minimal real-data radar (complete)
 [DESIGN](DESIGN.md#interface-intent) owns the visual brief and open panel questions;
 [simulator usage](../sim/README.md) owns controls and comparison examples.
 
@@ -226,6 +227,17 @@ Simulator throughput is not target capacity evidence.
 **Done when:** satellites move through a zoomable view traceable to verified
 engine outputs, with initial visual feedback on density and layout. Coastlines,
 visual slow-down and pass countdowns are not prerequisites.
+
+**Exit assessment — 2026-10-18 UTC:** complete. Explicit-time replay and app
+regressions verify motion and lens zoom without changing physical truth;
+headless snapshots independently check geometry and selected fields across
+catalogues, times and zooms. Accepted camera/layout/density feedback is recorded
+in 0027, 0033 and 0035, with the selected fields, transitions and debug access
+accepted above. Fresh workspace check/tests, app/render no-default-feature check
+and formatting check passed against source revision `64db11a`; no code change
+was needed. Existing user visual acceptance is separate from these host checks.
+M2 operating budgets/scheduling and physical-display/target validation remain open;
+closure neither selects production capacity/cadence nor authorizes follow-on work.
 
 ## M4 — Useful display behavior
 - [ ] Refine secondary information with visual feedback; add stable automatic
