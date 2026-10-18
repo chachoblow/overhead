@@ -473,3 +473,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Retained two native-size binary illustrative comparisons and [provenance](mockups/0048-empty-view-proposal.md), based on two headless historical snapshots; no new executable notice behavior or physical-display claim.
 - Updated PLAN, DESIGN, 0039/0040 cross-references and HANDOFF. Docs/images-only verification: local links/anchors, instruction consistency, image dimensions/binary pixels and whitespace; Rust checks not rerun, frozen-M2 evidence unchanged.
 - Next: ask before implementing 0048; preserve square/physical truth and warning lifecycle. M2 budgets/scheduling, Sharp output, RAM/safe stack and RWX remain open.
+
+## 2026-10-18 UTC (M4 empty-view notice implementation and acceptance)
+- Separately authorized and implemented [0048](decisions/0048-refined-empty-view-notices.md) in `render/src/lib.rs`: arrow/horizon/fallback status with wider backing; independent warnings, square, selection and physical state unchanged.
+- Added renderer classification/pixel/recovery and `sim/tests/snapshot.rs` headless real-data/omission tests; updated [simulator usage](../sim/README.md#wide-radar-comparison) and current status docs. User separately accepted fresh executable arrow and horizon snapshots; retained mocks remain illustrative.
+- Wrap-up verified workspace check/tests, app/render no-default-feature check, strict app/render/sim Clippy, formatting, local links and whitespace. No new dependencies, fixtures, hardware/firmware/toolchain or frozen-M2 evidence; host images do not validate target legibility or costs.
+- Next: scope one bounded M4 stable automatic-selection contract with user approval before implementation; M2 operating budgets/scheduling and Sharp bring-up remain open.

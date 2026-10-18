@@ -429,13 +429,12 @@ fn draw_wide_status<D: DrawTarget<Color = BinaryColor>>(
     ingestion_warning: bool,
 ) -> Result<(), D::Error> {
     let counts = app.counts();
-    let status = if app.time().is_none() {
-        Some("NO FRAME")
-    } else if counts.visible == 0 {
-        Some("NO MARKERS")
-    } else {
-        None
-    };
+    let status = wide_empty_status(
+        app.time().is_some(),
+        counts,
+        app.indicators().next().is_some(),
+        ingestion_warning,
+    );
     draw_wide_notices(
         display,
         &[
@@ -444,6 +443,32 @@ fn draw_wide_status<D: DrawTarget<Color = BinaryColor>>(
             ingestion_warning.then_some("INGEST WARN"),
         ],
     )
+}
+
+// A horizon claim requires a complete, successful sample of a nonempty load.
+// An arrow is evidence of tracked sky outside the viewport, not zoom advice
+// for other objects (which may have invalid camera depth).
+fn wide_empty_status(
+    has_frame: bool,
+    counts: overhead_app::Counts,
+    has_indicator: bool,
+    ingestion_warning: bool,
+) -> Option<&'static str> {
+    if !has_frame {
+        Some("NO FRAME")
+    } else if counts.visible > 0 {
+        None
+    } else if has_indicator {
+        Some("SKY OUTSIDE VIEW")
+    } else if counts.catalogue > 0
+        && counts.above_horizon == 0
+        && counts.failed == 0
+        && !ingestion_warning
+    {
+        Some("NONE ABOVE HORIZON")
+    } else {
+        Some("NO MARKERS")
+    }
 }
 
 fn draw_wide_notices<D: DrawTarget<Color = BinaryColor>>(
@@ -1907,11 +1932,75 @@ mod tests {
     }
 
     #[test]
+    fn empty_status_requires_positive_evidence_and_clean_horizon_samples() {
+        use overhead_app::Counts;
+        let clean = Counts {
+            catalogue: 1,
+            ..Counts::default()
+        };
+        assert_eq!(
+            wide_empty_status(false, clean, true, false),
+            Some("NO FRAME")
+        );
+        assert_eq!(
+            wide_empty_status(
+                true,
+                Counts {
+                    visible: 1,
+                    ..clean
+                },
+                true,
+                true
+            ),
+            None
+        );
+        assert_eq!(
+            wide_empty_status(true, clean, true, false),
+            Some("SKY OUTSIDE VIEW")
+        );
+        assert_eq!(
+            wide_empty_status(true, clean, true, true),
+            Some("SKY OUTSIDE VIEW")
+        );
+        assert_eq!(
+            wide_empty_status(true, Counts { failed: 1, ..clean }, true, false),
+            Some("SKY OUTSIDE VIEW")
+        );
+        assert_eq!(
+            wide_empty_status(true, clean, false, false),
+            Some("NONE ABOVE HORIZON")
+        );
+        for (counts, warning) in [
+            (Counts::default(), false),
+            (
+                Counts {
+                    above_horizon: 1,
+                    ..clean
+                },
+                false,
+            ), // e.g. invalid camera depth
+            (Counts { failed: 1, ..clean }, false),
+            (clean, true),
+        ] {
+            assert_eq!(
+                wide_empty_status(true, counts, false, warning),
+                Some("NO MARKERS")
+            );
+        }
+    }
+
+    #[test]
     fn notice_backing_is_opaque_bounded_and_absent_without_notices() {
         for notices in [
             [None, None, None],
             [Some("NO FRAME"), None, None],
             [Some("NO MARKERS"), None, None],
+            [Some("SKY OUTSIDE VIEW"), None, None],
+            [
+                Some("NONE ABOVE HORIZON"),
+                Some("TRACK ERROR"),
+                Some("INGEST WARN"),
+            ],
             [None, Some("TRACK ERROR"), Some("INGEST WARN")],
             [Some("NO MARKERS"), Some("TRACK ERROR"), Some("INGEST WARN")],
         ] {
@@ -2091,8 +2180,25 @@ mod tests {
         assert_eq!(healthy.counts().visible, 0);
         assert_eq!(failed.counts().visible, 0);
         assert_eq!(failed.counts().failed, 1);
-        assert_wide_notice(&healthy, false, &["NO MARKERS"]);
+        assert_eq!(healthy.counts().above_horizon, 0);
+        assert_wide_notice(&healthy, false, &["NONE ABOVE HORIZON"]);
+        assert_wide_notice(&healthy, true, &["NO MARKERS", "INGEST WARN"]);
         assert_wide_notice(&failed, true, &["NO MARKERS", "TRACK ERROR", "INGEST WARN"]);
+        let mut horizon = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        let mut incomplete = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw(&mut horizon, &healthy, Layout::wide(), false).unwrap();
+        draw(&mut incomplete, &healthy, Layout::wide(), true).unwrap();
+        for y in 0..240 {
+            for x in 0..400 {
+                if !(10..122).contains(&x) || !(200..227).contains(&y) {
+                    assert_eq!(horizon.pixels[y][x], incomplete.pixels[y][x]);
+                }
+            }
+        }
         draw(&mut screen, &failed, Layout::wide(), true).unwrap();
         draw(&mut screen, &healthy, Layout::wide(), false).unwrap();
         draw(&mut clean, &healthy, Layout::wide(), false).unwrap();

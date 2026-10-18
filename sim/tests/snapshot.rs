@@ -83,6 +83,51 @@ fn demo_is_deterministic_from_an_unrelated_directory_without_sdl() {
 }
 
 #[test]
+fn wide_empty_status_distinguishes_real_arrows_from_clean_horizon() {
+    let scratch = Scratch::new();
+    let report = success(scratch.run(&["--demo", "--wide", "--snapshot", "arrows.png"]));
+    assert!(
+        report.contains("catalogue=16 sky=4 visible=0 failed=0 indicators=4"),
+        "{report}"
+    );
+    assert_snapshot_notices(&scratch, "arrows.png", &["SKY OUTSIDE VIEW"]);
+
+    let iss: Value =
+        serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
+    scratch.manifest(iss.clone());
+    let run = |file: &str| {
+        scratch.run(&[
+            "catalogue.json",
+            "2026-10-04T12:43:41.833056Z",
+            "39.007",
+            "-104.883",
+            "2.187",
+            "--wide",
+            "--snapshot",
+            file,
+        ])
+    };
+    let report = success(run("horizon.png"));
+    assert!(
+        report.contains("catalogue=1 sky=0 visible=0 failed=0 indicators=0"),
+        "{report}"
+    );
+    assert_snapshot_notices(&scratch, "horizon.png", &["NONE ABOVE HORIZON"]);
+
+    // A known omission prevents the horizon claim, without changing the accepted ISS.
+    let mut omitted = iss;
+    omitted
+        .as_array_mut()
+        .unwrap()
+        .push(json!({"bad": "record"}));
+    scratch.manifest(omitted);
+    let output = run("omitted.png");
+    assert!(String::from_utf8_lossy(&output.stderr).contains("warning: skipped"));
+    assert!(success(output).contains("catalogue=1 sky=0 visible=0 failed=0 indicators=0"));
+    assert_snapshot_notices(&scratch, "omitted.png", &["NO MARKERS", "INGEST WARN"]);
+}
+
+#[test]
 fn real_catalogue_zoom_changes_visibility_not_sky_count() {
     let scratch = Scratch::new();
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/weather-gps.json");
@@ -340,7 +385,15 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                     selected_category,
                 );
                 if visible == 0 {
-                    assert_snapshot_notices(&scratch, "wide.png", &["NO MARKERS"]);
+                    assert_snapshot_notices(
+                        &scratch,
+                        "wide.png",
+                        &[if indicators > 0 {
+                            "SKY OUTSIDE VIEW"
+                        } else {
+                            "NONE ABOVE HORIZON"
+                        }],
+                    );
                 }
             }
         }
@@ -781,7 +834,12 @@ fn assert_snapshot_notices(scratch: &Scratch, path: &str, lines: &[&str]) {
     };
     use embedded_graphics_simulator::SimulatorDisplay;
     assert!(!lines.is_empty());
-    if lines.contains(&"NO MARKERS") || lines.contains(&"NO FRAME") {
+    if lines.iter().any(|line| {
+        matches!(
+            *line,
+            "NO MARKERS" | "NO FRAME" | "SKY OUTSIDE VIEW" | "NONE ABOVE HORIZON"
+        )
+    }) {
         assert_snapshot_fields(scratch, path, None, None, None, None, None);
     }
     let image = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join(path)).unwrap();

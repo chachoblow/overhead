@@ -320,9 +320,15 @@ or Earth within that small area. This does not change eligibility, physical stat
 selection or reported counts; counts are not an unoccluded-pixel tally.
 
 Notices are condition-driven, not timed pop-ups:
-- `NO MARKERS`: no in-view markers in a valid-time frame, even if arrows remain.
-  It clears when motion or zoom brings a marker into view; it does not claim a
-  complete empty sky.
+- `SKY OUTSIDE VIEW`: no in-view markers but at least one valid off-screen arrow.
+  This reports tracked sky outside this viewport, not a promise that zoom can
+  reveal every tracked object.
+- `NONE ABOVE HORIZON`: no in-view markers or arrows, and a nonempty accepted
+  catalogue has no above-horizon samples, tracking failures or ingestion warning.
+  This describes only the loaded catalogue at this UTC, not the complete sky.
+- `NO MARKERS`: remaining valid-time zero-visible cases, including empty input,
+  failed/incomplete tracking, or above-horizon objects without valid arrows.
+  Any bottom status clears as soon as a marker enters view.
 - `TRACK ERROR`: at least one current calculation failed, including when other
   markers remain valid. It clears on a frame with no tracking failures.
 - `INGEST WARN`: the catalogue load produced diagnostics, such as omitted records.
@@ -334,7 +340,8 @@ Notices are condition-driven, not timed pop-ups:
 Active lines appear in status/tracking/ingestion order. No active notice means
 neither text nor backing. Redrawing restores scene pixels as notices disappear or
 the block shrinks; there is no timeout, dismissal control or permanently reserved
-box. The maximum three-line backing occupies only `x=10..79`, `y=187..226`.
+box. The maximum three-line backing occupies `x=10..121`, `y=187..226` (the
+18-character horizon status sets the widest case).
 Debug exposes the same conditions separately without replacing these comparison
 notices. No routine FOV/count text is shown in the wide normal image.
 
@@ -400,7 +407,8 @@ printf 'Review images: %s\n' "$review_dir"
 ```
 
 `combined.png` has one valid selected ISS marker, one tracking failure and an
-ingestion warning. `failed.png` has no valid markers and all three notice lines.
+ingestion warning. `failed.png` has no valid markers and all three notice lines
+(`NO MARKERS`, `TRACK ERROR`, `INGEST WARN`).
 Compare `crossing-clean.png` with `crossing-ingest.png`: the overlay can cover the
 ISS diamond/ID while all four data fields and the `visible=1` report remain.
 Clean loading restores that scene; this is not a live ingestion-warning timeout.

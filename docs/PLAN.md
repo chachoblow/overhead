@@ -1,8 +1,8 @@
 # Overhead — Plan
 
 **Current: M3 complete after exit verification on 2026-10-18 UTC;
-M4 empty-view notice contract accepted under 0048, implementation not yet
-authorized. Opt-in wide radar and per-satellite off-screen arrows are implemented and visually approved under 0033; square/diagnostic default retained. Selected-marker
+M4 empty-view notices implemented under 0048; the user accepted fresh
+executable output separately from contract mocks and host checks. Opt-in wide radar and per-satellite off-screen arrows are implemented and visually approved under 0033; square/diagnostic default retained. Selected-marker
 identification is implemented under 0034, refined by 0035's configurable 70°/60°
 hide/show hysteresis after review of crowding; the user has now accepted that behavior.
 0037's visually accepted elevation-only capsule is now replaced by 0041's
@@ -244,11 +244,13 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   distinguish arrow-eligible off-screen objects from clean no-above-horizon
   samples, retaining conservative fallback and independent warnings. The user
   approved wording and wider backing after reviewing illustrative native-size
-  comparisons. This is a design agreement, not implemented or executable visual
-  acceptance; implementation needs separate authorization. Square diagnostics
+  comparisons. Separate implementation authorization was granted; those
+  comparisons are not executable visual acceptance. Square diagnostics
   and existing radar/selection behavior remain unchanged.
-- [ ] Implement and verify 0048 in a separate bounded slice after authorization;
-  preserve existing 0039/0040 notice lifecycles and provenance boundaries.
+- [x] Implement 0048 in a separately authorized bounded slice, preserving
+  0039/0040 notice lifecycles and provenance boundaries. Host checks and tests
+  cover classification, backing and headless real-data cases. The user separately
+  reviewed and accepted fresh executable arrow and horizon snapshots.
 - [ ] Refine secondary information with visual feedback; add stable automatic
   selection and the chosen true-state readouts. 0032 removes routine normal-view
   FOV/counts; time and data age are not requirements of its starting layout.

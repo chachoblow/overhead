@@ -4,9 +4,9 @@ These strictly 1-bit **illustrative composites** were reviewed on 2026-10-18
 alongside the wording/backing contract now accepted in
 [0048](../decisions/0048-refined-empty-view-notices.md). The new notices shown
 on the right are not executable renderer output or executable visual acceptance.
-The source executable still uses `NO MARKERS` for both scenes. The decision owns
-the state rules and subsequent verification; [simulator usage](../../sim/README.md)
-continues to document current behavior until implementation.
+At the time of capture, the source executable used `NO MARKERS` for both scenes.
+The decision owns the state rules; [simulator usage](../../sim/README.md) documents
+the subsequent implementation. These retained sheets remain historical mocks.
 
 ![Current NO MARKERS versus approved SKY OUTSIDE VIEW, both at native 400 by 240](0048-empty-view-comparison.png)
 

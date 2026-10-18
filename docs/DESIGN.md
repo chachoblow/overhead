@@ -514,7 +514,9 @@ arrows, `NONE ABOVE HORIZON` only for a clean nonempty loaded catalogue with
 nothing above the horizon, and conservative `NO MARKERS` otherwise. Independent
 tracking/ingestion warnings remain. The wording and wider white backing were
 approved from [native-size illustrative comparisons](mockups/0048-empty-view-proposal.md),
-but are **not implemented**; the current executable still says `NO MARKERS`.
+and are now implemented after separate authorization. The user reviewed and
+accepted fresh executable arrow and horizon output separately; the retained
+illustrations are not executable output.
 0047's separate debug access does not replace normal notices. The revised
 full-height stack occupied the former strip warning area.
 [0039](decisions/0039-bottom-left-condition-driven-notices.md) selects bottom-left

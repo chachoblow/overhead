@@ -1,7 +1,7 @@
 # 0048 — Refined empty-view notices for the wide radar
 
 Date: 2026-10-18
-Status: accepted (M4 contract; implementation pending separate authorization)
+Status: accepted (M4 contract implemented after separate authorization; fresh executable output visually accepted)
 
 ## Decision
 
@@ -11,8 +11,10 @@ and [0040's notice backing width](0040-white-backed-bottom-left-notice-contract.
 not their warning lifecycle, placement or compositing order. The user approved
 both the wording and the wider backing after reviewing the
 [native-size comparisons and their provenance](../mockups/0048-empty-view-proposal.md).
-Approval of this contract does **not** authorize renderer implementation or
-constitute executable visual acceptance.
+Approval of this contract alone did **not** authorize renderer implementation or
+constitute executable visual acceptance. The user subsequently gave separate
+implementation authorization. The user subsequently reviewed and accepted fresh
+executable arrow and horizon snapshots separately from the illustrative comparisons.
 
 ## Why
 
@@ -76,7 +78,7 @@ countdown policy, production catalogue/cadence, scheduler, hardware behavior
 or frozen-M2 evidence update. The historical screenshots used for review
 are **illustrative composites**, not simulator output of the new wording.
 
-### Verification for a separately authorized implementation
+### Verification for the separately authorized implementation
 
 - Headless real-data cases: the 16-object default demo at 20° has four arrows,
   zero visible markers and the off-screen status; the one-object ISS comparison
@@ -94,6 +96,7 @@ are **illustrative composites**, not simulator output of the new wording.
   fresh **executable** headless output separately from the contract composites.
   Host snapshots do not establish physical-display legibility or target costs.
 
-[Simulator usage](../../sim/README.md#notice-overlay-review) remains the
-executable reproduction reference; until implementation it still documents
-`NO MARKERS` for both empty situations.
+[Simulator usage](../../sim/README.md#notice-overlay-review) owns executable
+reproduction. Host implementation checks/tests cover the status rules, notice
+raster and headless replay cases. The user separately accepted the fresh
+executable output; this does not establish physical-display legibility or target costs.

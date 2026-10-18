@@ -1,40 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-18 UTC. Next: seek separate authorization for M4 notice implementation._
+_Last updated: 2026-10-18 UTC. Next: scope a bounded M4 selection slice, not implement it._
 
 ## State
-[M3 complete](PLAN.md#m3--minimal-real-data-radar-complete): accepted moving,
-zoomable real-data radar, opt-in wide view/five fields/transitions and debug;
-square diagnostics remain default. [Simulator usage](../sim/README.md) owns
-executable reproduction. M4's first **agreed, unimplemented** contract is
-[0048's wide empty-view refinement](decisions/0048-refined-empty-view-notices.md):
-`SKY OUTSIDE VIEW` for arrows, `NONE ABOVE HORIZON` only for clean nonempty
-loaded catalogues with none above, otherwise conservative `NO MARKERS`.
-[Native-size comparisons](mockups/0048-empty-view-proposal.md) are illustrative,
-not executable output. Current wide replay still says `NO MARKERS` in both cases.
+[M3 complete](PLAN.md#m3--minimal-real-data-radar-complete): moving, zoomable real-data
+radar with opt-in wide view/five fields/transitions/debug; square diagnostics
+remain default. M4's [0048 empty-view notices](decisions/0048-refined-empty-view-notices.md)
+are implemented and user-approved on fresh executable output: arrows yield
+`SKY OUTSIDE VIEW`, clean nonempty no-above-horizon samples yield
+`NONE ABOVE HORIZON`, and uncertain/remaining empty cases yield `NO MARKERS`.
+Independent warnings persist; [simulator usage](../sim/README.md#wide-radar-comparison)
+owns reproduction. [0048 mocks](mockups/0048-empty-view-proposal.md) remain illustrative.
 
 ## This session
-- From clean `main` at `ac31fc7`, reviewed 0033/0039/0040, app/render code
-  and simulator tests. User chose M4 ahead of M2 and approved the contract.
-- Captured two headless historical wide snapshots: demo (16 accepted, 4 arrows,
-  0 visible) and one ISS record (0 above horizon); retained the two binary
-  comparison PNGs/provenance in `docs/mockups/0048-*`.
-- Recorded `docs/decisions/0048-refined-empty-view-notices.md`; updated PLAN,
-  DESIGN, 0039/0040 links and HANDOFF. No code/fixture/firmware/M2 changes.
+- From clean `main` at `01c62de`, user separately authorized 0048 implementation.
+  `render/src/lib.rs` now classifies the wide status using current app truth;
+  backing grows with the longest active line. Square, app truth, selection and
+  warning lifecycle remain unchanged.
+- Added focused raster/classification/recovery and real-data/omission coverage in
+  `render/src/lib.rs` and `sim/tests/snapshot.rs`; updated `sim/README.md`,
+  `PLAN.md`, `DESIGN.md`, 0048 and its mock provenance. User then accepted the
+  fresh executable demo-arrow and one-ISS horizon screenshots separately from
+  the earlier contract composites.
 
 ## Next bounded step / limits
-Ask for **separate implementation authorization**. If granted, update only
-wide notice classification/backing in `render/src/lib.rs`, plus focused
-pixel/lifecycle and `sim/tests/snapshot.rs` headless tests; preserve square,
-selection, arrows, glyphs, physical truth and independent warnings. Review fresh
-executable output separately; mocks do not authorize it. M2 budgets/scheduling,
-RAM/safe stack, Sharp bring-up and RWX remain open; keep
-[0023's frozen evidence](decisions/0023-frozen-m2-revision-isolation.md) isolated.
-Circular-radar/field/graph alternatives remain unapproved exploration.
+Review current wide replay selection behavior and propose **one bounded stable
+automatic-selection contract** for user approval before implementation. Scope
+selection continuity, entry/loss and zoom changes without choosing new normal
+readouts or changing physical eligibility. [PLAN](PLAN.md#m4--useful-display-behavior)
+retains other M4 options; circular-radar/field/graph alternatives are unapproved.
+M2 budgets/scheduling, RAM/safe stack, Sharp output and RWX remain open;
+keep [0023's frozen evidence](decisions/0023-frozen-m2-revision-isolation.md) isolated.
 
 ## Verification
-This docs/images session ran two **headless** simulator snapshots and checked
-links/anchors, image size/binary pixels, instruction consistency and whitespace.
-No Rust checks/tests (no code change), SDL window or hardware access. Earlier
-M3 checks in [PLAN](PLAN.md#m3--minimal-real-data-radar-complete) were on
-`64db11a`, not new validation. No target/panel claim or executable acceptance.
+Workspace check/tests, app/render no-default-features check, strict app/render/sim
+Clippy, formatting, local links and whitespace pass; headless real-data
+snapshots were generated and checked without SDL. Fresh
+executable visual acceptance is user feedback, not target/panel validation.
+No hardware, firmware, dependency, fixture or frozen-M2 work this session.
