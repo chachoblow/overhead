@@ -8,6 +8,7 @@ use embedded_graphics::{
     prelude::*,
     text::Text,
 };
+use overhead_app::RadarApp;
 
 // Fixed radius-11 circle, independent of primitive stroke/raster conventions.
 const OCTANT: [Point; 9] = [
@@ -22,6 +23,41 @@ const OCTANT: [Point; 9] = [
     Point::new(8, 8),
 ];
 
+/// Bounded presentation parameters, not true physical readouts. Each field's
+/// endpoint uses the same mapping as the original static renderer.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct Params(pub [Option<f64>; 4]);
+
+impl Params {
+    pub(crate) fn selected(app: &RadarApp) -> Self {
+        let selected = app.selected().map(|(_, s)| s.physical);
+        Self::from_readouts(
+            selected.map(|s| s.look.elevation_rad),
+            selected.map(|s| s.geodetic.altitude_km),
+            selected.map(|s| s.teme_speed_km_s),
+            app.selected_period_minutes(),
+        )
+    }
+
+    fn from_readouts(
+        elevation: Option<f64>,
+        altitude_km: Option<f64>,
+        speed_km_s: Option<f64>,
+        period_minutes: Option<f64>,
+    ) -> Self {
+        Self([
+            elevation
+                .filter(|v| v.is_finite())
+                .map(|v| v.clamp(0.0, FRAC_PI_2)),
+            altitude_km.and_then(altitude_continuous_radius),
+            speed_km_s
+                .filter(|v| v.is_finite())
+                .map(|v| v.clamp(0.0, 12.0)),
+            period_minutes.and_then(period_turns),
+        ])
+    }
+}
+
 pub(super) fn draw_strip<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
     elevation: Option<f64>,
@@ -29,8 +65,18 @@ pub(super) fn draw_strip<D: DrawTarget<Color = BinaryColor>>(
     speed_km_s: Option<f64>,
     period_minutes: Option<f64>,
 ) -> Result<(), D::Error> {
+    draw_strip_params(
+        display,
+        Params::from_readouts(elevation, altitude_km, speed_km_s, period_minutes),
+    )
+}
+
+pub(crate) fn draw_strip_params<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    Params([elevation, altitude_radius, speed, turns]): Params,
+) -> Result<(), D::Error> {
     display.draw_iter((12..=227).map(|y| Pixel(Point::new(352, y), BinaryColor::On)))?;
-    if let Some(elevation) = elevation.filter(|value| value.is_finite()) {
+    if let Some(elevation) = elevation {
         Text::new(
             "Elev",
             Point::new(364, 64),
@@ -39,7 +85,7 @@ pub(super) fn draw_strip<D: DrawTarget<Color = BinaryColor>>(
         .draw(display)?;
         draw_elevation(display, elevation)?;
     }
-    if let Some(radius) = altitude_km.and_then(altitude_radius) {
+    if let Some(radius) = altitude_radius {
         Text::new(
             "Alt",
             Point::new(367, 111),
@@ -48,10 +94,10 @@ pub(super) fn draw_strip<D: DrawTarget<Color = BinaryColor>>(
         .draw(display)?;
         let mut rows = [0_u32; 23];
         circle(&mut rows, 11);
-        circle(&mut rows, i32::from(radius));
+        circle(&mut rows, i32::from(round_radius(radius)));
         draw_rows(display, rows, Point::new(365, 116))?;
     }
-    if let Some(speed) = speed_km_s.filter(|value| value.is_finite()) {
+    if let Some(speed) = speed {
         Text::new(
             "Spd",
             Point::new(367, 158),
@@ -64,7 +110,7 @@ pub(super) fn draw_strip<D: DrawTarget<Color = BinaryColor>>(
         }
         draw_rows(display, rows, Point::new(365, 163))?;
     }
-    if let Some(turns) = period_minutes.and_then(period_turns) {
+    if let Some(turns) = turns {
         Text::new(
             "Per",
             Point::new(367, 205),
@@ -158,13 +204,18 @@ fn speed_pixel_count(speed: f64) -> usize {
     low
 }
 
-fn altitude_radius(altitude_km: f64) -> Option<u8> {
+fn altitude_continuous_radius(altitude_km: f64) -> Option<f64> {
     if !altitude_km.is_finite() {
         return None;
     }
     let h = altitude_km.clamp(0.0, 40_000.0);
     let t = libm::log1p(h / 400.0) / libm::log(101.0);
-    Some(round_radius(9.0 - 7.0 * t))
+    Some(9.0 - 7.0 * t)
+}
+
+#[cfg(test)]
+fn altitude_radius(altitude_km: f64) -> Option<u8> {
+    altitude_continuous_radius(altitude_km).map(round_radius)
 }
 
 // Input is bounded to [2,9]; truncation after adding 0.5 rounds half ties up.

@@ -39,8 +39,9 @@ and accepted fresh executable period output. [0045's static category](decisions/
 now completes the five static fields using explicitly configured group roles and
 Station > Navigation > Weather > Unknown priority. The icons, assignment direction
 and lifecycle are approved and implementation authorized; the user subsequently
-accepted fresh executable category output. Transitions and final debug access
-remain open.
+accepted fresh executable category output. [0046's selected-data transitions](decisions/0046-selected-data-glyph-transition-contract.md)
+are implemented for interactive wide replay; the user subsequently reviewed and
+accepted the animation. Final debug access remains open.
 
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 minimum on-screen traversal time for fast markers is planned, not implemented.
@@ -179,7 +180,11 @@ recover this direction; the retained PNGs and text are sufficient.
   executable output.
 - **Transitions:** favor glyphs animating toward the new selected satellite's
   values. Intermediate shapes are presentation only, never new physical samples.
-  This has not been implemented or given timing/interruption rules.
+  The user agreed to scope a first transition to `Elev`, `Alt`, `Spd`, `Per`,
+  with `Cat` switching immediately. [0046](decisions/0046-selected-data-glyph-transition-contract.md)
+  accepts timing, interruption and clearing. Interactive wide replay implements
+  that bounded contract; headless snapshots remain static. The user subsequently
+  reviewed and accepted the interactive animation.
 
 ### Circular elevation-only contract
 
@@ -486,8 +491,8 @@ explicit raster rules; the user subsequently accepted fresh executable output.
 static group-derived category, completing the five static fields. The category
 icons, hierarchy and lifecycle are approved; the user also accepted the fresh
 executable output. No selection clears all five fields, retaining the separator.
-Full-stack transition rules and final normal/debug access still need design
-before coding.
+The four-data-glyph transition contract is implemented under 0046 and the user
+accepted the interactive animation. Final normal/debug access still needs design.
 
 Circular radar with an info brick, surrounding noise fields and unlabelled
 visible-population graphs were explored, not selected as replacements. For any

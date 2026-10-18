@@ -119,10 +119,11 @@ and `Per` label, with
 [0040's bottom-left notice overlay](../docs/decisions/0040-white-backed-bottom-left-notice-contract.md).
 [0045's static group-derived category](../docs/decisions/0045-static-group-category-contract.md)
 and `Cat` label are also implemented; the user subsequently accepted the fresh
-executable category output. The full normal/debug split and transitions remain
-open. Elevation, altitude and speed are visually accepted. The period meaning, scale, 2½-turn
-appearance and lifecycle are approved; implementation is complete and the user
-subsequently accepted fresh executable period output.
+executable category output. [0046's selected-data transitions](../docs/decisions/0046-selected-data-glyph-transition-contract.md)
+are implemented in the interactive wide view; the user subsequently reviewed
+and accepted their appearance. Headless `--snapshot` and square diagnostics
+remain static. The full normal/debug split remains open. Elevation, altitude,
+speed and period are also visually accepted as static fields.
 [DESIGN's retained schematic](../docs/DESIGN.md#selected-satellite-presentation)
 remains a design reference, not this executable's output or a golden test.
 Final debug-access controls remain open.
@@ -359,8 +360,10 @@ owns exact geometry, angular snapping and single-pixel raster rules; quantizatio
 never changes the true physical sample.
 
 The glyph reads the selected satellite's current physical elevation directly.
-Tab selection, frame updates and zoom-driven reselection update it immediately,
-without animation. Hiding the marker's ID at wide zoom does **not** hide `Elev`
+In these headless snapshots, Tab selection, frame updates and zoom-driven
+reselection show current values without animation. Interactive selection changes
+use [0046's transition](../docs/decisions/0046-selected-data-glyph-transition-contract.md).
+Hiding the marker's ID at wide zoom does **not** hide `Elev`
 or the glyph. Without selection, clear both label and glyph while retaining the
 separator; no stale reading remains. Nonfinite input likewise suppresses the
 label/glyph. Notices retain their independent bottom-left overlay.
@@ -384,7 +387,7 @@ and a real selected marker/ID visually covered by the notice backing. These
 executable glyphs use true historical samples, unlike DESIGN's illustrative
 stack and endpoint references. The same snapshots now include altitude under
 0042, speed under 0043, nominal period under 0044 and category under 0045;
-transitions remain absent.
+headless snapshots do not animate transitions.
 
 ### Static altitude glyph
 
@@ -397,9 +400,10 @@ can share a raster; high values saturate at the smallest ring. This is a broad
 height cue, not a precise numeric readout or a tracking limit. The decision owns
 the exact scale, rounding and pixel rules; zoom and catalogue never rescale it.
 
-The fields update immediately with frames and selection changes, without
-animation, and remain visible when the marker ID is hidden. Nonfinite altitude
-clears only `Alt` and its circles, preserving other valid fields. Without selection,
+These static snapshots show immediate true-state fields; interactive selected-ID
+changes animate the data glyphs under 0046. The fields remain visible when the
+marker ID is hidden. Nonfinite altitude clears only `Alt` and its circles,
+preserving other valid fields. Without selection,
 all selected labels/glyphs clear, leaving the separator. Notices and square diagnostics
 are unchanged. These behaviors are implemented, and the user reviewed and
 accepted fresh executable altitude output separately from the illustrative mocks.
@@ -478,7 +482,8 @@ and arc, never substituting a plausible reading or hiding other valid fields.
 These are drawing limits, not tracking limits; physical speed is not clamped.
 
 All selected fields update immediately on frames and selection changes, without
-animation. Nominal period is constant for a given element set. ID-hidden views
+animation in headless snapshots; interactive ID changes follow 0046. Nominal
+period is constant for a given element set. ID-hidden views
 still show the fields. No selection clears the labels/glyphs while retaining the separator; no stale speed survives a failed
 frame or former selection. Notices remain explicit alongside valid fields.
 0044 adds nominal period and 0045 adds group-derived category. Speed implementation is
@@ -521,7 +526,8 @@ same elements give the same period across frames, observer and zoom; selection
 changes may change the reading. Nonfinite/nonpositive/unavailable period clears
 only its label/spiral. No selection clears all selected fields, retaining the
 separator. ID hiding does not hide the fields, and notices remain explicit.
-No animation or new CLI option. 0045 now adds category above the four data fields.
+No animation in these headless snapshots or new CLI option. 0045 adds category
+above the four data fields; interactive ID changes follow 0046.
 
 The user approved meaning, scale, 2½-turn appearance and static lifecycle, then
 authorized documentation and implementation. They subsequently reviewed and
@@ -561,7 +567,10 @@ example assigns Station. The mixed `--demo` pool is uncategorized, so selected
 objects show Unknown. Old manifests still work. A successful selection always
 shows Cat and one icon, independently of the four data fields and ID visibility.
 No selection clears all five fields, retaining the separator. Notices, counts,
-physical state and square diagnostics are unchanged. No animation or fetching.
+physical state and square diagnostics are unchanged. Cat still switches immediately;
+interactive wide replay animates only the four data glyphs on selected-ID changes
+under [0046](../docs/decisions/0046-selected-data-glyph-transition-contract.md).
+Standalone headless snapshots remain static. No fetching.
 
 For fresh real-orbit examples of all icons, run from the workspace root. This
 creates disposable **single-object review groups**, not a production per-ID map.

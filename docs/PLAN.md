@@ -21,8 +21,8 @@ The user subsequently reviewed and accepted fresh executable period output;
 0045 now implements static category after approval of icons, explicit group-role
 assignment, Station > Navigation > Weather > Unknown priority and immediate
 five-field lifecycle, followed by implementation authorization. The user subsequently
-reviewed and accepted fresh executable category output; transitions/debug access
-remain open.
+reviewed and accepted fresh executable category output; 0046's bounded animated
+transitions are implemented and user visually accepted. Final debug access remains open.
 M2 operating-budget and scheduling work remains open.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
@@ -199,10 +199,14 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
   inferred roles, operational-status claim or orbital-data change.
 - [x] User reviewed and accepted fresh executable category output, separately
   from approved icons/assignment/lifecycle. [Review recipe](../sim/README.md#static-category-glyph).
-- [ ] Scope and agree subsequent bounded presentation contracts before implementation.
-  Transitions and final normal/debug access remain open. No scene displacement or collision search is approved.
-  Circular-radar/field/graph alternatives remain exploration; neither mocks nor
-  replay populations select production capacity.
+- [x] Agree and implement [0046's selected-data transitions](decisions/0046-selected-data-glyph-transition-contract.md):
+  four animated glyphs on selected-ID changes, immediate Cat, 250 ms smoothstep,
+  explicit presentation time and bounded retarget/loss behavior. The user
+  separately accepted interactive output; headless snapshots stay static.
+- [ ] Scope subsequent bounded presentation contracts before implementation.
+  Final normal/debug access remains open; no scene displacement or collision
+  search is approved. Circular-radar/field/graph alternatives remain exploration;
+  neither mocks nor replay populations select production capacity.
 
 No prediction integration, slowdown or live fetching is required for this slice.
 Simulator throughput is not target capacity evidence.

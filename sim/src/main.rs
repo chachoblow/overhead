@@ -33,8 +33,23 @@ fn run(config: Config) -> Result<(), String> {
         config.observer.altitude_km
     );
     let mut display = SimulatorDisplay::<BinaryColor>::new(overhead_render::DISPLAY_SIZE);
-    overhead_render::draw(&mut display, &app, config.layout, ingestion_warning)
+    let mut presentation = overhead_render::presentation::Presentation::new();
+    if config.snapshot.is_some() {
+        overhead_render::draw(&mut display, &app, config.layout, ingestion_warning)
+            .map_err(|e| e.to_string())?;
+    } else {
+        // Prime the interactive timeline with the initial selected ID before
+        // any input, so even a Tab on the first event cycle has an endpoint.
+        overhead_render::draw_at(
+            &mut display,
+            &app,
+            config.layout,
+            ingestion_warning,
+            &mut presentation,
+            Duration::ZERO,
+        )
         .map_err(|e| e.to_string())?;
+    }
     if let Some(path) = config.snapshot {
         display
             .to_rgb_output_image(
@@ -106,11 +121,19 @@ fn run(config: Config) -> Result<(), String> {
         if let Some(remaining) = frame_period.checked_sub(frame_started.elapsed()) {
             thread::sleep(remaining);
         }
-        app.update(replay_time(config.start, started.elapsed())?)
+        let elapsed = started.elapsed();
+        app.update(replay_time(config.start, elapsed)?)
             .map_err(|e| e.to_string())?;
         report_failures(&app, &mut previous_failures);
-        overhead_render::draw(&mut display, &app, config.layout, ingestion_warning)
-            .map_err(|e| e.to_string())?;
+        overhead_render::draw_at(
+            &mut display,
+            &app,
+            config.layout,
+            ingestion_warning,
+            &mut presentation,
+            elapsed,
+        )
+        .map_err(|e| e.to_string())?;
     }
 }
 

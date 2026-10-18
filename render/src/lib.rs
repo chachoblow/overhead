@@ -2,7 +2,10 @@
 //! ownership; all readouts come from the app's true, timestamped frame.
 #![no_std]
 
-use core::fmt::{self, Write};
+use core::{
+    fmt::{self, Write},
+    time::Duration,
+};
 use embedded_graphics::{
     mono_font::{MonoTextStyle, ascii::FONT_6X10},
     pixelcolor::BinaryColor,
@@ -18,6 +21,7 @@ use overhead_core::sgp4::chrono::Timelike;
 
 mod category;
 mod glyphs;
+pub mod presentation;
 
 pub const DISPLAY_SIZE: Size = Size::new(400, 240);
 
@@ -88,6 +92,31 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
     layout: Layout,
     ingestion_warning: bool,
 ) -> Result<(), D::Error> {
+    draw_frame(display, app, layout, ingestion_warning, None)
+}
+
+/// Draw with explicit monotonic presentation time. Only the wide data glyphs
+/// transition; square diagnostics and all true-state readouts remain immediate.
+pub fn draw_at<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    app: &RadarApp,
+    layout: Layout,
+    ingestion_warning: bool,
+    presentation: &mut presentation::Presentation,
+    time: Duration,
+) -> Result<(), D::Error> {
+    let values =
+        (app.view().viewport() == Viewport::Rectangle).then(|| presentation.values(app, time));
+    draw_frame(display, app, layout, ingestion_warning, values)
+}
+
+fn draw_frame<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    app: &RadarApp,
+    layout: Layout,
+    ingestion_warning: bool,
+    values: Option<glyphs::Params>,
+) -> Result<(), D::Error> {
     let mut display = display.clipped(&Rectangle::new(Point::zero(), DISPLAY_SIZE));
     display.clear(BinaryColor::Off)?;
     let stroke = PrimitiveStyle::with_stroke(BinaryColor::On, 1);
@@ -135,16 +164,20 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
             draw_selected_label(&mut display, id, marker, layout)?;
         }
         category::draw(&mut display, app.selected_category())?;
-        glyphs::draw_strip(
-            &mut display,
-            app.selected()
-                .map(|(_, sample)| sample.physical.look.elevation_rad),
-            app.selected()
-                .map(|(_, sample)| sample.physical.geodetic.altitude_km),
-            app.selected()
-                .map(|(_, sample)| sample.physical.teme_speed_km_s),
-            app.selected_period_minutes(),
-        )?;
+        if let Some(values) = values {
+            glyphs::draw_strip_params(&mut display, values)?;
+        } else {
+            glyphs::draw_strip(
+                &mut display,
+                app.selected()
+                    .map(|(_, sample)| sample.physical.look.elevation_rad),
+                app.selected()
+                    .map(|(_, sample)| sample.physical.geodetic.altitude_km),
+                app.selected()
+                    .map(|(_, sample)| sample.physical.teme_speed_km_s),
+                app.selected_period_minutes(),
+            )?;
+        }
         return draw_wide_status(&mut display, app, ingestion_warning);
     }
 
@@ -1575,6 +1608,140 @@ mod tests {
         assert_ne!(speed_pixels(&screen.pixels), speed_pixels(&initial));
         assert_eq!(period_pixels(&screen.pixels), period_pixels(&initial));
         assert_eq!(app.selected_period_minutes(), Some(720.0));
+    }
+
+    #[test]
+    fn animated_wide_glyphs_preserve_static_endpoints_radar_category_and_truth() {
+        use core::time::Duration;
+        let mut app = app_with_orbits(Viewport::Rectangle, false, &[25544, 100530], 2.0)
+            .with_group_categories(std::vec![
+                overhead_app::category::Category::Station,
+                overhead_app::category::Category::Navigation,
+            ]);
+        let layout = Layout::wide();
+        let mut state = presentation::Presentation::new();
+        let mut screen = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        let mut static_screen = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        let original: Vec<_> = app.objects().map(|(_, s)| s.clone()).collect();
+        let counts = app.counts();
+        draw_at(&mut screen, &app, layout, true, &mut state, Duration::ZERO).unwrap();
+        draw(&mut static_screen, &app, layout, true).unwrap();
+        assert_eq!(screen.pixels, static_screen.pixels);
+        app.select_next();
+        assert_eq!(app.selected_id(), Some(100530));
+        draw(&mut static_screen, &app, layout, true).unwrap();
+        for millis in [0, 125, 250] {
+            draw_at(
+                &mut screen,
+                &app,
+                layout,
+                true,
+                &mut state,
+                Duration::from_millis(millis),
+            )
+            .unwrap();
+            if millis == 0 {
+                assert_ne!(screen.pixels, static_screen.pixels);
+            }
+            for y in 0..240 {
+                for x in 0..400 {
+                    // Only four data slots may differ from the same-frame static scene.
+                    if !(364..388).contains(&x) || !(57..233).contains(&y) || millis == 250 {
+                        assert_eq!(
+                            screen.pixels[y][x], static_screen.pixels[y][x],
+                            "at {x},{y}"
+                        );
+                    }
+                }
+            }
+        }
+        assert_eq!(
+            app.objects().map(|(_, s)| s.clone()).collect::<Vec<_>>(),
+            original
+        );
+        assert_eq!(app.counts(), counts);
+        app.zoom(64); // Selected B is clipped; visible A is chosen immediately.
+        assert_eq!(app.selected_id(), Some(25544));
+        draw_at(
+            &mut screen,
+            &app,
+            layout,
+            true,
+            &mut state,
+            Duration::from_millis(251),
+        )
+        .unwrap();
+        draw(&mut static_screen, &app, layout, true).unwrap();
+        assert_ne!(screen.pixels, static_screen.pixels);
+        draw_at(
+            &mut screen,
+            &app,
+            layout,
+            true,
+            &mut state,
+            Duration::from_millis(501),
+        )
+        .unwrap();
+        assert_eq!(screen.pixels, static_screen.pixels);
+        let old_time = app.time().unwrap();
+        let invalid = overhead_core::sgp4::chrono::NaiveDate::from_ymd_opt(2101, 1, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        assert!(app.update(invalid).is_err());
+        assert_eq!(app.selected_id(), None);
+        draw_at(
+            &mut screen,
+            &app,
+            layout,
+            true,
+            &mut state,
+            Duration::from_millis(502),
+        )
+        .unwrap();
+        draw(&mut static_screen, &app, layout, true).unwrap();
+        assert_eq!(screen.pixels, static_screen.pixels);
+        app.update(old_time).unwrap();
+        draw_at(
+            &mut screen,
+            &app,
+            layout,
+            true,
+            &mut state,
+            Duration::from_millis(503),
+        )
+        .unwrap();
+        draw(&mut static_screen, &app, layout, true).unwrap();
+        assert_eq!(screen.pixels, static_screen.pixels);
+    }
+
+    #[test]
+    fn square_draw_at_matches_static_diagnostics() {
+        use core::time::Duration;
+        let app = app_with_viewport(Viewport::Square);
+        let layout = Layout::new(240).unwrap();
+        let mut a = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        let mut b = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        let mut state = presentation::Presentation::new();
+        draw(&mut a, &app, layout, true).unwrap();
+        draw_at(
+            &mut b,
+            &app,
+            layout,
+            true,
+            &mut state,
+            Duration::from_millis(125),
+        )
+        .unwrap();
+        assert_eq!(a.pixels, b.pixels);
     }
 
     #[test]
