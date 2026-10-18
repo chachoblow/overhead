@@ -42,8 +42,9 @@ and lifecycle are approved and implementation authorized; the user subsequently
 accepted fresh executable category output. [0046's selected-data transitions](decisions/0046-selected-data-glyph-transition-contract.md)
 are implemented for interactive wide replay; the user subsequently reviewed and
 accepted the animation. [0047](decisions/0047-text-first-debug-access-contract.md)
-agrees radar-free, text-first simulator debug access for tracking/data health;
-it is not implemented.
+agrees radar-free, text-first simulator debug access for tracking/data health.
+The user approved its [layout/overflow reference](mockups/0047-debug-layout-proposal.md);
+implementation and executable acceptance remain separate open gates.
 
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 minimum on-screen traversal time for fast markers is planned, not implemented.
@@ -495,7 +496,8 @@ icons, hierarchy and lifecycle are approved; the user also accepted the fresh
 executable output. No selection clears all five fields, retaining the separator.
 The four-data-glyph transition contract is implemented under 0046 and the user
 accepted the interactive animation. 0047 now specifies radar-free, text-first
-debug access for wide replay; implementation and visual review remain open.
+debug access for wide replay with an approved layout/overflow reference;
+implementation authorization, implementation and executable visual review remain open.
 
 Circular radar with an info brick, surrounding noise fields and unlabelled
 visible-population graphs were explored, not selected as replacements. For any

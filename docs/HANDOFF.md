@@ -1,38 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-18 UTC. Next: implement 0047 and review executable output._
+_Last updated: 2026-10-18 UTC. Next: authorize and implement the approved 0047 debug layout._
 
 ## State
-M3 opt-in wide radar and five static fields are implemented; [0046](decisions/0046-selected-data-glyph-transition-contract.md)
-adds visually accepted 250 ms Elev/Alt/Spd/Per transitions. Cat, ID and selected
-identity switch immediately; physical values stay true. Default square diagnostics
-and static headless snapshots remain unchanged ([usage](../sim/README.md)).
-[0029](decisions/0029-normal-and-debug-presentation-direction.md) established
-normal/debug separation; [0047](decisions/0047-text-first-debug-access-contract.md)
-now accepts a radar-free text-first tracking/data-health debug page, interactive
-wide `v` toggle and explicit `--wide --debug` start. **No debug code exists yet.**
+M3 opt-in wide radar, five selected fields and [0046's transitions](decisions/0046-selected-data-glyph-transition-contract.md)
+are implemented and visually accepted. True samples, normal notices and static
+square/default and headless output remain unchanged ([usage](../sim/README.md)).
+[0047](decisions/0047-text-first-debug-access-contract.md) accepts radar-free
+tracking/data-health debug, interactive wide `v` access and `--wide --debug`.
+Its layout/overflow review is now approved. **No debug code exists yet.**
 
 ## This session
-Design only: added `docs/decisions/0047-text-first-debug-access-contract.md`;
-updated `docs/PLAN.md` (agreed vs open implementation), `docs/DESIGN.md` and
-`docs/PROGRESS.md`. No new dependency, app/core semantics, fixtures, firmware,
-toolchain or frozen-M2 evidence; preserve [0023's pinned revision](decisions/0023-frozen-m2-revision-isolation.md).
+Design only: retained the approved [layout reference](mockups/0047-debug-layout-proposal.md)
+and [six native-size illustrative pages](mockups/0047-debug-native-proposal.png).
+0047 records approval; PLAN checks off only the preimplementation layout review;
+DESIGN links that status and PROGRESS records the session. The reference owns
+geometry, numeric formatting, two-row names and explicit host-log overflow rules.
+The retained docs/image suffice without this chat or disposable preview scripts.
+Layout approval is not implementation authorization or executable acceptance.
 
 ## Next bounded step
-Implement 0047 in simulator config/input and the renderer, then seek separate
-executable visual acceptance. Debug is text-first, not a square radar: `--debug`
-requires `--wide`, is interactive-only, and `v` toggles without changing app
-view/selection/time. Keep existing square/default and wide-normal snapshots,
-true samples, host failure reporting and condition-driven normal notices. Review
-400×240 1-bit text fit; long names/error causes must not silently truncate.
-Do not add selection/collision policy, slowdown, fetching, prediction, scheduling,
-production limits or hardware work. M2 budgets, RAM/safe stack, Sharp bring-up
-and RWX remain open.
+Obtain implementation authorization, then implement 0047 in `sim/src/config.rs`,
+`sim/src/main.rs` and an independent renderer page, with regression coverage.
+Preserve true state/geometry across toggles, Tab/zoom while debugging, normal
+notices, complete host causes and historical square/wide-normal snapshots.
+Reject debug snapshots; return to a current normal frame without queued motion.
+Run workspace checks/tests, then seek separate executable visual acceptance.
+No new selection/collision policy, fetching, prediction, slowdown or hardware.
+M2 budgets/scheduling, RAM/safe stack, Sharp bring-up and RWX remain open;
+keep [0023's frozen evidence](decisions/0023-frozen-m2-revision-isolation.md) isolated.
 
 ## Verification / limits
-This session: documentation-only local links/paths and instruction consistency
-checked; unstaged and staged whitespace checked at wrap-up. Rust checks/tests
-not rerun because there are no code changes. Previous 0046 workspace check/tests,
-fmt, app/render no-default-feature checks and strict Clippy passed in an earlier
-session, **not** as 0047 verification. No debug executable review, physical-display
-or S3 timing validation; no 20 Hz claim.
+This session checked preview font/raw parity, native bounds, binary pixels,
+deterministic regeneration and text-boundary controls; the user approved its
+illustrative appearance, not physical samples. Wrap-up checked retained image
+bounds/font cells, local links/anchors, doc consistency and unstaged/staged
+whitespace. Rust checks/tests were not rerun: only docs and a reference PNG changed.
+No simulator launch, executable debug review, physical-display or S3 validation;
+no dependency, fixture, firmware/toolchain or frozen-M2 changes; no 20 Hz claim.

@@ -445,3 +445,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Recorded objective fields, host-log boundaries, state-preserving toggles and snapshot/CLI constraints in 0047; updated DESIGN, PLAN and HANDOFF. No debug implementation or executable visual approval.
 - Wrap-up checked local links/paths, documentation consistency and unstaged/staged whitespace; no Rust checks were rerun because the diff is documentation-only. No firmware, hardware, toolchain or frozen-M2 work.
 - Next: implement 0047 and separately review executable output; preserve wide normal notices, true-state semantics and historical snapshots.
+
+## 2026-10-18 UTC (debug layout and overflow approval)
+- User approved [0047's layout/overflow reference](mockups/0047-debug-layout-proposal.md) after reviewing six native-size 1-bit illustrative pages; this closes the preimplementation renderer-review gate, not implementation authorization or executable acceptance.
+- Retained geometry, numeric/absence formatting, bounded names/causes and explicit host-log guidance; updated 0047, DESIGN, PLAN and HANDOFF. No runtime code or new implementation slice.
+- Preview checks covered bitmap parity, bounds, binary pixels, deterministic regeneration and text-boundary controls; wrap-up checked retained font cells/margins, local links/anchors, doc consistency and unstaged/staged whitespace. Rust checks were not rerun for this docs/reference-PNG-only diff.
+- Next: obtain implementation authorization, implement 0047, then verify and seek executable review. No simulator/hardware, dependency, fixture, firmware/toolchain or frozen-M2 changes; no target-performance claim.

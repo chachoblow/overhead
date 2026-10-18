@@ -1,7 +1,7 @@
 # 0047 — Text-first simulator debug access
 
 Date: 2026-10-18
-Status: accepted (M3 design/access contract; not implemented)
+Status: accepted (M3 access and reviewed layout/overflow contract; not implemented)
 
 ## Decision
 
@@ -48,12 +48,13 @@ The first bounded page should expose:
   period and TEME speed are not pass duration or ground speed. Category is a
   display role, not a tracking-health or operational-status assertion.
 
-No fixed row positions, numeric precision or final abbreviations are selected
-by this access contract. Fit and legibility of the 400×240, 1-bit bitmap text
-need a separate renderer review before implementation; prioritize status and
-failure visibility over a long selected name. Avoid silent truncation, stale
-values or false completeness. Host stderr retains the complete ingestion report
-and per-object failure causes when the failure set changes; this contract adds
+The initial access contract deferred row positions, numeric precision and
+abbreviations to a separate preimplementation renderer review. The user has
+now approved the [layout/overflow reference](../mockups/0047-debug-layout-proposal.md),
+closing that gate. It prioritizes status and failure visibility over a long
+selected name. Avoid silent truncation, stale values or false completeness.
+Host stderr retains the complete ingestion report and per-object failure causes
+when the failure set changes; this contract adds
 no log history, persistence, fetching or on-screen log viewer.
 
 ### Access and state
@@ -77,6 +78,20 @@ no log history, persistence, fetching or on-screen log viewer.
   Debug displays the same underlying conditions without dismissing or masking
   them in normal mode. The simulator still exits on fatal load/clock errors;
   this does not introduce a persistent `NO FRAME` host state.
+
+### Accepted renderer layout
+
+The user reviewed six native-size 1-bit illustrative pages and approved the
+[layout/overflow reference](../mockups/0047-debug-layout-proposal.md): fixed
+status-first rows, the existing 6×10 bitmap font, two name rows, explicit
+shortening/substitution notices and host-stderr guidance, numeric formatting,
+field-local unavailability and unsampled-count presentation. The linked reference
+owns exact row positions, text bounds and formatting rules; the retained images
+remain illustrative, not physical samples or executable output.
+
+This closes the required preimplementation layout review without changing the
+access/state contract. Implementation authorization and fresh executable visual
+acceptance remain separate gates; no debug code exists yet.
 
 ### Boundaries and verification for implementation
 

@@ -22,8 +22,9 @@ The user subsequently reviewed and accepted fresh executable period output;
 assignment, Station > Navigation > Weather > Unknown priority and immediate
 five-field lifecycle, followed by implementation authorization. The user subsequently
 reviewed and accepted fresh executable category output; 0046's bounded animated
-transitions are implemented and user visually accepted. 0047 agrees a text-first,
-radar-free debug access contract; implementation and executable review remain open.
+transitions are implemented and user visually accepted. 0047 agrees text-first,
+radar-free debug access and its reviewed layout/overflow treatment; implementation
+authorization, implementation and executable review remain open.
 M2 operating-budget and scheduling work remains open.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
@@ -207,10 +208,14 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
 - [x] Agree [0047's text-first debug access](decisions/0047-text-first-debug-access-contract.md):
   radar-free tracking/data-health page, interactive wide-view `v` toggle and
   explicit `--wide --debug` start. Design only; default square baseline retained.
-- [ ] Implement and review 0047 separately, preserving current app truth, wide
-  normal-view notices and historical snapshot behavior. No scene displacement
-  or collision search is approved. Circular-radar/field/graph alternatives remain
-  exploration; neither mocks nor replay populations select production capacity.
+- [x] User reviewed and approved the [debug layout/overflow treatment](mockups/0047-debug-layout-proposal.md),
+  closing 0047's preimplementation renderer-review gate. The six pages remain
+  illustrative references, not executable output or implementation authorization.
+- [ ] Separately authorize, implement and review 0047, preserving current app
+  truth, wide normal-view notices and historical snapshot behavior. No scene
+  displacement or collision search is approved. Circular-radar/field/graph
+  alternatives remain exploration; neither mocks nor replay populations select
+  production capacity.
 
 No prediction integration, slowdown or live fetching is required for this slice.
 Simulator throughput is not target capacity evidence.
