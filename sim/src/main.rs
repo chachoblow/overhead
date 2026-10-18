@@ -1,12 +1,13 @@
 mod config;
 
 use config::{Config, USAGE, replay_time};
-use embedded_graphics::pixelcolor::BinaryColor;
+use embedded_graphics::{pixelcolor::BinaryColor, prelude::DrawTarget};
 use embedded_graphics_simulator::{
     BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
     sdl2::{Keycode, MouseWheelDirection},
 };
-use overhead_app::RadarApp;
+use overhead_app::{RadarApp, projection::Viewport};
+use overhead_render::{Layout, presentation::Presentation};
 use std::{
     env,
     process::ExitCode,
@@ -33,22 +34,22 @@ fn run(config: Config) -> Result<(), String> {
         config.observer.altitude_km
     );
     let mut display = SimulatorDisplay::<BinaryColor>::new(overhead_render::DISPLAY_SIZE);
-    let mut presentation = overhead_render::presentation::Presentation::new();
+    let mut presentation = InteractivePresentation::new(config.view.viewport(), config.debug);
     if config.snapshot.is_some() {
         overhead_render::draw(&mut display, &app, config.layout, ingestion_warning)
             .map_err(|e| e.to_string())?;
     } else {
-        // Prime the interactive timeline with the initial selected ID before
-        // any input, so even a Tab on the first event cycle has an endpoint.
-        overhead_render::draw_at(
-            &mut display,
-            &app,
-            config.layout,
-            ingestion_warning,
-            &mut presentation,
-            Duration::ZERO,
-        )
-        .map_err(|e| e.to_string())?;
+        // Normal startup primes the glyph timeline before input, so even a Tab
+        // on the first cycle has an endpoint. Debug starts without glyph history.
+        presentation
+            .draw(
+                &mut display,
+                &app,
+                config.layout,
+                ingestion_warning,
+                Duration::ZERO,
+            )
+            .map_err(|e| e.to_string())?;
     }
     if let Some(path) = config.snapshot {
         display
@@ -93,24 +94,14 @@ fn run(config: Config) -> Result<(), String> {
         window.update(&display);
         for event in window.events() {
             match event {
-                SimulatorEvent::Quit
-                | SimulatorEvent::KeyDown {
-                    keycode: Keycode::Escape,
-                    ..
-                } => return Ok(()),
+                SimulatorEvent::Quit => return Ok(()),
                 SimulatorEvent::KeyDown {
-                    keycode: Keycode::Up,
-                    ..
-                } => app.zoom(1),
-                SimulatorEvent::KeyDown {
-                    keycode: Keycode::Down,
-                    ..
-                } => app.zoom(-1),
-                SimulatorEvent::KeyDown {
-                    keycode: Keycode::Tab,
-                    repeat: false,
-                    ..
-                } => app.select_next(),
+                    keycode, repeat, ..
+                } => {
+                    if !presentation.key(&mut app, keycode, repeat) {
+                        return Ok(());
+                    }
+                }
                 SimulatorEvent::MouseWheel {
                     scroll_delta,
                     direction,
@@ -125,15 +116,73 @@ fn run(config: Config) -> Result<(), String> {
         app.update(replay_time(config.start, elapsed)?)
             .map_err(|e| e.to_string())?;
         report_failures(&app, &mut previous_failures);
-        overhead_render::draw_at(
-            &mut display,
-            &app,
-            config.layout,
-            ingestion_warning,
-            &mut presentation,
-            elapsed,
-        )
-        .map_err(|e| e.to_string())?;
+        presentation
+            .draw(
+                &mut display,
+                &app,
+                config.layout,
+                ingestion_warning,
+                elapsed,
+            )
+            .map_err(|e| e.to_string())?;
+    }
+}
+
+/// Host-only presentation choice. Toggling never mutates app geometry or truth;
+/// discard hidden glyph history so returning normal starts at current endpoints.
+struct InteractivePresentation {
+    wide: bool,
+    debug: bool,
+    glyphs: Presentation,
+}
+
+impl InteractivePresentation {
+    fn new(viewport: Viewport, debug: bool) -> Self {
+        let wide = viewport == Viewport::Rectangle;
+        Self {
+            wide,
+            debug: wide && debug,
+            glyphs: Presentation::new(),
+        }
+    }
+
+    /// False requests exit. Repeat policy preserves existing Tab/zoom behavior;
+    /// holding V must not cycle between pages on keyboard auto-repeat.
+    fn key(&mut self, app: &mut RadarApp, key: Keycode, repeat: bool) -> bool {
+        match key {
+            Keycode::Escape => return false,
+            Keycode::Up => app.zoom(1),
+            Keycode::Down => app.zoom(-1),
+            Keycode::Tab if !repeat => app.select_next(),
+            Keycode::V if self.wide && !repeat => {
+                self.debug = !self.debug;
+                self.glyphs = Presentation::new();
+            }
+            _ => {}
+        }
+        true
+    }
+
+    fn draw<D: DrawTarget<Color = BinaryColor>>(
+        &mut self,
+        display: &mut D,
+        app: &RadarApp,
+        layout: Layout,
+        ingestion_warning: bool,
+        elapsed: Duration,
+    ) -> Result<(), D::Error> {
+        if self.debug {
+            overhead_render::debug::draw(display, app, ingestion_warning)
+        } else {
+            overhead_render::draw_at(
+                display,
+                app,
+                layout,
+                ingestion_warning,
+                &mut self.glyphs,
+                elapsed,
+            )
+        }
     }
 }
 
@@ -183,13 +232,5 @@ fn main() -> ExitCode {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn wheel_direction_and_large_events() {
-        assert_eq!(wheel_steps(1, MouseWheelDirection::Normal), 1);
-        assert_eq!(wheel_steps(1, MouseWheelDirection::Flipped), -1);
-        assert_eq!(wheel_steps(i32::MIN, MouseWheelDirection::Flipped), 64);
-        assert_eq!(wheel_steps(0, MouseWheelDirection::Normal), 0);
-    }
-}
+#[path = "interactive_tests.rs"]
+mod tests;

@@ -1,11 +1,12 @@
 # 0047 — Approved debug-page layout reference
 
-**User approved the layout and overflow treatment; not yet implemented.**
+**Approved layout and overflow reference; 0047 is implemented and its fresh
+executable output was separately accepted by the user.**
 [0047](../decisions/0047-text-first-debug-access-contract.md) records this approval
 alongside the content, access and state invariants. This reference specifies the
 accepted bitmap text fit, formatting and overflow behavior. Layout approval is
 separate from implementation authorization and executable visual acceptance;
-it does not change the current wide radar, square default, CLI or host logging.
+this reference itself did not change the wide radar, square default, CLI or host logging.
 
 ![Six native-size illustrative debug pages](0047-debug-native-proposal.png)
 
@@ -71,7 +72,7 @@ Category is omitted; it is not a tracking-health or operational-status field.
 - For a finite numeric field whose ordinary fixed-decimal text would exceed its
   32-cell column, use explicit scientific notation with three significant digits,
   retaining label, units and the epoch sign. Do not clip digits or clamp physical
-  values. This fallback is accepted behavior, not an implemented formatter.
+  values. This is the accepted fallback implemented under 0047.
 - Missing/nonfinite individual values show `UNAVAILABLE` in their own field;
   nominal period also requires a positive value. Other selected values remain.
   The label preserves field meaning when there is no numeric value/unit suffix.
@@ -160,13 +161,11 @@ performance validation. The user subsequently approved the native-size layout
 and overflow treatment. The retained PNG's proposal heading records its origin;
 its pixels have not changed with approval.
 
-## Next gates
+## Subsequent implementation and acceptance
 
-After separate implementation authorization, implement 0047 in simulator
-configuration/input and an independent renderer page. Preserve app truth, wide geometry, normal notices, static
-headless snapshots and square defaults. Prefer a fresh static wide frame on
-return rather than resuming a hidden glyph transition. Test option conflicts,
-toggles, Tab/zoom while debugging, absent/partial/failed frames, long text,
-formatting boundaries and unchanged normal pixels. Run workspace checks/tests
-and seek separate executable visual acceptance. Nothing here authorizes a debug
-`--snapshot` option, new selection policy, fetching, prediction or hardware work.
+The user subsequently authorized implementation, now complete under 0047 with
+regression coverage, then separately accepted its fresh executable output. Its
+fresh static return preserves app truth, wide geometry, normal notices, static
+headless snapshots and square defaults. These retained pages remain illustrative;
+[simulator usage](../../sim/README.md#debug-access) owns executable review instructions. Nothing here authorizes a debug `--snapshot` option,
+new selection policy, fetching, prediction or hardware work.

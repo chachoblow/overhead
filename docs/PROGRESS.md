@@ -451,3 +451,13 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Retained geometry, numeric/absence formatting, bounded names/causes and explicit host-log guidance; updated 0047, DESIGN, PLAN and HANDOFF. No runtime code or new implementation slice.
 - Preview checks covered bitmap parity, bounds, binary pixels, deterministic regeneration and text-boundary controls; wrap-up checked retained font cells/margins, local links/anchors, doc consistency and unstaged/staged whitespace. Rust checks were not rerun for this docs/reference-PNG-only diff.
 - Next: obtain implementation authorization, implement 0047, then verify and seek executable review. No simulator/hardware, dependency, fixture, firmware/toolchain or frozen-M2 changes; no target-performance claim.
+
+## 2026-10-18 UTC (debug implementation and executable acceptance)
+- Separately authorized and implemented [0047](decisions/0047-text-first-debug-access-contract.md): independent text-first debug renderer, wide-only `v`/`--debug`, explicit bounded text/values and static return without hidden glyph motion. App/core truth, full host reports, normal notices and snapshot policy remain unchanged.
+- Workspace check/tests, app/render no-default-feature checks, formatting and strict all-target app/render/sim/tools Clippy passed; six pre/post square/wide-normal PNGs and stderr reports were byte-identical. No new dependency or fixture/firmware/toolchain/frozen-M2 changes.
+- The user subsequently said the fresh executable looks great, closing the separate visual gate; updated status docs without code changes or rerunning Rust checks. No physical-display or target-performance claim; next implementation scope remains unselected.
+
+## 2026-10-18 UTC (debug implementation wrap-up)
+- Reviewed the complete session diff and prepared a concise [handoff](HANDOFF.md); 0047 is implemented and user visually accepted. No new implementation slice or M3 closure was started.
+- Freshly reran workspace check/tests, app/render no-default-feature checks, formatting and strict all-target app/render/sim/tools Clippy successfully. Earlier six-case normal PNG/stderr parity remains distinct from these fresh checks; no SDL window or hardware access by the agent.
+- Next: assess M3's exit criteria and recommend closure or one specific remaining gap before new implementation. M2 operating budgets/scheduling and hardware risks remain open; frozen evidence is unchanged.

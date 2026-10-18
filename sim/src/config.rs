@@ -24,12 +24,14 @@ Options (each at most once):
   --radar-size N   Square radar allocation, 180..240 pixels (default 240)
   --viewport MODE  square (default, borderless), circle, borderless-circle
   --wide          352x240 comparison with off-screen arrows; no --radar-size/--viewport
+  --debug         Start wide replay in text-first debug; requires --wide, no --snapshot
   --label-hide-deg N  Hide wide-view ID at/above this vertical FOV (default 70)
   --label-show-deg N  Restore ID at/below this FOV (default 60); requires --wide
   --snapshot PNG  Render exactly the start UTC to a 400x240 PNG; no window
   --help, -h      Show this help
 
 Controls: wheel/up = zoom in; down = zoom out; Tab = next marker; Esc = quit.
+Wide interactive replay only: v = toggle radar/debug; zoom and Tab stay active.
 Actual 3D positions use a north-up perspective camera fixed 75000 km above the
 observer along local up. Zoom changes the lens, not camera position. Earth is a
 WGS-84 outline through the same camera. Only true elevation > 0 is eligible;
@@ -61,6 +63,7 @@ pub struct Config {
     pub layout: Layout,
     pub label_zoom: LabelZoom,
     pub snapshot: Option<PathBuf>,
+    pub debug: bool,
 }
 
 impl Config {
@@ -112,13 +115,19 @@ impl Config {
         let mut label_hide = None;
         let mut label_show = None;
         let mut wide = false;
+        let mut debug = false;
         let mut options = options.iter();
         while let Some(flag) = options.next() {
-            if flag == "--wide" {
-                if wide {
-                    return Err("repeated option: --wide".into());
+            if flag == "--wide" || flag == "--debug" {
+                let enabled = if flag == "--wide" {
+                    &mut wide
+                } else {
+                    &mut debug
+                };
+                if *enabled {
+                    return Err(format!("repeated option: {flag}"));
                 }
-                wide = true;
+                *enabled = true;
                 continue;
             }
             let value = options
@@ -159,6 +168,12 @@ impl Config {
                 _ => return Err(format!("unknown, repeated or invalid option: {flag}")),
             }
         }
+        if debug && !wide {
+            return Err("--debug requires --wide".into());
+        }
+        if debug && snapshot.is_some() {
+            return Err("--debug cannot be combined with --snapshot".into());
+        }
         if wide && (size.is_some() || viewport.is_some()) {
             return Err("--wide cannot be combined with --radar-size or --viewport".into());
         }
@@ -188,6 +203,7 @@ impl Config {
             layout,
             label_zoom,
             snapshot,
+            debug,
         })
     }
 }
@@ -255,6 +271,40 @@ mod tests {
         let config = parse("--demo --wide --snapshot wide.png --fov-deg 100").unwrap();
         assert!((config.view.fov_deg() - 100.0).abs() < 1e-12);
         assert_eq!(config.snapshot, Some(PathBuf::from("wide.png")));
+    }
+
+    #[test]
+    fn debug_start_is_explicit_wide_only_interactive_and_order_independent() {
+        assert!(!parse("--demo").unwrap().debug);
+        assert!(!parse("--demo --wide").unwrap().debug);
+        assert!(!parse("--demo --wide --snapshot normal.png").unwrap().debug);
+        for args in [
+            "--demo --wide --debug",
+            "--demo --debug --fov-deg 60 --wide",
+            "x.json 2026-10-10T00:00:00Z 0 0 0 --debug --wide",
+        ] {
+            let config = parse(args).unwrap();
+            assert!(config.debug);
+            assert_eq!(config.view.viewport(), Viewport::Rectangle);
+            assert_eq!(
+                config.view,
+                View::rectangular(config.view.fov_deg(), config.layout.aspect_ratio()).unwrap()
+            );
+            assert!(config.snapshot.is_none());
+        }
+        for args in [
+            "--demo --debug",
+            "--demo --viewport square --debug",
+            "--demo --viewport circle --debug",
+            "--demo --wide --debug --debug",
+            "--demo --debug --wide --debug",
+            "--demo --wide --debug --snapshot debug.png",
+            "--demo --snapshot debug.png --debug --wide",
+            "--demo --wide --debug --radar-size 240",
+            "--demo --wide --debug --viewport square",
+        ] {
+            assert!(parse(args).is_err(), "{args}");
+        }
     }
 
     #[test]

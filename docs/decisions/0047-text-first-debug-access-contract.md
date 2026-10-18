@@ -1,7 +1,7 @@
 # 0047 — Text-first simulator debug access
 
 Date: 2026-10-18
-Status: accepted (M3 access and reviewed layout/overflow contract; not implemented)
+Status: accepted (M3 contract; implemented and user visually accepted)
 
 ## Decision
 
@@ -12,7 +12,9 @@ interactive `--wide` replay in debug; it is not an implicit replacement for
 `--wide` and does not change the default square/diagnostic comparison. The user
 approved no-radar debug, `v` access and an explicit debug-start option after
 [0029's normal/debug direction](0029-normal-and-debug-presentation-direction.md).
-This records behavior to implement later; it does not claim executable review.
+The user subsequently authorized implementation of the approved contract/layout.
+After implementation, the user reviewed the fresh executable output and said it
+looks great, closing the separate visual-acceptance gate.
 
 ## Why
 
@@ -51,7 +53,7 @@ The first bounded page should expose:
 The initial access contract deferred row positions, numeric precision and
 abbreviations to a separate preimplementation renderer review. The user has
 now approved the [layout/overflow reference](../mockups/0047-debug-layout-proposal.md),
-closing that gate. It prioritizes status and failure visibility over a long
+closing that gate before implementation. It prioritizes status and failure visibility over a long
 selected name. Avoid silent truncation, stale values or false completeness.
 Host stderr retains the complete ingestion report and per-object failure causes
 when the failure set changes; this contract adds
@@ -89,9 +91,10 @@ field-local unavailability and unsampled-count presentation. The linked referenc
 owns exact row positions, text bounds and formatting rules; the retained images
 remain illustrative, not physical samples or executable output.
 
-This closes the required preimplementation layout review without changing the
-access/state contract. Implementation authorization and fresh executable visual
-acceptance remain separate gates; no debug code exists yet.
+This closed the required preimplementation layout review without changing the
+access/state contract. The user subsequently authorized implementation, which is
+complete. They subsequently accepted the fresh executable output separately from
+the illustrative layout approval.
 
 ### Boundaries and verification for implementation
 
@@ -103,13 +106,23 @@ viewport geometry, add new selection/ranking, expose inferred freshness, add
 logging I/O to app/render, change core/firmware or refresh frozen M2 evidence.
 No normal-view default change, production/device control or target 20 Hz claim.
 
-An implementation would likely touch `sim/src/config.rs` and `sim/src/main.rs`
-for access, `render/src/lib.rs` for the independent page, and simulator/renderer
-unit and snapshot tests; the app already exposes counts, samples and per-object
-errors. Verify option conflicts and `v` cycling; identical app state and scene
-geometry across toggles; Tab/zoom while debug is open; selected/no-selection,
-healthy/mixed-failure/ingestion-warning cases; full host causes versus visibly
-bounded on-screen text; and unchanged square/default and wide-normal snapshots.
-Run workspace checks/tests and seek separate visual review of executable debug
-output before calling the implementation accepted. Current simulator behavior
-and controls remain documented in [simulator usage](../../sim/README.md).
+Implementation uses `sim/src/config.rs` and `sim/src/main.rs` for access and
+`render/src/debug.rs` for an independent page; existing app APIs supply counts,
+samples and ordered per-object errors. No app/core or logging behavior changed.
+Both toggle directions discard presentation history, so returning starts at the
+current static endpoints rather than resuming hidden transitions.
+
+Workspace check/tests, app/render no-default-feature checks, formatting and
+strict all-target app/render/sim/tools Clippy passed. Tests cover option conflicts,
+`v` cycling, identical app state/geometry/failures across toggles, Tab/zoom/replay
+while debugging, selected/empty/unsampled/mixed-failure cases, numeric and text
+boundaries, complete host causes/names and stale-state clearing. Pre/post
+weather/GPS square-default and wide-normal PNGs plus stderr are byte-identical
+at 0.1°, 20° and 100°. These are host checks, not physical-display or target
+performance validation. No SDL window was launched during implementation.
+
+The user subsequently reviewed and accepted the fresh executable debug output.
+This closes 0047's visual gate, not physical-display validation or target operating
+budgets. No code changes or new Rust check/test run accompanied that confirmation.
+[Simulator usage and review](../../sim/README.md#debug-access) own current controls
+and reproduction; the retained mock pages remain illustrative, not executable evidence.

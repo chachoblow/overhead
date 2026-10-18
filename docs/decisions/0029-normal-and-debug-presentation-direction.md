@@ -1,7 +1,7 @@
 # 0029 — Normal and debug presentation direction
 
 Date: 2026-10-12
-Status: accepted (normal readout/layout direction amended by [0032](0032-wide-radar-and-selected-satellite-glyphs.md), including bare NORAD ID as the normal marker label; separation remains unimplemented)
+Status: accepted (normal readout/layout direction amended by [0032](0032-wide-radar-and-selected-satellite-glyphs.md), including bare NORAD ID as the normal marker label; separation subsequently implemented under [0047](0047-text-first-debug-access-contract.md))
 
 ## Decision
 Separate the normal user-facing presentation from an objective diagnostic view.

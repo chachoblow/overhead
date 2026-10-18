@@ -46,6 +46,9 @@ Missing fetch metadata remains unknown; it is not inferred from filenames.
   by 1.2×, clamped to the lens range; the camera does not move.
 - Tab: select the next visible NORAD ID, wrapping. Selection stays while visible;
   otherwise the first visible ID is used. This is inspection, not final ranking.
+- `v`: toggle radar/text-first debug in interactive `--wide` replay only. Replay,
+  zoom and Tab stay active in debug; returning shows current normal state without
+  queued glyph motion. Holding `v` does not repeatedly toggle.
 - Escape/window close: quit.
 - `--fov-deg`: full vertical angle, 0.1°–100°; default 20°. Also the horizontal
   angle in square/circular modes; wide mode derives horizontal coverage from aspect.
@@ -60,6 +63,8 @@ Missing fetch metadata remains unknown; it is not inferred from filenames.
   strip and bottom-left white-backed notices. Incompatible with
   `--radar-size` and `--viewport`.
   See [wide comparison](#wide-radar-comparison).
+- `--debug`: start interactive `--wide` replay on the radar-free tracking/data-health
+  page. Requires `--wide`; incompatible with `--snapshot`. See [debug access](#debug-access).
 - `--label-hide-deg` / `--label-show-deg`: wide-view ID visibility thresholds,
   default 70°/60° vertical FOV. Both require `--wide`; see
   [label zoom visibility](#label-zoom-visibility).
@@ -122,15 +127,69 @@ and `Cat` label are also implemented; the user subsequently accepted the fresh
 executable category output. [0046's selected-data transitions](../docs/decisions/0046-selected-data-glyph-transition-contract.md)
 are implemented in the interactive wide view; the user subsequently reviewed
 and accepted their appearance. Headless `--snapshot` and square diagnostics
-remain static. The full normal/debug split remains open. Elevation, altitude,
-speed and period are also visually accepted as static fields.
+remain static. [0047's text-first debug access](../docs/decisions/0047-text-first-debug-access-contract.md)
+is implemented after separate authorization; the user subsequently reviewed and
+accepted the fresh executable output. Elevation, altitude, speed and period are also visually accepted as static fields.
 [DESIGN's retained schematic](../docs/DESIGN.md#selected-satellite-presentation)
 remains a design reference, not this executable's output or a golden test.
-Final debug-access controls remain open.
+The default square diagnostic panel is unchanged by debug access.
 
 The synchronous loop targets 20 Hz on the host, without a catch-up queue. This
 is a visual test loop, **not a selected device cadence or bounded scheduler**.
 No pass countdown, motion slow-down or hardware access is included.
+
+## Debug access
+
+Under [0047](../docs/decisions/0047-text-first-debug-access-contract.md), interactive
+wide replay has a separate radar-free page for tracking/data health. Start there:
+
+```sh
+cargo run -p overhead-sim -- sim/examples/weather-gps.json \
+  2026-10-10T00:00:00Z 39.007 -104.883 2.187 --wide --debug
+```
+
+Press `v` to return to radar, and again to inspect debug. Tab and wheel/up/down
+continue changing the underlying wide view while debug is open. Replay never
+pauses or switches to wall-clock UTC; toggling does not change geometry, counts,
+selection or physical samples. Returning discards hidden glyph-transition history
+and draws current static endpoints; subsequent normal-view selection changes
+animate as before. Normal notices remain condition-driven and cannot be dismissed
+by visiting debug. Square and circular comparisons ignore `v`.
+
+The fixed text page shows replay UTC, vertical FOV, separate catalogue/sky/view/
+failure counts, ingestion status, the first failed NORAD ID/cause, and selected
+identity plus true altitude, range, elevation, TEME speed, nominal period and
+signed epoch offset. Epoch offset is not freshness, period is not pass duration,
+and speed is not ground speed. No selection omits selected values; unavailable
+individual fields are explicit. Unsampled frame counts show `--`, not zero;
+`NO FRAME` is renderer-tested, while fatal host load/clock errors still exit.
+
+Names wrap across two rows; omissions and unsupported-character replacements
+explicitly point to the original host report. A bounded first cause likewise
+points to complete causes/other failed IDs in stderr. The accepted catalogue and
+ingestion report is printed at load, and full tracking causes when the failure
+set changes. There is no on-screen log history or fetching. Exact geometry,
+precision and overflow behavior belong to the [approved layout reference](../docs/mockups/0047-debug-layout-proposal.md).
+
+For executable review, use the command above to inspect selected readings, Tab,
+zoom, and repeated `v` round trips, including zooming to an empty viewport and
+back. To review selected-plus-failure or all-failed pages, first create the
+disposable inputs in the [notice review recipe](#notice-overlay-review), then run:
+
+```sh
+cargo run -p overhead-sim -- "$review_dir/combined.json" \
+  2026-10-04T12:43:41.833056Z 0.000017409 -85.180357315 0 --wide --debug
+# Repeat with "$review_dir/failed.json" for no successful selection.
+```
+
+Those failures/omissions are synthetic controls, not reported catalogue incidents.
+The user accepted the fresh executable output separately from layout approval
+and passing implementation tests. Tests invoke input/presentation code without
+an SDL window; neither those tests nor user visual acceptance establish
+physical-display legibility or target performance.
+`--debug` without `--wide`, repeated flags, and `--debug --snapshot` are rejected.
+There is no debug snapshot option: existing square and `--wide --snapshot` outputs
+remain static normal images.
 
 ## Deterministic snapshots and density comparison
 
@@ -276,8 +335,8 @@ Active lines appear in status/tracking/ingestion order. No active notice means
 neither text nor backing. Redrawing restores scene pixels as notices disappear or
 the block shrinks; there is no timeout, dismissal control or permanently reserved
 box. The maximum three-line backing occupies only `x=10..79`, `y=187..226`.
-These remain comparison notices, not the final debug-access design. No routine
-FOV/count text is shown in the wide image.
+Debug exposes the same conditions separately without replacing these comparison
+notices. No routine FOV/count text is shown in the wide normal image.
 
 At the pinned weather/GPS time/site above, all frames have SKY 22 and zero failures:
 
@@ -739,6 +798,14 @@ saturation, connected bounded hollow spirals, independent raster references,
 field-local invalid suppression, selection changes and constant period across
 physical frames. Independent CLI assertions derive period from element metadata
 for all 16 pool objects, both replay catalogues and synthetic-warning states.
+Debug tests cover exact fixed cells, signed fractional-time arithmetic, text
+boundaries/substitution/overflow, scientific fallback, field-local availability,
+unsampled/empty/mixed-failure states and stale-ink clearing. Simulator unit tests
+exercise wide-only nonrepeating toggles, unchanged app truth/geometry/failures,
+Tab/zoom and replay while debugging, static return during interrupted animation,
+normal transition recovery and preserved notices. CLI tests reject debug snapshot
+combinations and verify complete host names/causes; normal real-data snapshot
+regressions remain unchanged.
 
 The [2026-10-12 verification record](../docs/PROGRESS.md#2026-10-12-utc-square-default-fresh-session-verification-before-commit)
 contains the prior fresh-source build, broader check suite, headless counts,

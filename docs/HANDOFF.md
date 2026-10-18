@@ -1,40 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-18 UTC. Next: authorize and implement the approved 0047 debug layout._
+_Last updated: 2026-10-18 UTC. Next: review M3 exit criteria before selecting new work._
 
 ## State
-M3 opt-in wide radar, five selected fields and [0046's transitions](decisions/0046-selected-data-glyph-transition-contract.md)
-are implemented and visually accepted. True samples, normal notices and static
-square/default and headless output remain unchanged ([usage](../sim/README.md)).
-[0047](decisions/0047-text-first-debug-access-contract.md) accepts radar-free
-tracking/data-health debug, interactive wide `v` access and `--wide --debug`.
-Its layout/overflow review is now approved. **No debug code exists yet.**
+[0047](decisions/0047-text-first-debug-access-contract.md) is implemented and the
+user accepted its fresh executable debug output, separately from layout approval
+and implementation authorization. Wide radar, five selected fields and
+[0046's transitions](decisions/0046-selected-data-glyph-transition-contract.md)
+remain accepted. Square/default, normal notices and static snapshots are unchanged.
+[Simulator usage](../sim/README.md#debug-access) owns controls and reproduction;
+retained mock pages remain illustrative, not executable evidence.
 
 ## This session
-Design only: retained the approved [layout reference](mockups/0047-debug-layout-proposal.md)
-and [six native-size illustrative pages](mockups/0047-debug-native-proposal.png).
-0047 records approval; PLAN checks off only the preimplementation layout review;
-DESIGN links that status and PROGRESS records the session. The reference owns
-geometry, numeric formatting, two-row names and explicit host-log overflow rules.
-The retained docs/image suffice without this chat or disposable preview scripts.
-Layout approval is not implementation authorization or executable acceptance.
+- `render/src/debug.rs`: independent no_std text-first page with bounded names/
+  causes, explicit overflow guidance, true values and unsampled/absent states.
+- `sim/src/config.rs`, `sim/src/main.rs`: wide-only `v` and `--wide --debug`;
+  replay/Tab/zoom remain active, return discards hidden glyph motion, debug
+  snapshots are rejected. App/core truth and complete host reports are unchanged.
+- `render/src/debug_tests.rs`, `sim/src/interactive_tests.rs`,
+  `sim/tests/snapshot.rs`: formatting, state/lifecycle, input and CLI regressions.
+  Updated usage, 0047 and PLAN to record implementation and visual acceptance.
 
 ## Next bounded step
-Obtain implementation authorization, then implement 0047 in `sim/src/config.rs`,
-`sim/src/main.rs` and an independent renderer page, with regression coverage.
-Preserve true state/geometry across toggles, Tab/zoom while debugging, normal
-notices, complete host causes and historical square/wide-normal snapshots.
-Reject debug snapshots; return to a current normal frame without queued motion.
-Run workspace checks/tests, then seek separate executable visual acceptance.
-No new selection/collision policy, fetching, prediction, slowdown or hardware.
-M2 budgets/scheduling, RAM/safe stack, Sharp bring-up and RWX remain open;
-keep [0023's frozen evidence](decisions/0023-frozen-m2-revision-isolation.md) isolated.
+Review [M3's done-when criteria](PLAN.md#m3--minimal-real-data-radar-in-progress)
+against accepted output and tests; recommend milestone closure or identify one
+specific remaining gap before requesting another implementation slice. M3 has
+not been marked complete and no follow-on implementation is authorized.
+Circular-radar/field/graph alternatives remain unapproved exploration. M2 budgets/
+scheduling, RAM/safe stack, Sharp bring-up and RWX remain open; keep
+[0023's frozen evidence](decisions/0023-frozen-m2-revision-isolation.md) isolated.
 
 ## Verification / limits
-This session checked preview font/raw parity, native bounds, binary pixels,
-deterministic regeneration and text-boundary controls; the user approved its
-illustrative appearance, not physical samples. Wrap-up checked retained image
-bounds/font cells, local links/anchors, doc consistency and unstaged/staged
-whitespace. Rust checks/tests were not rerun: only docs and a reference PNG changed.
-No simulator launch, executable debug review, physical-display or S3 validation;
-no dependency, fixture, firmware/toolchain or frozen-M2 changes; no 20 Hz claim.
+Wrap-up freshly passed `cargo check --workspace`, `cargo test --workspace --quiet`,
+`cargo check -p overhead-app -p overhead-render --no-default-features`,
+`cargo clippy -p overhead-app -p overhead-render -p overhead-sim -p overhead-tools --all-targets -- -D warnings`,
+and `cargo fmt --all --check`. Earlier pre/post weather/GPS square/wide-normal
+PNGs and stderr matched at 0.1°, 20° and 100°. The agent launched no SDL window;
+user visual acceptance is separate from input/presentation tests. No dependency,
+fixture, firmware/toolchain or frozen-M2 changes; no display/S3 validation or 20 Hz claim.

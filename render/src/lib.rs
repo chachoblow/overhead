@@ -20,6 +20,7 @@ use overhead_app::{
 use overhead_core::sgp4::chrono::Timelike;
 
 mod category;
+pub mod debug;
 mod glyphs;
 pub mod presentation;
 

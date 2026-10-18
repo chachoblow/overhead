@@ -915,6 +915,17 @@ fn malformed_inputs_fail_before_creating_a_snapshot() {
             "bad.png",
         ],
         vec!["--demo", "--wide", "--wide", "--snapshot", "bad.png"],
+        vec!["--demo", "--debug", "--snapshot", "bad.png"],
+        vec!["--demo", "--wide", "--debug", "--snapshot", "bad.png"],
+        vec!["--demo", "--snapshot", "bad.png", "--debug", "--wide"],
+        vec![
+            "--demo",
+            "--wide",
+            "--debug",
+            "--debug",
+            "--snapshot",
+            "bad.png",
+        ],
         vec!["--demo", "--label-hide-deg", "80", "--snapshot", "bad.png"],
         vec![
             "--demo",
@@ -956,6 +967,23 @@ fn malformed_inputs_fail_before_creating_a_snapshot() {
     );
     let help = success(scratch.run(&["--help"]));
     assert!(help.contains("Usage:") && help.contains("--fov-deg"));
+    assert!(help.contains("--debug") && help.contains("v = toggle radar/debug"));
+    for (args, error) in [
+        (vec!["--demo", "--debug"], "--debug requires --wide"),
+        (
+            vec!["--demo", "--wide", "--debug", "--debug"],
+            "repeated option: --debug",
+        ),
+        (
+            vec!["--demo", "--wide", "--debug", "--snapshot", "bad.png"],
+            "--debug cannot be combined with --snapshot",
+        ),
+    ] {
+        let output = scratch.run(&args);
+        assert_eq!(output.status.code(), Some(1));
+        assert!(String::from_utf8_lossy(&output.stderr).contains(error));
+        assert!(!scratch.0.join("bad.png").exists());
+    }
     assert_eq!(scratch.run(&[]).status.code(), Some(1));
     scratch.manifest(json!([]));
     let output = scratch.run(&[
@@ -1056,6 +1084,52 @@ fn propagation_errors_and_ingestion_warnings_remain_explicit() {
     assert!(String::from_utf8_lossy(&output.stderr).contains("warning: skipped"));
     assert!(success(output).contains("catalogue=1"));
     scratch.png("error.png");
+}
+
+#[test]
+fn host_report_retains_original_names_and_every_complete_failure_cause() {
+    let scratch = Scratch::new();
+    let mut records: Value =
+        serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
+    // Deliberately long/unsupported text exercises the host side of 0047's
+    // overflow guidance; the orbital input is unchanged for the selected ISS.
+    let name = format!("{} λ ORIGINAL TAIL", "LONG NAME ".repeat(20));
+    records[0]["OBJECT_NAME"] = json!(name);
+    for id in [99999, 99998] {
+        let mut failed = records[0].clone();
+        failed["NORAD_CAT_ID"] = json!(id);
+        failed["MEAN_MOTION"] = json!(1e300);
+        records.as_array_mut().unwrap().push(failed);
+    }
+    records
+        .as_array_mut()
+        .unwrap()
+        .push(json!({"bad":"record"}));
+    scratch.manifest(records);
+    let loaded = overhead_tools::catalogue::load(&scratch.0.join("catalogue.json")).unwrap();
+    let time = loaded.catalogue.entries()[0].satellite().epoch();
+    let output = scratch.run(&[
+        "catalogue.json",
+        "2026-10-04T12:43:41.833056Z",
+        "0.000017409",
+        "-85.180357315",
+        "0",
+        "--wide",
+        "--snapshot",
+        "normal.png",
+    ]);
+    let stderr = String::from_utf8(output.stderr.clone()).unwrap();
+    assert!(stderr.contains(&format!("Satellite: {name}\n")));
+    assert!(stderr.contains("warning: skipped"));
+    for entry in &loaded.catalogue.entries()[1..] {
+        let cause = entry.satellite().state_at(time).unwrap_err();
+        assert!(stderr.contains(&format!(
+            "NORAD {}: propagation: {cause}\n",
+            entry.elements().norad_id
+        )));
+    }
+    assert!(success(output).contains("catalogue=3 sky=1 visible=1 failed=2"));
+    assert_snapshot_notices(&scratch, "normal.png", &["TRACK ERROR", "INGEST WARN"]);
 }
 
 #[test]
