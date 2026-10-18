@@ -41,7 +41,9 @@ Station > Navigation > Weather > Unknown priority. The icons, assignment directi
 and lifecycle are approved and implementation authorized; the user subsequently
 accepted fresh executable category output. [0046's selected-data transitions](decisions/0046-selected-data-glyph-transition-contract.md)
 are implemented for interactive wide replay; the user subsequently reviewed and
-accepted the animation. Final debug access remains open.
+accepted the animation. [0047](decisions/0047-text-first-debug-access-contract.md)
+agrees radar-free, text-first simulator debug access for tracking/data health;
+it is not implemented.
 
 Zoom ranges from local to wider than Earth. Motion should feel fluid and lively;
 minimum on-screen traversal time for fast markers is planned, not implemented.
@@ -492,7 +494,8 @@ static group-derived category, completing the five static fields. The category
 icons, hierarchy and lifecycle are approved; the user also accepted the fresh
 executable output. No selection clears all five fields, retaining the separator.
 The four-data-glyph transition contract is implemented under 0046 and the user
-accepted the interactive animation. Final normal/debug access still needs design.
+accepted the interactive animation. 0047 now specifies radar-free, text-first
+debug access for wide replay; implementation and visual review remain open.
 
 Circular radar with an info brick, surrounding noise fields and unlabelled
 visible-population graphs were explored, not selected as replacements. For any
@@ -503,7 +506,8 @@ accepted wide/glyph direction.
 
 Refined empty-view explanations and incomplete-data/tracking notices are parked
 for focused design, not removed as a correctness requirement. The comparison
-uses minimal explicit notices; final debug access remains open. The revised
+uses minimal explicit notices; 0047 specifies separate debug access but does
+not replace these notices. The revised
 full-height stack occupied the former strip warning area.
 [0039](decisions/0039-bottom-left-condition-driven-notices.md) selects bottom-left
 condition-driven notices, with retained comparisons [above](#bottom-left-notice-reference);

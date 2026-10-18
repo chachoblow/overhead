@@ -1,39 +1,38 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-17 UTC. Next: scope M3 normal/debug access._
+_Last updated: 2026-10-18 UTC. Next: implement 0047 and review executable output._
 
-## Current state / agreed direction
-[0045](decisions/0045-static-group-category-contract.md) completes the five
-static selected fields in opt-in wide view. [0046](decisions/0046-selected-data-glyph-transition-contract.md)
-is implemented and user visually accepted: Elev/Alt/Spd/Per transition over
-250 ms on selected-ID changes, while Cat, ID and selection switch immediately.
-Physical readouts stay true; square diagnostics remain default and headless
-snapshots remain static. [0029](decisions/0029-normal-and-debug-presentation-direction.md)
-agrees normal/debug separation as direction, not a control or implementation.
+## State
+M3 opt-in wide radar and five static fields are implemented; [0046](decisions/0046-selected-data-glyph-transition-contract.md)
+adds visually accepted 250 ms Elev/Alt/Spd/Per transitions. Cat, ID and selected
+identity switch immediately; physical values stay true. Default square diagnostics
+and static headless snapshots remain unchanged ([usage](../sim/README.md)).
+[0029](decisions/0029-normal-and-debug-presentation-direction.md) established
+normal/debug separation; [0047](decisions/0047-text-first-debug-access-contract.md)
+now accepts a radar-free text-first tracking/data-health debug page, interactive
+wide `v` toggle and explicit `--wide --debug` start. **No debug code exists yet.**
 
-## Session changes
-`render/src/presentation.rs` retains bounded explicit-time drawing parameters;
-`render/src/{glyphs,lib}.rs` share static endpoints with wide-only `draw_at`.
-`sim/src/main.rs` supplies monotonic elapsed time for interactive replay; PNGs
-still use `draw`. Renderer timeline/pixel tests and [simulator usage](../sim/README.md)
-cover motion versus static output. No new dependencies, app/core semantics,
-orbital fixtures, firmware or frozen-M2 changes. The user separately approved
-0046's design, authorized implementation and accepted interactive appearance;
-no physical-display approval follows. 0040–0045 field, category and notice
-contracts stay accepted. Preserve [0023's pinned M2 revision](decisions/0023-frozen-m2-revision-isolation.md).
+## This session
+Design only: added `docs/decisions/0047-text-first-debug-access-contract.md`;
+updated `docs/PLAN.md` (agreed vs open implementation), `docs/DESIGN.md` and
+`docs/PROGRESS.md`. No new dependency, app/core semantics, fixtures, firmware,
+toolchain or frozen-M2 evidence; preserve [0023's pinned revision](decisions/0023-frozen-m2-revision-isolation.md).
 
-## Next step / boundaries
-Recommend a **design-only** normal/debug access contract: settle simulator
-entry/toggle and how objective diagnostics remain reachable before code or a
-default-mode change. Preserve wide radar, true state and explicit notices. No
-selection/collision policy, marker slowdown, production catalogue, prediction,
-fetching, scheduling or hardware work is approved by 0046.
+## Next bounded step
+Implement 0047 in simulator config/input and the renderer, then seek separate
+executable visual acceptance. Debug is text-first, not a square radar: `--debug`
+requires `--wide`, is interactive-only, and `v` toggles without changing app
+view/selection/time. Keep existing square/default and wide-normal snapshots,
+true samples, host failure reporting and condition-driven normal notices. Review
+400×240 1-bit text fit; long names/error causes must not silently truncate.
+Do not add selection/collision policy, slowdown, fetching, prediction, scheduling,
+production limits or hardware work. M2 budgets, RAM/safe stack, Sharp bring-up
+and RWX remain open.
 
-## Verification / risks
-Wrap-up passed workspace check/tests, fmt, app/render no-default-feature checks
-and strict all-target app/render/sim/tools Clippy; local links and whitespace
-were checked. Renderer tests cover interruption, loss/recovery, retargeting and
-static endpoint/square isolation; CLI snapshots cover static real data. User
-reviewed the interactive animation; no agent-run interactive, physical-display
-or S3 timing validation, and no 20 Hz claim. M2 budgets/scheduling, RAM/safe
-stack, Sharp bring-up and RWX remain open.
+## Verification / limits
+This session: documentation-only local links/paths and instruction consistency
+checked; unstaged and staged whitespace checked at wrap-up. Rust checks/tests
+not rerun because there are no code changes. Previous 0046 workspace check/tests,
+fmt, app/render no-default-feature checks and strict Clippy passed in an earlier
+session, **not** as 0047 verification. No debug executable review, physical-display
+or S3 timing validation; no 20 Hz claim.

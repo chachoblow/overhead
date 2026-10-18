@@ -439,3 +439,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Accepted and implemented [0046](decisions/0046-selected-data-glyph-transition-contract.md): 250 ms selected-ID transitions for four data glyphs, immediate Cat; the user separately approved design, authorized implementation and accepted the interactive animation.
 - Added explicit-time renderer presentation state, deterministic timeline/pixel tests and thin simulator timing; headless snapshots and square diagnostics stay static, with true physical readouts untouched.
 - Wrap-up passed workspace check/tests, fmt, app/render no-default-feature checks, strict all-target app/render/sim/tools Clippy and doc/link/whitespace review. No physical-display or target timing validation; next scope M3 normal/debug access before code.
+
+## 2026-10-18 UTC (text-first debug access contract)
+- Accepted [0047](decisions/0047-text-first-debug-access-contract.md): radar-free tracking/data-health debug for interactive wide replay, `v` toggle and explicit `--wide --debug` start; the square baseline remains unchanged.
+- Recorded objective fields, host-log boundaries, state-preserving toggles and snapshot/CLI constraints in 0047; updated DESIGN, PLAN and HANDOFF. No debug implementation or executable visual approval.
+- Wrap-up checked local links/paths, documentation consistency and unstaged/staged whitespace; no Rust checks were rerun because the diff is documentation-only. No firmware, hardware, toolchain or frozen-M2 work.
+- Next: implement 0047 and separately review executable output; preserve wide normal notices, true-state semantics and historical snapshots.
