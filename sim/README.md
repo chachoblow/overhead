@@ -44,8 +44,12 @@ Missing fetch metadata remains unknown; it is not inferred from filenames.
 
 - Wheel/up arrow: zoom in. Down arrow: zoom out. Each step scales magnification
   by 1.2×, clamped to the lens range; the camera does not move.
-- Tab: select the next visible NORAD ID, wrapping. Selection stays while visible;
-  otherwise the first visible ID is used. This is inspection, not final ranking.
+- Tab: select the next in-view NORAD ID, wrapping; with no in-view markers,
+  leave a retained wide-view selection alone. In the wide view, a successfully
+  tracked above-horizon satellite stays selected even after zoom or motion takes
+  it off-screen. On horizon/tracking loss, fall back to the first in-view ID or
+  clear selection. Square/circular comparisons remain visible-only. This is
+  inspection, not a new ranking.
 - `v`: toggle radar/text-first debug in interactive `--wide` replay only. Replay,
   zoom and Tab stay active in debug; returning shows current normal state without
   queued glyph motion. Holding `v` does not repeatedly toggle.
@@ -292,11 +296,29 @@ Exact overlaps can look like a single arrow. Near-plane/behind-camera objects
 receive no arrow; zoom cannot change their depth. Objects become ordinary
 markers when their true projections enter the viewport.
 
-Selection remains visible-marker-only, with the same Tab/zoom behavior as the
-baseline; arrows never count as visible markers. The snapshot report adds
-`indicators=N`: the number of arrows submitted, not necessarily distinguishable
-symbols (zero in baseline modes). All physical diagnostics remain available in
-host reports and the baseline panel.
+Under [0049](../docs/decisions/0049-stable-wide-selection.md), the wide view
+retains a successfully tracked selected ID above the horizon even if zoom or
+motion takes it off-screen. Initial acquisition and genuine loss choose the first
+in-view NORAD ID; Tab cycles only in-view markers and does nothing if none is
+visible. An off-screen selected object can keep its current true-state strip and
+debug values, but has no diamond or marker-adjacent ID; its arrow, if any, is
+not highlighted or labelled. Notices and visible counts still describe the
+viewport. Square/circular diagnostics retain visible-only selection; arrows
+never count as visible markers. The snapshot report adds `indicators=N`: the
+number of arrows submitted, not necessarily distinguishable symbols (zero in
+baseline modes). A standalone headless snapshot starts without selection history
+and never automatically selects an off-screen object. All physical diagnostics
+remain available in host reports and the baseline panel.
+
+For interactive review, run
+`cargo run -p overhead-sim -- --demo --wide --fov-deg 100`, use Tab to choose
+a marker away from the aim point, then zoom in until it leaves the viewport.
+Its strip remains current; Tab switches to an in-view marker if one exists,
+and `v` shows the same selected object in debug.
+Zoom back out to see its diamond return if no new selection or physical loss
+occurred. The user confirmed review and acceptance of the interactive 0049
+behavior separately from contract/code review; this is not physical-display
+legibility or target-performance validation.
 
 When the zoom gate permits it, the selected visible marker carries its bare NORAD
 ID, except `25544` shows `ISS`.
@@ -310,8 +332,8 @@ below; the selected diamond and square baseline are unchanged.
 
 The strip shows a labelled static circular cutout of true elevation,
 concentric circles of true WGS-84 altitude and an arc of true TEME speed
-when a visible satellite is selected;
-its separator remains without selection. Under
+when a successfully tracked satellite is selected, including when it is off-screen
+in wide replay; its separator remains without selection. Under
 [0040](../docs/decisions/0040-white-backed-bottom-left-notice-contract.md), complete
 notice lines are bottom-left at `x=12`, ending at baseline `y=222`, with 13px
 spacing. A borderless white backing pads the active text block by 2px and is drawn
@@ -704,8 +726,9 @@ production packed masks. No target/display validation follows from host images.
 
 Under [0035](../docs/decisions/0035-label-zoom-visibility.md), the wide-view label
 hides at **≥70° vertical FOV** and restores at **≤60°**. Between those thresholds,
-it retains its previous visibility. The selected diamond remains visible. This
-is clean hide/show with hysteresis: no fade, dithering or animation.
+it retains its previous visibility. The selected diamond remains visible
+**while its marker is in view**. This is clean hide/show with hysteresis: no fade,
+dithering or animation.
 
 At launch, including headless snapshots, the label is shown below the hide
 threshold and hidden at/above it; the intervening band starts visible. Frame

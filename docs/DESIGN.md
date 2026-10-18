@@ -471,8 +471,9 @@ group-derived category. Reproduce the current state through the
 
 ### Open questions and boundaries
 
-0033 settles the first comparison's vertical FOV/aspect, no-arrow invalid-depth
-handling, overlaps-allowed arrow policy and unchanged visible-only selection.
+0033 settled the first comparison's vertical FOV/aspect, no-arrow invalid-depth
+handling, overlaps-allowed arrow policy and initial visible-only selection;
+0049 now refines selection continuity in the wide view.
 The user approved the current wide layout and allowed arrow overlaps; retain
 these rather than adding collision avoidance. 0034 settles the first marker-adjacent
 label's placement and overlaps-allowed policy. User review of the crowded overview
@@ -508,6 +509,16 @@ rather than readable text placed over texture. No field mapping, time-history
 policy or implementation is approved; keep such experiments separate from the
 accepted wide/glyph direction.
 
+[0049](decisions/0049-stable-wide-selection.md) implements a wide-view
+selection refinement: keep the selected ID and current true-state strip when a
+successfully tracked above-horizon object moves outside the viewport through
+zoom or motion. Tab chooses an in-view marker; horizon/tracking loss ends the
+selection and falls back to the first in-view marker. No off-screen diamond,
+marker-adjacent label or specially marked arrow is approved. This was separately
+authorized for the opt-in wide view; the user subsequently confirmed reviewing
+and accepting the interactive output. Square diagnostics retain visible-only
+selection.
+
 [0048](decisions/0048-refined-empty-view-notices.md) now accepts a bounded
 wide-radar empty-view refinement: `SKY OUTSIDE VIEW` when there are eligible
 arrows, `NONE ABOVE HORIZON` only for a clean nonempty loaded catalogue with
@@ -529,8 +540,9 @@ remain.
 The selected-satellite start/end/peak pass graphic is interesting but deferred;
 upcoming-pass lists are not desired. Local time, orbit-data age, range and bearing
 are not part of this starting layout. Camera movement/panning, marker slowdown,
-new automatic selection policy, fetching and production population/cadence
-choices are outside this slice. No radio information or battery indicator.
+any ranking beyond 0049's agreed selection continuity/fallback, fetching and
+production population/cadence choices are outside this slice. No radio
+information or battery indicator.
 
 ## Controls
 - Simulator: continuous zoom via scroll wheel and up/down arrows.

@@ -247,7 +247,7 @@ fn debug_empty_and_invalid_frames_recover_without_stale_normal_notices_or_fields
     }
     assert_eq!(app.counts().visible, 0);
     assert!(app.counts().above_horizon > 0);
-    assert!(app.selected_id().is_none());
+    assert!(app.selected_id().is_some()); // Still tracked above the horizon.
     let empty = frame(&mut presentation, &app, layout, true, 10);
     assert_ne!(selected, empty);
     presentation.key(&mut app, Keycode::V, false);

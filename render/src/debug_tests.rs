@@ -156,7 +156,7 @@ fn no_frame_is_unsampled_not_zero_and_omits_all_selected_rows() {
     assert_eq!(row(&page, 6), "");
     assert_eq!(row(&page, 7), "");
     assert_eq!(row(&page, 8), "INGEST WARN / DETAILS: HOST STDERR");
-    assert_eq!(row(&page, 9), "NO SELECTED VISIBLE OBJECT");
+    assert_eq!(row(&page, 9), "NO SELECTED OBJECT");
     for i in 10..=16 {
         assert_eq!(row(&page, i), "");
     }
@@ -248,7 +248,7 @@ fn rendered_text_matches_fixed_cells_without_radar_or_separator() {
         (4, 1, "FAILED --"),
         (5, 0, "TRACKING NOT SAMPLED / NO VALID FRAME"),
         (8, 0, "INGEST WARN / DETAILS: HOST STDERR"),
-        (9, 0, "NO SELECTED VISIBLE OBJECT"),
+        (9, 0, "NO SELECTED OBJECT"),
         (17, 0, "V RADAR  UP/DN/WHEEL ZOOM  TAB SELECT"),
     ] {
         Text::new(
@@ -372,20 +372,22 @@ fn missing_and_invalid_selected_fields_are_local_without_stale_readings() {
 }
 
 #[test]
-fn empty_view_with_sky_objects_omits_values_without_claiming_empty_sky() {
+fn empty_view_with_sky_objects_keeps_true_offscreen_selection() {
     let mut app = app(0, true);
+    let original = app.selected().unwrap().1.physical;
     let time = app.time().unwrap() + TimeDelta::seconds(60);
     app.zoom(64);
     app.update(time).unwrap();
     assert_eq!(app.counts().visible, 0);
     assert_eq!(app.counts().above_horizon, 1);
+    assert_eq!(app.selected_id(), Some(25544));
+    assert_ne!(app.selected().unwrap().1.physical, original);
     let page = Page::from_app(&app, false);
     assert_eq!(right(&page, 3), "SKY >0 DEG 1");
     assert_eq!(left(&page, 4), "IN VIEW 0");
-    assert_eq!(row(&page, 9), "NO SELECTED VISIBLE OBJECT");
-    for i in 10..=16 {
-        assert_eq!(row(&page, i), "");
-    }
+    assert_eq!(row(&page, 9), "SELECTED NORAD 25544");
+    assert!(left(&page, 12).starts_with("ALT WGS84 "));
+    assert!(left(&page, 13).starts_with("ELEV "));
 }
 
 #[test]

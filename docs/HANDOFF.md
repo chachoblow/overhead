@@ -1,40 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-18 UTC. Next: scope a bounded M4 selection slice, not implement it._
+_Last updated: 2026-10-18 UTC. Next: scope one bounded M4 secondary-information comparison; do not implement by default._
 
 ## State
-[M3 complete](PLAN.md#m3--minimal-real-data-radar-complete): moving, zoomable real-data
-radar with opt-in wide view/five fields/transitions/debug; square diagnostics
-remain default. M4's [0048 empty-view notices](decisions/0048-refined-empty-view-notices.md)
-are implemented and user-approved on fresh executable output: arrows yield
-`SKY OUTSIDE VIEW`, clean nonempty no-above-horizon samples yield
-`NONE ABOVE HORIZON`, and uncertain/remaining empty cases yield `NO MARKERS`.
-Independent warnings persist; [simulator usage](../sim/README.md#wide-radar-comparison)
-owns reproduction. [0048 mocks](mockups/0048-empty-view-proposal.md) remain illustrative.
+[M3 complete](PLAN.md#m3--minimal-real-data-radar-complete). The square/diagnostic
+simulator remains default; opt-in wide radar has five true-state fields,
+transitions, debug and [0048's user-accepted empty-view notices](decisions/0048-refined-empty-view-notices.md).
+[0049's stable wide selection](decisions/0049-stable-wide-selection.md) is
+implemented and user-accepted after interactive review: a successfully tracked
+above-horizon selection survives zoom- and motion-driven viewport exits, with
+current strip/debug values. Tab chooses an in-view marker; genuine loss falls
+back to the first in-view ID or clears. Square/circular remain visible-only.
+[Simulator usage](../sim/README.md#wide-radar-comparison) has an interactive recipe;
+a standalone snapshot cannot show continuity.
 
 ## This session
-- From clean `main` at `01c62de`, user separately authorized 0048 implementation.
-  `render/src/lib.rs` now classifies the wide status using current app truth;
-  backing grows with the longest active line. Square, app truth, selection and
-  warning lifecycle remain unchanged.
-- Added focused raster/classification/recovery and real-data/omission coverage in
-  `render/src/lib.rs` and `sim/tests/snapshot.rs`; updated `sim/README.md`,
-  `PLAN.md`, `DESIGN.md`, 0048 and its mock provenance. User then accepted the
-  fresh executable demo-arrow and one-ISS horizon screenshots separately from
-  the earlier contract composites.
+- Began on clean `main` at `4a99d80`. Agreed 0049, then separately authorized
+  implementation. `app/src/lib.rs` changes wide reconciliation and Tab;
+  `render/src/debug.rs` avoids a misleading no-selection message. Added
+  app/render/sim regressions in those crates and updated `sim/README.md`,
+  `DESIGN.md`, `PLAN.md` and the 0049 decision. User confirmed review and
+  acceptance of both code/contract and interactive executable behavior.
+- No new field, selected-arrow highlight, ranking, or device policy was approved.
 
 ## Next bounded step / limits
-Review current wide replay selection behavior and propose **one bounded stable
-automatic-selection contract** for user approval before implementation. Scope
-selection continuity, entry/loss and zoom changes without choosing new normal
-readouts or changing physical eligibility. [PLAN](PLAN.md#m4--useful-display-behavior)
-retains other M4 options; circular-radar/field/graph alternatives are unapproved.
-M2 budgets/scheduling, RAM/safe stack, Sharp output and RWX remain open;
-keep [0023's frozen evidence](decisions/0023-frozen-m2-revision-isolation.md) isolated.
+Review the current wide normal view (including selected and empty-view states)
+and propose **one** bounded secondary true-state readout comparison for user
+approval, or recommend adding none if it would reduce radar clarity. Do not
+implement or assume time/data age is required; [PLAN](PLAN.md#m4--useful-display-behavior)
+retains separate empty-sky/countdown and coastline options. Circular radar,
+field and graph alternatives are exploration, not selected. M2 budgets/scheduling,
+RAM/safe stack, Sharp output and RWX remain open; keep
+[0023's frozen evidence](decisions/0023-frozen-m2-revision-isolation.md) isolated.
 
-## Verification
-Workspace check/tests, app/render no-default-features check, strict app/render/sim
-Clippy, formatting, local links and whitespace pass; headless real-data
-snapshots were generated and checked without SDL. Fresh
-executable visual acceptance is user feedback, not target/panel validation.
-No hardware, firmware, dependency, fixture or frozen-M2 work this session.
+## Verification / limits
+Fresh wrap-up: workspace check/tests, app/render no-default-feature checks,
+formatting, strict all-target app/render/sim Clippy, local links and whitespace
+pass. User interactive acceptance is separate; no agent-run SDL replay, hardware,
+firmware or frozen-M2 change. No physical-display or target-performance claim.

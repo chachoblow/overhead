@@ -251,9 +251,21 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   0039/0040 notice lifecycles and provenance boundaries. Host checks and tests
   cover classification, backing and headless real-data cases. The user separately
   reviewed and accepted fresh executable arrow and horizon snapshots.
-- [ ] Refine secondary information with visual feedback; add stable automatic
-  selection and the chosen true-state readouts. 0032 removes routine normal-view
-  FOV/counts; time and data age are not requirements of its starting layout.
+- [x] Agree [0049's stable wide-selection contract](decisions/0049-stable-wide-selection.md):
+  retain a successfully tracked above-horizon selection across viewport exits
+  from zoom or motion, keep current true-state fields, and use first in-view ID
+  only for initial acquisition or genuine loss. Tab still chooses in-view markers.
+  Agreement preceded implementation and separate interactive visual acceptance.
+- [x] Separately authorize and implement 0049 in the wide view: keep the
+  selected object's current true-state fields outside the viewport, Tab to an
+  in-view marker, and clear/fall back on horizon or tracking loss. Square/circular
+  selection stays visible-only. Host app/renderer/simulator regressions cover
+  continuity, strip/debug and no-stale-data behavior; no selected-arrow styling.
+- [x] User confirmed reviewing and accepting interactive executable 0049
+  selection continuity as well as the code/contract, separately from host tests.
+- [ ] Refine secondary information with visual feedback and choose any further
+  true-state readouts separately. 0032 removes routine normal-view FOV/counts;
+  time and data age are not starting-layout requirements.
 - [ ] Refine empty-sky behavior; evaluate next-pass countdown integration where
   useful, without sacrificing radar quality or responsiveness.
 - [ ] Prepare coastlines offline and render them legibly across zoom levels.

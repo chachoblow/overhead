@@ -479,3 +479,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Added renderer classification/pixel/recovery and `sim/tests/snapshot.rs` headless real-data/omission tests; updated [simulator usage](../sim/README.md#wide-radar-comparison) and current status docs. User separately accepted fresh executable arrow and horizon snapshots; retained mocks remain illustrative.
 - Wrap-up verified workspace check/tests, app/render no-default-feature check, strict app/render/sim Clippy, formatting, local links and whitespace. No new dependencies, fixtures, hardware/firmware/toolchain or frozen-M2 evidence; host images do not validate target legibility or costs.
 - Next: scope one bounded M4 stable automatic-selection contract with user approval before implementation; M2 operating budgets/scheduling and Sharp bring-up remain open.
+
+## 2026-10-18 UTC (M4 stable wide selection and interactive acceptance)
+- Agreed, separately authorized and implemented [0049](decisions/0049-stable-wide-selection.md): wide selection persists across zoom/motion viewport exits while tracked above horizon, with current true-state strip/debug; Tab chooses in-view markers and genuine loss falls back to first in-view ID. Square/circular stay visible-only.
+- Updated `app/src/lib.rs`, debug wording, app/render/sim tests, [usage](../sim/README.md#wide-radar-comparison) and scope docs; user separately confirmed accepting the code/contract and interactive behavior.
+- Wrap-up freshly passed workspace check/tests, app/render no-default-feature checks, formatting, strict all-target app/render/sim Clippy and link/whitespace review. No agent-run SDL, hardware, firmware, dependency or frozen-M2 work; no target/panel claim.
+- Next: scope one bounded M4 secondary-information comparison with user approval before implementation; no selected-arrow styling, new ranking/readout or production budget is approved.

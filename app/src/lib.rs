@@ -18,7 +18,9 @@ use category::Category;
 pub mod identification;
 pub mod projection;
 use identification::LabelZoom;
-use projection::{Camera, CameraError, CameraPoint, EarthLimb, EdgeIndicator, View, ViewPoint};
+use projection::{
+    Camera, CameraError, CameraPoint, EarthLimb, EdgeIndicator, View, ViewPoint, Viewport,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TrackingError {
@@ -246,25 +248,38 @@ impl RadarApp {
         self.reconcile_selection();
     }
 
-    /// Minimal inspect behavior: keep the selected visible ID, otherwise use
-    /// the first visible NORAD ID. No ranking, dwell timer or production policy.
+    /// Wide: retain a successfully tracked above-horizon ID across viewport
+    /// exits; other comparison modes retain their visible-only selection.
+    /// Initial acquisition and genuine loss use the first visible NORAD ID.
     fn reconcile_selection(&mut self) {
-        if !self
-            .markers()
-            .any(|(e, _, _)| Some(e.elements().norad_id) == self.selected)
-        {
-            let first = self.markers().next().map(|(e, _, _)| e.elements().norad_id);
+        let retained = if self.view.viewport() == Viewport::Rectangle {
+            self.objects().any(|(entry, result)| {
+                Some(entry.elements().norad_id) == self.selected
+                    && result.as_ref().is_ok_and(Sample::above_horizon)
+            })
+        } else {
+            self.markers()
+                .any(|(entry, _, _)| Some(entry.elements().norad_id) == self.selected)
+        };
+        if !retained {
+            let first = self
+                .markers()
+                .next()
+                .map(|(entry, _, _)| entry.elements().norad_id);
             self.selected = first;
         }
     }
 
+    /// Tab always chooses an in-view marker; with none, wide selection persists.
     pub fn select_next(&mut self) {
         let next = self
             .markers()
             .map(|(e, _, _)| e.elements().norad_id)
             .find(|id| self.selected.is_none_or(|selected| *id > selected))
             .or_else(|| self.markers().next().map(|(e, _, _)| e.elements().norad_id));
-        self.selected = next;
+        if next.is_some() || self.view.viewport() != Viewport::Rectangle {
+            self.selected = next;
+        }
     }
 }
 
@@ -709,6 +724,147 @@ mod tests {
     }
 
     #[test]
+    fn wide_selection_survives_zoom_and_replay_motion_but_not_horizon_or_failure() {
+        let mut square = app();
+        let time = square.catalogue.entries()[0].satellite().epoch();
+        square.update(time).unwrap();
+        let mut wide = RadarApp::new(
+            app().catalogue,
+            square.observer,
+            View::rectangular(20.0, 173.0 / 117.0).unwrap(),
+        )
+        .unwrap()
+        .with_group_categories(alloc::vec![Category::Station]);
+        wide.update(time + Duration::seconds(30)).unwrap();
+        square.update(time + Duration::seconds(30)).unwrap();
+        let id = wide.selected_id();
+        let original = wide.selected().unwrap().1.physical;
+        wide.zoom(64);
+        assert_eq!(wide.counts().visible, 0);
+        assert_eq!(wide.selected_id(), id);
+        assert_eq!(wide.selected().unwrap().1.physical, original);
+        assert_eq!(wide.selected_category(), Some(Category::Station));
+        wide.select_next(); // Nothing in view: no-op, not selection loss.
+        assert_eq!(wide.selected_id(), id);
+        wide.update(time + Duration::seconds(60)).unwrap();
+        assert_eq!(wide.counts().visible, 0);
+        assert_eq!(wide.selected_id(), id);
+        assert_ne!(wide.selected().unwrap().1.physical, original);
+        wide.zoom(-64);
+        assert_eq!(wide.selected_id(), id);
+        assert_eq!(wide.counts().visible, 1);
+
+        // Motion out of the viewport without zoom keeps the current ID.
+        wide.samples[0].as_mut().unwrap().camera = CameraPoint {
+            east_km: 100_000.0,
+            north_km: 0.0,
+            depth_km: 1.0,
+        };
+        wide.reconcile_selection();
+        assert_eq!(wide.selected_id(), id);
+        assert_eq!(wide.counts().visible, 0);
+        // Even invalid camera depth is not a physical horizon or tracking loss.
+        wide.samples[0].as_mut().unwrap().camera.depth_km = -1.0;
+        wide.reconcile_selection();
+        assert_eq!(wide.selected_id(), id);
+        assert_eq!(wide.indicators().count(), 0);
+        wide.samples[0]
+            .as_mut()
+            .unwrap()
+            .physical
+            .look
+            .elevation_rad = 0.0;
+        wide.reconcile_selection();
+        assert_eq!(wide.selected_id(), None);
+        assert_eq!(wide.selected_category(), None);
+        wide.update(time).unwrap();
+        assert_eq!(wide.selected_id(), id);
+        wide.samples[0] = Err(TrackingError::Observation(
+            ObservationError::CoincidentPositions,
+        ));
+        wide.reconcile_selection();
+        assert_eq!(wide.selected_id(), None);
+        wide.update(time).unwrap();
+        assert_eq!(wide.selected_id(), id);
+        let invalid = NaiveDate::from_ymd_opt(2101, 1, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        assert!(wide.update(invalid).is_err());
+        assert_eq!(wide.selected_id(), None);
+
+        square.zoom(64);
+        assert_eq!(square.selected_id(), None);
+    }
+
+    #[test]
+    fn wide_tab_and_loss_fallback_use_only_in_view_markers() {
+        let elements: Vec<OmmElements> =
+            serde_json::from_str(include_str!("../../tools/fixtures/m2-pool/pool.json")).unwrap();
+        let mut builder = CatalogueBuilder::new();
+        for (record, e) in elements.into_iter().take(2).enumerate() {
+            builder.push(RecordOrigin { group: 0, record }, e);
+        }
+        let mut app = RadarApp::new(
+            builder.finish().unwrap(),
+            GeodeticPosition {
+                latitude_rad: 0.0,
+                longitude_rad: 0.0,
+                altitude_km: 0.0,
+            },
+            View::rectangular(20.0, 173.0 / 117.0).unwrap(),
+        )
+        .unwrap();
+        let time = NaiveDate::from_ymd_opt(2026, 10, 10)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        app.update(time).unwrap();
+        let ids: Vec<_> = app
+            .catalogue
+            .entries()
+            .iter()
+            .map(|e| e.elements().norad_id)
+            .collect();
+        for result in &mut app.samples {
+            let sample = result.as_mut().unwrap();
+            sample.physical.look.elevation_rad = 0.1;
+            sample.camera = CameraPoint {
+                east_km: 0.0,
+                north_km: 0.0,
+                depth_km: 10_000.0,
+            };
+        }
+        app.reconcile_selection();
+        assert_eq!(app.selected_id(), Some(ids[0]));
+        app.select_next(); // Manual choice is sticky even when it moves off-screen.
+        assert_eq!(app.selected_id(), Some(ids[1]));
+        app.samples[1].as_mut().unwrap().camera.east_km = 100_000.0;
+        app.reconcile_selection();
+        assert_eq!(app.selected_id(), Some(ids[1]));
+        assert_eq!(app.counts().visible, 1);
+        app.select_next(); // Off-screen ID wraps to the only visible marker.
+        assert_eq!(app.selected_id(), Some(ids[0]));
+        app.select_next();
+        assert_eq!(app.selected_id(), Some(ids[0]));
+        app.samples[1].as_mut().unwrap().camera.east_km = 0.0;
+        app.select_next();
+        assert_eq!(app.selected_id(), Some(ids[1]));
+        app.samples[1].as_mut().unwrap().physical.look.elevation_rad = 0.0;
+        app.reconcile_selection();
+        assert_eq!(app.selected_id(), Some(ids[0])); // Genuine loss: first visible.
+        app.samples[0].as_mut().unwrap().camera.east_km = 100_000.0;
+        app.reconcile_selection(); // No new automatic off-screen acquisition.
+        assert_eq!(app.selected_id(), Some(ids[0]));
+        app.samples[0].as_mut().unwrap().physical.look.elevation_rad = 0.0;
+        app.reconcile_selection();
+        assert_eq!(app.selected_id(), None);
+        app.samples[1].as_mut().unwrap().physical.look.elevation_rad = 0.1;
+        app.reconcile_selection();
+        assert_eq!(app.selected_id(), Some(ids[1]));
+    }
+
+    #[test]
     fn overlapping_indicators_are_per_object_and_do_not_change_counts_or_selection() {
         let elements: Vec<OmmElements> =
             serde_json::from_str(include_str!("../../tools/fixtures/m2-pool/pool.json")).unwrap();
@@ -741,6 +897,7 @@ mod tests {
                 depth_km: 1.0,
             };
         }
+        app.selected = None; // No initial off-screen auto-acquisition.
         app.reconcile_selection();
         assert_eq!(app.indicators().count(), 16);
         assert_eq!(app.counts().visible, 0);

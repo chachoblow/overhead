@@ -102,7 +102,7 @@ impl Page {
                 format_args!("EPOCH: NOT FRESHNESS; PERIOD: NOT PASS DURATION"),
             );
         } else {
-            page.line(9, format_args!("NO SELECTED VISIBLE OBJECT"));
+            page.line(9, format_args!("NO SELECTED OBJECT"));
         }
         page.line(17, format_args!("V RADAR  UP/DN/WHEEL ZOOM  TAB SELECT"));
         page

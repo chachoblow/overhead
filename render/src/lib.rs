@@ -1690,7 +1690,20 @@ mod tests {
             original
         );
         assert_eq!(app.counts(), counts);
-        app.zoom(64); // Selected B is clipped; visible A is chosen immediately.
+        app.zoom(64); // Clipped B remains selected without a new transition.
+        assert_eq!(app.selected_id(), Some(100530));
+        draw_at(
+            &mut screen,
+            &app,
+            layout,
+            true,
+            &mut state,
+            Duration::from_millis(250),
+        )
+        .unwrap();
+        draw(&mut static_screen, &app, layout, true).unwrap();
+        assert_eq!(screen.pixels, static_screen.pixels);
+        app.select_next(); // Tab chooses visible A and starts a new transition.
         assert_eq!(app.selected_id(), Some(25544));
         draw_at(
             &mut screen,
@@ -1803,9 +1816,11 @@ mod tests {
         assert_ne!(Some(elevation), previous);
         assert_selected_strip(&screen, &app);
 
-        // Tight zoom removes both objects; arrows cannot retain a selected glyph.
+        // Tight zoom removes both markers, not the current true-state strip.
+        let selected = app.selected_id();
         app.zoom(64);
-        assert_eq!(app.selected_id(), None);
+        assert_eq!(app.counts().visible, 0);
+        assert_eq!(app.selected_id(), selected);
         draw(&mut screen, &app, Layout::wide(), false).unwrap();
         assert_selected_strip(&screen, &app);
         app.zoom(-64);
@@ -2385,7 +2400,7 @@ mod tests {
     }
 
     #[test]
-    fn zooming_selected_marker_offscreen_removes_label_without_labelling_arrow() {
+    fn zooming_selected_marker_offscreen_keeps_strip_without_labelling_arrow() {
         let layout = Layout::wide();
         let mut app = app_with_viewport(Viewport::Rectangle);
         let later = app.time().unwrap() + overhead_core::sgp4::chrono::Duration::seconds(30);
@@ -2397,10 +2412,11 @@ mod tests {
         draw(&mut screen, &app, layout, false).unwrap();
         let before = screen.pixels;
         app.zoom(64);
-        assert_eq!(app.selected_id(), None);
+        assert_eq!(app.selected_id(), Some(25544));
         assert_eq!(app.counts().visible, 0);
         assert_eq!(app.indicators().count(), 1);
         draw(&mut screen, &app, layout, false).unwrap();
+        assert_selected_strip(&screen, &app);
         assert_ne!(screen.pixels, before);
         let mut fresh = Screen {
             pixels: [[false; 400]; 240],
