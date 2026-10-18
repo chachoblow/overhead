@@ -1,7 +1,7 @@
 # 0040 — White-backed bottom-left notice contract
 
 Date: 2026-10-17
-Status: accepted (bounded M3 contract; implemented and user visually accepted)
+Status: accepted (bounded M3 contract; implemented and user visually accepted; width later amended by 0048)
 
 ## Decision
 Implement [0039's bottom-left condition-driven notices](0039-bottom-left-condition-driven-notices.md)
@@ -14,6 +14,9 @@ Subsequently, [0041](0041-circular-elevation-only-contract.md) replaces the
 capsule/filled elevation with a circular cutout, label and separator. That
 separate slice leaves this accepted notice contract unchanged; references to
 preserving 0037 below describe the original notice-only implementation scope.
+[0048](0048-refined-empty-view-notices.md) subsequently accepts longer empty-view
+statuses and a wider backing for future implementation; the raster bounds below
+describe the **current executable**, not approved-but-unimplemented 0048.
 
 ## Why
 Transparent corner text can become unreadable when scene graphics cross it.

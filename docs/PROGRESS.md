@@ -467,3 +467,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Workspace check/tests, app/render no-default-feature check and formatting passed on source `64db11a`; existing executable visual acceptance remains separate from these host checks.
 - Updated [HANDOFF](HANDOFF.md); wrap-up checks local links/anchors, instruction consistency and unstaged/staged whitespace. Rust checks are not rerun for the documentation-only wrap-up.
 - Next: propose one bounded post-M3 task and obtain scope agreement. M2 budgets/scheduling and hardware risks remain open; no SDL/hardware access, frozen-evidence changes or target-performance claim.
+
+## 2026-10-18 UTC (M4 empty-view contract approval and wrap-up)
+- User chose M4 empty-view review and approved [0048](decisions/0048-refined-empty-view-notices.md): bounded off-screen/horizon/fallback wording and wider bottom-left backing; implementation still needs separate authorization.
+- Retained two native-size binary illustrative comparisons and [provenance](mockups/0048-empty-view-proposal.md), based on two headless historical snapshots; no new executable notice behavior or physical-display claim.
+- Updated PLAN, DESIGN, 0039/0040 cross-references and HANDOFF. Docs/images-only verification: local links/anchors, instruction consistency, image dimensions/binary pixels and whitespace; Rust checks not rerun, frozen-M2 evidence unchanged.
+- Next: ask before implementing 0048; preserve square/physical truth and warning lifecycle. M2 budgets/scheduling, Sharp output, RAM/safe stack and RWX remain open.

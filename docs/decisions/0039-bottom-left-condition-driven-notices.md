@@ -1,7 +1,7 @@
 # 0039 — Bottom-left condition-driven notices
 
 Date: 2026-10-17
-Status: accepted (M3 placement and notice lifecycle direction; implemented under 0040)
+Status: accepted (M3 placement/lifecycle; implemented under 0040; empty status refined by 0048)
 
 ## Decision
 Place explicit status notices at the bottom-left of the radar when implementing
@@ -30,7 +30,9 @@ Preserve the current meanings when relocating notices:
 
 - `NO MARKERS`: a valid-time frame has no in-view markers. Off-screen arrows
   may remain; this is not a claim that the entire sky is empty. Remove it when
-  motion or zoom brings a marker into view.
+  motion or zoom brings a marker into view. [0048](0048-refined-empty-view-notices.md)
+  later refines this wide-view status into bounded empty-view subtypes; the
+  behavior recorded here describes the original implemented M3 slice.
 - `TRACK ERROR`: at least one catalogue object failed its current tracking
   calculation. Show it alongside valid markers; remove it on a subsequent
   calculation frame with no failures. Merely zooming does not repair a failure.

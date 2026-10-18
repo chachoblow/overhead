@@ -1,8 +1,8 @@
 # Overhead — Plan
 
 **Current: M3 complete after exit verification on 2026-10-18 UTC;
-next work is not yet selected. Opt-in wide radar and per-satellite off-screen
-arrows are implemented and visually approved under 0033; square/diagnostic default retained. Selected-marker
+M4 empty-view notice contract accepted under 0048, implementation not yet
+authorized. Opt-in wide radar and per-satellite off-screen arrows are implemented and visually approved under 0033; square/diagnostic default retained. Selected-marker
 identification is implemented under 0034, refined by 0035's configurable 70°/60°
 hide/show hysteresis after review of crowding; the user has now accepted that behavior.
 0037's visually accepted elevation-only capsule is now replaced by 0041's
@@ -240,6 +240,15 @@ M2 operating budgets/scheduling and physical-display/target validation remain op
 closure neither selects production capacity/cadence nor authorizes follow-on work.
 
 ## M4 — Useful display behavior
+- [x] Agree [0048's bounded wide-radar empty-view notice contract](decisions/0048-refined-empty-view-notices.md):
+  distinguish arrow-eligible off-screen objects from clean no-above-horizon
+  samples, retaining conservative fallback and independent warnings. The user
+  approved wording and wider backing after reviewing illustrative native-size
+  comparisons. This is a design agreement, not implemented or executable visual
+  acceptance; implementation needs separate authorization. Square diagnostics
+  and existing radar/selection behavior remain unchanged.
+- [ ] Implement and verify 0048 in a separate bounded slice after authorization;
+  preserve existing 0039/0040 notice lifecycles and provenance boundaries.
 - [ ] Refine secondary information with visual feedback; add stable automatic
   selection and the chosen true-state readouts. 0032 removes routine normal-view
   FOV/counts; time and data age are not requirements of its starting layout.

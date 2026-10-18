@@ -508,10 +508,14 @@ rather than readable text placed over texture. No field mapping, time-history
 policy or implementation is approved; keep such experiments separate from the
 accepted wide/glyph direction.
 
-Refined empty-view explanations and incomplete-data/tracking notices are parked
-for focused design, not removed as a correctness requirement. The comparison
-uses minimal explicit notices; 0047 implements separate debug access but does
-not replace these notices. The revised
+[0048](decisions/0048-refined-empty-view-notices.md) now accepts a bounded
+wide-radar empty-view refinement: `SKY OUTSIDE VIEW` when there are eligible
+arrows, `NONE ABOVE HORIZON` only for a clean nonempty loaded catalogue with
+nothing above the horizon, and conservative `NO MARKERS` otherwise. Independent
+tracking/ingestion warnings remain. The wording and wider white backing were
+approved from [native-size illustrative comparisons](mockups/0048-empty-view-proposal.md),
+but are **not implemented**; the current executable still says `NO MARKERS`.
+0047's separate debug access does not replace normal notices. The revised
 full-height stack occupied the former strip warning area.
 [0039](decisions/0039-bottom-left-condition-driven-notices.md) selects bottom-left
 condition-driven notices, with retained comparisons [above](#bottom-left-notice-reference);

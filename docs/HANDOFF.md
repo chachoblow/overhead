@@ -1,40 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-18 UTC. Next: scope one post-M3 task; no follow-on implementation is authorized._
+_Last updated: 2026-10-18 UTC. Next: seek separate authorization for M4 notice implementation._
 
 ## State
-[M3 is complete](PLAN.md#m3--minimal-real-data-radar-complete): moving, zoomable
-real-data radar, verified-engine traceability and initial density/layout feedback.
-Accepted executable: opt-in wide radar, five fields,
-[0046's transitions](decisions/0046-selected-data-glyph-transition-contract.md)
-and [0047's debug access](decisions/0047-text-first-debug-access-contract.md).
-Square/diagnostic default, normal notices and static snapshots are unchanged.
-[Simulator usage](../sim/README.md) owns reproduction; mocks remain illustrative.
+[M3 complete](PLAN.md#m3--minimal-real-data-radar-complete): accepted moving,
+zoomable real-data radar, opt-in wide view/five fields/transitions and debug;
+square diagnostics remain default. [Simulator usage](../sim/README.md) owns
+executable reproduction. M4's first **agreed, unimplemented** contract is
+[0048's wide empty-view refinement](decisions/0048-refined-empty-view-notices.md):
+`SKY OUTSIDE VIEW` for arrows, `NONE ABOVE HORIZON` only for clean nonempty
+loaded catalogues with none above, otherwise conservative `NO MARKERS`.
+[Native-size comparisons](mockups/0048-empty-view-proposal.md) are illustrative,
+not executable output. Current wide replay still says `NO MARKERS` in both cases.
 
 ## This session
-- Inspected clean `main` at `64db11a`, decisions, implementation and tests;
-  verified M3's exit criteria without adding features or changing source.
-- `docs/PLAN.md`: marked M3 complete and recorded exit evidence/limitations.
-- `docs/HANDOFF.md`, `docs/PROGRESS.md`: recorded closure and next-session context.
-  Existing user visual acceptance remains separate from automated verification.
+- From clean `main` at `ac31fc7`, reviewed 0033/0039/0040, app/render code
+  and simulator tests. User chose M4 ahead of M2 and approved the contract.
+- Captured two headless historical wide snapshots: demo (16 accepted, 4 arrows,
+  0 visible) and one ISS record (0 above horizon); retained the two binary
+  comparison PNGs/provenance in `docs/mockups/0048-*`.
+- Recorded `docs/decisions/0048-refined-empty-view-notices.md`; updated PLAN,
+  DESIGN, 0039/0040 links and HANDOFF. No code/fixture/firmware/M2 changes.
 
-## Next bounded step
-Follow [the next-task workflow](../.pi/prompts/next.md) to propose one session-sized
-post-M3 task, explicitly recommending whether M4 display behavior or remaining
-M2 operating-budget work should lead. Obtain scope agreement before implementation;
-closure does not select a milestone, production policy or new UI design.
-M2 budgets/scheduling, RAM/safe stack, Sharp bring-up and RWX remain open; keep
+## Next bounded step / limits
+Ask for **separate implementation authorization**. If granted, update only
+wide notice classification/backing in `render/src/lib.rs`, plus focused
+pixel/lifecycle and `sim/tests/snapshot.rs` headless tests; preserve square,
+selection, arrows, glyphs, physical truth and independent warnings. Review fresh
+executable output separately; mocks do not authorize it. M2 budgets/scheduling,
+RAM/safe stack, Sharp bring-up and RWX remain open; keep
 [0023's frozen evidence](decisions/0023-frozen-m2-revision-isolation.md) isolated.
-Circular-radar/field/graph alternatives remain unapproved exploration; preserve
-accepted defaults, overlap and selection rules.
+Circular-radar/field/graph alternatives remain unapproved exploration.
 
-## Verification / limits
-Earlier this session, all passed on source `64db11a`:
-- `cargo check --workspace` and `cargo test --workspace`
-- `cargo check -p overhead-app -p overhead-render --no-default-features`
-- `cargo fmt --all --check`
-Wrap-up checks local links/anchors, instruction consistency and unstaged/staged
-whitespace; Rust checks are not rerun for documentation-only changes.
-No SDL window, hardware access or new visual review; no dependency, fixture,
-firmware/toolchain or frozen-M2 changes. Host verification is not a historical
-M2-gate rerun, physical-display validation or target 20 Hz/capacity claim.
+## Verification
+This docs/images session ran two **headless** simulator snapshots and checked
+links/anchors, image size/binary pixels, instruction consistency and whitespace.
+No Rust checks/tests (no code change), SDL window or hardware access. Earlier
+M3 checks in [PLAN](PLAN.md#m3--minimal-real-data-radar-complete) were on
+`64db11a`, not new validation. No target/panel claim or executable acceptance.
