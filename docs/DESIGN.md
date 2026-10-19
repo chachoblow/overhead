@@ -80,6 +80,11 @@ User feedback favors zoom-magnified motion and a fuller satellite overview with
 smaller Earth at wide FOV. Preserve breathing room rather than auto-fitting or
 adding satellites to fill it; the square choice removes the ring, not that
 preference. These choices do not select production counts or capacity.
+[0051](decisions/0051-angular-coastline-appearance-direction.md) records a
+reviewed **angular 1-bit coastline appearance direction** from 5° through 100°,
+including local detail and the tiny wide-end cue. The [offline comparisons](mockups/0054-coastline-overview-comparison.md)
+are not executable coastline output; source, preprocessing, exact raster/clipping,
+behavior below 5° and implementation are unapproved.
 
 Only satellites above the local geometric horizon are eligible for markers,
 then clipped to the current view—even at whole-Earth zoom. This is the observer's

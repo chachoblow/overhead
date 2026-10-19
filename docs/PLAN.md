@@ -271,8 +271,10 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
 - [ ] Refine empty-sky behavior without adding display prediction for now;
   next-pass countdown study/integration is deferred under 0050, not cancelled
   or substituted for [0048's notices](decisions/0048-refined-empty-view-notices.md).
-- [ ] Prepare coastlines offline and render them legibly across zoom levels;
-  begin with a bounded legibility comparison before selecting data or raster rules.
+- [ ] Prepare coastlines offline and render them legibly across zoom levels.
+  [0051's reviewed angular appearance direction](decisions/0051-angular-coastline-appearance-direction.md)
+  and [native 1-bit comparisons](mockups/0054-coastline-overview-comparison.md)
+  cover 5°–100°; source, geometry/raster rules and implementation remain open.
 
 **Done when:** the view is useful and understandable during passes and empty sky.
 

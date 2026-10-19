@@ -491,3 +491,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - User chose [0050](decisions/0050-keep-range-in-debug-and-defer-display-prediction.md): keep range in debug and defer display prediction/countdown study for now; the existing pass engine/tool, M4 notices and wide selection are unchanged.
 - Updated PLAN/DESIGN/HANDOFF without closing a milestone checkbox. Next: scope an offline coastline-legibility comparison before choosing data, raster rules or implementation; no new slice started.
 - Docs/image-only verification: local links, 1-bit dimensions, whitespace and final/staged diff review; no Rust checks rerun because no code/build inputs changed. No interactive/hardware/firmware/frozen-M2 or target-display validation.
+
+## 2026-10-19 UTC (M4 offline coastline comparison and angular direction)
+- Retained [source provenance/initial 1-bit comparison](mockups/0051-coastline-legibility-comparison.md), [5° local](mockups/0052-local-coastline-comparison.md), [5°–20°](mockups/0053-coastline-zoom-progression.md) and [40°–100°](mockups/0054-coastline-overview-comparison.md) native-size sheets; only the no-coast columns are executable simulator output.
+- User selected [0051's angular visual direction](decisions/0051-angular-coastline-appearance-direction.md) throughout reviewed 5°–100°; provisional Natural Earth source, rank/RDP reduction, raster/occlusion, below-5° behavior and implementation remain unapproved. PLAN coastline checkbox stays open.
+- Built simulator and generated headless historical source PNGs; wrap-up verified retained binary panels, provenance, links, whitespace and staged diff. No Rust code/build input changed, so workspace check/tests were not rerun; no SDL window, hardware, firmware, dependency or frozen-M2 work.
+- Next: scope source/geometry/budget/raster contract for user review before separately authorizing implementation. M2 budget/scheduling and physical-panel/target validation remain open.
