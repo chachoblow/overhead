@@ -265,10 +265,14 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   selection continuity as well as the code/contract, separately from host tests.
 - [ ] Refine secondary information with visual feedback and choose any further
   true-state readouts separately. 0032 removes routine normal-view FOV/counts;
-  time and data age are not starting-layout requirements.
-- [ ] Refine empty-sky behavior; evaluate next-pass countdown integration where
-  useful, without sacrificing radar quality or responsiveness.
-- [ ] Prepare coastlines offline and render them legibly across zoom levels.
+  time and data age are not starting-layout requirements. The [range comparison](mockups/0050-range-vs-no-readout.md)
+  ended with range remaining in debug under [0050](decisions/0050-keep-range-in-debug-and-defer-display-prediction.md);
+  no additional normal-view readout was approved.
+- [ ] Refine empty-sky behavior without adding display prediction for now;
+  next-pass countdown study/integration is deferred under 0050, not cancelled
+  or substituted for [0048's notices](decisions/0048-refined-empty-view-notices.md).
+- [ ] Prepare coastlines offline and render them legibly across zoom levels;
+  begin with a bounded legibility comparison before selecting data or raster rules.
 
 **Done when:** the view is useful and understandable during passes and empty sky.
 

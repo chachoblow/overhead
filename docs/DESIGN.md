@@ -538,7 +538,10 @@ failed/omitted tracking as a complete empty sky, including when some valid marke
 remain.
 
 The selected-satellite start/end/peak pass graphic is interesting but deferred;
-upcoming-pass lists are not desired. Local time, orbit-data age, range and bearing
+upcoming-pass lists are not desired. [0050](decisions/0050-keep-range-in-debug-and-defer-display-prediction.md)
+keeps range in debug after a [normal-view comparison](mockups/0050-range-vs-no-readout.md)
+and defers display prediction, including a countdown study, for now; the existing
+physical pass-search engine remains intact. Local time, orbit-data age and bearing
 are not part of this starting layout. Camera movement/panning, marker slowdown,
 any ranking beyond 0049's agreed selection continuity/fallback, fetching and
 production population/cadence choices are outside this slice. No radio

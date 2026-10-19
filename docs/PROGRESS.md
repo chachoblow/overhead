@@ -485,3 +485,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Updated `app/src/lib.rs`, debug wording, app/render/sim tests, [usage](../sim/README.md#wide-radar-comparison) and scope docs; user separately confirmed accepting the code/contract and interactive behavior.
 - Wrap-up freshly passed workspace check/tests, app/render no-default-feature checks, formatting, strict all-target app/render/sim Clippy and link/whitespace review. No agent-run SDL, hardware, firmware, dependency or frozen-M2 work; no target/panel claim.
 - Next: scope one bounded M4 secondary-information comparison with user approval before implementation; no selected-arrow styling, new ranking/readout or production budget is approved.
+
+## 2026-10-18 UTC (M4 range review and prediction-display deferral)
+- Retained [native 1-bit range comparison and provenance](mockups/0050-range-vs-no-readout.md) from headless wide/square snapshots; off-screen selection is an illustrative same-UTC composite, not a captured interactive frame.
+- User chose [0050](decisions/0050-keep-range-in-debug-and-defer-display-prediction.md): keep range in debug and defer display prediction/countdown study for now; the existing pass engine/tool, M4 notices and wide selection are unchanged.
+- Updated PLAN/DESIGN/HANDOFF without closing a milestone checkbox. Next: scope an offline coastline-legibility comparison before choosing data, raster rules or implementation; no new slice started.
+- Docs/image-only verification: local links, 1-bit dimensions, whitespace and final/staged diff review; no Rust checks rerun because no code/build inputs changed. No interactive/hardware/firmware/frozen-M2 or target-display validation.
