@@ -1,5 +1,7 @@
 # Build artifacts
 target/
+__pycache__/
+*.pyc
 
 # Host member locks are redundant; firmware is an isolated workspace.
 /*/Cargo.lock

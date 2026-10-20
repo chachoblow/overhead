@@ -1,40 +1,40 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-19 UTC. Next: draft an M4 coastline contract for review; no implementation by default._
+_Last updated: 2026-10-20 UTC. Next: compare pixel-stable coastline strokes offline; no renderer implementation by default._
 
 ## State
-[M3 complete](PLAN.md#m3--minimal-real-data-radar-complete). Opt-in wide radar
-implements [0048's empty-view notices](decisions/0048-refined-empty-view-notices.md)
-and [0049's stable selection](decisions/0049-stable-wide-selection.md) with
-current true-state strip/debug values off-screen; square/circular remain
-visible-only. [Interactive replay](../sim/README.md#wide-radar-comparison), not
-a snapshot, proves continuity. [0050](decisions/0050-keep-range-in-debug-and-defer-display-prediction.md)
-keeps range in debug and defers display prediction; the pass engine/tool remains.
+[M3 complete](PLAN.md#m3--minimal-real-data-radar-complete). M4's
+[0048 notices](decisions/0048-refined-empty-view-notices.md) and
+[0049 wide selection](decisions/0049-stable-wide-selection.md) are implemented
+and visually accepted; square/circular stay visible-only. Selection continuity
+needs [interactive replay](../sim/README.md#wide-radar-comparison).
+[0050](decisions/0050-keep-range-in-debug-and-defer-display-prediction.md) defers display prediction; range stays in debug. **No coastline runtime exists.**
 
 ## This session
-- On `main` from `f03bf3e`, evaluated provisional Natural Earth 1:110m v4.1.0
-  offline. [Source/hash/licence and initial 1-bit comparison](mockups/0051-coastline-legibility-comparison.md),
-  [5° local](mockups/0052-local-coastline-comparison.md), [5°–20°](mockups/0053-coastline-zoom-progression.md)
-  and [40°–100°](mockups/0054-coastline-overview-comparison.md) retain selected/
-  empty and full/simplified/no-coast scenes at Colorado and San Francisco.
-- User accepted [0051's angular appearance direction](decisions/0051-angular-coastline-appearance-direction.md)
-  throughout the reviewed **5°–100° range**. Rank/2.5px RDP/0.2° sampling
-  were illustrative only; source adoption, clipping/raster, below-5° behavior
-  and implementation are unapproved. [Unapproved proposal](mockups/0051-coastline-rules-proposal.md)
-  lists gates. PLAN coastline checkbox stays open; no Rust/firmware change.
+- [0051](decisions/0051-angular-coastline-appearance-direction.md) accepts the
+  angular **5°–100° appearance**; below 5° is evidence-gated exploration.
+  [0052](decisions/0052-natural-earth-coastline-candidate.md) accepts pinned Natural Earth 1:110m v4.1.0 as a **conditional candidate**, not an asset.
+  [Contract proposal](mockups/0055-coastline-contract-proposal.md) and implementation remain unapproved.
+- [Offline tools/usage](../tools/README.md#offline-m4-coastline-source-preflight)
+  and [source](evaluations/m4-coastline-source-preflight.md), [reduction](evaluations/m4-coastline-reduction-study.md), [40 km](evaluations/m4-coastline-40km-refinement.md) studies check provenance,
+  trial bytes and sampled clipping/culling. User chose **40 km for study only**,
+  not an export tolerance. [0056 sheets](mockups/0056-coastline-reduction-comparison.md)
+  are offline overlays over headless source frames.
+- [Sampling study](evaluations/m4-coastline-sampling-study.md) and [0057 sheet](mockups/0057-coastline-sampling-comparison.md)
+  show 0.2° vs 0.01° changes 108 mask pixels at San Francisco 0.1° despite
+  <0.011px *eligible-point* chord deviation. Finer samples cost more and alter
+  raster ink without proving curve/tangent accuracy.
 
-## Next bounded step / limits
-Propose a reviewable **coastline source/geometry/raster contract**: bounded
-preprocessing, camera-facing tangent/viewport segment clipping, zoom below 5°,
-layering and memory/work evidence. Ask separately before implementation; preserve
-observer-horizon eligibility, limb, notices, selection and square baseline.
-Do not reopen 0050 or treat static composites as executable output. M2 budgets/
-scheduling, target RAM/safe stack, Sharp output and RWX remain open; keep
-[0023's frozen evidence](decisions/0023-frozen-m2-revision-isolation.md) isolated.
+## Next / limits
+Compare one **offline pixel-stable clipped-stroke raster** with 0057 and
+synthetic tangent/viewport-edge cases; distinguish aliasing from missed visible
+runs and target-float error. No sampler, asset, budget, tight-zoom appearance or
+implementation is approved. Preserve horizon, limb, notices, selection and
+square baseline. M2 budgets/scheduling, Sharp, RAM/safe stack and RWX remain
+open; [frozen M2 evidence](decisions/0023-frozen-m2-revision-isolation.md) is isolated.
 
-## Verification / limits
-Docs/PNG-only diff: rebuilt simulator and generated headless historical sources;
-retained 1-bit overlays are **not** renderer output or physical validation.
-Wrap-up checked binary cells, links, whitespace and staged diff; Rust check/tests
-not rerun (no code/build inputs changed). No interactive replay, hardware,
-firmware or frozen-M2 capture this session.
+## Verification
+Fresh workspace check/tests and eight Python tests passed; archive/report hashes,
+1-bit sheet bounds, links and whitespace checked. Offline OR composites are
+**not executable coastlines** or physical/S3 evidence. No interactive replay,
+hardware, firmware or frozen-M2 capture.

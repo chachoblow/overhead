@@ -5,6 +5,26 @@ capture and reporting gates (including their Python tests) instead require the
 [pinned historical export](../docs/evaluations/s3-m2/README.md#offline-validation-and-table-regeneration).
 The evolving workspace lockfile intentionally fails that old source freeze.
 
+## Offline M4 coastline source preflight
+
+`tools/offline/coastline_preflight.py` checks a separately downloaded, pinned
+Natural Earth 1:110m coastline archive and prints source/interpolation counts,
+trial bytes and viewport-work proxies. It uses only the Python standard library;
+optional temporary binaries are **not** an adopted runtime asset. It does not
+draw coastlines or prove device cost. Input,
+reproduction command and limits: [M4 preflight](../docs/evaluations/m4-coastline-source-preflight.md).
+
+`tools/offline/coastline_compare.py` (optional host Pillow for 1-bit PNGs) compares
+exploratory ECEF reductions with finite tangent and viewport **segment** clipping
+over headless simulator source frames. This is not the app renderer or a selected
+export. [Inputs, counts and review limits](../docs/evaluations/m4-coastline-reduction-study.md).
+The selected-for-study 40 km candidate has a separate, still-offline decoded-byte
+and conservative-culling diagnostic in `tools/offline/coastline_refine_40km.py`;
+see [method/limits](../docs/evaluations/m4-coastline-40km-refinement.md).
+`tools/offline/coastline_sampling_study.py` compares geographic steps and 1-bit
+raster stability at tight FOV without adopting a sampler; [evidence/limits](../docs/evaluations/m4-coastline-sampling-study.md).
+No coastline code runs in the app or renderer.
+
 ## `overhead-catalogue`
 
 Load local OMM groups and report a nonempty, deduplicated catalogue. No network,
