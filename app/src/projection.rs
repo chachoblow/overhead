@@ -120,6 +120,28 @@ impl Camera {
         })
     }
 
+    /// Zero-height coastline point on the same WGS-84 surface as the limb.
+    /// The signed normal-to-camera test is independent of observer horizon.
+    pub fn coast_point(&self, longitude_deg: f64, latitude_deg: f64) -> Option<(CameraPoint, f64)> {
+        let position = GeodeticPosition {
+            latitude_rad: latitude_deg.to_radians(),
+            longitude_rad: longitude_deg.to_radians(),
+            altitude_km: 0.0,
+        }
+        .to_ecef()
+        .ok()?;
+        let (sin_lat, cos_lat) = libm::sincos(latitude_deg.to_radians());
+        let (sin_lon, cos_lon) = libm::sincos(longitude_deg.to_radians());
+        let normal = [cos_lat * cos_lon, cos_lat * sin_lon, sin_lat];
+        let surface = position.km();
+        let facing = dot(
+            core::array::from_fn(|i| self.observer[i] + CAMERA_HEIGHT_KM * self.up[i] - surface[i]),
+            normal,
+        );
+        let camera = self.project(position).ok()?;
+        facing.is_finite().then_some((camera, facing))
+    }
+
     pub fn earth_limb(&self, view: View) -> EarthLimb {
         EarthLimb {
             north_center: self.limb.north_center / view.half_span,
@@ -286,7 +308,7 @@ impl View {
     }
     /// Unclipped lens coordinates. Invalid depth/nonfinite projection has no
     /// meaningful screen direction; it must never become a reversed arrow.
-    fn project(self, point: CameraPoint) -> Option<ViewPoint> {
+    pub fn project_unclipped(self, point: CameraPoint) -> Option<ViewPoint> {
         if ![point.east_km, point.north_km, point.depth_km]
             .iter()
             .all(|v| v.is_finite())
@@ -302,12 +324,12 @@ impl View {
     /// Include near-plane equality and marker centers on the viewport edge.
     /// Glyph pixels are additionally clipped by the renderer. No far plane.
     pub fn locate(self, point: CameraPoint) -> Option<ViewPoint> {
-        let point = self.project(point)?;
+        let point = self.project_unclipped(point)?;
         self.viewport.contains(point).then_some(point)
     }
 
     pub fn edge_indicator(self, camera: CameraPoint) -> Option<EdgeIndicator> {
-        let point = self.project(camera)?;
+        let point = self.project_unclipped(camera)?;
         if self.viewport.contains(point) {
             return None;
         }

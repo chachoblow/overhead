@@ -20,6 +20,7 @@ use overhead_app::{
 use overhead_core::sgp4::chrono::Timelike;
 
 mod category;
+mod coast;
 pub mod debug;
 mod glyphs;
 pub mod presentation;
@@ -93,7 +94,14 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
     layout: Layout,
     ingestion_warning: bool,
 ) -> Result<(), D::Error> {
-    draw_frame(display, app, layout, ingestion_warning, None)
+    draw_frame(
+        display,
+        app,
+        layout,
+        ingestion_warning,
+        None,
+        Some(coast::ASSET),
+    )
 }
 
 /// Draw with explicit monotonic presentation time. Only the wide data glyphs
@@ -108,7 +116,14 @@ pub fn draw_at<D: DrawTarget<Color = BinaryColor>>(
 ) -> Result<(), D::Error> {
     let values =
         (app.view().viewport() == Viewport::Rectangle).then(|| presentation.values(app, time));
-    draw_frame(display, app, layout, ingestion_warning, values)
+    draw_frame(
+        display,
+        app,
+        layout,
+        ingestion_warning,
+        values,
+        Some(coast::ASSET),
+    )
 }
 
 fn draw_frame<D: DrawTarget<Color = BinaryColor>>(
@@ -117,9 +132,20 @@ fn draw_frame<D: DrawTarget<Color = BinaryColor>>(
     layout: Layout,
     ingestion_warning: bool,
     values: Option<glyphs::Params>,
+    coast_asset: Option<&[u8]>,
 ) -> Result<(), D::Error> {
     let mut display = display.clipped(&Rectangle::new(Point::zero(), DISPLAY_SIZE));
     display.clear(BinaryColor::Off)?;
+    let mut coast_error = false;
+    if app.view().viewport() == Viewport::Rectangle
+        && let Some(asset) = coast_asset
+        && !coast::draw(&mut display, app.observer(), app.view(), layout, asset)?
+    {
+        // A coast-only numeric error can occur after ink was emitted.
+        // Repaint the frame from scratch instead of keeping partial ink.
+        display.clear(BinaryColor::Off)?;
+        coast_error = true;
+    }
     let stroke = PrimitiveStyle::with_stroke(BinaryColor::On, 1);
     let center = layout.center();
     let radius = layout.radius();
@@ -179,7 +205,7 @@ fn draw_frame<D: DrawTarget<Color = BinaryColor>>(
                 app.selected_period_minutes(),
             )?;
         }
-        return draw_wide_status(&mut display, app, ingestion_warning);
+        return draw_wide_status(&mut display, app, ingestion_warning, coast_error);
     }
 
     let x = layout.radar_width as i32 + 10;
@@ -427,6 +453,7 @@ fn draw_wide_status<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
     app: &RadarApp,
     ingestion_warning: bool,
+    coast_error: bool,
 ) -> Result<(), D::Error> {
     let counts = app.counts();
     let status = wide_empty_status(
@@ -441,6 +468,7 @@ fn draw_wide_status<D: DrawTarget<Color = BinaryColor>>(
             status,
             (counts.failed > 0).then_some("TRACK ERROR"),
             ingestion_warning.then_some("INGEST WARN"),
+            coast_error.then_some("COAST ERROR"),
         ],
     )
 }
@@ -473,7 +501,7 @@ fn wide_empty_status(
 
 fn draw_wide_notices<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
-    notices: &[Option<&str>; 3],
+    notices: &[Option<&str>],
 ) -> Result<(), D::Error> {
     let count = notices.iter().flatten().count() as i32;
     let Some(columns) = notices.iter().flatten().map(|line| line.len()).max() else {
@@ -2007,17 +2035,29 @@ mod tests {
     #[test]
     fn notice_backing_is_opaque_bounded_and_absent_without_notices() {
         for notices in [
-            [None, None, None],
-            [Some("NO FRAME"), None, None],
-            [Some("NO MARKERS"), None, None],
-            [Some("SKY OUTSIDE VIEW"), None, None],
+            [None, None, None, None],
+            [Some("NO FRAME"), None, None, None],
+            [Some("NO MARKERS"), None, None, None],
+            [Some("SKY OUTSIDE VIEW"), None, None, None],
             [
                 Some("NONE ABOVE HORIZON"),
                 Some("TRACK ERROR"),
                 Some("INGEST WARN"),
+                None,
             ],
-            [None, Some("TRACK ERROR"), Some("INGEST WARN")],
-            [Some("NO MARKERS"), Some("TRACK ERROR"), Some("INGEST WARN")],
+            [None, Some("TRACK ERROR"), Some("INGEST WARN"), None],
+            [
+                Some("NO MARKERS"),
+                Some("TRACK ERROR"),
+                Some("INGEST WARN"),
+                None,
+            ],
+            [
+                Some("NO MARKERS"),
+                Some("TRACK ERROR"),
+                Some("INGEST WARN"),
+                Some("COAST ERROR"),
+            ],
         ] {
             // Fully inked background is a worst-case collision: every cell,
             // inter-line gap and padding pixel must be cleared inside the mask.
@@ -2033,6 +2073,7 @@ mod tests {
                     1 => 213,
                     2 => 200,
                     3 => 187,
+                    4 => 174,
                     _ => unreachable!(),
                 };
                 let right = 14 + lines.iter().map(|line| line.len()).max().unwrap() * 6;
@@ -2338,11 +2379,12 @@ mod tests {
         let mut screen = Screen {
             pixels: [[true; 400]; 240],
         };
-        draw(&mut screen, &app, layout, false).unwrap();
+        // Compare label pixels without the independent geography background.
+        draw_frame(&mut screen, &app, layout, false, None, None).unwrap();
         let iss = screen.pixels;
         app.select_next();
         assert_eq!(app.selected_id(), Some(100530));
-        draw(&mut screen, &app, layout, false).unwrap();
+        draw_frame(&mut screen, &app, layout, false, None, None).unwrap();
         assert_ne!(screen.pixels, iss);
         let mut label_reference = Screen {
             pixels: [[false; 400]; 240],
@@ -2367,7 +2409,7 @@ mod tests {
         let mut fresh = Screen {
             pixels: [[false; 400]; 240],
         };
-        draw(&mut fresh, &app, layout, false).unwrap();
+        draw_frame(&mut fresh, &app, layout, false, None, None).unwrap();
         assert_eq!(screen.pixels, fresh.pixels);
         assert_eq!(app.counts(), counts);
         assert_eq!(
@@ -2375,7 +2417,7 @@ mod tests {
             samples
         );
         app.select_next();
-        draw(&mut screen, &app, layout, false).unwrap();
+        draw_frame(&mut screen, &app, layout, false, None, None).unwrap();
         assert_eq!(screen.pixels, iss);
 
         let invalid = overhead_core::sgp4::chrono::NaiveDate::from_ymd_opt(2101, 1, 1)
@@ -2383,8 +2425,8 @@ mod tests {
             .and_hms_opt(0, 0, 0)
             .unwrap();
         assert!(app.update(invalid).is_err());
-        draw(&mut screen, &app, layout, false).unwrap();
-        draw(&mut fresh, &app, layout, false).unwrap();
+        draw_frame(&mut screen, &app, layout, false, None, None).unwrap();
+        draw_frame(&mut fresh, &app, layout, false, None, None).unwrap();
         assert_eq!(screen.pixels, fresh.pixels);
         assert_eq!(app.selected_id(), None);
         let label_origin = selected_label_origin(layout.center(), Size::new(18, 10), layout);
@@ -2518,6 +2560,88 @@ mod tests {
             for y in 0..240 {
                 assert_eq!(a.pixels[y][..240], b.pixels[y][..240]);
             }
+        }
+    }
+
+    #[test]
+    fn coastline_draws_only_in_wide_view_and_invalid_asset_has_explicit_notice() {
+        let layout = Layout::wide();
+        let app = app_with_viewport(Viewport::Rectangle);
+        let mut with_coast = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        let mut without = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw(&mut with_coast, &app, layout, false).unwrap();
+        draw_frame(&mut without, &app, layout, false, None, None).unwrap();
+        // The chosen test observer is not guaranteed coastal: prove geographic
+        // ink independently at the actual SF shore, not via a satellite fixture.
+        let observer = GeodeticPosition {
+            latitude_rad: 37.7749_f64.to_radians(),
+            longitude_rad: (-122.4194_f64).to_radians(),
+            altitude_km: 0.0,
+        };
+        for fov in [0.1, 1.0, 5.0, 20.0, 100.0] {
+            let mut ink = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            let view = View::rectangular(fov, layout.aspect_ratio()).unwrap();
+            assert!(coast::draw(&mut ink, observer, view, layout, coast::ASSET).unwrap());
+            assert!(
+                ink.pixels.iter().flatten().any(|p| *p),
+                "no coast at {fov} degrees"
+            );
+            for (y, row) in ink.pixels.iter().enumerate() {
+                for (x, &pixel) in row.iter().enumerate() {
+                    if pixel {
+                        assert!(
+                            layout.contains(Point::new(x as i32, y as i32), Viewport::Rectangle)
+                        );
+                    }
+                }
+            }
+        }
+        let mut broken = Screen {
+            pixels: [[true; 400]; 240],
+        };
+        draw_frame(
+            &mut broken,
+            &app,
+            layout,
+            false,
+            None,
+            Some(&coast::ASSET[..10]),
+        )
+        .unwrap();
+        let mut expected = Screen {
+            pixels: without.pixels,
+        };
+        draw_wide_notices(&mut expected, &[Some("COAST ERROR")]).unwrap();
+        assert_eq!(broken.pixels, expected.pixels);
+        // Failure does not invent a tracking error or change app state.
+        assert_eq!(
+            app.counts(),
+            app_with_viewport(Viewport::Rectangle).counts()
+        );
+        for viewport in [
+            Viewport::Square,
+            Viewport::Circle,
+            Viewport::BorderlessCircle,
+        ] {
+            let app = app_with_viewport(viewport);
+            let square = Layout::new(240).unwrap();
+            draw_frame(
+                &mut with_coast,
+                &app,
+                square,
+                false,
+                None,
+                Some(&coast::ASSET[..10]),
+            )
+            .unwrap();
+            draw_frame(&mut without, &app, square, false, None, None).unwrap();
+            assert_eq!(with_coast.pixels, without.pixels);
         }
     }
 

@@ -509,3 +509,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Accepted [provisional measurement gates](evaluations/m4-coastline-budget-preflight.md), not device headroom. User rejected resolvable geography gaps/dropouts under [0053](decisions/0053-no-resolvable-coastline-omissions.md); [0060](mockups/0060-coastline-first-executable-slice-proposal.md) remains a proposal, not authorization.
 - Wrap-up verified 28 offline Python tests, workspace check/tests, local links, 1-bit images and diff whitespace; no interactive SDL, firmware/hardware, Sharp/target cost or frozen-M2 capture.
 - Next: review a finite numeric/commit path and exceptional-failure presentation before separate asset/renderer authorization; M4 coastline checkbox remains open.
+
+## 2026-10-20 UTC (M4 first executable coastline comparison)
+- User approved the 40 km orientation look, a bounded wide-only implementation and `COAST ERROR` for genuinely irrecoverable coast failure under [0054](decisions/0054-first-executable-coastline-comparison.md); then accepted [fresh executable images](mockups/0061-first-executable-coastline-review.md) and their simulator appearance, not device readiness.
+- Added checked Natural Earth export/provenance (`tools/offline/export_coastline.py`, `render/assets/`), shared surface projection and 1-bit coast rendering in `app/src/projection.rs` / `render/src/`, preserving square/circular output and foreground truth.
+- Wrap-up workspace check/tests, app/render no-default-feature check, strict app/render/sim Clippy, formatting, offline tests, export hash, 1-bit images and links/whitespace pass; no agent interactive SDL, firmware/hardware, new dependency, toolchain or frozen-M2 change.
+- Next: bounded no-coast/tangent/viewport verification for [0053](decisions/0053-no-resolvable-coastline-omissions.md); 0.2° sampling may miss a narrow visible run, and target time/stack/Sharp capacity remain unmeasured. M4 coastline checkbox stays open.

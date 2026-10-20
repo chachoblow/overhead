@@ -86,8 +86,12 @@ including local detail and the tiny wide-end cue, with evidence-gated exploratio
 down to 0.1°. [0052](decisions/0052-natural-earth-coastline-candidate.md) accepts
 Natural Earth 1:110m v4.1.0 as a conditional source candidate only. The
 [offline comparisons](mockups/0057-coastline-sampling-comparison.md) are not
-executable coastline output; asset adoption, exact raster/clipping and tight-zoom
-rules, and implementation remain unapproved.
+executable coastline output. [0054](decisions/0054-first-executable-coastline-comparison.md)
+now implements a bounded wide-only host comparison using the user's accepted
+40 km orientation look and a checked source export. The user accepted its
+fresh executable images and simulator appearance, including the tight-zoom
+comparison. This is not a certified no-omission geographic renderer, target-cost
+result or production asset. Square/circular modes remain unchanged.
 
 Only satellites above the local geometric horizon are eligible for markers,
 then clipped to the current view—even at whole-Earth zoom. This is the observer's

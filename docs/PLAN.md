@@ -274,9 +274,13 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
 - [ ] Prepare coastlines offline and render them legibly across zoom levels.
   [0051's reviewed angular appearance direction](decisions/0051-angular-coastline-appearance-direction.md)
   and [native 1-bit comparisons](mockups/0054-coastline-overview-comparison.md)
-  cover 5°–100°. The [M2-informed coastline ceilings](evaluations/m4-coastline-budget-preflight.md)
-  are accepted **only as provisional measurement gates**; no device headroom,
-  source/export, geometry/raster contract or renderer implementation is approved.
+  cover 5°–100°. [0054](decisions/0054-first-executable-coastline-comparison.md)
+  now authorizes a bounded, executable **wide-only comparison** using the reviewed
+  40 km look and an explicit exceptional `COAST ERROR` notice; its host export,
+  renderer and tests exist. The user reviewed the fresh executable images and
+  simulator, accepting the appearance. No-ordinary-omission evidence, resource
+  measurement and physical-display acceptance remain open. The [M2-informed ceilings](evaluations/m4-coastline-budget-preflight.md)
+  are **provisional measurement gates**, not proven capacity or shipping approval.
 
 **Done when:** the view is useful and understandable during passes and empty sky.
 

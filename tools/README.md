@@ -62,7 +62,12 @@ equatorial point predicates with exact-rational Taylor intervals;
 `tools/offline/coastline_fixed_interval_study.py` screens signed-i128 outward
 algebra on those pre-enclosed trig inputs and reports finite-precision unknowns
 and overflow; [limits](../docs/evaluations/m4-coastline-fixed-interval-feasibility.md).
-No coastline code runs in the app or renderer.
+These studies remain diagnostics, not the executable slice. The checked
+`tools/offline/export_coastline.py` now regenerates the **wide-only executable
+comparison** asset from the separately obtained pinned zip, using only the
+Python standard library; [exact command, hash and format](../render/assets/README.md).
+`app/src/projection.rs` and `render/src/coast.rs` now run geography in the host
+comparison. The generator and runtime are not target-budget evidence.
 
 ## `overhead-catalogue`
 

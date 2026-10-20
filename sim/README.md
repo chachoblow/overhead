@@ -87,7 +87,8 @@ its silhouette. The circular comparison mode draws a separate outer ring.
 At terrestrial sites Earth spans roughly 45% of the viewport width at the default
 20°, 14% at 60°, and 6.6% at 100° (about 15 pixels at the default layout).
 At tight zoom the limb can leave the view entirely.
-There are no coastlines or filled occlusion mask. `FOV ... DEG` is a lens angle,
+The opt-in wide comparison now draws coastline strokes; square/circular modes have
+none. There is no filled occlusion mask. `FOV ... DEG` is a lens angle,
 **not surface, map or slant distance**.
 
 Only satellites above the true local geometric horizon are eligible; zoom cannot
@@ -231,6 +232,29 @@ modify orbital data. `catalogue.json` uses the selected 16-object pool;
 [Acquisition, exact bytes, selection and provenance](../tools/fixtures/m2-pool/README.md)
 remain there. These archives include historical/inactive objects and are not a
 chosen production group set. Source URLs are provenance only, never fetched.
+
+## M4 executable coastline comparison (appearance accepted)
+
+`--wide` now draws the checked 40 km Natural Earth orientation strokes behind
+markers, limb, strip and condition-driven notices. The square/circular baseline
+remains coast-free. Example **headless** executable reviews (outputs are 1-bit):
+
+```sh
+cargo run -p overhead-sim -- sim/examples/weather-gps.json \
+  2026-10-10T00:00:00Z 37.7749 -122.4194 0 \
+  --wide --fov-deg 0.1 --snapshot /tmp/overhead-coast-sf-tight.png
+cargo run -p overhead-sim -- sim/examples/weather-gps.json \
+  2026-10-10T00:00:00Z 39.007 -104.883 2.187 \
+  --wide --fov-deg 20 --snapshot /tmp/overhead-coast-co.png
+```
+
+[0054](../docs/decisions/0054-first-executable-coastline-comparison.md) owns the
+comparison scope and open no-omission/target-cost gates. The user reviewed the
+[fresh executable scenes](../docs/mockups/0061-first-executable-coastline-review.md)
+and tried the simulator, accepting their appearance; neither that acceptance nor
+the earlier offline mocks proves physical-display legibility or target cost.
+A `COAST ERROR` notice reports a genuinely invalid coast-only calculation/asset;
+display write errors still fail the whole frame.
 
 ## Viewport shape comparison
 

@@ -1,7 +1,7 @@
 # 0052 — Natural Earth coastline candidate for first bounded slice
 
 Date: 2026-10-20
-Status: accepted candidate source, conditional; not dataset bundling or implementation authorization
+Status: accepted candidate source, conditional; originally not dataset bundling or implementation authorization; [0054](0054-first-executable-coastline-comparison.md) subsequently authorizes a checked host comparison export
 
 ## Decision
 
@@ -17,4 +17,4 @@ This answers the source-candidate question, not whether to ship an asset or impl
 
 - Before adopting an exported asset, document the generator and provenance, confirm source terms/hash, report retained part/vertex/segment counts, bytes and checked maxima, and demonstrate bounded runtime work/stack against a separately stated target budget. The candidate archive's 134 polylines / 5,128 source vertices are **not** an exported-size or target-cost bound.
 - Compare the proposed reduced source and exact geometry/layering in fresh **executable** 1-bit wide scenes at tight, local and overview zooms, with selected/empty cases and a no-coast control. Offline overlays cannot validate tangent/viewport clipping, foreground priority, physical-panel legibility or S3 performance.
-- Keep the existing unfilled WGS-84 limb, true observer-horizon satellite eligibility, notices, selection, strip and square/circular baseline unchanged. No new crate, runtime fetching, firmware work or frozen-M2 evidence renewal follows. Seek separate agreement on the remaining contract and explicit authorization before implementation.
+- Keep the existing unfilled WGS-84 limb, true observer-horizon satellite eligibility, notices, selection, strip and square/circular baseline unchanged. No new crate, runtime fetching, firmware work or frozen-M2 evidence renewal follows. Seek separate agreement on the remaining contract and explicit authorization before implementation. [0054](0054-first-executable-coastline-comparison.md) subsequently grants a bounded comparison authorization, not a production asset or device guarantee.
