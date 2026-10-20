@@ -101,7 +101,7 @@ def pixels(image):
     return get()
 
 
-def segment_might_enter(a, b, observer, east, north, up, span):
+def segment_might_enter(a, b, observer, east, north, up, span, trace=None):
     """Conservative real-arithmetic surface-curve bound against the camera frustum.
 
     For WGS-84, lat/lon tangent speeds are < 6500 km/rad. Along shortest-lon
@@ -119,12 +119,19 @@ def segment_might_enter(a, b, observer, east, north, up, span):
         for sign in (-1, 1):
             normal = tuple(scale*up[i] + sign*axis[i] for i in range(3))
             plane = scale*HEIGHT - dot(delta, normal)
-            if plane + radius * math.hypot(scale, 1) < 0:
+            margin = plane + radius * math.hypot(scale, 1)
+            if trace is not None:
+                trace['closest_cull_plane_km'] = min(
+                    trace.get('closest_cull_plane_km', math.inf), abs(margin))
+                if margin < 0:
+                    trace['closest_rejected_cull_plane_km'] = min(
+                        trace.get('closest_rejected_cull_plane_km', math.inf), -margin)
+            if margin < 0:
                 return False
     return True
 
 
-def draw(parts, site, fov, cull=False, sample_step=.2):
+def draw(parts, site, fov, cull=False, sample_step=.2, segments_out=None):
     from PIL import Image, ImageDraw
     observer, camera, east, north, up = setup(site)
     span = math.tan(math.radians(fov)/2)
@@ -199,6 +206,11 @@ def draw(parts, site, fov, cull=False, sample_step=.2):
             if not (3 <= p[0] <= 349 and 3 <= q[0] <= 349 and 3 <= p[1] <= 237 and 3 <= q[1] <= 237):
                 raise AssertionError((p, q))
             pen.line([p, q], fill=0, width=1)
+            if segments_out is not None:
+                # Preserve continuous screen coordinates before endpoint rounding.
+                # This is diagnostic geometry, not an approved raster path.
+                segments_out.append(((176 + line[0][0]*173, 120 - line[0][1]*117),
+                                     (176 + line[1][0]*173, 120 - line[1][1]*117)))
             stats['drawn_segments'] += 1
     stats['coast_ink'] = sum(v == 0 for v in pixels(layer))
     return layer, stats

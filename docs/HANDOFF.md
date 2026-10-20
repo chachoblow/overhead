@@ -1,40 +1,17 @@
 # Overhead — Handoff
 
-_Last updated: 2026-10-20 UTC. Next: compare pixel-stable coastline strokes offline; no renderer implementation by default._
+_Last updated: 2026-10-20 UTC. Next: review a finite, no-omission coastline design; do not start an implementation slice by default._
 
 ## State
-[M3 complete](PLAN.md#m3--minimal-real-data-radar-complete). M4's
-[0048 notices](decisions/0048-refined-empty-view-notices.md) and
-[0049 wide selection](decisions/0049-stable-wide-selection.md) are implemented
-and visually accepted; square/circular stay visible-only. Selection continuity
-needs [interactive replay](../sim/README.md#wide-radar-comparison).
-[0050](decisions/0050-keep-range-in-debug-and-defer-display-prediction.md) defers display prediction; range stays in debug. **No coastline runtime exists.**
+[M3 is complete](PLAN.md#m3--minimal-real-data-radar-complete). M4's [0048 notices](decisions/0048-refined-empty-view-notices.md) and [0049 wide selection](decisions/0049-stable-wide-selection.md) are implemented and user-accepted; [0050](decisions/0050-keep-range-in-debug-and-defer-display-prediction.md) keeps range in debug. **No executable coastline, exported asset or device coastline exists.** The wide radar is the intended first comparison; square/circular modes stay unchanged.
 
-## This session
-- [0051](decisions/0051-angular-coastline-appearance-direction.md) accepts the
-  angular **5°–100° appearance**; below 5° is evidence-gated exploration.
-  [0052](decisions/0052-natural-earth-coastline-candidate.md) accepts pinned Natural Earth 1:110m v4.1.0 as a **conditional candidate**, not an asset.
-  [Contract proposal](mockups/0055-coastline-contract-proposal.md) and implementation remain unapproved.
-- [Offline tools/usage](../tools/README.md#offline-m4-coastline-source-preflight)
-  and [source](evaluations/m4-coastline-source-preflight.md), [reduction](evaluations/m4-coastline-reduction-study.md), [40 km](evaluations/m4-coastline-40km-refinement.md) studies check provenance,
-  trial bytes and sampled clipping/culling. User chose **40 km for study only**,
-  not an export tolerance. [0056 sheets](mockups/0056-coastline-reduction-comparison.md)
-  are offline overlays over headless source frames.
-- [Sampling study](evaluations/m4-coastline-sampling-study.md) and [0057 sheet](mockups/0057-coastline-sampling-comparison.md)
-  show 0.2° vs 0.01° changes 108 mask pixels at San Francisco 0.1° despite
-  <0.011px *eligible-point* chord deviation. Finer samples cost more and alter
-  raster ink without proving curve/tangent accuracy.
+[0051](decisions/0051-angular-coastline-appearance-direction.md) accepts angular 1-bit appearance at 5°–100° and agrees only to investigate 0.1°–<5°. [0052](decisions/0052-natural-earth-coastline-candidate.md) accepts pinned Natural Earth 1:110m v4.1.0 **conditionally**, not as a bundled asset. [0053](decisions/0053-no-resolvable-coastline-omissions.md) rejects local gaps or full-layer dropout **for resolvable visible coastlines**. Exceptional invalid-data/failure presentation remains unselected. The [first executable-slice proposal](mockups/0060-coastline-first-executable-slice-proposal.md) is for review, not a contract or implementation authorization.
 
-## Next / limits
-Compare one **offline pixel-stable clipped-stroke raster** with 0057 and
-synthetic tangent/viewport-edge cases; distinguish aliasing from missed visible
-runs and target-float error. No sampler, asset, budget, tight-zoom appearance or
-implementation is approved. Preserve horizon, limb, notices, selection and
-square baseline. M2 budgets/scheduling, Sharp, RAM/safe stack and RWX remain
-open; [frozen M2 evidence](decisions/0023-frozen-m2-revision-isolation.md) is isolated.
+## Work retained
+The [offline coastline tools](../tools/README.md#offline-m4-coastline-source-preflight), [evaluations](evaluations/m4-coastline-streaming-enclosure-study.md) and [0058/0059 illustrative images](mockups/0059-coastline-fallback-diagnostic.md) compare clipped strokes, trial coordinate precision, front/viewport uncertainty, work, narrow exact/checked predicates, two-pass fallback and bounded streaming. These **do not** prove arbitrary WGS-84 or target arithmetic, exact raster, atomic commit, device timing/stack, Sharp throughput or 20 Hz. The 40 km reduction, 1e-4° trial encoding, 0.2° step and all fallback limits are study inputs only. The previously explored local-gap/whole-coast fallback is *not* approved behavior under 0053. See [provisional measurement gates](evaluations/m4-coastline-budget-preflight.md): ≤5 ms observed coast rebuild, ≤64 KiB compiled addition (≤32 KiB asset), no added heap and ≤1 KiB measured incremental scratch/stack; none is proven spare capacity.
 
-## Verification
-Fresh workspace check/tests and eight Python tests passed; archive/report hashes,
-1-bit sheet bounds, links and whitespace checked. Offline OR composites are
-**not executable coastlines** or physical/S3 evidence. No interactive replay,
-hardware, firmware or frozen-M2 capture.
+## One next step / open gates
+Review [0060](mockups/0060-coastline-first-executable-slice-proposal.md) with [0053](decisions/0053-no-resolvable-coastline-omissions.md): identify one finite target-safe strategy that actually resolves screen-relevant ordinary unknowns within bounded work, and ask the user how to present **genuinely irrecoverable** coast failures. If no credible numeric/commit path fits, reject that candidate design rather than accepting missing resolvable ink or launching more open-ended studies. Exact source export/raster, finite global work, late-commit safety, executable visual review and whole-device/Sharp capacity remain gates; ask separately before renderer, asset, firmware, hardware/flash or toolchain changes. M2 operating budget/scheduling, stack and RWX remain open; [frozen M2 evidence](decisions/0023-frozen-m2-revision-isolation.md) remains isolated.
+
+## Verification / limitations
+Fresh wrap-up: 28 offline Python tests; `cargo check --workspace` and `cargo test --workspace`; local Markdown links/new 1-bit images and unstaged/staged whitespace checked. No interactive SDL, target/Sharp capture, firmware, new dependency or frozen-M2 refresh. Host/synthetic work is not executable coast or physical cost evidence.

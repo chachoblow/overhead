@@ -23,6 +23,45 @@ and conservative-culling diagnostic in `tools/offline/coastline_refine_40km.py`;
 see [method/limits](../docs/evaluations/m4-coastline-40km-refinement.md).
 `tools/offline/coastline_sampling_study.py` compares geographic steps and 1-bit
 raster stability at tight FOV without adopting a sampler; [evidence/limits](../docs/evaluations/m4-coastline-sampling-study.md).
+`tools/offline/coastline_stroke_study.py` tests continuous clipped-stroke pixel
+coverage against that earlier raster, including synthetic viewport/tangent
+controls; [method/limits](../docs/evaluations/m4-coastline-stroke-study.md).
+`tools/offline/coastline_precision_study.py` compares unquantized study parts with
+decoded trial coordinates under that stroke and checks coarse-cull equality;
+[restricted bound/results](../docs/evaluations/m4-coastline-coordinate-precision-study.md).
+`tools/offline/coastline_visibility_study.py` stress-tests finite front-face/
+frustum enclosures on synthetic crossings and grazes, retaining indeterminate
+intervals on budget exhaustion; [failure limits](../docs/evaluations/m4-coastline-visibility-bound-study.md).
+`tools/offline/coastline_curvature_study.py` compares a tighter second-derivative
+front-face enclosure and an on-screen projected-chord bound, without deciding
+raster or target-float errors; [results](../docs/evaluations/m4-coastline-curvature-bound-study.md).
+`tools/offline/coastline_enclosure_work_study.py` counts that enclosure's nodes
+and unknowns over unapproved reduced/decoded candidate parts at four sites and
+five zooms; [source-wide proxy and limits](../docs/evaluations/m4-coastline-enclosure-work-study.md).
+`tools/offline/coastline_unknown_policy_study.py` compares provisional
+certified-front local gaps and illustrative whole-geography fallback thresholds;
+[policy sensitivity/limits](../docs/evaluations/m4-coastline-unknown-policy-study.md).
+`tools/offline/coastline_unknown_precision_study.py` compares the local-gap
+trial before/after coordinate decoding and probes host-f64 decision margins;
+[precision results and limits](../docs/evaluations/m4-coastline-unknown-precision-study.md).
+`tools/offline/coastline_fallback_appearance_study.py` writes a native 1-bit
+coast-only fallback poster and counts projected sampling/stroke work;
+[appearance/work limits](../docs/evaluations/m4-coastline-fallback-appearance-study.md).
+`tools/offline/coastline_atomic_fallback_study.py` compares streaming two-pass
+preflight/commit work and synthetic late budget exhaustion without adopting a
+fallback threshold or proving target atomicity; [method/limits](../docs/evaluations/m4-coastline-atomic-fallback-study.md).
+`tools/offline/coastline_streaming_enclosure_study.py` compares an optional
+bounded pending stack and immediate front/unknown visitors with the list trial;
+[observed depth and memory limits](../docs/evaluations/m4-coastline-streaming-enclosure-study.md).
+`tools/offline/coastline_predicate_oracle_study.py` compares narrow equatorial
+sign/cull/viewport cases against a high-precision independent reference;
+[numerical limits](../docs/evaluations/m4-coastline-predicate-oracle-study.md).
+`tools/offline/coastline_interval_predicate_study.py` encloses only the narrow
+equatorial point predicates with exact-rational Taylor intervals;
+[feasibility and proof obligations](../docs/evaluations/m4-coastline-interval-predicate-feasibility.md).
+`tools/offline/coastline_fixed_interval_study.py` screens signed-i128 outward
+algebra on those pre-enclosed trig inputs and reports finite-precision unknowns
+and overflow; [limits](../docs/evaluations/m4-coastline-fixed-interval-feasibility.md).
 No coastline code runs in the app or renderer.
 
 ## `overhead-catalogue`

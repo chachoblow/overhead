@@ -503,3 +503,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Added reproducible `tools/offline/` preflight, reduction, quantization/culling and sampling studies with [source/evidence](evaluations/m4-coastline-source-preflight.md) and [native sheets](mockups/0057-coastline-sampling-comparison.md). User chose 40 km only as a study baseline; finer sampling changes 1-bit ink without proving curve/tangent accuracy.
 - Fresh workspace check/tests, eight Python tests, pinned archive/report hashes, binary images, links and whitespace passed. No interactive replay, hardware, firmware or frozen-M2 capture; offline overlays are not executable or target validation.
 - Next: compare a pixel-stable clipped stroke offline against 0057 and tangent/edge controls; exact raster, budget, tight-zoom policy and implementation require separate agreement.
+
+## 2026-10-20 UTC (M4 coastline offline evidence and no-omission review)
+- Added offline stroke, precision, visibility/curvature, bounded-work, local-gap/fallback, narrow numeric-predicate and two-pass/streaming studies in `tools/offline/`, with focused evaluations, tests and 0058/0059 mockups; no coast runtime or adopted asset.
+- Accepted [provisional measurement gates](evaluations/m4-coastline-budget-preflight.md), not device headroom. User rejected resolvable geography gaps/dropouts under [0053](decisions/0053-no-resolvable-coastline-omissions.md); [0060](mockups/0060-coastline-first-executable-slice-proposal.md) remains a proposal, not authorization.
+- Wrap-up verified 28 offline Python tests, workspace check/tests, local links, 1-bit images and diff whitespace; no interactive SDL, firmware/hardware, Sharp/target cost or frozen-M2 capture.
+- Next: review a finite numeric/commit path and exceptional-failure presentation before separate asset/renderer authorization; M4 coastline checkbox remains open.

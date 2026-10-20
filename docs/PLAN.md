@@ -274,7 +274,9 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
 - [ ] Prepare coastlines offline and render them legibly across zoom levels.
   [0051's reviewed angular appearance direction](decisions/0051-angular-coastline-appearance-direction.md)
   and [native 1-bit comparisons](mockups/0054-coastline-overview-comparison.md)
-  cover 5°–100°; source, geometry/raster rules and implementation remain open.
+  cover 5°–100°. The [M2-informed coastline ceilings](evaluations/m4-coastline-budget-preflight.md)
+  are accepted **only as provisional measurement gates**; no device headroom,
+  source/export, geometry/raster contract or renderer implementation is approved.
 
 **Done when:** the view is useful and understandable during passes and empty sky.
 
