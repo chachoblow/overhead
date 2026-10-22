@@ -278,9 +278,29 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   now authorizes a bounded, executable **wide-only comparison** using the reviewed
   40 km look and an explicit exceptional `COAST ERROR` notice; its host export,
   renderer and tests exist. The user reviewed the fresh executable images and
-  simulator, accepting the appearance. No-ordinary-omission evidence, resource
-  measurement and physical-display acceptance remain open. The [M2-informed ceilings](evaluations/m4-coastline-budget-preflight.md)
-  are **provisional measurement gates**, not proven capacity or shipping approval.
+  simulator, accepting the appearance. A follow-up host suite now compares
+  coast/no-coast selected and empty/notice frames and probes dense visible samples
+  on the checked asset at SF, polar and dateline sites, plus synthetic limb,
+  viewport and run-boundary cases. A further host test isolates exported segments
+  in those scenes and at computed limb/viewport-edge observer positions; it found
+  no qualifying gaps. Short runs, unsampled excursions and no-ordinary-omission
+  proof remain open. A [selected-segment bounded host study](evaluations/m4-coastline-bounded-segment-study.md)
+  tests segment 46 and four short viewport-edge runs (2–7 reference cells)
+  independently of the renderer's fixed sampling. A further finite-scene control
+  checks **each of the 1,734 segments** at seven scenes, conservatively covering
+  every unknown interval's possible screen cells with isolated ink within 3px.
+  No qualifying gap was found. Unknown visibility is not called invisible; not
+  all observers are covered and floating-point margins lack formal bounds, so
+  0053 is not closed. A
+  [host-only cost preflight](evaluations/m4-coastline-host-cost-preflight.md)
+  now times coast/full-frame controls and counts raster writes on reviewed and
+  boundary scenes; it does not measure S3 cost, late-failure cost or compiled size.
+  A separate host regression injects a coastline-only failure after confirmed ink
+  and checks rollback, foreground and notice pixels in selected/empty warning
+  scenes. Natural late numeric failures and their target cost remain unmeasured.
+  Target resource measurement and physical-display acceptance remain open. The
+  [M2-informed ceilings](evaluations/m4-coastline-budget-preflight.md) are
+  **provisional measurement gates**, not proven capacity or shipping approval.
 
 **Done when:** the view is useful and understandable during passes and empty sky.
 

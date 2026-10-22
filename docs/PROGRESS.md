@@ -515,3 +515,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Added checked Natural Earth export/provenance (`tools/offline/export_coastline.py`, `render/assets/`), shared surface projection and 1-bit coast rendering in `app/src/projection.rs` / `render/src/`, preserving square/circular output and foreground truth.
 - Wrap-up workspace check/tests, app/render no-default-feature check, strict app/render/sim Clippy, formatting, offline tests, export hash, 1-bit images and links/whitespace pass; no agent interactive SDL, firmware/hardware, new dependency, toolchain or frozen-M2 change.
 - Next: bounded no-coast/tangent/viewport verification for [0053](decisions/0053-no-resolvable-coastline-omissions.md); 0.2° sampling may miss a narrow visible run, and target time/stack/Sharp capacity remain unmeasured. M4 coastline checkbox stays open.
+
+## 2026-10-20 UTC (M4 coastline host verification and bounded screen-effect study)
+- Added dense/no-coast and isolated-export limb/viewport controls in `render/src/coast.rs`, plus `render/src/lib.rs` foreground/notice controls and injected late-ink rollback; no production appearance change.
+- Recorded ten-scene [host cost preflight](evaluations/m4-coastline-host-cost-preflight.md) and [bounded study](evaluations/m4-coastline-bounded-segment-study.md): four 2–7-cell edge runs and all 1,734 isolated segments at seven fixed scenes had no qualifying gap; unresolved visibility was not classified invisible.
+- Fresh workspace check/tests, render no-default-feature check, strict all-target render Clippy, formatting, links and whitespace pass; host `f64` margins are not formally certified and no target, Sharp, firmware or frozen-M2 evidence was obtained.
+- Next: investigate outward-rounded host enclosure for selected short runs; [0053](decisions/0053-no-resolvable-coastline-omissions.md) and the M4 coastline checkbox remain open, as do target resource and physical-display gates.

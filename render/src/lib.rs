@@ -134,12 +134,42 @@ fn draw_frame<D: DrawTarget<Color = BinaryColor>>(
     values: Option<glyphs::Params>,
     coast_asset: Option<&[u8]>,
 ) -> Result<(), D::Error> {
+    draw_frame_with_coast(
+        display,
+        app,
+        layout,
+        ingestion_warning,
+        values,
+        coast_asset,
+        coast::draw,
+    )
+}
+
+fn draw_frame_with_coast<'a, D, F>(
+    display: &'a mut D,
+    app: &RadarApp,
+    layout: Layout,
+    ingestion_warning: bool,
+    values: Option<glyphs::Params>,
+    coast_asset: Option<&[u8]>,
+    mut coast_draw: F,
+) -> Result<(), D::Error>
+where
+    D: DrawTarget<Color = BinaryColor>,
+    F: FnMut(
+        &mut embedded_graphics::draw_target::Clipped<'a, D>,
+        overhead_core::GeodeticPosition,
+        overhead_app::projection::View,
+        Layout,
+        &[u8],
+    ) -> Result<bool, D::Error>,
+{
     let mut display = display.clipped(&Rectangle::new(Point::zero(), DISPLAY_SIZE));
     display.clear(BinaryColor::Off)?;
     let mut coast_error = false;
     if app.view().viewport() == Viewport::Rectangle
         && let Some(asset) = coast_asset
-        && !coast::draw(&mut display, app.observer(), app.view(), layout, asset)?
+        && !coast_draw(&mut display, app.observer(), app.view(), layout, asset)?
     {
         // A coast-only numeric error can occur after ink was emitted.
         // Repaint the frame from scratch instead of keeping partial ink.
@@ -2564,6 +2594,62 @@ mod tests {
     }
 
     #[test]
+    fn coastline_is_a_background_in_selected_and_empty_notice_scenes() {
+        let layout = Layout::wide();
+        let mut app = app_with_viewport(Viewport::Rectangle);
+        let mut coast_only_pixels = 0;
+        for empty in [false, true] {
+            if empty {
+                let later =
+                    app.time().unwrap() + overhead_core::sgp4::chrono::Duration::minutes(45);
+                app.update(later).unwrap();
+                assert_eq!(app.counts().visible, 0);
+            } else {
+                assert!(app.selected_id().is_some());
+            }
+            for warning in [false, true] {
+                let mut coast = Screen {
+                    pixels: [[false; 400]; 240],
+                };
+                let mut control = Screen {
+                    pixels: [[false; 400]; 240],
+                };
+                draw_frame(&mut coast, &app, layout, warning, None, Some(coast::ASSET)).unwrap();
+                draw_frame(&mut control, &app, layout, warning, None, None).unwrap();
+                // Geographic ink may add to the background, but may not erase
+                // existing marker, limb, strip or notice ink. Compare complete
+                // frames; the earlier control isolates coast without CLI flags.
+                for y in 0..240 {
+                    for x in 0..400 {
+                        assert!(
+                            !control.pixels[y][x] || coast.pixels[y][x],
+                            "coast erased foreground at ({x}, {y}), empty={empty} warning={warning}"
+                        );
+                        coast_only_pixels +=
+                            usize::from(coast.pixels[y][x] && !control.pixels[y][x]);
+                    }
+                }
+                assert_eq!(
+                    coast
+                        .pixels
+                        .iter()
+                        .map(|row| &row[352..])
+                        .collect::<Vec<_>>(),
+                    control
+                        .pixels
+                        .iter()
+                        .map(|row| &row[352..])
+                        .collect::<Vec<_>>()
+                );
+            }
+        }
+        assert!(
+            coast_only_pixels > 0,
+            "control never isolated visible coast ink"
+        );
+    }
+
+    #[test]
     fn coastline_draws_only_in_wide_view_and_invalid_asset_has_explicit_notice() {
         let layout = Layout::wide();
         let app = app_with_viewport(Viewport::Rectangle);
@@ -2642,6 +2728,103 @@ mod tests {
             .unwrap();
             draw_frame(&mut without, &app, square, false, None, None).unwrap();
             assert_eq!(with_coast.pixels, without.pixels);
+        }
+    }
+
+    #[test]
+    fn late_coast_failure_rolls_back_ink_without_losing_foreground() {
+        use core::cell::Cell;
+
+        // Count actual On writes to the draw target. The hook cannot fire
+        // until a coast stroke has been emitted, not merely projected.
+        struct TrackingScreen<'a> {
+            pixels: [[bool; 400]; 240],
+            on_writes: &'a Cell<usize>,
+        }
+        impl OriginDimensions for TrackingScreen<'_> {
+            fn size(&self) -> Size {
+                DISPLAY_SIZE
+            }
+        }
+        impl DrawTarget for TrackingScreen<'_> {
+            type Color = BinaryColor;
+            type Error = core::convert::Infallible;
+            fn draw_iter<I: IntoIterator<Item = Pixel<BinaryColor>>>(
+                &mut self,
+                pixels: I,
+            ) -> Result<(), Self::Error> {
+                for Pixel(p, color) in pixels {
+                    assert!((0..400).contains(&p.x) && (0..240).contains(&p.y));
+                    if color == BinaryColor::On {
+                        self.on_writes.set(self.on_writes.get() + 1);
+                    }
+                    self.pixels[p.y as usize][p.x as usize] = color == BinaryColor::On;
+                }
+                Ok(())
+            }
+        }
+
+        let layout = Layout::wide();
+        let mut app = app_with_viewport(Viewport::Rectangle);
+        for empty in [false, true] {
+            if empty {
+                let later =
+                    app.time().unwrap() + overhead_core::sgp4::chrono::Duration::minutes(45);
+                app.update(later).unwrap();
+                assert_eq!(app.counts().visible, 0);
+            } else {
+                assert!(app.selected_id().is_some());
+            }
+            for warning in [false, true] {
+                let on_writes = Cell::new(0);
+                let stopped = Cell::new(false);
+                let mut actual = TrackingScreen {
+                    pixels: [[true; 400]; 240],
+                    on_writes: &on_writes,
+                };
+                draw_frame_with_coast(
+                    &mut actual,
+                    &app,
+                    layout,
+                    warning,
+                    None,
+                    Some(coast::ASSET),
+                    |display, observer, view, layout, asset| {
+                        coast::draw_with_hook(display, observer, view, layout, asset, || {
+                            let written = on_writes.get() > 0;
+                            stopped.set(written);
+                            written
+                        })
+                    },
+                )
+                .unwrap();
+                assert!(stopped.get(), "did not inject after coast ink");
+
+                let mut expected = Screen {
+                    pixels: [[false; 400]; 240],
+                };
+                draw_frame(&mut expected, &app, layout, warning, None, None).unwrap();
+                let counts = app.counts();
+                draw_wide_notices(
+                    &mut expected,
+                    &[
+                        wide_empty_status(
+                            app.time().is_some(),
+                            counts,
+                            app.indicators().next().is_some(),
+                            warning,
+                        ),
+                        (counts.failed > 0).then_some("TRACK ERROR"),
+                        warning.then_some("INGEST WARN"),
+                        Some("COAST ERROR"),
+                    ],
+                )
+                .unwrap();
+                assert_eq!(
+                    actual.pixels, expected.pixels,
+                    "late failure changed foreground: empty={empty} warning={warning}"
+                );
+            }
         }
     }
 
