@@ -300,7 +300,10 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   A separate host regression injects a coastline-only failure after confirmed ink
   and checks rollback, foreground and notice pixels in selected/empty warning
   scenes. Natural late numeric failures and their target cost remain unmeasured.
-  Target resource measurement and physical-display acceptance remain open. The
+  Target resource measurement and physical-display acceptance remain open. An
+  [offline Stage A measurement harness](evaluations/m4-coastline-device-measurement-protocol.md)
+  is prepared for review but has not been target-built, flashed or captured;
+  it is not S3 evidence. The
   [M2-informed ceilings](evaluations/m4-coastline-budget-preflight.md) are
   **provisional measurement gates**, not proven capacity or shipping approval.
 

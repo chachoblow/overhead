@@ -53,7 +53,9 @@ fn main() {
         assert_eq!(e.classification, sgp4::Classification::Unclassified);
         writeln!(source, "Elements {{ norad_id: {}, classification: Classification::Unclassified, datetime: {}, element_set_number: {}, revolution_number: {}, ephemeris_type: {},",
             e.norad_id, datetime(e.datetime), e.element_set_number, e.revolution_number, e.ephemeris_type).unwrap();
-        if env::var_os("CARGO_FEATURE_CATALOGUE_MEMORY").is_some() {
+        if env::var_os("CARGO_FEATURE_CATALOGUE_MEMORY").is_some()
+            || env::var_os("CARGO_FEATURE_COAST_MEASUREMENT").is_some()
+        {
             // Alloc metadata fields exist with serde; old workloads still do
             // not allocate names or alter their original numeric elements.
             source.push_str("object_name: None, international_designator: None,\n");

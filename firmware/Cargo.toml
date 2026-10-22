@@ -7,9 +7,16 @@ edition = "2024"
 # Shared host/target reference checker only; no capture harness or new dependency.
 numerical-reference = []
 catalogue-memory = ["overhead-core/catalogue", "dep:serde_json", "dep:esp-alloc"]
+# Separate opt-in renderer experiment; never part of frozen M2 images.
+coast-measurement = ["dep:overhead-app", "dep:overhead-render", "dep:embedded-graphics", "dep:serde_json", "dep:esp-alloc", "overhead-core/catalogue", "overhead-render/measurement"]
+coast-measurement-on = ["coast-measurement"]
 
 [dependencies]
 overhead-core = { path = "../core" }
+# Existing shared crates; optional so historical kernel builds remain unchanged.
+overhead-app = { path = "../app", optional = true }
+overhead-render = { path = "../render", optional = true }
+embedded-graphics = { version = "0.8", optional = true }
 # Same checked OMM-array path as the host experiment, without std.
 serde_json = { version = "1", default-features = false, features = ["alloc", "raw_value"], optional = true }
 
@@ -38,6 +45,13 @@ bench = false
 name = "overhead-s3-catalogue-memory"
 path = "src/catalogue_main.rs"
 required-features = ["catalogue-memory"]
+test = false
+bench = false
+
+[[bin]]
+name = "overhead-s3-coast-measurement"
+path = "src/coast_main.rs"
+required-features = ["coast-measurement"]
 test = false
 bench = false
 

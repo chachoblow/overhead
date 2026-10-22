@@ -1,6 +1,9 @@
 #![no_std]
 #![cfg_attr(
-    all(feature = "catalogue-memory", target_arch = "xtensa"),
+    all(
+        any(feature = "catalogue-memory", feature = "coast-measurement"),
+        target_arch = "xtensa"
+    ),
     feature(asm_experimental_arch)
 )]
 //! Allocation-free kernel workloads plus opt-in catalogue/memory experiments.
@@ -12,20 +15,25 @@ use overhead_core::{
     sgp4::chrono::{NaiveDateTime, TimeDelta},
 };
 
+#[cfg(feature = "coast-measurement")]
+pub mod coast_measurement;
 pub mod suites;
 
 #[cfg(feature = "numerical-reference")]
 pub mod numerical;
 
-#[cfg(feature = "catalogue-memory")]
+#[cfg(any(feature = "catalogue-memory", feature = "coast-measurement"))]
 extern crate alloc;
 #[cfg(feature = "catalogue-memory")]
 pub mod catalogue_memory;
-#[cfg(feature = "catalogue-memory")]
+#[cfg(any(feature = "catalogue-memory", feature = "coast-measurement"))]
 pub mod heap_meter;
 #[cfg(feature = "catalogue-memory")]
 pub mod m2;
-#[cfg(all(feature = "catalogue-memory", any(target_arch = "xtensa", test)))]
+#[cfg(all(
+    any(feature = "catalogue-memory", feature = "coast-measurement"),
+    any(target_arch = "xtensa", test)
+))]
 pub mod stack_watermark;
 
 pub const TRACK_STEPS: usize = 1441;

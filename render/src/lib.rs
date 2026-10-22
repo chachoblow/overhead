@@ -23,6 +23,8 @@ mod category;
 mod coast;
 pub mod debug;
 mod glyphs;
+#[cfg(feature = "measurement")]
+pub mod measurement;
 pub mod presentation;
 
 pub const DISPLAY_SIZE: Size = Size::new(400, 240);
