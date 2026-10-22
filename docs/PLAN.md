@@ -283,15 +283,17 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   on the checked asset at SF, polar and dateline sites, plus synthetic limb,
   viewport and run-boundary cases. A further host test isolates exported segments
   in those scenes and at computed limb/viewport-edge observer positions; it found
-  no qualifying gaps. Short runs, unsampled excursions and no-ordinary-omission
-  proof remain open. A [selected-segment bounded host study](evaluations/m4-coastline-bounded-segment-study.md)
+  no qualifying gaps. A [selected-segment bounded host study](evaluations/m4-coastline-bounded-segment-study.md)
   tests segment 46 and four short viewport-edge runs (2–7 reference cells)
   independently of the renderer's fixed sampling. A further finite-scene control
   checks **each of the 1,734 segments** at seven scenes, conservatively covering
   every unknown interval's possible screen cells with isolated ink within 3px.
   No qualifying gap was found. Unknown visibility is not called invisible; not
-  all observers are covered and floating-point margins lack formal bounds, so
-  0053 is not closed. A
+  all observers are covered and floating-point margins lack formal bounds.
+  [0055](decisions/0055-defer-all-view-coastline-proof-for-m4.md) stops the
+  all-view proof effort as a **gate for this M4 iteration**, retaining 0053's
+  no-known-ordinary-gap intent and a later completeness TODO; it does not
+  certify all observers or close device acceptance. A
   [host-only cost preflight](evaluations/m4-coastline-host-cost-preflight.md)
   now times coast/full-frame controls and counts raster writes on reviewed and
   boundary scenes; it does not measure S3 cost, late-failure cost or compiled size.

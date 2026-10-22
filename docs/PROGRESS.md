@@ -521,3 +521,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Recorded ten-scene [host cost preflight](evaluations/m4-coastline-host-cost-preflight.md) and [bounded study](evaluations/m4-coastline-bounded-segment-study.md): four 2–7-cell edge runs and all 1,734 isolated segments at seven fixed scenes had no qualifying gap; unresolved visibility was not classified invisible.
 - Fresh workspace check/tests, render no-default-feature check, strict all-target render Clippy, formatting, links and whitespace pass; host `f64` margins are not formally certified and no target, Sharp, firmware or frozen-M2 evidence was obtained.
 - Next: investigate outward-rounded host enclosure for selected short runs; [0053](decisions/0053-no-resolvable-coastline-omissions.md) and the M4 coastline checkbox remain open, as do target resource and physical-display gates.
+
+## 2026-10-22 UTC (M4 coastline arithmetic audit and iteration boundary)
+- Added a host-only conditional outward-rounded projection/lens audit for four short runs in `render/src/coast/visibility_bound_study/rounded_projection.rs`; [study](evaluations/m4-coastline-bounded-segment-study.md) records 256 uncertified camera-input bins, not an all-view proof or renderer change.
+- User reaffirmed accepting the executable 40 km appearance and chose [0055](decisions/0055-defer-all-view-coastline-proof-for-m4.md): defer all-view proof this iteration, retain known-gap-as-bug policy, and move toward device gates. PLAN coastline item remains open.
+- Fresh workspace check/tests, render no-default check, all-target render Clippy, formatting, local links and whitespace pass. No target build, hardware, firmware, toolchain or frozen-M2 work; next is an authorized target measurement setup, not more proof churn.

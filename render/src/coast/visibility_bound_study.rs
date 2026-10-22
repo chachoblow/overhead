@@ -1,11 +1,15 @@
 //! Host-only screen-effect controls for selected and all exported segments.
 //! Analytic derivative envelopes are independent of the renderer's 0.2°
 //! sampling. f64 margins are pragmatic, NOT directed-rounding certification.
+//! The short-run arithmetic audit below rounds algebra outward but explicitly
+//! leaves shared transcendental/camera inputs uncertified.
 extern crate std;
 
 use super::*;
 use overhead_app::projection::Viewport;
 use std::{collections::BTreeSet, vec::Vec};
+
+mod rounded_projection;
 
 struct Ink([[bool; 400]; 240]);
 impl OriginDimensions for Ink {
