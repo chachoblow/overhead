@@ -1,0 +1,2 @@
+# Preserve raw espflash monitor bytes (including CRLF) and original SHA-256.
+*.log -text whitespace=-blank-at-eol

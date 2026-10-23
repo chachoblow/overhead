@@ -6,7 +6,7 @@ use embedded_graphics::{
 };
 use overhead_app::RadarApp;
 
-use crate::{DISPLAY_SIZE, Layout, coast, draw_frame, draw_frame_with_coast};
+use crate::{DISPLAY_SIZE, Layout, coast, draw_frame_with_coast};
 
 pub fn coast_only<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
@@ -22,26 +22,63 @@ pub fn coast_only<D: DrawTarget<Color = BinaryColor>>(
 }
 
 /// The off control uses the same frame path but excludes coast before drawing.
+/// Specialize the measurement-only hook so its linked call graph does not
+/// retain coastline code through the production `draw_frame` wrapper.
 pub fn frame_off<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
     app: &RadarApp,
     warning: bool,
 ) -> Result<(), D::Error> {
-    draw_frame(display, app, Layout::wide(), warning, None, None)
+    draw_frame_with_coast(
+        display,
+        app,
+        Layout::wide(),
+        warning,
+        None,
+        None,
+        |_, _, _, _, _| Ok(true),
+    )
 }
 
+/// Return false if the normal coast path failed and repainted without coast.
+/// The boolean is measurement-only; the frame's error/foreground policy is unchanged.
 pub fn frame_on<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
     app: &RadarApp,
     warning: bool,
-) -> Result<(), D::Error> {
-    draw_frame(
+) -> Result<bool, D::Error> {
+    let succeeded = Cell::new(false);
+    draw_frame_with_coast(
         display,
         app,
         Layout::wide(),
         warning,
         None,
         Some(coast::ASSET),
+        |display, observer, view, layout, asset| {
+            let result = coast::draw(display, observer, view, layout, asset)?;
+            succeeded.set(result);
+            Ok(result)
+        },
+    )?;
+    Ok(succeeded.get())
+}
+
+/// Immediate coastline-only failure: independent pixel control for late rollback.
+/// The ordinary coast-free frame omits COAST ERROR and is not this control.
+pub fn frame_failure_control<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    app: &RadarApp,
+    warning: bool,
+) -> Result<(), D::Error> {
+    draw_frame_with_coast(
+        display,
+        app,
+        Layout::wide(),
+        warning,
+        None,
+        Some(coast::ASSET),
+        |_, _, _, _, _| Ok(false),
     )
 }
 
@@ -159,16 +196,65 @@ mod tests {
         let mut actual = Screen([[false; 400]; 240]);
         assert!(frame_late_failure(&mut actual, &app, true).unwrap());
         let mut expected = Screen([[false; 400]; 240]);
-        draw_frame_with_coast(
-            &mut expected,
-            &app,
-            Layout::wide(),
-            true,
-            None,
-            Some(coast::ASSET),
-            |_, _, _, _, _| Ok(false),
-        )
-        .unwrap();
+        frame_failure_control(&mut expected, &app, true).unwrap();
         assert_eq!(actual.0, expected.0);
+    }
+
+    #[test]
+    fn off_control_matches_the_original_no_coast_path() {
+        let fixture = || {
+            let elements: Vec<OmmElements> =
+                serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json"))
+                    .unwrap();
+            let mut builder = CatalogueBuilder::new();
+            builder.push(
+                RecordOrigin {
+                    group: 0,
+                    record: 0,
+                },
+                elements.into_iter().next().unwrap(),
+            );
+            builder.finish().unwrap()
+        };
+        let catalogue = fixture();
+        let time = catalogue.entries()[0].satellite().epoch();
+        for (selected, site) in [
+            (
+                false,
+                GeodeticPosition {
+                    latitude_rad: 89.9_f64.to_radians(),
+                    longitude_rad: 0.0,
+                    altitude_km: 0.0,
+                },
+            ),
+            (
+                true,
+                GeodeticPosition {
+                    altitude_km: 0.0,
+                    ..overhead_core::ecef_to_geodetic(
+                        catalogue.entries()[0]
+                            .satellite()
+                            .state_at(time)
+                            .unwrap()
+                            .to_ecef()
+                            .unwrap(),
+                    )
+                    .unwrap()
+                },
+            ),
+        ] {
+            let view = View::rectangular(20.0, Layout::wide().aspect_ratio()).unwrap();
+            let mut app = RadarApp::new(fixture(), site, view).unwrap();
+            app.update(time).unwrap();
+            assert_eq!(app.selected_id().is_some(), selected);
+            for warning in [false, true] {
+                let mut actual = Screen([[false; 400]; 240]);
+                frame_off(&mut actual, &app, warning).unwrap();
+                let mut expected = Screen([[false; 400]; 240]);
+                crate::draw_frame(&mut expected, &app, Layout::wide(), warning, None, None)
+                    .unwrap();
+                assert_eq!(actual.0, expected.0);
+            }
+        }
     }
 }

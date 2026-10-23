@@ -20,6 +20,9 @@ const HEAP_BYTES: usize = 64 * 1024;
 struct HeapStorage(MaybeUninit<[u8; HEAP_BYTES]>);
 static mut HEAP_STORAGE: HeapStorage = HeapStorage(MaybeUninit::uninit());
 static mut SCREEN: Screen = Screen::new();
+// Measurement-only 12 KB pixel reference, present in both comparison images.
+// Neither screen is coast-attributable scratch or a Sharp driver buffer.
+static mut REFERENCE: Screen = Screen::new();
 #[global_allocator]
 static ALLOCATOR: Meter<esp_alloc::EspHeap> = Meter::new(esp_alloc::EspHeap::empty());
 
@@ -48,7 +51,11 @@ fn sample(
     app: &overhead_app::RadarApp,
     mode: Mode,
 ) -> (u64, u32, u32, u32, usize) {
-    screen.reset_counts();
+    if mode == Mode::Coast {
+        screen.clear_for_coast();
+    } else {
+        screen.reset_counts();
+    }
     let before = ALLOCATOR.begin();
     // SAFETY: this proposed single-core image starts no task/second core and
     // switches no stacks. Reassess stack ownership before a target build.
@@ -81,10 +88,13 @@ fn main() -> ! {
         ALLOCATOR.backend.add_region(esp_alloc::HeapRegion::new(
             (&raw mut HEAP_STORAGE.0).cast::<u8>(),
             HEAP_BYTES,
+            esp_alloc::MemoryCapability::Internal.into(),
         ));
     }
     // SAFETY: no other owner of the static RAM target in this single-core image.
     let screen = unsafe { &mut *(&raw mut SCREEN) };
+    // SAFETY: distinct static storage, exclusively owned by this image.
+    let reference = unsafe { &mut *(&raw mut REFERENCE) };
     pause();
     println!("OVERHEAD_S3_COAST_MEASUREMENT_V1");
     println!(
@@ -93,17 +103,44 @@ fn main() -> ! {
         HEAP_BYTES
     );
     println!("NOT a Sharp/frame-cadence measurement; stack is observed writes only");
+    println!(
+        "heap_free={},heap_used={}",
+        ALLOCATOR.backend.free(),
+        ALLOCATOR.backend.used()
+    );
+    // SAFETY: the proposed single-owner CPU0 stack invariant must be verified
+    // for the exact target image; a smoke check cannot prove a safe stack bound.
+    let (baseline, loaded) = unsafe { stack_watermark::self_check() };
+    println!(
+        "PROBE,baseline={},loaded={},stack_low={},stack_top={},paint_low={},paint_high={}",
+        baseline.observed_bytes,
+        loaded.observed_bytes,
+        baseline.stack_low,
+        baseline.stack_top,
+        baseline.paint_low,
+        baseline.paint_high
+    );
     for (name, lat, lon, fov) in CASES {
         let app = coast_measurement::app(name, lat, lon, fov);
         let modes: &[Mode] = if cfg!(feature = "coast-measurement-on") {
-            if name == "polar-20" {
-                &[Mode::Coast, Mode::FrameOn, Mode::FrameOff, Mode::Late]
+            if name == "polar-20" || name == "iss-ground-20" {
+                &[
+                    Mode::Coast,
+                    Mode::FrameOn,
+                    Mode::FrameOff,
+                    Mode::Late,
+                    Mode::LateWarning,
+                ]
             } else {
                 &[Mode::Coast, Mode::FrameOn, Mode::FrameOff]
             }
         } else {
             &[Mode::FrameOff]
         };
+        // Same untimed no-coast control in both images, retaining the reference
+        // buffer and a comparable baseline. Late controls overwrite it later.
+        coast_measurement::run_off(reference, &app);
+        println!("OFF_CONTROL,{name},{}", reference.checksum());
         let site = app.observer();
         println!(
             "CASE,{name},{:.6},{:.6},{fov},selected={}",
@@ -112,7 +149,10 @@ fn main() -> ! {
             app.selected_id().is_some()
         );
         for &mode in modes {
-            // Warm-up outside timed samples; the same static target is reused.
+            // Warm-up outside timed samples; coast-only begins from a blank target.
+            if mode == Mode::Coast {
+                screen.clear_for_coast();
+            }
             assert!(invoke(screen, &app, mode));
             pause();
             let mut samples = [(0_u64, 0_u32, 0_u32, 0_u32, 0_usize); SAMPLES];
@@ -124,6 +164,15 @@ fn main() -> ! {
             {
                 println!(
                     "ROW,{name},{mode:?},{index},{us},{checksum},{writes},{on_writes},{stack}"
+                );
+            }
+            #[cfg(feature = "coast-measurement-on")]
+            if matches!(mode, Mode::Late | Mode::LateWarning) {
+                let warning = mode == Mode::LateWarning;
+                coast_measurement::verify_late(screen, reference, &app, warning);
+                println!(
+                    "PIXEL_CONTROL,{name},{mode:?},matched,{}",
+                    screen.checksum()
                 );
             }
         }

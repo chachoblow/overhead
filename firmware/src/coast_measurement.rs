@@ -32,6 +32,7 @@ pub enum Mode {
     FrameOn,
     FrameOff,
     Late,
+    LateWarning,
 }
 
 pub fn app(name: &str, lat: f64, lon: f64, fov: f64) -> RadarApp {
@@ -98,6 +99,11 @@ impl Screen {
         self.writes = 0;
         self.on_writes = 0;
     }
+    /// Coast-only has no frame clear; erase previous scene ink outside timing.
+    pub fn clear_for_coast(&mut self) {
+        self.pixels.fill(0);
+        self.reset_counts();
+    }
 }
 impl Default for Screen {
     fn default() -> Self {
@@ -144,16 +150,25 @@ pub fn run_off(screen: &mut Screen, app: &RadarApp) {
 pub fn run(screen: &mut Screen, app: &RadarApp, mode: Mode) -> bool {
     match mode {
         Mode::Coast => measurement::coast_only(screen, app).unwrap(),
-        Mode::FrameOn => {
-            measurement::frame_on(screen, app, false).unwrap();
-            true
-        }
+        Mode::FrameOn => measurement::frame_on(screen, app, false).unwrap(),
         Mode::FrameOff => {
             run_off(screen, app);
             true
         }
         Mode::Late => measurement::frame_late_failure(screen, app, false).unwrap(),
+        Mode::LateWarning => measurement::frame_late_failure(screen, app, true).unwrap(),
     }
+}
+
+/// Untimed byte-for-byte control, with the same selected/warning app truth.
+pub fn verify_late(screen: &Screen, reference: &mut Screen, app: &RadarApp, warning: bool) {
+    reference.pixels.fill(0);
+    reference.reset_counts();
+    measurement::frame_failure_control(reference, app, warning).unwrap();
+    assert_eq!(
+        screen.pixels, reference.pixels,
+        "late failure lost foreground or notice pixels"
+    );
 }
 
 #[cfg(test)]
@@ -171,6 +186,7 @@ mod tests {
             }
             let mut screen = Screen::new();
             assert!(run(&mut screen, &app, Mode::Coast));
+            assert!(screen.on_writes > 0, "{name} must draw coast ink");
             assert!(run(&mut screen, &app, Mode::FrameOn));
             assert!(run(&mut screen, &app, Mode::FrameOff));
             let expected = screen.pixels;
@@ -182,12 +198,27 @@ mod tests {
             selected > 0 && empty > 0,
             "fixture must exercise selected and empty frames"
         );
-        let app = app("polar-20", 89.9, 0.0, 20.0);
-        let mut screen = Screen::new();
-        assert!(run(&mut screen, &app, Mode::Late));
-        let late = screen.pixels;
-        // An explicit invalid/no-coast control is checked in the renderer's
-        // pixel regression; the target probe also reports checksum/writes.
-        assert!(late.iter().any(|&byte| byte != 0));
+        for (name, lat, lon, selected) in [
+            ("polar-20", 89.9, 0.0, false),
+            ("iss-ground-20", 0.0, 0.0, true),
+        ] {
+            let app = app(name, lat, lon, 20.0);
+            assert_eq!(
+                app.selected_id().is_some(),
+                selected,
+                "{name} control state"
+            );
+            let mut plain = Screen::new();
+            assert!(run(&mut plain, &app, Mode::Late), "{name} post-ink failure");
+            let mut reference = Screen::new();
+            verify_late(&plain, &mut reference, &app, false);
+            let mut warned = Screen::new();
+            assert!(
+                run(&mut warned, &app, Mode::LateWarning),
+                "{name} warned failure"
+            );
+            verify_late(&warned, &mut reference, &app, true);
+            assert_ne!(plain.pixels, warned.pixels, "{name} warning must have ink");
+        }
     }
 }

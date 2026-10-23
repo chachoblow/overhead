@@ -301,10 +301,14 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   and checks rollback, foreground and notice pixels in selected/empty warning
   scenes. Natural late numeric failures and their target cost remain unmeasured.
   Target resource measurement and physical-display acceptance remain open. An
-  [offline Stage A measurement harness](evaluations/m4-coastline-device-measurement-protocol.md)
-  is prepared for review but has not been target-built, flashed or captured;
-  it is not S3 evidence. The
-  [M2-informed ceilings](evaluations/m4-coastline-budget-preflight.md) are
+  [Stage A measurement harness and S3 capture](evaluations/m4-coastline-device-measurement-protocol.md)
+  now have separately authorized, exact-gated coast-on/off release images and a
+  1-bit RAM-target capture. The clean coast-off code/asset comparison is
+  65,020 B of `.rodata` + `.text` (516 B below the provisional 64 KiB screen),
+  but the maximum observed complete coast rebuild was **9,781,141 µs**, far
+  above the provisional **5 ms** gate. The current candidate therefore fails
+  target-time screening; no Sharp or whole-device validation follows. The
+  [M2-informed ceilings](evaluations/m4-coastline-budget-preflight.md) remain
   **provisional measurement gates**, not proven capacity or shipping approval.
 
 **Done when:** the view is useful and understandable during passes and empty sky.

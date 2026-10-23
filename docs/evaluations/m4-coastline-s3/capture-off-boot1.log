@@ -1,0 +1,116 @@
+[2026-10-23T02:33:43Z INFO ] Serial port: '/dev/cu.usbserial-21410'
+[2026-10-23T02:33:43Z INFO ] Connecting...
+[2026-10-23T02:33:43Z INFO ] Using flash stub
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x1 (POWERON),boot:0x8 (SPI_FAST_FLASH_BOOT)
+SPIWP:0xee
+mode:DIO, clock div:2
+load:0x3fce2820,len:0x14d0
+load:0x403c8700,len:0xdcc
+load:0x403cb700,len:0x2f54
+entry 0x403c8900
+I (29) boot: ESP-IDF v6.1-beta1-497-g14f663f003e 2nd stage bootloader
+I (30) boot: Multicore bootloader
+I (30) boot: chip revision: v0.2
+I (30) boot: efuse block revision: v1.4
+I (34) boot.esp32s3: Boot SPI Speed : 40MHz
+I (38) boot.esp32s3: SPI Mode       : DIO
+I (42) boot.esp32s3: SPI Flash Size : 8MB
+I (45) boot: Enabling RNG early entropy source...
+I (50) boot: Partition Table:
+I (52) boot: ## Label            Usage          Type ST Offset   Length
+I (59) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (65) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (72) boot:  2 factory          factory app      00 00 00010000 007f0000
+I (78) boot: End of partition table
+I (82) esp_image: segment 0: paddr=00010020 vaddr=3c000020 size=1458ch ( 83340) map
+I (110) esp_image: segment 1: paddr=000245b4 vaddr=3fc8b148 size=00de4h (  3556) load
+I (111) esp_image: segment 2: paddr=000253a0 vaddr=40378000 size=03144h ( 12612) load
+I (118) esp_image: segment 3: paddr=000284ec vaddr=00000000 size=07b2ch ( 31532) 
+I (129) esp_image: segment 4: paddr=00030020 vaddr=42020020 size=42498h (271512) map
+I (199) boot: Loaded app from partition at offset 0x10000
+I (199) boot: Disabling RNG early entropy source...
+OVERHEAD_S3_COAST_MEASUREMENT_V1
+coast_on=false,cpu_mhz=240,buffer_bytes=12000,heap_reserved=65536,samples=5
+NOT a Sharp/frame-cadence measurement; stack is observed writes only
+heap_free=65536,heap_used=0
+PROBE,baseline=1632,loaded=9580,stack_low=1070210472,stack_top=1070446336,paint_low=1070210536,paint_high=1070444704
+OFF_CONTROL,sf-tight,2549045966
+CASE,sf-tight,37.774900,-122.419400,0.1,selected=false
+ROW,sf-tight,FrameOff,0,20144,2549045966,98075,507,3408
+ROW,sf-tight,FrameOff,1,20101,2549045966,98075,507,3408
+ROW,sf-tight,FrameOff,2,20062,2549045966,98075,507,3408
+ROW,sf-tight,FrameOff,3,20062,2549045966,98075,507,3408
+ROW,sf-tight,FrameOff,4,20062,2549045966,98075,507,3408
+OFF_CONTROL,sf-1,2549045966
+CASE,sf-1,37.774900,-122.419400,1,selected=false
+ROW,sf-1,FrameOff,0,20092,2549045966,98075,507,3408
+ROW,sf-1,FrameOff,1,20041,2549045966,98075,507,3408
+ROW,sf-1,FrameOff,2,20002,2549045966,98075,507,3408
+ROW,sf-1,FrameOff,3,20001,2549045966,98075,507,3408
+ROW,sf-1,FrameOff,4,20002,2549045966,98075,507,3408
+OFF_CONTROL,sf-5,2549045966
+CASE,sf-5,37.774900,-122.419400,5,selected=false
+ROW,sf-5,FrameOff,0,20145,2549045966,98075,507,3408
+ROW,sf-5,FrameOff,1,20096,2549045966,98075,507,3408
+ROW,sf-5,FrameOff,2,20056,2549045966,98075,507,3408
+ROW,sf-5,FrameOff,3,20057,2549045966,98075,507,3408
+ROW,sf-5,FrameOff,4,20056,2549045966,98075,507,3408
+OFF_CONTROL,sf-100,3538906842
+CASE,sf-100,37.774900,-122.419400,100,selected=false
+ROW,sf-100,FrameOff,0,18332,3538906842,98135,567,3456
+ROW,sf-100,FrameOff,1,18222,3538906842,98135,567,3456
+ROW,sf-100,FrameOff,2,18207,3538906842,98135,567,3456
+ROW,sf-100,FrameOff,3,18207,3538906842,98135,567,3456
+ROW,sf-100,FrameOff,4,18207,3538906842,98135,567,3456
+OFF_CONTROL,colorado-20,3426818162
+CASE,colorado-20,39.007000,-104.883000,20,selected=false
+ROW,colorado-20,FrameOff,0,20458,3426818162,98493,925,3456
+ROW,colorado-20,FrameOff,1,20341,3426818162,98493,925,3456
+ROW,colorado-20,FrameOff,2,20351,3426818162,98493,925,3456
+ROW,colorado-20,FrameOff,3,20335,3426818162,98493,925,3456
+ROW,colorado-20,FrameOff,4,20335,3426818162,98493,925,3456
+OFF_CONTROL,polar-20,888801996
+CASE,polar-20,89.900000,0.000000,20,selected=false
+ROW,polar-20,FrameOff,0,20494,888801996,98495,927,3456
+ROW,polar-20,FrameOff,1,20434,888801996,98495,927,3456
+ROW,polar-20,FrameOff,2,20412,888801996,98495,927,3456
+ROW,polar-20,FrameOff,3,20412,888801996,98495,927,3456
+ROW,polar-20,FrameOff,4,20412,888801996,98495,927,3456
+OFF_CONTROL,dateline-5,2549045966
+CASE,dateline-5,0.000000,179.900000,5,selected=false
+ROW,dateline-5,FrameOff,0,20105,2549045966,98075,507,3408
+ROW,dateline-5,FrameOff,1,20064,2549045966,98075,507,3408
+ROW,dateline-5,FrameOff,2,20041,2549045966,98075,507,3408
+ROW,dateline-5,FrameOff,3,20042,2549045966,98075,507,3408
+ROW,dateline-5,FrameOff,4,20042,2549045966,98075,507,3408
+OFF_CONTROL,limb-20,2153254732
+CASE,limb-20,1.364900,-156.229044,20,selected=false
+ROW,limb-20,FrameOff,0,20524,2153254732,98491,923,3456
+ROW,limb-20,FrameOff,1,20414,2153254732,98491,923,3456
+ROW,limb-20,FrameOff,2,20399,2153254732,98491,923,3456
+ROW,limb-20,FrameOff,3,20398,2153254732,98491,923,3456
+ROW,limb-20,FrameOff,4,20398,2153254732,98491,923,3456
+OFF_CONTROL,limb-100,3538906842
+CASE,limb-100,1.364900,-156.229044,100,selected=false
+ROW,limb-100,FrameOff,0,18349,3538906842,98135,567,3456
+ROW,limb-100,FrameOff,1,18239,3538906842,98135,567,3456
+ROW,limb-100,FrameOff,2,18224,3538906842,98135,567,3456
+ROW,limb-100,FrameOff,3,18223,3538906842,98135,567,3456
+ROW,limb-100,FrameOff,4,18224,3538906842,98135,567,3456
+OFF_CONTROL,viewport-tight,2549045966
+CASE,viewport-tight,1.364900,119.225793,0.1,selected=false
+ROW,viewport-tight,FrameOff,0,20108,2549045966,98075,507,3408
+ROW,viewport-tight,FrameOff,1,20068,2549045966,98075,507,3408
+ROW,viewport-tight,FrameOff,2,20027,2549045966,98075,507,3408
+ROW,viewport-tight,FrameOff,3,20026,2549045966,98075,507,3408
+ROW,viewport-tight,FrameOff,4,20027,2549045966,98075,507,3408
+OFF_CONTROL,iss-ground-20,3571765250
+CASE,iss-ground-20,0.000017,-85.180357,20,selected=true
+ROW,iss-ground-20,FrameOff,0,136857,3571765250,97280,1280,3456
+ROW,iss-ground-20,FrameOff,1,136756,3571765250,97280,1280,3456
+ROW,iss-ground-20,FrameOff,2,136652,3571765250,97280,1280,3456
+ROW,iss-ground-20,FrameOff,3,136699,3571765250,97280,1280,3456
+ROW,iss-ground-20,FrameOff,4,136655,3571765250,97280,1280,3456
+OVERHEAD_S3_COAST_MEASUREMENT_DONE
