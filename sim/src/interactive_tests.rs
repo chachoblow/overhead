@@ -59,7 +59,8 @@ fn pixels(display: &SimulatorDisplay<BinaryColor>) -> Vec<BinaryColor> {
 }
 fn normal(app: &RadarApp, layout: Layout, warning: bool) -> Vec<BinaryColor> {
     let mut display = SimulatorDisplay::new(overhead_render::DISPLAY_SIZE);
-    overhead_render::draw(&mut display, app, layout, warning).unwrap();
+    let mut coast = CoastLayer::prepare(app.observer());
+    overhead_render::draw(&mut display, app, layout, warning, &mut coast).unwrap();
     pixels(&display)
 }
 fn frame(
@@ -97,7 +98,11 @@ fn v_cycles_only_wide_presentation_without_mutating_app_or_repeating() {
     for mode in ["wide", "square", "circle", "borderless-circle"] {
         let (mut app, layout) = replay(mode);
         let state = AppState::new(&app);
-        let mut presentation = InteractivePresentation::new(app.view().viewport(), false);
+        let mut presentation = InteractivePresentation::new(
+            app.view().viewport(),
+            false,
+            CoastLayer::prepare(app.observer()),
+        );
         let expected = normal(&app, layout, true);
         assert_eq!(frame(&mut presentation, &app, layout, true, 0), expected);
         assert!(presentation.key(&mut app, Keycode::V, true));
@@ -109,7 +114,11 @@ fn v_cycles_only_wide_presentation_without_mutating_app_or_repeating() {
         if mode == "wide" {
             assert_ne!(shown, expected);
             // Explicit debug start and toggled entry are the same current page.
-            let mut startup = InteractivePresentation::new(app.view().viewport(), true);
+            let mut startup = InteractivePresentation::new(
+                app.view().viewport(),
+                true,
+                CoastLayer::prepare(app.observer()),
+            );
             assert_eq!(frame(&mut startup, &app, layout, true, 0), shown);
         } else {
             assert_eq!(shown, expected);
@@ -127,7 +136,11 @@ fn v_cycles_only_wide_presentation_without_mutating_app_or_repeating() {
 #[test]
 fn debug_keeps_tab_zoom_and_replay_live_then_returns_static_without_queued_motion() {
     let (mut app, layout) = replay("wide");
-    let mut presentation = InteractivePresentation::new(app.view().viewport(), false);
+    let mut presentation = InteractivePresentation::new(
+        app.view().viewport(),
+        false,
+        CoastLayer::prepare(app.observer()),
+    );
     let start = app.time().unwrap();
     frame(&mut presentation, &app, layout, false, 0);
     presentation.key(&mut app, Keycode::Tab, false);
@@ -226,7 +239,11 @@ fn failure_counts_causes_and_normal_notices_survive_debug_round_trips() {
         assert_eq!(app.counts().visible, usize::from(mixed));
         let state = AppState::new(&app);
         let expected = normal(&app, layout, true);
-        let mut presentation = InteractivePresentation::new(app.view().viewport(), false);
+        let mut presentation = InteractivePresentation::new(
+            app.view().viewport(),
+            false,
+            CoastLayer::prepare(app.observer()),
+        );
         assert_eq!(frame(&mut presentation, &app, layout, true, 0), expected);
         presentation.key(&mut app, Keycode::V, false);
         assert_ne!(frame(&mut presentation, &app, layout, true, 50), expected);
@@ -240,7 +257,11 @@ fn failure_counts_causes_and_normal_notices_survive_debug_round_trips() {
 fn debug_empty_and_invalid_frames_recover_without_stale_normal_notices_or_fields() {
     let (mut app, layout) = replay("wide");
     let start = app.time().unwrap();
-    let mut presentation = InteractivePresentation::new(app.view().viewport(), true);
+    let mut presentation = InteractivePresentation::new(
+        app.view().viewport(),
+        true,
+        CoastLayer::prepare(app.observer()),
+    );
     let selected = frame(&mut presentation, &app, layout, false, 0);
     for _ in 0..64 {
         presentation.key(&mut app, Keycode::Up, false);

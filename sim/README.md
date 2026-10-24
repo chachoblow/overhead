@@ -235,9 +235,13 @@ chosen production group set. Source URLs are provenance only, never fetched.
 
 ## M4 executable coastline comparison (appearance accepted)
 
-`--wide` now draws the checked 40 km Natural Earth orientation strokes behind
-markers, limb, strip and condition-driven notices. The square/circular baseline
-remains coast-free. Example **headless** executable reviews (outputs are 1-bit):
+`--wide` draws coastline behind markers, limb, strip and condition-driven
+notices. Since [0058](../docs/decisions/0058-prepared-wide-coastline-slice.md) it
+uses the accepted quadratic representation, prepared once for the fixed observer
+(a full-screen `PREPARING MAP` frame precedes the first interactive frame; stderr
+reports host preparation time) and reused across motion and zoom; a cached raster
+of the current view is redrawn only when the zoom changes ([0059](../docs/decisions/0059-current-view-coastline-raster-cache.md)). The square/circular
+baseline remains coast-free. Example **headless** executable reviews (outputs are 1-bit):
 
 ```sh
 cargo run -p overhead-sim -- sim/examples/weather-gps.json \
@@ -249,11 +253,14 @@ cargo run -p overhead-sim -- sim/examples/weather-gps.json \
 ```
 
 [0054](../docs/decisions/0054-first-executable-coastline-comparison.md) owns the
-comparison scope and open no-omission/target-cost gates. The user reviewed the
+original comparison scope and open no-omission/target-cost gates. The user reviewed the
 [fresh executable scenes](../docs/mockups/0061-first-executable-coastline-review.md)
 and tried the simulator, accepting their appearance; neither that acceptance nor
 the earlier offline mocks proves physical-display legibility or target cost.
-A `COAST ERROR` notice reports a genuinely invalid coast-only calculation/asset;
+The reviewed scenes show the earlier 0054 renderer; the quadratic candidate's
+appearance was accepted separately under 0056.
+A `COAST ERROR` notice reports a genuinely invalid coast-only calculation/asset,
+failed preparation or a layer prepared for a different observer;
 display write errors still fail the whole frame.
 
 ## Viewport shape comparison

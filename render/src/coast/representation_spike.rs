@@ -1,7 +1,11 @@
-//! Measurement-only extraction of the accepted host trial, NOT production.
-//! Packed quadratic ECEF curves, f32 traversal, analytic facing roots and
-//! screen-space flattening. Approximation/rounding choices are experimental.
-use core::{convert::Infallible, ops::Range};
+//! Accepted quadratic coastline representation (0056 host trial). Packed
+//! quadratic ECEF curves, f32 traversal, analytic facing roots and screen-space
+//! flattening. `prepared` owns the fixed-observer wide-view layer (0058); the
+//! per-call `candidate_draw` remains for tests and explicit measurement.
+//! Approximation/rounding choices are experimental, not certified tolerances.
+use core::convert::Infallible;
+#[cfg(any(test, feature = "representation-measurement"))]
+use core::ops::Range;
 use embedded_graphics::{
     pixelcolor::BinaryColor,
     prelude::*,
@@ -13,6 +17,9 @@ use overhead_core::{EcefPosition, GeodeticPosition};
 mod decode;
 #[cfg(test)]
 mod packing;
+#[cfg(test)]
+mod preparation_trial;
+pub(crate) mod prepared;
 
 const A: f64 = 6378.137;
 const B: f64 = A * (1.0 - 1.0 / 298.257_223_563);
@@ -47,6 +54,7 @@ fn dot(a: V3, b: V3) -> f32 {
     a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
 }
 
+#[derive(Clone, Copy)]
 struct Context {
     rows: [V3; 3],
     offset: V3,
@@ -93,6 +101,19 @@ impl Context {
             lens: [scale.east as f32, scale.north as f32],
         }
     }
+    fn with_view(self, view: View) -> Self {
+        let scale = view
+            .project_unclipped(CameraPoint {
+                east_km: 1.0,
+                north_km: 1.0,
+                depth_km: 1.0,
+            })
+            .unwrap();
+        Self {
+            lens: [scale.east as f32, scale.north as f32],
+            ..self
+        }
+    }
     fn transform(&self, p: V3) -> V3 {
         core::array::from_fn(|i| dot(self.rows[i], p) + self.offset[i])
     }
@@ -117,7 +138,25 @@ pub struct Counts {
     pub peak_pending: usize,
 }
 
+/// Coastline-only failure (the layer is rolled back) or a draw-target error
+/// (the frame fails). Keeping them distinct lets real displays be fallible.
+#[derive(Debug, PartialEq)]
+pub(crate) enum Fail<E> {
+    Coast(&'static str),
+    Target(E),
+}
+
+impl From<Fail<Infallible>> for &'static str {
+    fn from(fail: Fail<Infallible>) -> Self {
+        match fail {
+            Fail::Coast(reason) => reason,
+            Fail::Target(never) => match never {},
+        }
+    }
+}
+
 /// Inventory only; excludes other live locals/callers and is not a stack bound.
+#[cfg(any(test, feature = "representation-measurement"))]
 pub const fn pending_bytes() -> usize {
     core::mem::size_of::<[Pending; DEPTH]>()
 }
@@ -204,13 +243,13 @@ struct Pending {
     depth: usize,
 }
 
-fn flatten<D: DrawTarget<Color = BinaryColor, Error = Infallible>>(
+fn flatten<D: DrawTarget<Color = BinaryColor>>(
     screen: &mut D,
     context: &Context,
     curve: Curve,
     counts: &mut Counts,
     depth_limit: usize,
-) -> Result<(), &'static str> {
+) -> Result<(), Fail<D::Error>> {
     let mut stack = [Pending {
         q: [[0.0; 3]; 3],
         depth: 0,
@@ -220,18 +259,18 @@ fn flatten<D: DrawTarget<Color = BinaryColor, Error = Infallible>>(
     loop {
         counts.nodes += 1;
         if counts.nodes > NODE_LIMIT {
-            return Err("node limit");
+            return Err(Fail::Coast("node limit"));
         }
         if current
             .q
             .iter()
             .any(|p| p[2] < 1.0 || p.iter().any(|v| !v.is_finite()))
         {
-            return Err("invalid camera curve");
+            return Err(Fail::Coast("invalid camera curve"));
         }
         let p = current.q.map(|p| context.project(p));
         if p.iter().flatten().any(|x| !x.is_finite()) {
-            return Err("invalid projection");
+            return Err(Fail::Coast("invalid projection"));
         }
         // Positive-depth rational Bézier projection stays in its control hull.
         // Whole-hull rejection cannot discard a crossing with outside endpoints.
@@ -252,11 +291,11 @@ fn flatten<D: DrawTarget<Color = BinaryColor, Error = Infallible>>(
                 Line::new(pixel(a), pixel(b))
                     .into_styled(PrimitiveStyle::with_stroke(BinaryColor::On, 1))
                     .draw(screen)
-                    .unwrap();
+                    .map_err(Fail::Target)?;
             }
         } else {
             if current.depth >= depth_limit || len == DEPTH {
-                return Err("refinement limit");
+                return Err(Fail::Coast("refinement limit"));
             }
             let (left, right) = split(current.q, 0.5);
             stack[len] = Pending {
@@ -281,16 +320,16 @@ fn flatten<D: DrawTarget<Color = BinaryColor, Error = Infallible>>(
     Ok(())
 }
 
-fn render_piece<D: DrawTarget<Color = BinaryColor, Error = Infallible>>(
+fn render_piece<D: DrawTarget<Color = BinaryColor>>(
     screen: &mut D,
     context: &Context,
     q: Curve,
     counts: &mut Counts,
-) -> Result<(), &'static str> {
+) -> Result<(), Fail<D::Error>> {
     counts.pieces += 1;
     let f = q.map(|p| context.front(p));
     if f.iter().any(|x| !x.is_finite()) {
-        return Err("invalid facing");
+        return Err(Fail::Coast("invalid facing"));
     }
     if f.iter().all(|x| *x <= 0.0) {
         counts.hidden += 1;
@@ -321,6 +360,7 @@ fn render_piece<D: DrawTarget<Color = BinaryColor, Error = Infallible>>(
     Ok(())
 }
 
+#[cfg(any(test, feature = "representation-measurement"))]
 fn render_range<D: DrawTarget<Color = BinaryColor, Error = Infallible>>(
     screen: &mut D,
     context: &Context,
@@ -334,6 +374,7 @@ fn render_range<D: DrawTarget<Color = BinaryColor, Error = Infallible>>(
     Ok(())
 }
 
+#[cfg(any(test, feature = "representation-measurement"))]
 pub fn candidate_draw<D: DrawTarget<Color = BinaryColor, Error = Infallible>>(
     screen: &mut D,
     site: GeodeticPosition,
@@ -484,7 +525,7 @@ mod tests {
                 &mut Counts::default(),
                 0
             ),
-            Err("refinement limit")
+            Err(Fail::Coast("refinement limit"))
         );
         assert_eq!(
             flatten(
@@ -497,7 +538,7 @@ mod tests {
                 },
                 DEPTH
             ),
-            Err("node limit")
+            Err(Fail::Coast("node limit"))
         );
         // Viewport crossing survives even though both projected ends are outside.
         let mut screen = Screen::new();

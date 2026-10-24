@@ -67,8 +67,10 @@ location. Lens zoom narrows or widens the field of view without moving the camer
 This iteration may reuse prepared coastline geography for a fixed observer during
 use; the user would like to keep globe scrolling/panning open for a future
 iteration, not require it now. [0057](decisions/0057-fixed-observer-coastline-preparation-scope.md)
-scopes that direction without selecting a location UI, cache or production
-implementation. Earth and satellites share the perspective; altitude affects
+scopes that direction without selecting a location UI; [0058](decisions/0058-prepared-wide-coastline-slice.md)
+implements a startup-prepared wide-view layer in the simulator, with
+[0059](decisions/0059-current-view-coastline-raster-cache.md)'s current-view raster
+cache; neither is a device adoption. Earth and satellites share the perspective; altitude affects
 marker placement,
 and satellites can appear outside Earth's silhouette rather than being flattened
 onto its surface. Objects outside the view or behind the camera are clipped;

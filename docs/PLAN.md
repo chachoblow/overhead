@@ -325,10 +325,29 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   renderer optimization under 0056 and scope set-location/preparation/reuse for
   different users. [0057](decisions/0057-fixed-observer-coastline-preparation-scope.md)
   accepts a fixed observer during use for this version, without excluding future
-  globe scrolling/panning. It does not choose configuration, cache, location UI,
-  preparation delay or revised memory policy; the first firmware prototype still
-  follows 0004 until a successor contract is chosen. Selected non-coast frame
-  cost and Sharp/whole-device cadence remain separate open blockers.
+  globe scrolling/panning. A [preparation/reuse proposal](evaluations/m4-coastline-location-preparation-scope.md)
+  records the user's acceptance of a visible one-time setup phase, observer-space
+  geometry as the first host feasibility path and a full loading screen (no old
+  coastline) during location preparation—not a cache implementation or format
+  contract. A [host-only uncompressed preparation trial](evaluations/m4-coastline-observer-preparation-host.md)
+  matches 55 candidate rasters but retains 37,000–73,864 B per observer; a
+  second host-only 16-bit trial retains 15,240–24,996 B but differs by up to 1px
+  on those masks. A further host-only heap probe found 51,984–98,604 B peak
+  logical requested heap while both forms coexist, with a conservative realloc
+  envelope up to 110,592 B; no new target or live-stack evidence follows. Screen details,
+  lifecycle, zoom and evidence details remain proposals; configuration, setup
+  duration, retained memory and revised
+  resource policy remain open. The first firmware prototype still follows 0004
+  until a successor contract is chosen. [0058](decisions/0058-prepared-wide-coastline-slice.md)
+  now implements the host/simulator slice: the wide view draws the accepted
+  quadratic coastline from a heap-free fixed-observer layer prepared once
+  behind a provisional full-screen loading frame, reused across satellite motion
+  and zoom, exactly matching the candidate rasters tested. Host draw savings are
+  modest; [0059](decisions/0059-current-view-coastline-raster-cache.md) therefore
+  caches the current view's 10,560 B coastline raster, re-rastering only on zoom
+  (layer 10,960 B). S3 cost is unmeasured; no target check was run.
+  Selected non-coast frame cost and Sharp/whole-device cadence remain separate
+  open blockers.
 
 **Done when:** the view is useful and understandable during passes and empty sky.
 

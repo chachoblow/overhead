@@ -27,6 +27,8 @@ mod glyphs;
 pub mod measurement;
 pub mod presentation;
 
+pub use coast::CoastLayer;
+
 pub const DISPLAY_SIZE: Size = Size::new(400, 240);
 
 #[derive(Debug, Clone, Copy)]
@@ -90,21 +92,36 @@ impl Layout {
 
 /// Draw an entire frame, clearing previous markers. `ingestion_warning` means
 /// accepted catalogue data was accompanied by warnings printed by the host.
+/// The wide view draws `coast`, prepared once for the app's fixed observer and
+/// re-rastered only when the lens changes; a failed or mismatched layer shows
+/// `COAST ERROR` instead of geography.
 pub fn draw<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
     app: &RadarApp,
     layout: Layout,
     ingestion_warning: bool,
+    coast: &mut CoastLayer,
 ) -> Result<(), D::Error> {
-    draw_frame(
-        display,
-        app,
-        layout,
-        ingestion_warning,
-        None,
-        Some(coast::ASSET),
-    )
+    draw_frame(display, app, layout, ingestion_warning, None, Some(coast))
 }
+
+/// Provisional full-screen loading frame shown while the observer's coastline
+/// is prepared (0058). Wording/layout are not a final contract; it never shows
+/// geography, markers or notices from a previous preparation.
+pub fn draw_preparing<D: DrawTarget<Color = BinaryColor>>(display: &mut D) -> Result<(), D::Error> {
+    let mut display = display.clipped(&Rectangle::new(Point::zero(), DISPLAY_SIZE));
+    display.clear(BinaryColor::Off)?;
+    Text::with_baseline(
+        PREPARING,
+        Point::new(200 - PREPARING.len() as i32 * 3, 115),
+        MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+        Baseline::Top,
+    )
+    .draw(&mut display)?;
+    Ok(())
+}
+
+const PREPARING: &str = "PREPARING MAP";
 
 /// Draw with explicit monotonic presentation time. Only the wide data glyphs
 /// transition; square diagnostics and all true-state readouts remain immediate.
@@ -115,26 +132,21 @@ pub fn draw_at<D: DrawTarget<Color = BinaryColor>>(
     ingestion_warning: bool,
     presentation: &mut presentation::Presentation,
     time: Duration,
+    coast: &mut CoastLayer,
 ) -> Result<(), D::Error> {
     let values =
         (app.view().viewport() == Viewport::Rectangle).then(|| presentation.values(app, time));
-    draw_frame(
-        display,
-        app,
-        layout,
-        ingestion_warning,
-        values,
-        Some(coast::ASSET),
-    )
+    draw_frame(display, app, layout, ingestion_warning, values, Some(coast))
 }
 
+/// `coast: None` omits geography without a notice: test/measurement controls only.
 fn draw_frame<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
     app: &RadarApp,
     layout: Layout,
     ingestion_warning: bool,
     values: Option<glyphs::Params>,
-    coast_asset: Option<&[u8]>,
+    coast: Option<&mut CoastLayer>,
 ) -> Result<(), D::Error> {
     draw_frame_with_coast(
         display,
@@ -142,8 +154,11 @@ fn draw_frame<D: DrawTarget<Color = BinaryColor>>(
         layout,
         ingestion_warning,
         values,
-        coast_asset,
-        coast::draw,
+        coast.is_some(),
+        |display, observer, view, layout| match coast {
+            Some(coast) => coast.draw(display, observer, view, layout),
+            None => Ok(true),
+        },
     )
 }
 
@@ -153,25 +168,24 @@ fn draw_frame_with_coast<'a, D, F>(
     layout: Layout,
     ingestion_warning: bool,
     values: Option<glyphs::Params>,
-    coast_asset: Option<&[u8]>,
-    mut coast_draw: F,
+    coast_enabled: bool,
+    coast_draw: F,
 ) -> Result<(), D::Error>
 where
     D: DrawTarget<Color = BinaryColor>,
-    F: FnMut(
+    F: FnOnce(
         &mut embedded_graphics::draw_target::Clipped<'a, D>,
         overhead_core::GeodeticPosition,
         overhead_app::projection::View,
         Layout,
-        &[u8],
     ) -> Result<bool, D::Error>,
 {
     let mut display = display.clipped(&Rectangle::new(Point::zero(), DISPLAY_SIZE));
     display.clear(BinaryColor::Off)?;
     let mut coast_error = false;
     if app.view().viewport() == Viewport::Rectangle
-        && let Some(asset) = coast_asset
-        && !coast_draw(&mut display, app.observer(), app.view(), layout, asset)?
+        && coast_enabled
+        && !coast_draw(&mut display, app.observer(), app.view(), layout)?
     {
         // A coast-only numeric error can occur after ink was emitted.
         // Repaint the frame from scratch instead of keeping partial ink.
@@ -629,6 +643,42 @@ mod tests {
         ecef_to_geodetic,
     };
     use std::vec::Vec;
+
+    // Public entry points with a layer freshly prepared for the app's observer.
+    // Shadows the glob import so scene tests exercise the real wide coast path.
+    fn draw<D: DrawTarget<Color = BinaryColor>>(
+        display: &mut D,
+        app: &RadarApp,
+        layout: Layout,
+        warning: bool,
+    ) -> Result<(), D::Error> {
+        super::draw(
+            display,
+            app,
+            layout,
+            warning,
+            &mut CoastLayer::prepare(app.observer()),
+        )
+    }
+    fn draw_at<D: DrawTarget<Color = BinaryColor>>(
+        display: &mut D,
+        app: &RadarApp,
+        layout: Layout,
+        warning: bool,
+        presentation: &mut presentation::Presentation,
+        time: Duration,
+    ) -> Result<(), D::Error> {
+        let mut coast = CoastLayer::prepare(app.observer());
+        super::draw_at(
+            display,
+            app,
+            layout,
+            warning,
+            presentation,
+            time,
+            &mut coast,
+        )
+    }
     struct Screen {
         pixels: [[bool; 400]; 240],
     }
@@ -2616,7 +2666,8 @@ mod tests {
                 let mut control = Screen {
                     pixels: [[false; 400]; 240],
                 };
-                draw_frame(&mut coast, &app, layout, warning, None, Some(coast::ASSET)).unwrap();
+                let mut layer = CoastLayer::prepare(app.observer());
+                draw_frame(&mut coast, &app, layout, warning, None, Some(&mut layer)).unwrap();
                 draw_frame(&mut control, &app, layout, warning, None, None).unwrap();
                 // Geographic ink may add to the background, but may not erase
                 // existing marker, limb, strip or notice ink. Compare complete
@@ -2670,12 +2721,17 @@ mod tests {
             longitude_rad: (-122.4194_f64).to_radians(),
             altitude_km: 0.0,
         };
+        let mut sf = CoastLayer::prepare(observer);
+        assert_ne!(
+            with_coast.pixels, without.pixels,
+            "test observer shows no coast"
+        );
         for fov in [0.1, 1.0, 5.0, 20.0, 100.0] {
             let mut ink = Screen {
                 pixels: [[false; 400]; 240],
             };
             let view = View::rectangular(fov, layout.aspect_ratio()).unwrap();
-            assert!(coast::draw(&mut ink, observer, view, layout, coast::ASSET).unwrap());
+            assert!(sf.draw(&mut ink, observer, view, layout).unwrap());
             assert!(
                 ink.pixels.iter().flatten().any(|p| *p),
                 "no coast at {fov} degrees"
@@ -2690,23 +2746,24 @@ mod tests {
                 }
             }
         }
-        let mut broken = Screen {
-            pixels: [[true; 400]; 240],
-        };
-        draw_frame(
-            &mut broken,
-            &app,
-            layout,
-            false,
-            None,
-            Some(&coast::ASSET[..10]),
-        )
-        .unwrap();
+        // An invalid preparation, or a layer prepared for another observer,
+        // shows the exceptional notice rather than empty or stale geography.
         let mut expected = Screen {
             pixels: without.pixels,
         };
         draw_wide_notices(&mut expected, &[Some("COAST ERROR")]).unwrap();
-        assert_eq!(broken.pixels, expected.pixels);
+        let mut invalid = CoastLayer::prepare(GeodeticPosition {
+            latitude_rad: f64::NAN,
+            ..app.observer()
+        });
+        assert!(invalid.error().is_some());
+        for layer in [&mut invalid, &mut sf] {
+            let mut broken = Screen {
+                pixels: [[true; 400]; 240],
+            };
+            super::draw(&mut broken, &app, layout, false, layer).unwrap();
+            assert_eq!(broken.pixels, expected.pixels);
+        }
         // Failure does not invent a tracking error or change app state.
         assert_eq!(
             app.counts(),
@@ -2725,7 +2782,7 @@ mod tests {
                 square,
                 false,
                 None,
-                Some(&coast::ASSET[..10]),
+                Some(&mut invalid),
             )
             .unwrap();
             draw_frame(&mut without, &app, square, false, None, None).unwrap();
@@ -2734,11 +2791,54 @@ mod tests {
     }
 
     #[test]
+    fn one_prepared_layer_serves_satellite_motion_and_zoom() {
+        let layout = Layout::wide();
+        let mut app = app_with_viewport(Viewport::Rectangle);
+        let mut layer = CoastLayer::prepare(app.observer());
+        for step in 0..4 {
+            let later =
+                app.time().unwrap() + overhead_core::sgp4::chrono::Duration::seconds(20 * step);
+            app.update(later).unwrap();
+            app.zoom(if step % 2 == 0 { 20 } else { -35 });
+            let mut reused = Screen {
+                pixels: [[true; 400]; 240],
+            };
+            super::draw(&mut reused, &app, layout, false, &mut layer).unwrap();
+            let mut fresh = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            draw(&mut fresh, &app, layout, false).unwrap();
+            assert_eq!(reused.pixels, fresh.pixels, "step={step}");
+        }
+    }
+
+    #[test]
+    fn preparing_screen_is_full_screen_text_only() {
+        let mut screen = Screen {
+            pixels: [[true; 400]; 240],
+        };
+        draw_preparing(&mut screen).unwrap();
+        let mut expected = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        Text::with_baseline(
+            "PREPARING MAP",
+            Point::new(161, 115),
+            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+            Baseline::Top,
+        )
+        .draw(&mut expected)
+        .unwrap();
+        // No radar, limb, coast, strip, separator or notices from any scene.
+        assert_eq!(screen.pixels, expected.pixels);
+    }
+
+    #[test]
     fn late_coast_failure_rolls_back_ink_without_losing_foreground() {
         use core::cell::Cell;
 
-        // Count actual On writes to the draw target. The hook cannot fire
-        // until a coast stroke has been emitted, not merely projected.
+        // Count actual On writes to the draw target. The failure is injected
+        // only after a coast stroke has been emitted, not merely projected.
         struct TrackingScreen<'a> {
             pixels: [[bool; 400]; 240],
             on_writes: &'a Cell<usize>,
@@ -2784,19 +2884,19 @@ mod tests {
                     pixels: [[true; 400]; 240],
                     on_writes: &on_writes,
                 };
+                let mut layer = CoastLayer::prepare(app.observer());
+                // Inject after the whole prepared layer succeeded with real ink.
                 draw_frame_with_coast(
                     &mut actual,
                     &app,
                     layout,
                     warning,
                     None,
-                    Some(coast::ASSET),
-                    |display, observer, view, layout, asset| {
-                        coast::draw_with_hook(display, observer, view, layout, asset, || {
-                            let written = on_writes.get() > 0;
-                            stopped.set(written);
-                            written
-                        })
+                    true,
+                    |display, observer, view, layout| {
+                        let drawn = layer.draw(display, observer, view, layout)?;
+                        stopped.set(drawn && on_writes.get() > 0);
+                        Ok(false)
                     },
                 )
                 .unwrap();

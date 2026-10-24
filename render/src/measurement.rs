@@ -35,8 +35,8 @@ pub fn frame_off<D: DrawTarget<Color = BinaryColor>>(
         Layout::wide(),
         warning,
         None,
-        None,
-        |_, _, _, _, _| Ok(true),
+        false,
+        |_, _, _, _| Ok(true),
     )
 }
 
@@ -54,9 +54,9 @@ pub fn frame_on<D: DrawTarget<Color = BinaryColor>>(
         Layout::wide(),
         warning,
         None,
-        Some(coast::ASSET),
-        |display, observer, view, layout, asset| {
-            let result = coast::draw(display, observer, view, layout, asset)?;
+        true,
+        |display, observer, view, layout| {
+            let result = coast::draw(display, observer, view, layout, coast::ASSET)?;
             succeeded.set(result);
             Ok(result)
         },
@@ -77,8 +77,8 @@ pub fn frame_failure_control<D: DrawTarget<Color = BinaryColor>>(
         Layout::wide(),
         warning,
         None,
-        Some(coast::ASSET),
-        |_, _, _, _, _| Ok(false),
+        true,
+        |_, _, _, _| Ok(false),
     )
 }
 
@@ -97,12 +97,12 @@ pub fn frame_late_failure<D: DrawTarget<Color = BinaryColor>>(
         Layout::wide(),
         warning,
         None,
-        Some(coast::ASSET),
-        |display, observer, view, layout, asset| {
+        true,
+        |display, observer, view, layout| {
             let ink = Cell::new(false);
             let mut target = InkTarget { display, ink: &ink };
             let mut intervals = 0;
-            coast::draw_with_hook(&mut target, observer, view, layout, asset, || {
+            coast::draw_with_hook(&mut target, observer, view, layout, coast::ASSET, || {
                 intervals += 1;
                 let stop = intervals >= 20_000 && ink.get();
                 fired.set(stop);
@@ -139,6 +139,21 @@ impl<D: DrawTarget<Color = BinaryColor>> DrawTarget for InkTarget<'_, D> {
     }
 }
 
+/// Prepared layer (0058/0059) coast-only draw onto a caller-cleared target.
+/// Returns false on a coastline-only failure.
+pub fn prepared_coast_only<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    app: &RadarApp,
+    layer: &mut crate::CoastLayer,
+) -> Result<bool, D::Error> {
+    layer.draw(display, app.observer(), app.view(), Layout::wide())
+}
+
+/// Discard the cached raster so the next draw measures a zoom-step raster.
+pub fn invalidate_coast_cache(layer: &mut crate::CoastLayer) {
+    layer.invalidate();
+}
+
 /// The accepted host trial, exposed only for the separately authorized S3 check.
 /// Still restricted to an infallible RAM target, not a production display API.
 #[cfg(feature = "representation-measurement")]
@@ -164,8 +179,8 @@ pub fn frame_candidate<D: DrawTarget<Color = BinaryColor, Error = core::convert:
         Layout::wide(),
         warning,
         None,
-        Some(bytes),
-        |display, site, view, _, bytes| {
+        true,
+        |display, site, view, _| {
             let ok = candidate_draw(display, site, view, bytes)
                 .is_ok_and(|counts| !inject_late || counts.strokes > 0);
             completed.set(ok);
@@ -189,8 +204,8 @@ pub fn candidate_failure_control<D: DrawTarget<Color = BinaryColor>>(
         Layout::wide(),
         warning,
         None,
-        Some(&[]),
-        |_, _, _, _, _| Ok(false),
+        true,
+        |_, _, _, _| Ok(false),
     )
 }
 

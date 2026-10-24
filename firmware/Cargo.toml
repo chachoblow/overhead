@@ -13,6 +13,8 @@ coast-measurement-on = ["coast-measurement"]
 # Separate candidate image; historical Stage A and frozen M2 features unchanged.
 coast-representation = ["coast-measurement", "overhead-render/representation-measurement"]
 coast-representation-on = ["coast-representation"]
+# Prepared/cached layer image (0058/0059); keeps the candidate for exactness checks.
+coast-prepared = ["coast-representation"]
 
 [dependencies]
 overhead-core = { path = "../core" }
@@ -64,6 +66,17 @@ path = "src/representation_main.rs"
 required-features = ["coast-representation"]
 test = false
 bench = false
+
+[[bin]]
+name = "overhead-s3-coast-prepared"
+path = "src/prepared_main.rs"
+required-features = ["coast-prepared"]
+test = false
+bench = false
+
+[[example]]
+name = "prepared_expected"
+required-features = ["coast-prepared"]
 
 [[example]]
 name = "representation_expected"

@@ -7,7 +7,7 @@ use embedded_graphics_simulator::{
     sdl2::{Keycode, MouseWheelDirection},
 };
 use overhead_app::{RadarApp, projection::Viewport};
-use overhead_render::{Layout, presentation::Presentation};
+use overhead_render::{CoastLayer, Layout, presentation::Presentation};
 use std::{
     env,
     process::ExitCode,
@@ -34,10 +34,32 @@ fn run(config: Config) -> Result<(), String> {
         config.observer.altitude_km
     );
     let mut display = SimulatorDisplay::<BinaryColor>::new(overhead_render::DISPLAY_SIZE);
-    let mut presentation = InteractivePresentation::new(config.view.viewport(), config.debug);
+    let wide = config.view.viewport() == Viewport::Rectangle;
+    let settings = OutputSettingsBuilder::new()
+        .theme(BinaryColorTheme::LcdWhite)
+        .scale(2)
+        .build();
+    let mut window = None;
+    if wide && config.snapshot.is_none() {
+        // Fixed observer: prepare its coastline once, behind a full loading
+        // screen, before the first radar frame (0058). Never re-prepared here.
+        overhead_render::draw_preparing(&mut display).map_err(|e| e.to_string())?;
+        window
+            .insert(Window::new("Overhead - local replay", &settings))
+            .update(&display);
+    }
+    let coast = prepare_coast(&app, wide);
+    let mut presentation =
+        InteractivePresentation::new(config.view.viewport(), config.debug, coast);
     if config.snapshot.is_some() {
-        overhead_render::draw(&mut display, &app, config.layout, ingestion_warning)
-            .map_err(|e| e.to_string())?;
+        overhead_render::draw(
+            &mut display,
+            &app,
+            config.layout,
+            ingestion_warning,
+            &mut presentation.coast,
+        )
+        .map_err(|e| e.to_string())?;
     } else {
         // Normal startup primes the glyph timeline before input, so even a Tab
         // on the first cycle has an endpoint. Debug starts without glyph history.
@@ -79,11 +101,7 @@ fn run(config: Config) -> Result<(), String> {
         );
         return Ok(());
     }
-    let settings = OutputSettingsBuilder::new()
-        .theme(BinaryColorTheme::LcdWhite)
-        .scale(2)
-        .build();
-    let mut window = Window::new("Overhead - local replay", &settings);
+    let mut window = window.unwrap_or_else(|| Window::new("Overhead - local replay", &settings));
     let started = Instant::now();
     // This is a host visual-loop target, not a production device cadence or
     // bounded scheduler. Missed frames are not queued or caught up in a burst.
@@ -128,21 +146,41 @@ fn run(config: Config) -> Result<(), String> {
     }
 }
 
+/// One-time preparation for the replay's fixed observer. Square diagnostics
+/// draw no coastline, so the reported cost is wide-only host information.
+fn prepare_coast(app: &RadarApp, wide: bool) -> CoastLayer {
+    let started = Instant::now();
+    let coast = CoastLayer::prepare(app.observer());
+    if wide {
+        match coast.error() {
+            None => eprintln!(
+                "COAST prepared for fixed observer in {} us (host; not a device figure)",
+                started.elapsed().as_micros()
+            ),
+            Some(error) => eprintln!("COAST preparation failed: {error}; showing COAST ERROR"),
+        }
+    }
+    coast
+}
+
 /// Host-only presentation choice. Toggling never mutates app geometry or truth;
 /// discard hidden glyph history so returning normal starts at current endpoints.
+/// The coast layer belongs to the fixed observer and survives every toggle.
 struct InteractivePresentation {
     wide: bool,
     debug: bool,
     glyphs: Presentation,
+    coast: CoastLayer,
 }
 
 impl InteractivePresentation {
-    fn new(viewport: Viewport, debug: bool) -> Self {
+    fn new(viewport: Viewport, debug: bool, coast: CoastLayer) -> Self {
         let wide = viewport == Viewport::Rectangle;
         Self {
             wide,
             debug: wide && debug,
             glyphs: Presentation::new(),
+            coast,
         }
     }
 
@@ -181,6 +219,7 @@ impl InteractivePresentation {
                 ingestion_warning,
                 &mut self.glyphs,
                 elapsed,
+                &mut self.coast,
             )
         }
     }

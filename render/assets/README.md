@@ -12,3 +12,13 @@ shasum -a 256 render/assets/coastline-110m-40km.bin
 Expected export SHA-256: `951ed542a445201c24241bfb263b81567cef20641854be281778788a7a7a6796`. Generator verifies the archive SHA, version, WGS-84 projection, finite source coordinates and topology, then applies the previously reviewed **40 km ECEF chord-distance RDP** (preserving part breaks and closure). It checks the reduced 134 parts / 1,868 points and 15,484 bytes. The runtime consumes 1,734 segments. The format is 1,868 consecutive little-endian `(i32 longitude, i32 latitude)` pairs in 1e-4 degrees, followed by 135 little-endian `u32` vertex offsets starting at zero and ending at 1,868. No header, index, heap allocation or shapefile decoder on the device. The offline max coordinate rounding is 0.00005°; this is **not** a bound on screen pixels at 0.1°.
 
 [0054](../../docs/decisions/0054-first-executable-coastline-comparison.md) owns the provisional renderer behavior and remaining review gates. The 40 km *look* is approved for the orientation comparison, not pixel-perfect reference geography. No measurement of physical-panel legibility, whole-device time, stack or Sharp transfer is implied by the asset's size.
+
+## `coastline-110m-40km-quadratic.bin`
+
+Packed quadratic ECEF representation drawn by the wide view's prepared layer
+([0058](../../docs/decisions/0058-prepared-wide-coastline-slice.md)). It is
+byte-identical to [`firmware/fixtures/coast-quadratic-trial.bin`](../../firmware/fixtures/README.md)
+(SHA-256 `6c478669a07d8683cf842b5ee8eb197723e05dbbe1a063508601866e3c5d3d02`),
+derived deterministically from the 40 km asset above; that README owns
+regeneration. The test `embedded_asset_is_the_regenerated_candidate` checks
+it against the host generator. Not a target-capacity or no-omission claim.

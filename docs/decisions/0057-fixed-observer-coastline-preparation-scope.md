@@ -17,3 +17,9 @@ The user wants to preserve the accepted coastline appearance and the measured qu
 - No mechanism for setting the location, setup delay, retained geometry/bitmaps, memory limits, persistence, location-change threshold, panning semantics or production renderer was selected or authorized for implementation. Preserve [0053's ordinary-gap rule](0053-no-resolvable-coastline-omissions.md), [0055's deferred universal proof](0055-defer-all-view-coastline-proof-for-m4.md) and the exceptional-only `COAST ERROR` treatment.
 - [0004](0004-hardcoded-location.md)'s compile-time constant remains the **first firmware prototype** contract; this direction does not silently change that prototype or decide its successor's configuration mechanism. Before distributing configurable devices, record how the observer is set and persisted. Designing later globe scrolling/panning and invalidation for a continuously moving observer is separate work, not blocked by accepting a fixed observer now.
 - The [0056](0056-bounded-coastline-architecture-trial.md) one-host/one-target allowance is consumed. The visually accepted representation, host checks and exact S3 evidence remain preserved as references, not an adopted shipping renderer. Non-coast frame cost, Sharp and whole-device cadence remain separate blockers.
+
+## Follow-up — 2026-10-24
+
+[0058](0058-prepared-wide-coastline-slice.md) implements a host/simulator slice for
+the startup-fixed observer: a heap-free prepared layer, provisional full-screen
+loading frame and reuse across motion/zoom. Location setting remains future work.

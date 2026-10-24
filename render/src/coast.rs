@@ -1,5 +1,8 @@
 //! Bounded, allocation-free first *comparison* of the reviewed 40 km geography.
 //! Approximate angular strokes, not a geographic accuracy or target-time guarantee.
+//! Since 0058 the wide view draws the prepared quadratic layer instead; this
+//! 0054 renderer remains for tests and the explicit measurement harness.
+#![cfg_attr(not(any(test, feature = "measurement")), allow(dead_code))]
 use embedded_graphics::{
     pixelcolor::BinaryColor,
     prelude::*,
@@ -302,8 +305,8 @@ pub(super) fn draw_with_hook<D: DrawTarget<Color = BinaryColor>>(
 mod candidate_spike;
 #[cfg(test)]
 mod cost_preflight;
-#[cfg(any(test, feature = "representation-measurement"))]
 pub(crate) mod representation_spike;
+pub use representation_spike::prepared::CoastLayer;
 #[cfg(test)]
 mod visibility_bound_study;
 #[cfg(test)]

@@ -136,15 +136,21 @@ fn boundary_sites(layout: Layout) -> (GeodeticPosition, GeodeticPosition, usize)
     panic!("no suitable exported segment for boundary probe");
 }
 
+fn old_frame(screen: &mut Screen, app: &RadarApp, layout: Layout, asset: &[u8]) {
+    crate::draw_frame_with_coast(screen, app, layout, false, None, true, |d, o, v, l| {
+        super::draw(d, o, v, l, asset)
+    })
+    .unwrap()
+}
+
 fn run(screen: &mut Screen, app: &RadarApp, mode: &str) {
     let layout = Layout::wide();
     match mode {
         "coast" => assert!(super::draw(screen, app.observer(), app.view(), layout, ASSET).unwrap()),
-        "frame+coast" => draw_frame(screen, app, layout, false, None, Some(ASSET)).unwrap(),
+        // Historical 0054 renderer inside the shared frame compositor.
+        "frame+coast" => old_frame(screen, app, layout, ASSET),
         "frame-only" => draw_frame(screen, app, layout, false, None, None).unwrap(),
-        "frame-invalid" => {
-            draw_frame(screen, app, layout, false, None, Some(&ASSET[..10])).unwrap()
-        }
+        "frame-invalid" => old_frame(screen, app, layout, &ASSET[..10]),
         _ => unreachable!(),
     }
 }
