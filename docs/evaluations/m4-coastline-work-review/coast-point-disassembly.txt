@@ -1,0 +1,275 @@
+
+firmware/target/coast-stage-a-capture-20261023/build-on/xtensa-esp32s3-none-elf/release/overhead-s3-coast-measurement:     file format elf32-xtensa-le
+
+
+Disassembly of section .text:
+
+4203d514 <<overhead_app::projection::Camera>::coast_point>:
+4203d514:	01c136        	entry	a1, 224
+4203d517:	05bd      	mov.n	a11, a5
+4203d519:	04ad      	mov.n	a10, a4
+4203d51b:	8b4951        	l32r	a5, 42020240 <sym_rtc_slow_persistent_start+0x1fc> (a2529d39 <_rtc_fast_bss_end+0x4242bd39>)
+4203d51e:	8b4941        	l32r	a4, 42020244 <sym_rtc_slow_persistent_start+0x200> (3f91df46 <_rtc_fast_sidata+0x3901f9a>)
+4203d521:	8b1d81        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+4203d524:	05cd      	mov.n	a12, a5
+4203d526:	04dd      	mov.n	a13, a4
+4203d528:	0008e0        	callx8	a8
+4203d52b:	1861b2        	s32i	a11, a1, 96
+4203d52e:	2b61b2        	s32i	a11, a1, 172
+4203d531:	1961a2        	s32i	a10, a1, 100
+4203d534:	2a61a2        	s32i	a10, a1, 168
+4203d537:	8b1881        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+4203d53a:	06ad      	mov.n	a10, a6
+4203d53c:	07bd      	mov.n	a11, a7
+4203d53e:	05cd      	mov.n	a12, a5
+4203d540:	04dd      	mov.n	a13, a4
+4203d542:	0008e0        	callx8	a8
+4203d545:	0a5d      	mov.n	a5, a10
+4203d547:	0b4d      	mov.n	a4, a11
+4203d549:	296142        	s32i	a4, a1, 164
+4203d54c:	286152        	s32i	a5, a1, 160
+4203d54f:	070c      	movi.n	a7, 0
+4203d551:	2d6172        	s32i	a7, a1, 180
+4203d554:	2c6172        	s32i	a7, a1, 176
+4203d557:	80a082        	movi	a8, 128
+4203d55a:	818a      	add.n	a8, a1, a8
+4203d55c:	00c8a2        	addi	a10, a8, 0
+4203d55f:	a0a082        	movi	a8, 160
+4203d562:	818a      	add.n	a8, a1, a8
+4203d564:	00c8b2        	addi	a11, a8, 0
+4203d567:	8df881        	l32r	a8, 42020d48 <sym_rtc_slow_persistent_start+0xd04> (420453dc <<overhead_core::coordinates::GeodeticPosition>::to_ecef>)
+4203d56a:	0008e0        	callx8	a8
+4203d56d:	800182        	l8ui	a8, a1, 128
+4203d570:	051866        	bnei	a8, 1, 4203d579 <<overhead_app::projection::Camera>::coast_point+0x65>
+4203d573:	1279      	s32i.n	a7, a2, 4
+4203d575:	0279      	s32i.n	a7, a2, 0
+4203d577:	f01d      	retw.n
+4203d579:	176122        	s32i	a2, a1, 92
+4203d57c:	272182        	l32i	a8, a1, 156
+4203d57f:	1f6182        	s32i	a8, a1, 124
+4203d582:	262182        	l32i	a8, a1, 152
+4203d585:	1e6182        	s32i	a8, a1, 120
+4203d588:	252182        	l32i	a8, a1, 148
+4203d58b:	1d6182        	s32i	a8, a1, 116
+4203d58e:	242182        	l32i	a8, a1, 144
+4203d591:	1c6182        	s32i	a8, a1, 112
+4203d594:	232182        	l32i	a8, a1, 140
+4203d597:	1b6182        	s32i	a8, a1, 108
+4203d59a:	222182        	l32i	a8, a1, 136
+4203d59d:	1a6182        	s32i	a8, a1, 104
+4203d5a0:	80a082        	movi	a8, 128
+4203d5a3:	818a      	add.n	a8, a1, a8
+4203d5a5:	00c8a2        	addi	a10, a8, 0
+4203d5a8:	8de981        	l32r	a8, 42020d4c <sym_rtc_slow_persistent_start+0xd08> (4205df98 <libm::math::sincos::sincos>)
+4203d5ab:	05cd      	mov.n	a12, a5
+4203d5ad:	04dd      	mov.n	a13, a4
+4203d5af:	0008e0        	callx8	a8
+4203d5b2:	212182        	l32i	a8, a1, 132
+4203d5b5:	166182        	s32i	a8, a1, 88
+4203d5b8:	202182        	l32i	a8, a1, 128
+4203d5bb:	156182        	s32i	a8, a1, 84
+4203d5be:	232152        	l32i	a5, a1, 140
+4203d5c1:	8159      	s32i.n	a5, a1, 32
+4203d5c3:	222172        	l32i	a7, a1, 136
+4203d5c6:	7179      	s32i.n	a7, a1, 28
+4203d5c8:	80a082        	movi	a8, 128
+4203d5cb:	818a      	add.n	a8, a1, a8
+4203d5cd:	00c8a2        	addi	a10, a8, 0
+4203d5d0:	8ddf81        	l32r	a8, 42020d4c <sym_rtc_slow_persistent_start+0xd08> (4205df98 <libm::math::sincos::sincos>)
+4203d5d3:	1921c2        	l32i	a12, a1, 100
+4203d5d6:	1821d2        	l32i	a13, a1, 96
+4203d5d9:	0008e0        	callx8	a8
+4203d5dc:	212182        	l32i	a8, a1, 132
+4203d5df:	c189      	s32i.n	a8, a1, 48
+4203d5e1:	202182        	l32i	a8, a1, 128
+4203d5e4:	b189      	s32i.n	a8, a1, 44
+4203d5e6:	232182        	l32i	a8, a1, 140
+4203d5e9:	2189      	s32i.n	a8, a1, 8
+4203d5eb:	222142        	l32i	a4, a1, 136
+4203d5ee:	5388      	l32i.n	a8, a3, 20
+4203d5f0:	196182        	s32i	a8, a1, 100
+4203d5f3:	4388      	l32i.n	a8, a3, 16
+4203d5f5:	146182        	s32i	a8, a1, 80
+4203d5f8:	172382        	l32i	a8, a3, 92
+4203d5fb:	126182        	s32i	a8, a1, 72
+4203d5fe:	162382        	l32i	a8, a3, 88
+4203d601:	116182        	s32i	a8, a1, 68
+4203d604:	3388      	l32i.n	a8, a3, 12
+4203d606:	f189      	s32i.n	a8, a1, 60
+4203d608:	2388      	l32i.n	a8, a3, 8
+4203d60a:	d189      	s32i.n	a8, a1, 52
+4203d60c:	152382        	l32i	a8, a3, 84
+4203d60f:	a189      	s32i.n	a8, a1, 40
+4203d611:	142382        	l32i	a8, a3, 80
+4203d614:	9189      	s32i.n	a8, a1, 36
+4203d616:	1388      	l32i.n	a8, a3, 4
+4203d618:	4189      	s32i.n	a8, a1, 16
+4203d61a:	0388      	l32i.n	a8, a3, 0
+4203d61c:	3189      	s32i.n	a8, a1, 12
+4203d61e:	132362        	l32i	a6, a3, 76
+4203d621:	122322        	l32i	a2, a3, 72
+4203d624:	1f2182        	l32i	a8, a1, 124
+4203d627:	186182        	s32i	a8, a1, 96
+4203d62a:	1e2182        	l32i	a8, a1, 120
+4203d62d:	136182        	s32i	a8, a1, 76
+4203d630:	1d2182        	l32i	a8, a1, 116
+4203d633:	106182        	s32i	a8, a1, 64
+4203d636:	1c2182        	l32i	a8, a1, 112
+4203d639:	e189      	s32i.n	a8, a1, 56
+4203d63b:	1b2182        	l32i	a8, a1, 108
+4203d63e:	6189      	s32i.n	a8, a1, 24
+4203d640:	1a2182        	l32i	a8, a1, 104
+4203d643:	5189      	s32i.n	a8, a1, 20
+4203d645:	80a082        	movi	a8, 128
+4203d648:	818a      	add.n	a8, a1, a8
+4203d64a:	00c8a2        	addi	a10, a8, 0
+4203d64d:	68c1c2        	addi	a12, a1, 104
+4203d650:	8dbb81        	l32r	a8, 42020d3c <sym_rtc_slow_persistent_start+0xcf8> (4203e030 <<overhead_app::projection::Camera>::project>)
+4203d653:	03bd      	mov.n	a11, a3
+4203d655:	0008e0        	callx8	a8
+4203d658:	8ad081        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+4203d65b:	07ad      	mov.n	a10, a7
+4203d65d:	05bd      	mov.n	a11, a5
+4203d65f:	04cd      	mov.n	a12, a4
+4203d661:	21d8      	l32i.n	a13, a1, 8
+4203d663:	0008e0        	callx8	a8
+4203d666:	0a4d      	mov.n	a4, a10
+4203d668:	0b7d      	mov.n	a7, a11
+4203d66a:	050c      	movi.n	a5, 0
+4203d66c:	8db931        	l32r	a3, 42020d50 <sym_rtc_slow_persistent_start+0xd0c> (40f24f80 <_rwtext_len+0xba70f8>)
+4203d66f:	8aca81        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+4203d672:	02ad      	mov.n	a10, a2
+4203d674:	06bd      	mov.n	a11, a6
+4203d676:	05cd      	mov.n	a12, a5
+4203d678:	03dd      	mov.n	a13, a3
+4203d67a:	0008e0        	callx8	a8
+4203d67d:	0acd      	mov.n	a12, a10
+4203d67f:	0bdd      	mov.n	a13, a11
+4203d681:	8bb481        	l32r	a8, 42020554 <sym_rtc_slow_persistent_start+0x510> (40002184 <__adddf3>)
+4203d684:	31a8      	l32i.n	a10, a1, 12
+4203d686:	41b8      	l32i.n	a11, a1, 16
+4203d688:	0008e0        	callx8	a8
+4203d68b:	8c9981        	l32r	a8, 420208f0 <sym_rtc_slow_persistent_start+0x8ac> (400024fc <__subdf3>)
+4203d68e:	51c8      	l32i.n	a12, a1, 20
+4203d690:	61d8      	l32i.n	a13, a1, 24
+4203d692:	0008e0        	callx8	a8
+4203d695:	0acd      	mov.n	a12, a10
+4203d697:	0bdd      	mov.n	a13, a11
+4203d699:	8abf81        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+4203d69c:	04ad      	mov.n	a10, a4
+4203d69e:	07bd      	mov.n	a11, a7
+4203d6a0:	0008e0        	callx8	a8
+4203d6a3:	0a6d      	mov.n	a6, a10
+4203d6a5:	0b7d      	mov.n	a7, a11
+4203d6a7:	8abc81        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+4203d6aa:	71a8      	l32i.n	a10, a1, 28
+4203d6ac:	81b8      	l32i.n	a11, a1, 32
+4203d6ae:	b1c8      	l32i.n	a12, a1, 44
+4203d6b0:	c1d8      	l32i.n	a13, a1, 48
+4203d6b2:	0008e0        	callx8	a8
+4203d6b5:	0a2d      	mov.n	a2, a10
+4203d6b7:	0b4d      	mov.n	a4, a11
+4203d6b9:	8ab781        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+4203d6bc:	91a8      	l32i.n	a10, a1, 36
+4203d6be:	a1b8      	l32i.n	a11, a1, 40
+4203d6c0:	05cd      	mov.n	a12, a5
+4203d6c2:	03dd      	mov.n	a13, a3
+4203d6c4:	0008e0        	callx8	a8
+4203d6c7:	0acd      	mov.n	a12, a10
+4203d6c9:	0bdd      	mov.n	a13, a11
+4203d6cb:	8ba281        	l32r	a8, 42020554 <sym_rtc_slow_persistent_start+0x510> (40002184 <__adddf3>)
+4203d6ce:	d1a8      	l32i.n	a10, a1, 52
+4203d6d0:	f1b8      	l32i.n	a11, a1, 60
+4203d6d2:	0008e0        	callx8	a8
+4203d6d5:	8c8681        	l32r	a8, 420208f0 <sym_rtc_slow_persistent_start+0x8ac> (400024fc <__subdf3>)
+4203d6d8:	e1c8      	l32i.n	a12, a1, 56
+4203d6da:	1021d2        	l32i	a13, a1, 64
+4203d6dd:	0008e0        	callx8	a8
+4203d6e0:	0acd      	mov.n	a12, a10
+4203d6e2:	0bdd      	mov.n	a13, a11
+4203d6e4:	8aad81        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+4203d6e7:	02ad      	mov.n	a10, a2
+4203d6e9:	04bd      	mov.n	a11, a4
+4203d6eb:	0008e0        	callx8	a8
+4203d6ee:	0acd      	mov.n	a12, a10
+4203d6f0:	0bdd      	mov.n	a13, a11
+4203d6f2:	8b9881        	l32r	a8, 42020554 <sym_rtc_slow_persistent_start+0x510> (40002184 <__adddf3>)
+4203d6f5:	06ad      	mov.n	a10, a6
+4203d6f7:	07bd      	mov.n	a11, a7
+4203d6f9:	0008e0        	callx8	a8
+4203d6fc:	0a7d      	mov.n	a7, a10
+4203d6fe:	0b6d      	mov.n	a6, a11
+4203d700:	8aa681        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+4203d703:	1121a2        	l32i	a10, a1, 68
+4203d706:	1221b2        	l32i	a11, a1, 72
+4203d709:	05cd      	mov.n	a12, a5
+4203d70b:	03dd      	mov.n	a13, a3
+4203d70d:	0008e0        	callx8	a8
+4203d710:	0acd      	mov.n	a12, a10
+4203d712:	0bdd      	mov.n	a13, a11
+4203d714:	8b9081        	l32r	a8, 42020554 <sym_rtc_slow_persistent_start+0x510> (40002184 <__adddf3>)
+4203d717:	1421a2        	l32i	a10, a1, 80
+4203d71a:	1921b2        	l32i	a11, a1, 100
+4203d71d:	0008e0        	callx8	a8
+4203d720:	8c7481        	l32r	a8, 420208f0 <sym_rtc_slow_persistent_start+0x8ac> (400024fc <__subdf3>)
+4203d723:	1321c2        	l32i	a12, a1, 76
+4203d726:	1821d2        	l32i	a13, a1, 96
+4203d729:	0008e0        	callx8	a8
+4203d72c:	0acd      	mov.n	a12, a10
+4203d72e:	0bdd      	mov.n	a13, a11
+4203d730:	8a9a81        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+4203d733:	1521a2        	l32i	a10, a1, 84
+4203d736:	1621b2        	l32i	a11, a1, 88
+4203d739:	0008e0        	callx8	a8
+4203d73c:	0acd      	mov.n	a12, a10
+4203d73e:	0bdd      	mov.n	a13, a11
+4203d740:	8b8581        	l32r	a8, 42020554 <sym_rtc_slow_persistent_start+0x510> (40002184 <__adddf3>)
+4203d743:	07ad      	mov.n	a10, a7
+4203d745:	06bd      	mov.n	a11, a6
+4203d747:	0008e0        	callx8	a8
+4203d74a:	800182        	l8ui	a8, a1, 128
+4203d74d:	0a1866        	bnei	a8, 1, 4203d75b <<overhead_app::projection::Camera>::coast_point+0x247>
+4203d750:	080c      	movi.n	a8, 0
+4203d752:	172192        	l32i	a9, a1, 92
+4203d755:	1989      	s32i.n	a8, a9, 4
+4203d757:	0989      	s32i.n	a8, a9, 0
+4203d759:	f01d      	retw.n
+4203d75b:	272182        	l32i	a8, a1, 156
+4203d75e:	2d6182        	s32i	a8, a1, 180
+4203d761:	262182        	l32i	a8, a1, 152
+4203d764:	2c6182        	s32i	a8, a1, 176
+4203d767:	252182        	l32i	a8, a1, 148
+4203d76a:	2b6182        	s32i	a8, a1, 172
+4203d76d:	242182        	l32i	a8, a1, 144
+4203d770:	2a6182        	s32i	a8, a1, 168
+4203d773:	232182        	l32i	a8, a1, 140
+4203d776:	296182        	s32i	a8, a1, 164
+4203d779:	222182        	l32i	a8, a1, 136
+4203d77c:	286182        	s32i	a8, a1, 160
+4203d77f:	8afa81        	l32r	a8, 42020368 <sym_rtc_slow_persistent_start+0x324> (7fffffff <_rtc_fast_bss_end+0x1ff01fff>)
+4203d782:	108b80        	and	a8, a11, a8
+4203d785:	8b6691        	l32r	a9, 42020520 <sym_rtc_slow_persistent_start+0x4dc> (7fefffff <_rtc_fast_bss_end+0x1fe01fff>)
+4203d788:	172172        	l32i	a7, a1, 92
+4203d78b:	07a987        	bge	a9, a8, 4203d796 <<overhead_app::projection::Camera>::coast_point+0x282>
+4203d78e:	058d      	mov.n	a8, a5
+4203d790:	0789      	s32i.n	a8, a7, 0
+4203d792:	1759      	s32i.n	a5, a7, 4
+4203d794:	f01d      	retw.n
+4203d796:	282182        	l32i	a8, a1, 160
+4203d799:	292192        	l32i	a9, a1, 164
+4203d79c:	2a21c2        	l32i	a12, a1, 168
+4203d79f:	2b21d2        	l32i	a13, a1, 172
+4203d7a2:	2c21e2        	l32i	a14, a1, 176
+4203d7a5:	2d21f2        	l32i	a15, a1, 180
+4203d7a8:	87a9      	s32i.n	a10, a7, 32
+4203d7aa:	77f9      	s32i.n	a15, a7, 28
+4203d7ac:	67e9      	s32i.n	a14, a7, 24
+4203d7ae:	57d9      	s32i.n	a13, a7, 20
+4203d7b0:	47c9      	s32i.n	a12, a7, 16
+4203d7b2:	3799      	s32i.n	a9, a7, 12
+4203d7b4:	2789      	s32i.n	a8, a7, 8
+4203d7b6:	97b9      	s32i.n	a11, a7, 36
+4203d7b8:	180c      	movi.n	a8, 1
+4203d7ba:	0789      	s32i.n	a8, a7, 0
+4203d7bc:	1759      	s32i.n	a5, a7, 4
+4203d7be:	f01d      	retw.n

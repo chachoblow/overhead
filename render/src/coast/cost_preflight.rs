@@ -12,14 +12,14 @@ use overhead_core::{
 };
 use std::{hint::black_box, time::Instant, vec::Vec};
 
-struct Screen {
-    pixels: [[u8; 400]; 240],
+pub(super) struct Screen {
+    pub(super) pixels: [[u8; 400]; 240],
     writes: usize,
-    on_writes: usize,
+    pub(super) on_writes: usize,
 }
 
 impl Screen {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         Self {
             pixels: [[0; 400]; 240],
             writes: 0,
@@ -53,7 +53,7 @@ impl DrawTarget for Screen {
     }
 }
 
-fn observer(lat: f64, lon: f64) -> GeodeticPosition {
+pub(super) fn observer(lat: f64, lon: f64) -> GeodeticPosition {
     GeodeticPosition {
         latitude_rad: lat.to_radians(),
         longitude_rad: lon.to_radians(),

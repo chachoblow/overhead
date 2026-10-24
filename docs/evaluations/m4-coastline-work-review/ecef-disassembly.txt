@@ -1,0 +1,219 @@
+
+firmware/target/coast-stage-a-capture-20261023/build-on/xtensa-esp32s3-none-elf/release/overhead-s3-coast-measurement:     file format elf32-xtensa-le
+
+
+Disassembly of section .text:
+
+420453dc <<overhead_core::coordinates::GeodeticPosition>::to_ecef>:
+420453dc:	00c136        	entry	a1, 96
+420453df:	53e8      	l32i.n	a14, a3, 20
+420453e1:	6be1a1        	l32r	a10, 42020368 <sym_rtc_slow_persistent_start+0x324> (7fffffff <_rtc_fast_bss_end+0x1ff01fff>)
+420453e4:	10dea0        	and	a13, a14, a10
+420453e7:	0c0c      	movi.n	a12, 0
+420453e9:	190c      	movi.n	a9, 1
+420453eb:	6c4db1        	l32r	a11, 42020520 <sym_rtc_slow_persistent_start+0x4dc> (7fefffff <_rtc_fast_bss_end+0x1fe01fff>)
+420453ee:	098d      	mov.n	a8, a9
+420453f0:	12abd7        	bge	a11, a13, 42045406 <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x2a>
+420453f3:	33d8      	l32i.n	a13, a3, 12
+420453f5:	105da0        	and	a5, a13, a10
+420453f8:	14ab57        	bge	a11, a5, 42045410 <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x34>
+420453fb:	1378      	l32i.n	a7, a3, 4
+420453fd:	1047a0        	and	a4, a7, a10
+42045400:	16ab47        	bge	a11, a4, 4204541a <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x3e>
+42045403:	0019c6        	j	4204546e <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x92>
+42045406:	0c8d      	mov.n	a8, a12
+42045408:	33d8      	l32i.n	a13, a3, 12
+4204540a:	105da0        	and	a5, a13, a10
+4204540d:	ea2b57        	blt	a11, a5, 420453fb <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x1f>
+42045410:	0c9d      	mov.n	a9, a12
+42045412:	1378      	l32i.n	a7, a3, 4
+42045414:	1047a0        	and	a4, a7, a10
+42045417:	532b47        	blt	a11, a4, 4204546e <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x92>
+4204541a:	160c      	movi.n	a6, 1
+4204541c:	109960        	and	a9, a9, a6
+4204541f:	04b956        	bnez	a9, 4204546e <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x92>
+42045422:	108860        	and	a8, a8, a6
+42045425:	045856        	bnez	a8, 4204546e <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x92>
+42045428:	71d9      	s32i.n	a13, a1, 28
+4204542a:	91e9      	s32i.n	a14, a1, 36
+4204542c:	b129      	s32i.n	a2, a1, 44
+4204542e:	2388      	l32i.n	a8, a3, 8
+42045430:	a189      	s32i.n	a8, a1, 40
+42045432:	03a8      	l32i.n	a10, a3, 0
+42045434:	4388      	l32i.n	a8, a3, 16
+42045436:	8189      	s32i.n	a8, a1, 32
+42045438:	6c3cc1        	l32r	a12, 42020528 <sym_rtc_slow_persistent_start+0x4e4> (54442d18 <_rtc_slow_bss_end+0x4442d18>)
+4204543b:	6c3cd1        	l32r	a13, 4202052c <sym_rtc_slow_persistent_start+0x4e8> (3ff921fb <ets_rom_layout_p+0x721ff>)
+4204543e:	6d3c81        	l32r	a8, 42020930 <sym_rtc_slow_persistent_start+0x8ec> (400023b8 <__ledf2>)
+42045441:	0a2d      	mov.n	a2, a10
+42045443:	04bd      	mov.n	a11, a4
+42045445:	0008e0        	callx8	a8
+42045448:	030c      	movi.n	a3, 0
+4204544a:	068d      	mov.n	a8, a6
+4204544c:	1423a7        	blt	a3, a10, 42045464 <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x88>
+4204544f:	6c36c1        	l32r	a12, 42020528 <sym_rtc_slow_persistent_start+0x4e4> (54442d18 <_rtc_slow_bss_end+0x4442d18>)
+42045452:	6ea8d1        	l32r	a13, 42020ef4 <sym_rtc_slow_persistent_start+0xeb0> (400921fb <rom_rx_gain_force+0x8bdcf>)
+42045455:	6d3681        	l32r	a8, 42020930 <sym_rtc_slow_persistent_start+0x8ec> (400023b8 <__ledf2>)
+42045458:	a1a8      	l32i.n	a10, a1, 40
+4204545a:	05bd      	mov.n	a11, a5
+4204545c:	0008e0        	callx8	a8
+4204545f:	171aa6        	blti	a10, 1, 4204547a <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x9e>
+42045462:	280c      	movi.n	a8, 2
+42045464:	b128      	l32i.n	a2, a1, 44
+42045466:	014282        	s8i	a8, a2, 1
+42045469:	004262        	s8i	a6, a2, 0
+4204546c:	f01d      	retw.n
+4204546e:	080c      	movi.n	a8, 0
+42045470:	014282        	s8i	a8, a2, 1
+42045473:	160c      	movi.n	a6, 1
+42045475:	004262        	s8i	a6, a2, 0
+42045478:	f01d      	retw.n
+4204547a:	30c1a2        	addi	a10, a1, 48
+4204547d:	6e3381        	l32r	a8, 42020d4c <sym_rtc_slow_persistent_start+0xd08> (4205df98 <libm::math::sincos::sincos>)
+42045480:	025d      	mov.n	a5, a2
+42045482:	05cd      	mov.n	a12, a5
+42045484:	07dd      	mov.n	a13, a7
+42045486:	0008e0        	callx8	a8
+42045489:	f188      	l32i.n	a8, a1, 60
+4204548b:	0189      	s32i.n	a8, a1, 0
+4204548d:	e128      	l32i.n	a2, a1, 56
+4204548f:	d168      	l32i.n	a6, a1, 52
+42045491:	c178      	l32i.n	a7, a1, 48
+42045493:	30c1a2        	addi	a10, a1, 48
+42045496:	6e2d81        	l32r	a8, 42020d4c <sym_rtc_slow_persistent_start+0xd08> (4205df98 <libm::math::sincos::sincos>)
+42045499:	a1c8      	l32i.n	a12, a1, 40
+4204549b:	71d8      	l32i.n	a13, a1, 28
+4204549d:	0008e0        	callx8	a8
+420454a0:	6c22c1        	l32r	a12, 42020528 <sym_rtc_slow_persistent_start+0x4e4> (54442d18 <_rtc_slow_bss_end+0x4442d18>)
+420454a3:	6c22d1        	l32r	a13, 4202052c <sym_rtc_slow_persistent_start+0x4e8> (3ff921fb <ets_rom_layout_p+0x721ff>)
+420454a6:	6c0c81        	l32r	a8, 420204d8 <sym_rtc_slow_persistent_start+0x494> (4000228c <__eqdf2>)
+420454a9:	05ad      	mov.n	a10, a5
+420454ab:	04bd      	mov.n	a11, a4
+420454ad:	0008e0        	callx8	a8
+420454b0:	0a4d      	mov.n	a4, a10
+420454b2:	6e91c1        	l32r	a12, 42020ef8 <sym_rtc_slow_persistent_start+0xeb4> (f1fe94f0 <_rtc_fast_bss_end+0x91eeb4f0>)
+420454b5:	6e91d1        	l32r	a13, 42020efc <sym_rtc_slow_persistent_start+0xeb8> (bf7b6b90 <_rtc_fast_bss_end+0x5f6b8b90>)
+420454b8:	6b3881        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+420454bb:	07ad      	mov.n	a10, a7
+420454bd:	06bd      	mov.n	a11, a6
+420454bf:	0008e0        	callx8	a8
+420454c2:	0acd      	mov.n	a12, a10
+420454c4:	0bdd      	mov.n	a13, a11
+420454c6:	6b3481        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+420454c9:	7179      	s32i.n	a7, a1, 28
+420454cb:	07ad      	mov.n	a10, a7
+420454cd:	a169      	s32i.n	a6, a1, 40
+420454cf:	06bd      	mov.n	a11, a6
+420454d1:	0008e0        	callx8	a8
+420454d4:	6cfbd1        	l32r	a13, 420208c0 <sym_rtc_slow_persistent_start+0x87c> (3ff00000 <ets_ops_table_ptr+0x210004>)
+420454d7:	6c1f81        	l32r	a8, 42020554 <sym_rtc_slow_persistent_start+0x510> (40002184 <__adddf3>)
+420454da:	03cd      	mov.n	a12, a3
+420454dc:	0008e0        	callx8	a8
+420454df:	d188      	l32i.n	a8, a1, 52
+420454e1:	4189      	s32i.n	a8, a1, 16
+420454e3:	c188      	l32i.n	a8, a1, 48
+420454e5:	3189      	s32i.n	a8, a1, 12
+420454e7:	f188      	l32i.n	a8, a1, 60
+420454e9:	2189      	s32i.n	a8, a1, 8
+420454eb:	e188      	l32i.n	a8, a1, 56
+420454ed:	1189      	s32i.n	a8, a1, 4
+420454ef:	6e1d81        	l32r	a8, 42020d64 <sym_rtc_slow_persistent_start+0xd20> (4205c084 <libm::math::sqrt::sqrt>)
+420454f2:	0008e0        	callx8	a8
+420454f5:	0acd      	mov.n	a12, a10
+420454f7:	0bdd      	mov.n	a13, a11
+420454f9:	6e1ba1        	l32r	a10, 42020d68 <sym_rtc_slow_persistent_start+0xd24> (126e978d <PS_WOE+0x126a978d>)
+420454fc:	6e1cb1        	l32r	a11, 42020d6c <sym_rtc_slow_persistent_start+0xd28> (40b8ea23 <_rwtext_len+0x810b9b>)
+420454ff:	6b3781        	l32r	a8, 420201dc <sym_rtc_slow_persistent_start+0x198> (40002250 <__divdf3>)
+42045502:	0008e0        	callx8	a8
+42045505:	0acd      	mov.n	a12, a10
+42045507:	0bdd      	mov.n	a13, a11
+42045509:	6c1281        	l32r	a8, 42020554 <sym_rtc_slow_persistent_start+0x510> (40002184 <__adddf3>)
+4204550c:	81a8      	l32i.n	a10, a1, 32
+4204550e:	91b8      	l32i.n	a11, a1, 36
+42045510:	61c9      	s32i.n	a12, a1, 24
+42045512:	51d9      	s32i.n	a13, a1, 20
+42045514:	0008e0        	callx8	a8
+42045517:	0acd      	mov.n	a12, a10
+42045519:	0bdd      	mov.n	a13, a11
+4204551b:	03ad      	mov.n	a10, a3
+4204551d:	036d      	mov.n	a6, a3
+4204551f:	011437        	beq	a4, a3, 42045524 <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x148>
+42045522:	02ad      	mov.n	a10, a2
+42045524:	068d      	mov.n	a8, a6
+42045526:	08bd      	mov.n	a11, a8
+42045528:	011487        	beq	a4, a8, 4204552d <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x151>
+4204552b:	01b8      	l32i.n	a11, a1, 0
+4204552d:	6b1a81        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+42045530:	0008e0        	callx8	a8
+42045533:	0a7d      	mov.n	a7, a10
+42045535:	0b5d      	mov.n	a5, a11
+42045537:	6b1881        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+4204553a:	11a8      	l32i.n	a10, a1, 4
+4204553c:	21b8      	l32i.n	a11, a1, 8
+4204553e:	07cd      	mov.n	a12, a7
+42045540:	05dd      	mov.n	a13, a5
+42045542:	0008e0        	callx8	a8
+42045545:	21a9      	s32i.n	a10, a1, 8
+42045547:	0b3d      	mov.n	a3, a11
+42045549:	6b1381        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+4204554c:	31a8      	l32i.n	a10, a1, 12
+4204554e:	41b8      	l32i.n	a11, a1, 16
+42045550:	07cd      	mov.n	a12, a7
+42045552:	05dd      	mov.n	a13, a5
+42045554:	0008e0        	callx8	a8
+42045557:	31a9      	s32i.n	a10, a1, 12
+42045559:	6b8321        	l32r	a2, 42020368 <sym_rtc_slow_persistent_start+0x324> (7fffffff <_rtc_fast_bss_end+0x1ff01fff>)
+4204555c:	41b9      	s32i.n	a11, a1, 16
+4204555e:	108b20        	and	a8, a11, a2
+42045561:	150c      	movi.n	a5, 1
+42045563:	6bef41        	l32r	a4, 42020520 <sym_rtc_slow_persistent_start+0x4dc> (7fefffff <_rtc_fast_bss_end+0x1fe01fff>)
+42045566:	057d      	mov.n	a7, a5
+42045568:	012487        	blt	a4, a8, 4204556d <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x191>
+4204556b:	067d      	mov.n	a7, a6
+4204556d:	108320        	and	a8, a3, a2
+42045570:	012487        	blt	a4, a8, 42045575 <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x199>
+42045573:	065d      	mov.n	a5, a6
+42045575:	6e62c1        	l32r	a12, 42020f00 <sym_rtc_slow_persistent_start+0xebc> (de1c02d6 <_rtc_fast_bss_end+0x7e0c22d6>)
+42045578:	6e63d1        	l32r	a13, 42020f04 <sym_rtc_slow_persistent_start+0xec0> (3fefc928 <ets_ops_table_ptr+0x20c92c>)
+4204557b:	6b0781        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+4204557e:	61a8      	l32i.n	a10, a1, 24
+42045580:	51b8      	l32i.n	a11, a1, 20
+42045582:	0008e0        	callx8	a8
+42045585:	0acd      	mov.n	a12, a10
+42045587:	0bdd      	mov.n	a13, a11
+42045589:	6bf281        	l32r	a8, 42020554 <sym_rtc_slow_persistent_start+0x510> (40002184 <__adddf3>)
+4204558c:	81a8      	l32i.n	a10, a1, 32
+4204558e:	91b8      	l32i.n	a11, a1, 36
+42045590:	0008e0        	callx8	a8
+42045593:	0acd      	mov.n	a12, a10
+42045595:	0bdd      	mov.n	a13, a11
+42045597:	6b0081        	l32r	a8, 42020198 <sym_rtc_slow_persistent_start+0x154> (40002418 <__muldf3>)
+4204559a:	71a8      	l32i.n	a10, a1, 28
+4204559c:	a1b8      	l32i.n	a11, a1, 40
+4204559e:	0008e0        	callx8	a8
+420455a1:	108b20        	and	a8, a11, a2
+420455a4:	282487        	blt	a4, a8, 420455d0 <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x1f4>
+420455a7:	180c      	movi.n	a8, 1
+420455a9:	109580        	and	a9, a5, a8
+420455ac:	020956        	bnez	a9, 420455d0 <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x1f4>
+420455af:	108780        	and	a8, a7, a8
+420455b2:	01a856        	bnez	a8, 420455d0 <<overhead_core::coordinates::GeodeticPosition>::to_ecef+0x1f4>
+420455b5:	b128      	l32i.n	a2, a1, 44
+420455b7:	62a9      	s32i.n	a10, a2, 24
+420455b9:	3188      	l32i.n	a8, a1, 12
+420455bb:	4289      	s32i.n	a8, a2, 16
+420455bd:	2188      	l32i.n	a8, a1, 8
+420455bf:	2289      	s32i.n	a8, a2, 8
+420455c1:	72b9      	s32i.n	a11, a2, 28
+420455c3:	4188      	l32i.n	a8, a1, 16
+420455c5:	5289      	s32i.n	a8, a2, 20
+420455c7:	3239      	s32i.n	a3, a2, 12
+420455c9:	060c      	movi.n	a6, 0
+420455cb:	004262        	s8i	a6, a2, 0
+420455ce:	f01d      	retw.n
+420455d0:	080c      	movi.n	a8, 0
+420455d2:	b128      	l32i.n	a2, a1, 44
+420455d4:	014282        	s8i	a8, a2, 1
+420455d7:	160c      	movi.n	a6, 1
+420455d9:	004262        	s8i	a6, a2, 0
+420455dc:	f01d      	retw.n

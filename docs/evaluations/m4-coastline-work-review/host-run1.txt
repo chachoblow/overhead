@@ -1,0 +1,20 @@
+   Compiling overhead-render v0.1.0 (/Users/wesleyklein/Code/Overhead/render)
+    Finished `release` profile [optimized] target(s) in 2.77s
+     Running unittests src/lib.rs (target/release/deps/overhead_render-2033bf8297329d40)
+
+running 1 test
+case,intervals,hidden,roots,strokes,coast_point_evals,on_writes,validation_median_us,coast_median_us
+sf-tight,23377,10864,10,12513,95397,242,26.0,5840.0
+sf-1,23377,10864,10,12513,95397,362,17.2,4051.1
+sf-5,23377,10864,10,12513,95397,5180,17.0,4371.1
+sf-100,23377,10864,10,12513,95397,12714,17.0,4755.0
+colorado-20,23377,10427,16,12950,96415,14393,17.0,4811.5
+polar-20,23377,7687,14,15690,101847,17613,17.1,5207.9
+dateline-5,23377,14383,18,8994,88551,2112,17.2,3807.4
+limb-20,23377,12706,42,10671,92481,11827,17.0,4503.4
+limb-100,23377,12706,42,10671,92481,10839,17.1,4538.6
+viewport-tight,23377,13796,22,9581,89821,263,17.0,3731.1
+iss-ground-20,23377,12847,26,10530,91815,11629,17.0,4560.6
+test coast::work_review::coast_work_review ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 80 filtered out; finished in 0.50s

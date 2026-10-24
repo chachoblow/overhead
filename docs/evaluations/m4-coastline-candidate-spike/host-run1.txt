@@ -1,0 +1,20 @@
+   Compiling overhead-render v0.1.0 (/Users/wesleyklein/Code/Overhead/render)
+    Finished `release` profile [optimized] target(s) in 2.84s
+     Running unittests src/lib.rs (target/release/deps/overhead_render-2033bf8297329d40)
+
+running 1 test
+case,hidden_segments,outside_segments,front_segments,kept_intervals,baseline_evals,cull_only_evals,reuse_evals,roots,strokes,on_writes,baseline_median_us,candidate_median_us
+sf-tight,799,934,1,27,95397,1869,1762,0,27,242,4227.6,118.2
+sf-1,799,926,9,176,95397,2614,1919,0,176,362,4309.8,127.7
+sf-5,799,555,378,4955,95397,26415,7116,0,4908,5180,4435.5,660.2
+sf-100,799,0,891,12883,95397,65649,16388,10,12513,12714,4869.5,1713.6
+colorado-20,790,0,900,13268,96415,67822,17076,16,12950,14393,4984.3,1796.5
+polar-20,531,0,1176,15890,101847,81120,19653,14,15690,17613,5348.8,2148.5
+dateline-5,960,571,202,1996,88551,11722,3980,1,1988,2112,4070.6,377.4
+limb-20,793,0,767,12726,92481,62262,20446,42,10671,11827,4732.3,1803.0
+limb-100,793,0,767,12726,92481,62262,20446,42,10671,10839,4534.0,1727.4
+viewport-tight,907,820,7,73,89821,2099,1814,0,73,263,3800.0,116.7
+iss-ground-20,955,0,673,11765,91815,58713,17878,26,10530,11629,4723.2,1748.6
+test coast::candidate_spike::coast_candidate_spike ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 82 filtered out; finished in 0.60s

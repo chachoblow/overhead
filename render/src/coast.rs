@@ -299,9 +299,13 @@ pub(super) fn draw_with_hook<D: DrawTarget<Color = BinaryColor>>(
 }
 
 #[cfg(test)]
+mod candidate_spike;
+#[cfg(test)]
 mod cost_preflight;
 #[cfg(test)]
 mod visibility_bound_study;
+#[cfg(test)]
+mod work_review;
 
 #[cfg(test)]
 mod tests {

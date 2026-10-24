@@ -1,0 +1,19 @@
+    Finished `release` profile [optimized] target(s) in 0.05s
+     Running unittests src/lib.rs (target/release/deps/overhead_render-2033bf8297329d40)
+
+running 1 test
+case,intervals,hidden,roots,strokes,coast_point_evals,on_writes,validation_median_us,coast_median_us
+sf-tight,23377,10864,10,12513,95397,242,17.9,4163.4
+sf-1,23377,10864,10,12513,95397,362,17.2,4103.8
+sf-5,23377,10864,10,12513,95397,5180,17.5,4460.0
+sf-100,23377,10864,10,12513,95397,12714,17.3,4970.2
+colorado-20,23377,10427,16,12950,96415,14393,17.2,4983.4
+polar-20,23377,7687,14,15690,101847,17613,17.2,5253.3
+dateline-5,23377,14383,18,8994,88551,2112,17.2,3870.8
+limb-20,23377,12706,42,10671,92481,11827,17.2,4537.8
+limb-100,23377,12706,42,10671,92481,10839,17.0,4511.9
+viewport-tight,23377,13796,22,9581,89821,263,17.1,3756.0
+iss-ground-20,23377,12847,26,10530,91815,11629,17.1,4547.2
+test coast::work_review::coast_work_review ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 80 filtered out; finished in 0.47s
