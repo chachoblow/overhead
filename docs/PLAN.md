@@ -347,8 +347,10 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   caches the current view's 10,560 B coastline raster, re-rastering only on zoom
   (layer 10,960 B). The approved [S3 measurement](evaluations/m4-coastline-prepared-target.md)
   gives cached coast 386–1,153 µs (passes 5 ms), zoom-step rasters up to 21 ms,
-  ~5 ms preparation and zero heap, matching the candidate exactly; no zoom-delay
-  ceiling is chosen yet.
+  ~5 ms preparation and zero heap, matching the candidate exactly.
+  [0060](decisions/0060-defer-timing-to-physical-prototype.md) accepts this for
+  now and defers timing work, including non-coast frame cost, to the physical
+  prototype.
   Selected non-coast frame cost and Sharp/whole-device cadence remain separate
   open blockers.
 
@@ -363,11 +365,13 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
 **Done when:** fast passes are watchable without contaminating physical state.
 
 ## M6 — Standalone device
-- [ ] Run shared engine/renderer on S3 + Sharp, with BOOT-button zoom presets.
+- [ ] Run shared engine/renderer on S3 + Sharp. Intended controls under 0060:
+  button cycles satellites, knob zooms continuously (presets as fallback).
 - [ ] Add Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes
   per [0002](decisions/0002-data-and-time-over-wifi.md).
 - [ ] Handle network failure, missing/invalid time or data, and stale elements.
-- [ ] Verify end-to-end performance and extended hardware operation.
+- [ ] Verify end-to-end performance and extended hardware operation, including
+  the frame-timing work deferred by 0060.
 
 **Done when:** the prototype boots with valid time/data and tracks between
 connections. Cached elements alone do not enable accurate offline cold boot.

@@ -568,8 +568,11 @@ information or battery indicator.
 
 ## Controls
 - Simulator: continuous zoom via scroll wheel and up/down arrows.
-- Initial device: BOOT button cycles through roughly four zoom presets.
-- Knob and optional auto-zoom demo mode come later; neither blocks the prototype.
+- Intended device ([0060](decisions/0060-defer-timing-to-physical-prototype.md)):
+  a button cycles through satellites and a knob zooms continuously; zoom presets
+  remain a fallback if the knob proves infeasible.
+- The first firmware prototype may start with BOOT-button control; optional
+  auto-zoom demo mode comes later. Neither blocks the prototype.
 
 ## Product choices
 [On-device SGP4](decisions/0001-on-device-sgp4.md),
