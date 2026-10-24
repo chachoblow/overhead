@@ -27,7 +27,7 @@ static mut SCREEN: Screen = Screen::new();
 static mut REFERENCE: Screen = Screen::new();
 // Long-lived layer storage, as 0059 requires (not a transient stack frame).
 // Uninitialized (.bss, not an 11 KB .data image); written once before use.
-static mut LAYER: MaybeUninit<Option<CoastLayer>> = MaybeUninit::uninit();
+static mut LAYER: MaybeUninit<CoastLayer> = MaybeUninit::uninit();
 #[global_allocator]
 static ALLOCATOR: Meter<esp_alloc::EspHeap> = Meter::new(esp_alloc::EspHeap::empty());
 
@@ -50,7 +50,7 @@ fn prepare_target(screen: &mut Screen, mode: Mode) {
 fn sample(
     screen: &mut Screen,
     app: &overhead_app::RadarApp,
-    layer: &mut Option<CoastLayer>,
+    layer: &mut CoastLayer,
     mode: Mode,
 ) -> (u64, u32, u32, u32, usize) {
     prepare_target(screen, mode);
@@ -90,12 +90,12 @@ fn main() -> ! {
     // SAFETY: sole owners of these statics in this single-core image.
     let screen = unsafe { &mut *(&raw mut SCREEN) };
     let reference = unsafe { &mut *(&raw mut REFERENCE) };
-    let layer = unsafe { (*(&raw mut LAYER)).write(None) };
+    let layer = unsafe { (*(&raw mut LAYER)).write(CoastLayer::new()) };
     pause();
     println!("OVERHEAD_S3_COAST_PREPARED_V1");
     println!(
         "cpu_mhz=240,buffer_bytes=12000,heap_reserved={HEAP_BYTES},samples={SAMPLES},layer_bytes={}",
-        core::mem::size_of::<Option<CoastLayer>>()
+        core::mem::size_of::<CoastLayer>()
     );
     println!("NOT a Sharp/frame-cadence measurement; stack is observed writes only");
     println!("Every ROW asserts zero allocation calls/failures/requested/live growth");
@@ -114,7 +114,6 @@ fn main() -> ! {
             site.longitude_rad.to_degrees(),
             app.selected_id().is_some()
         );
-        *layer = None;
         for mode in MODES {
             // Untimed warm-up; leaves a prepared layer and valid cache behind.
             prepare_target(screen, mode);

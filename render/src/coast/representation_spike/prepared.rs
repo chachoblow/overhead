@@ -102,11 +102,11 @@ struct Prepared {
 }
 
 impl CoastLayer {
-    /// One-time, allocation-free preparation for `observer`. A different observer
-    /// needs a new layer; the old one refuses to draw rather than show stale geography.
-    pub fn prepare(observer: GeodeticPosition) -> Self {
+    /// Unprepared layer; draws show `COAST ERROR` until `prepare_for` succeeds.
+    /// `const` so long-lived storage can be initialized without a stack temporary.
+    pub const fn new() -> Self {
         Self {
-            state: Prepared::new(observer, ASSET),
+            state: Err("not prepared"),
             cached: None,
             mask: Mask {
                 bits: [0; MASK_BYTES],
@@ -115,6 +115,21 @@ impl CoastLayer {
             #[cfg(test)]
             rasters: 0,
         }
+    }
+
+    /// Convenience for owners that can hold an 11 KB value on the stack (host).
+    pub fn prepare(observer: GeodeticPosition) -> Self {
+        let mut layer = Self::new();
+        layer.prepare_for(observer);
+        layer
+    }
+
+    /// One-time, allocation-free preparation in place for `observer`, replacing
+    /// any previous observer and discarding its raster. A layer refuses to draw
+    /// for any other observer rather than show stale geography.
+    pub fn prepare_for(&mut self, observer: GeodeticPosition) {
+        self.cached = None;
+        self.state = Prepared::new(observer, ASSET);
     }
 
     /// The preparation failure, if any.
@@ -168,6 +183,12 @@ impl CoastLayer {
         }
         target.draw_iter(self.mask.lit().map(|p| Pixel(p, BinaryColor::On)))?;
         Ok(true)
+    }
+}
+
+impl Default for CoastLayer {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -367,6 +388,27 @@ mod tests {
         assert_eq!(layer.cached, None);
         assert!(!layer.draw(&mut screen, site, wide(10.0), layout).unwrap());
         assert_eq!(layer.rasters, 5);
+    }
+
+    #[test]
+    fn in_place_preparation_replaces_observer_and_cache() {
+        let site = work_review::cases()[0].1;
+        let other = work_review::cases()[5].1;
+        let layout = Layout::wide();
+        let mut layer = CoastLayer::new();
+        assert_eq!(layer.error(), Some("not prepared"));
+        let mut screen = Screen::new();
+        assert!(!layer.draw(&mut screen, site, wide(20.0), layout).unwrap());
+        layer.prepare_for(site);
+        assert!(layer.draw(&mut screen, site, wide(20.0), layout).unwrap());
+        layer.prepare_for(other);
+        assert_eq!(layer.cached, None);
+        assert!(!layer.draw(&mut screen, site, wide(20.0), layout).unwrap());
+        let mut fresh = Screen::new();
+        let mut reused = Screen::new();
+        candidate_draw(&mut fresh, other, wide(20.0), ASSET).unwrap();
+        assert!(layer.draw(&mut reused, other, wide(20.0), layout).unwrap());
+        assert_eq!(fresh.pixels, reused.pixels);
     }
 
     #[test]

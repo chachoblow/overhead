@@ -31,30 +31,32 @@ pub const MODES: [Mode; 6] = [
     Mode::FrameOff,
 ];
 
-/// Run one invocation. `Prepare` replaces `layer`; others reuse it. Coast-only
-/// modes expect the caller to clear the target first.
-pub fn run(screen: &mut Screen, app: &RadarApp, layer: &mut Option<CoastLayer>, mode: Mode) {
+/// Run one invocation against caller-owned layer storage. Coast-only modes
+/// expect the caller to clear the target first.
+pub fn run(screen: &mut Screen, app: &RadarApp, layer: &mut CoastLayer, mode: Mode) {
     match mode {
-        Mode::Prepare => {
-            *layer = Some(CoastLayer::prepare(app.observer()));
-            assert!(
-                layer.as_ref().unwrap().error().is_none(),
-                "preparation failed"
-            );
-        }
-        Mode::CoastRaster | Mode::CoastCached | Mode::FrameRaster | Mode::FrameCached => {
-            let layer = layer.as_mut().expect("prepared layer");
-            if matches!(mode, Mode::CoastRaster | Mode::FrameRaster) {
+        Mode::Prepare => prepare(app, layer),
+        Mode::CoastRaster | Mode::CoastCached => {
+            if mode == Mode::CoastRaster {
                 measurement::invalidate_coast_cache(layer);
             }
-            if matches!(mode, Mode::CoastRaster | Mode::CoastCached) {
-                assert!(measurement::prepared_coast_only(screen, app, layer).unwrap());
-            } else {
-                overhead_render::draw(screen, app, Layout::wide(), false, layer).unwrap();
+            assert!(measurement::prepared_coast_only(screen, app, layer).unwrap());
+        }
+        Mode::FrameRaster | Mode::FrameCached => {
+            if mode == Mode::FrameRaster {
+                measurement::invalidate_coast_cache(layer);
             }
+            overhead_render::draw(screen, app, Layout::wide(), false, layer).unwrap();
         }
         Mode::FrameOff => coast_measurement::run_off(screen, app),
     }
+}
+
+// Separate frame so no mode's stack reservation contaminates another's.
+#[inline(never)]
+fn prepare(app: &RadarApp, layer: &mut CoastLayer) {
+    layer.prepare_for(app.observer());
+    assert!(layer.error().is_none(), "preparation failed");
 }
 
 /// Exactness against the per-call candidate already measured on the S3:
@@ -88,7 +90,7 @@ mod tests {
     fn prepared_modes_repeat_and_match_candidate() {
         for (name, lat, lon, fov) in CASES {
             let app = app(name, lat, lon, fov);
-            let mut layer = None;
+            let mut layer = CoastLayer::new();
             let mut screen = Screen::new();
             let mut reference = Screen::new();
             for mode in MODES {

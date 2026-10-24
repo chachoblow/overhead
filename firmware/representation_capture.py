@@ -18,6 +18,8 @@ def main():
     parser.add_argument("elf", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--timeout", type=float, default=240)
+    parser.add_argument("--marker", default="OVERHEAD_S3_COAST_REPRESENTATION",
+                        help="image prefix, e.g. OVERHEAD_S3_COAST_PREPARED")
     args = parser.parse_args()
     assert args.elf.is_file() and args.timeout > 0
     command = ["espflash", "monitor", "--port", args.port, "--elf", str(args.elf),
@@ -37,10 +39,10 @@ def main():
                     log.write(chunk)
                     log.flush()
                     data.extend(chunk)
-                    if b"OVERHEAD_S3_COAST_REPRESENTATION_FAILED" in data:
+                    marker = args.marker.encode()
+                    if marker + b"_FAILED" in data:
                         raise RuntimeError("target reported failure; partial log retained")
-                    if (b"OVERHEAD_S3_COAST_REPRESENTATION_DONE\n" in data or
-                            b"OVERHEAD_S3_COAST_REPRESENTATION_DONE\r\n" in data):
+                    if (marker + b"_DONE\n" in data or marker + b"_DONE\r\n" in data):
                         print(f"DONE: {args.output} ({len(data)} bytes, {time.monotonic()-start:.1f}s)")
                         break
                 if process.poll() is not None:

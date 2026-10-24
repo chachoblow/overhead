@@ -8,7 +8,7 @@ fn main() {
     println!("case,mode,checksum,writes,on_writes");
     for (name, lat, lon, fov) in CASES {
         let app = coast_measurement::app(name, lat, lon, fov);
-        let mut layer = None;
+        let mut layer = overhead_render::CoastLayer::new();
         for mode in MODES {
             let mut screen = Screen::new();
             prepared_measurement::run(&mut screen, &app, &mut layer, mode);

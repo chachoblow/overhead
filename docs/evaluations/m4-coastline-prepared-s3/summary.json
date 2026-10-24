@@ -1,0 +1,116 @@
+{
+ "Prepare": {
+  "min_us": 5039,
+  "median_us": 5156.0,
+  "max_us": 5283,
+  "max_stack_bytes": 14176,
+  "max_us_by_case": {
+   "sf-tight": 5269,
+   "sf-1": 5244,
+   "sf-5": 5253,
+   "sf-100": 5256,
+   "colorado-20": 5270,
+   "polar-20": 5195,
+   "dateline-5": 5155,
+   "limb-20": 5251,
+   "limb-100": 5263,
+   "viewport-tight": 5268,
+   "iss-ground-20": 5283
+  }
+ },
+ "CoastRaster": {
+  "min_us": 7532,
+  "median_us": 13718.0,
+  "max_us": 21160,
+  "max_stack_bytes": 14208,
+  "max_us_by_case": {
+   "sf-tight": 8604,
+   "sf-1": 8707,
+   "sf-5": 11970,
+   "sf-100": 15692,
+   "colorado-20": 16804,
+   "polar-20": 21160,
+   "dateline-5": 8496,
+   "limb-20": 15301,
+   "limb-100": 14824,
+   "viewport-tight": 7533,
+   "iss-ground-20": 13718
+  }
+ },
+ "CoastCached": {
+  "min_us": 387,
+  "median_us": 624.0,
+  "max_us": 1170,
+  "max_stack_bytes": 12488,
+  "max_us_by_case": {
+   "sf-tight": 532,
+   "sf-1": 547,
+   "sf-5": 1170,
+   "sf-100": 412,
+   "colorado-20": 779,
+   "polar-20": 918,
+   "dateline-5": 731,
+   "limb-20": 649,
+   "limb-100": 414,
+   "viewport-tight": 496,
+   "iss-ground-20": 666
+  }
+ },
+ "FrameRaster": {
+  "min_us": 28343,
+  "median_us": 33810.0,
+  "max_us": 153443,
+  "max_stack_bytes": 15344,
+  "max_us_by_case": {
+   "sf-tight": 29857,
+   "sf-1": 29896,
+   "sf-5": 33664,
+   "sf-100": 34915,
+   "colorado-20": 38446,
+   "polar-20": 42962,
+   "dateline-5": 29784,
+   "limb-20": 36875,
+   "limb-100": 34065,
+   "viewport-tight": 28623,
+   "iss-ground-20": 153443
+  }
+ },
+ "FrameCached": {
+  "min_us": 19256,
+  "median_us": 21689.0,
+  "max_us": 138538,
+  "max_stack_bytes": 14512,
+  "max_us_by_case": {
+   "sf-tight": 21404,
+   "sf-1": 21372,
+   "sf-5": 22559,
+   "sf-100": 19352,
+   "colorado-20": 22107,
+   "polar-20": 22419,
+   "dateline-5": 21743,
+   "limb-20": 21922,
+   "limb-100": 19366,
+   "viewport-tight": 21293,
+   "iss-ground-20": 138538
+  }
+ },
+ "FrameOff": {
+  "min_us": 18184,
+  "median_us": 20056.0,
+  "max_us": 136912,
+  "max_stack_bytes": 14512,
+  "max_us_by_case": {
+   "sf-tight": 20111,
+   "sf-1": 20058,
+   "sf-5": 20107,
+   "sf-100": 18259,
+   "colorado-20": 20352,
+   "polar-20": 20426,
+   "dateline-5": 20092,
+   "limb-20": 20419,
+   "limb-100": 18282,
+   "viewport-tight": 20073,
+   "iss-ground-20": 136912
+  }
+ }
+}
