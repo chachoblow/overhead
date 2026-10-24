@@ -1,36 +1,36 @@
 {
-  "elf_sha256": "eb820f88c3aaf2db33191cafcb82c4314c72ae5dddd4470db2424d4ba5c59ac6",
-  "image_sha256": "f0e6c2b9daef478006576788ae8ba051fcedac0fcab251e00f2f7a5cee382bf6",
-  "image_bytes": 500624,
+  "elf_sha256": "7e8ce5d8bf474d5f0b2d0ccdd0f94276bb8a92647df1f27224674c13d21fb1cd",
+  "image_sha256": "9c118395a696b99a274b31ac0ba21f86dc0c307fd9d79083ead35def06126431",
+  "image_bytes": 500336,
   "app_offset": 65536,
   "rodata_alignment": 64,
   "merge_bytes": 32,
   "checked_sections": 10,
-  "checked_elf_bytes": 469503,
+  "checked_elf_bytes": 469047,
   "segments": [
     {
       "address": "0x3c000020",
-      "bytes": 149196,
+      "bytes": 149068,
       "file_offset": 32
     },
     {
       "address": "0x3fc8b148",
-      "bytes": 3764,
-      "file_offset": 149236
+      "bytes": 3716,
+      "file_offset": 149108
     },
     {
       "address": "0x40378000",
       "bytes": 12612,
-      "file_offset": 153008
+      "file_offset": 152832
     },
     {
       "address": "0x00000000",
-      "bytes": 31004,
-      "file_offset": 165628
+      "bytes": 31180,
+      "file_offset": 165452
     },
     {
       "address": "0x42030020",
-      "bytes": 303936,
+      "bytes": 303656,
       "file_offset": 196640
     }
   ]

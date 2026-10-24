@@ -345,7 +345,10 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   and zoom, exactly matching the candidate rasters tested. Host draw savings are
   modest; [0059](decisions/0059-current-view-coastline-raster-cache.md) therefore
   caches the current view's 10,560 B coastline raster, re-rastering only on zoom
-  (layer 10,960 B). S3 cost is unmeasured; no target check was run.
+  (layer 10,960 B). The approved [S3 measurement](evaluations/m4-coastline-prepared-target.md)
+  gives cached coast 386–1,153 µs (passes 5 ms), zoom-step rasters up to 21 ms,
+  ~5 ms preparation and zero heap, matching the candidate exactly; no zoom-delay
+  ceiling is chosen yet.
   Selected non-coast frame cost and Sharp/whole-device cadence remain separate
   open blockers.
 

@@ -1,0 +1,2 @@
+# Preserve unmodified UART/monitor output including CRLF and bootloader spacing.
+*.log -text whitespace=-blank-at-eol

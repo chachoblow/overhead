@@ -1,11 +1,11 @@
-[2026-10-24T21:57:13Z WARN ] Monitor options were provided, but `--monitor/-M` flag isn't set. These options will be ignored.
-[2026-10-24T21:57:13Z INFO ] Serial port: '/dev/cu.usbserial-21410'
-[2026-10-24T21:57:13Z INFO ] Connecting...
-[2026-10-24T21:57:14Z INFO ] Using flash stub
+[2026-10-24T22:01:04Z WARN ] Monitor options were provided, but `--monitor/-M` flag isn't set. These options will be ignored.
+[2026-10-24T22:01:04Z INFO ] Serial port: '/dev/cu.usbserial-21410'
+[2026-10-24T22:01:04Z INFO ] Connecting...
+[2026-10-24T22:01:05Z INFO ] Using flash stub
 Chip type:         esp32s3 (revision v0.2)
 Crystal frequency: 40 MHz
 Flash size:        8MB
 Features:          WiFi, BLE, Embedded Flash
 MAC address:       80:45:6b:2a:45:08
-App/part. size:    500,624/8,323,072 bytes, 6.01%
-[2026-10-24T21:57:49Z INFO ] Flashing has completed!
+App/part. size:    500,336/8,323,072 bytes, 6.01%
+[2026-10-24T22:01:40Z INFO ] Flashing has completed!

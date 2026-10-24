@@ -40,3 +40,11 @@ the cache; continuous zoom re-rasters only while the lens is moving.
   placement, Sharp transfer and whole-device cadence remain unmeasured; any
   target check needs separate approval.
 - 0053's ordinary-gap rule and 0055's deferred all-view proof are unchanged.
+
+## Follow-up — 2026-10-24
+
+The approved [S3 measurement](../evaluations/m4-coastline-prepared-target.md):
+cached coast 386–1,153 µs (passes the provisional 5 ms screen), one zoom-step
+raster 7,532–21,177 µs, preparation ~5 ms, zero heap, +10,952 B `.bss`. Output
+matches the candidate exactly. `CoastLayer::new` plus in-place `prepare_for`
+were added so long-lived storage avoids an 11 KB stack temporary.

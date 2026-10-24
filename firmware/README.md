@@ -47,6 +47,16 @@ It uses a 1-bit RAM target, existing app fixtures and the
 are retained with the evidence. Future builds/flashes/runs require new approval;
 the completed check does not authorize continuing optimization or adopting it.
 
+## Prepared coastline layer image
+
+`overhead-s3-coast-prepared` (feature `coast-prepared`) measures the 0058/0059
+prepared, cached wide coastline layer: preparation, cached and fresh-raster coast,
+and complete frames, with on-target exactness checks against the candidate.
+[Results](../docs/evaluations/m4-coastline-prepared-target.md) and
+[commands/evidence](../docs/evaluations/m4-coastline-prepared-s3/README.md).
+`representation_capture.py --marker OVERHEAD_S3_COAST_PREPARED` captures it.
+Future builds/flashes require new approval.
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing
