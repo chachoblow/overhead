@@ -26,7 +26,8 @@ static mut SCREEN: Screen = Screen::new();
 // Measurement-only 12 KB candidate reference for untimed exactness checks.
 static mut REFERENCE: Screen = Screen::new();
 // Long-lived layer storage, as 0059 requires (not a transient stack frame).
-static mut LAYER: Option<CoastLayer> = None;
+// Uninitialized (.bss, not an 11 KB .data image); written once before use.
+static mut LAYER: MaybeUninit<Option<CoastLayer>> = MaybeUninit::uninit();
 #[global_allocator]
 static ALLOCATOR: Meter<esp_alloc::EspHeap> = Meter::new(esp_alloc::EspHeap::empty());
 
@@ -89,7 +90,7 @@ fn main() -> ! {
     // SAFETY: sole owners of these statics in this single-core image.
     let screen = unsafe { &mut *(&raw mut SCREEN) };
     let reference = unsafe { &mut *(&raw mut REFERENCE) };
-    let layer = unsafe { &mut *(&raw mut LAYER) };
+    let layer = unsafe { (*(&raw mut LAYER)).write(None) };
     pause();
     println!("OVERHEAD_S3_COAST_PREPARED_V1");
     println!(

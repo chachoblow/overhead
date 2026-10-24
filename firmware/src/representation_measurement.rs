@@ -4,7 +4,8 @@ use crate::coast_measurement::{Mode, Screen};
 use overhead_app::RadarApp;
 use overhead_render::measurement;
 
-pub const ASSET: &[u8; 32_211] = include_bytes!("../fixtures/coast-quadratic-trial.bin");
+/// `static` so every use shares one flash copy.
+pub static ASSET: &[u8; 32_211] = include_bytes!("../fixtures/coast-quadratic-trial.bin");
 
 pub fn run(screen: &mut Screen, app: &RadarApp, mode: Mode) -> bool {
     match mode {

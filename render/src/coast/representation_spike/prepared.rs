@@ -15,7 +15,10 @@
 use super::*;
 use crate::Layout;
 
-pub(crate) const ASSET: &[u8] = include_bytes!("../../../assets/coastline-110m-40km-quadratic.bin");
+/// A `static`, not a `const`: one flash copy however many call sites use it
+/// (a `const` was duplicated per codegen unit on the S3).
+pub(crate) static ASSET: &[u8] =
+    include_bytes!("../../../assets/coastline-110m-40km-quadratic.bin");
 /// Packed pieces in the pinned asset; a different count is rejected.
 pub(crate) const PIECES: usize = 2031;
 const WORDS: usize = PIECES.div_ceil(32);
