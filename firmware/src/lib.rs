@@ -17,6 +17,8 @@ use overhead_core::{
 
 #[cfg(feature = "coast-measurement")]
 pub mod coast_measurement;
+#[cfg(feature = "coast-representation")]
+pub mod representation_measurement;
 pub mod suites;
 
 #[cfg(feature = "numerical-reference")]

@@ -310,6 +310,25 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   target-time screening; no Sharp or whole-device validation follows. The
   [M2-informed ceilings](evaluations/m4-coastline-budget-preflight.md) remain
   **provisional measurement gates**, not proven capacity or shipping approval.
+  [0056](decisions/0056-bounded-coastline-architecture-trial.md) now limits further
+  investigation to one host representation trial and, if promising, at most one
+  separately authorized target feasibility check before choosing the architecture.
+  The [completed host trial](evaluations/m4-coastline-representation-spike.md) uses
+  a 32,211 B quadratic ECEF representation and screen-scale refinement; it improves
+  all eleven host scenes ~36–65×, with bidirectional isolated raster differences
+  within 1px in the tested controls. The user accepted its appearance and separately
+  authorized the [single target feasibility check](evaluations/m4-coastline-representation-target.md),
+  now complete: **22,489 µs** maximum coast rebuild (~435× faster than before, still
+  above 5 ms); **58,156 B** compiled increment fits, but candidate-specific nested
+  stack frames alone exceed 1 KiB. All 48 captured framebuffers match the host and
+  measured draws allocate no heap. **Not adopted for the device.** Stop general
+  renderer optimization under 0056 and scope set-location/preparation/reuse for
+  different users. [0057](decisions/0057-fixed-observer-coastline-preparation-scope.md)
+  accepts a fixed observer during use for this version, without excluding future
+  globe scrolling/panning. It does not choose configuration, cache, location UI,
+  preparation delay or revised memory policy; the first firmware prototype still
+  follows 0004 until a successor contract is chosen. Selected non-coast frame
+  cost and Sharp/whole-device cadence remain separate open blockers.
 
 **Done when:** the view is useful and understandable during passes and empty sky.
 

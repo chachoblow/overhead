@@ -1,0 +1,37 @@
+{
+  "elf_sha256": "8be11ae7b6587c95aa0411a865deda6a7475ca57fa6d785f5d5976a1d31f8ffa",
+  "image_sha256": "8ed3d2a10106fe6b761ff78eef4d211316ff1c1b75cc906e104f09225f742495",
+  "image_bytes": 431104,
+  "app_offset": 65536,
+  "rodata_alignment": 64,
+  "merge_bytes": 32,
+  "checked_sections": 10,
+  "checked_elf_bytes": 430987,
+  "segments": [
+    {
+      "address": "0x3c000020",
+      "bytes": 116108,
+      "file_offset": 32
+    },
+    {
+      "address": "0x3fc8b148",
+      "bytes": 3692,
+      "file_offset": 116148
+    },
+    {
+      "address": "0x40378000",
+      "bytes": 11248,
+      "file_offset": 119848
+    },
+    {
+      "address": "0x42020020",
+      "bytes": 298580,
+      "file_offset": 131104
+    },
+    {
+      "address": "0x4037abf0",
+      "bytes": 1364,
+      "file_offset": 429692
+    }
+  ]
+}

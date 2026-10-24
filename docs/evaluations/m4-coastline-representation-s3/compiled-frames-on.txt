@@ -1,0 +1,28 @@
+42022a28 <overhead_s3_coast_representation::sample>:
+42022a28:	016136        	entry	a1, 176
+42025380 <overhead_s3_benchmark::stack_watermark::target::exercise_stack>:
+42025380:	406136        	entry	a1, 0x2030
+42029548 <overhead_render::coast::representation_spike::candidate_draw::<embedded_graphics::draw_target::clipped::Clipped<overhead_s3_benchmark::coast_measurement::Screen>>>:
+42029548:	038136        	entry	a1, 0x1c0
+420299ec <overhead_render::coast::representation_spike::candidate_draw::<overhead_s3_benchmark::coast_measurement::Screen>>:
+420299ec:	038136        	entry	a1, 0x1c0
+42029e90 <overhead_render::coast::representation_spike::flatten::<embedded_graphics::draw_target::clipped::Clipped<overhead_s3_benchmark::coast_measurement::Screen>>>:
+42029e90:	08a136        	entry	a1, 0x450
+4202a6b4 <overhead_render::coast::representation_spike::flatten::<overhead_s3_benchmark::coast_measurement::Screen>>:
+4202a6b4:	07c136        	entry	a1, 0x3e0
+42039bd8 <overhead_render::coast::representation_spike::cuts>:
+42039bd8:	008136        	entry	a1, 64
+42039e80 <overhead_render::coast::representation_spike::flat>:
+42039e80:	006136        	entry	a1, 48
+42039f44 <overhead_render::coast::representation_spike::subcurve>:
+42039f44:	00a136        	entry	a1, 80
+4203a0d8 <overhead_render::coast::representation_spike::clip_fast>:
+4203a0d8:	008136        	entry	a1, 64
+4203a648 <overhead_render::coast::representation_spike::decode::part_range>:
+4203a648:	004136        	entry	a1, 32
+4203a6b0 <overhead_render::coast::representation_spike::decode::decode_fast>:
+4203a6b0:	00a136        	entry	a1, 80
+4203a7f4 <overhead_render::coast::representation_spike::decode::checked>:
+4203a7f4:	004136        	entry	a1, 32
+42067ff4 <overhead_render::coast::representation_spike::split>:
+42067ff4:	004136        	entry	a1, 32

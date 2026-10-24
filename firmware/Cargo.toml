@@ -10,6 +10,9 @@ catalogue-memory = ["overhead-core/catalogue", "dep:serde_json", "dep:esp-alloc"
 # Separate opt-in renderer experiment; never part of frozen M2 images.
 coast-measurement = ["dep:overhead-app", "dep:overhead-render", "dep:embedded-graphics", "dep:serde_json", "dep:esp-alloc", "overhead-core/catalogue", "overhead-render/measurement"]
 coast-measurement-on = ["coast-measurement"]
+# Separate candidate image; historical Stage A and frozen M2 features unchanged.
+coast-representation = ["coast-measurement", "overhead-render/representation-measurement"]
+coast-representation-on = ["coast-representation"]
 
 [dependencies]
 overhead-core = { path = "../core" }
@@ -54,6 +57,17 @@ path = "src/coast_main.rs"
 required-features = ["coast-measurement"]
 test = false
 bench = false
+
+[[bin]]
+name = "overhead-s3-coast-representation"
+path = "src/representation_main.rs"
+required-features = ["coast-representation"]
+test = false
+bench = false
+
+[[example]]
+name = "representation_expected"
+required-features = ["coast-representation-on"]
 
 [[example]]
 name = "numerical_expected"

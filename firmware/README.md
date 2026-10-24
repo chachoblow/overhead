@@ -35,6 +35,18 @@ All 75 rows pass in both approved diagnostic boots. Future flashes/resets still
 require approval; exact image gates and compiled-frame review are recorded in
 [M2_CAPTURE](M2_CAPTURE.md).
 
+## Isolated coastline representation feasibility image
+
+The single [0056 candidate check](../docs/evaluations/m4-coastline-representation-target.md)
+is complete. `overhead-s3-coast-representation` is a separate opt-in measurement
+binary, not the device app or a replacement for the earlier Stage A image. Features
+`coast-representation` / `coast-representation-on` select matched off/on builds.
+It uses a 1-bit RAM target, existing app fixtures and the
+[measurement-only packed asset](fixtures/README.md); no Sharp driver or PSRAM.
+[Exact build/capture commands, image identities and offline audits](../docs/evaluations/m4-coastline-representation-s3/README.md)
+are retained with the evidence. Future builds/flashes/runs require new approval;
+the completed check does not authorize continuing optimization or adopting it.
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing

@@ -1,0 +1,151 @@
+{
+  "base_revision": "33fcf43fc467fa0936972fac782bf8737d377809",
+  "source_state": "uncommitted measurement extraction over base; source-hashes.json records compiled inputs",
+  "settings": {
+    "bin": "overhead-s3-coast-representation",
+    "BENCH_SUITE": "baseline",
+    "BENCH_SAMPLES": "5",
+    "opt_level": 3,
+    "cpu_mhz": 240,
+    "flash": "8mb/dio/40mhz",
+    "target": "xtensa-esp32s3-none-elf"
+  },
+  "images": {
+    "off": {
+      "features": "coast-representation",
+      "gate": {
+        "elf_sha256": "e90530be007601fa2fe2626a915f3c78520510bdea2e8cfd1d78ac17dd7e51f8",
+        "image_sha256": "782270125301ad366736ed646e0d1e689ec5cfb1a0bcd808cb5aa5eb3e043d15",
+        "image_bytes": 404704,
+        "app_offset": 65536,
+        "rodata_alignment": 64,
+        "merge_bytes": 32,
+        "checked_sections": 10,
+        "checked_elf_bytes": 372831,
+        "segments": [
+          {
+            "address": "0x3c000020",
+            "bytes": 83084,
+            "file_offset": 32
+          },
+          {
+            "address": "0x3fc8b148",
+            "bytes": 3580,
+            "file_offset": 83124
+          },
+          {
+            "address": "0x40378000",
+            "bytes": 12612,
+            "file_offset": 86712
+          },
+          {
+            "address": "0x00000000",
+            "bytes": 31764,
+            "file_offset": 99332
+          },
+          {
+            "address": "0x42020020",
+            "bytes": 273560,
+            "file_offset": 131104
+          }
+        ]
+      },
+      "sections": {
+        ".text": 273549,
+        ".rodata": 82768,
+        ".data": 3580,
+        ".bss": 89720,
+        ".rwtext": 11588,
+        ".stack": 235832
+      },
+      "candidate_asset_offset": -1,
+      "original_asset_present": false,
+      "coast_text_excluded": true,
+      "frames_bytes": {
+        "overhead_s3_coast_representation::sample": 176,
+        "overhead_s3_benchmark::stack_watermark::target::exercise_stack": 8240
+      }
+    },
+    "on": {
+      "features": "coast-representation-on",
+      "gate": {
+        "elf_sha256": "8be11ae7b6587c95aa0411a865deda6a7475ca57fa6d785f5d5976a1d31f8ffa",
+        "image_sha256": "8ed3d2a10106fe6b761ff78eef4d211316ff1c1b75cc906e104f09225f742495",
+        "image_bytes": 431104,
+        "app_offset": 65536,
+        "rodata_alignment": 64,
+        "merge_bytes": 32,
+        "checked_sections": 10,
+        "checked_elf_bytes": 430987,
+        "segments": [
+          {
+            "address": "0x3c000020",
+            "bytes": 116108,
+            "file_offset": 32
+          },
+          {
+            "address": "0x3fc8b148",
+            "bytes": 3692,
+            "file_offset": 116148
+          },
+          {
+            "address": "0x40378000",
+            "bytes": 11248,
+            "file_offset": 119848
+          },
+          {
+            "address": "0x42020020",
+            "bytes": 298580,
+            "file_offset": 131104
+          },
+          {
+            "address": "0x4037abf0",
+            "bytes": 1364,
+            "file_offset": 429692
+          }
+        ]
+      },
+      "sections": {
+        ".text": 298569,
+        ".rodata": 115792,
+        ".data": 3692,
+        ".bss": 89720,
+        ".rwtext": 11588,
+        ".stack": 235720
+      },
+      "candidate_asset_offset": 21996,
+      "original_asset_present": false,
+      "coast_text_excluded": false,
+      "frames_bytes": {
+        "overhead_s3_coast_representation::sample": 176,
+        "overhead_s3_benchmark::stack_watermark::target::exercise_stack": 8240,
+        "overhead_render::coast::representation_spike::candidate_draw::<embedded_graphics::draw_target::clipped::Clipped<overhead_s3_benchmark::coast_measurement::Screen>>": 448,
+        "overhead_render::coast::representation_spike::candidate_draw::<overhead_s3_benchmark::coast_measurement::Screen>": 448,
+        "overhead_render::coast::representation_spike::flatten::<embedded_graphics::draw_target::clipped::Clipped<overhead_s3_benchmark::coast_measurement::Screen>>": 1104,
+        "overhead_render::coast::representation_spike::flatten::<overhead_s3_benchmark::coast_measurement::Screen>": 992,
+        "overhead_render::coast::representation_spike::cuts": 64,
+        "overhead_render::coast::representation_spike::flat": 48,
+        "overhead_render::coast::representation_spike::subcurve": 80,
+        "overhead_render::coast::representation_spike::clip_fast": 64,
+        "overhead_render::coast::representation_spike::decode::part_range": 32,
+        "overhead_render::coast::representation_spike::decode::decode_fast": 80,
+        "overhead_render::coast::representation_spike::decode::checked": 32,
+        "overhead_render::coast::representation_spike::split": 32
+      }
+    }
+  },
+  "allocated_file_backed_increment": 58156,
+  "section_deltas": {
+    ".text": 25020,
+    ".rodata": 33024,
+    ".data": 112,
+    ".bss": 0,
+    ".rwtext": 0,
+    ".stack": -112
+  },
+  "asset": {
+    "bytes": 32211,
+    "sha256": "6c478669a07d8683cf842b5ee8eb197723e05dbbe1a063508601866e3c5d3d02"
+  },
+  "source_patch_sha256": "6fafa033b5473e9ae1427ce2cc5bfb0dde68c21f97f9fc3ac183d27a4a9b36ef"
+}

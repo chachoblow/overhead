@@ -1,0 +1,121 @@
+{
+  "off": {
+    "rows": 55,
+    "masks": 11,
+    "raw_sha256": "7f3900092d857f1b6181b4584f7e02b37be392aa7f35ac4313780527732a487c",
+    "probe": {
+      "baseline": 1632,
+      "loaded": 9580,
+      "stack_low": 1070210504,
+      "stack_top": 1070446336,
+      "paint_low": 1070210568,
+      "paint_high": 1070444704
+    },
+    "modes": {
+      "FrameOff": {
+        "min_us": 18302,
+        "max_us": 136849,
+        "max_case": "iss-ground-20",
+        "stack_min": 3456,
+        "stack_max": 3640
+      }
+    }
+  },
+  "on": {
+    "rows": 185,
+    "masks": 37,
+    "raw_sha256": "d0d53f03298ad0e413e1a54e1bdf8e0869c512de1cfbe2c9534a4332eafa4ef2",
+    "probe": {
+      "baseline": 1648,
+      "loaded": 9596,
+      "stack_low": 1070210616,
+      "stack_top": 1070446336,
+      "paint_low": 1070210680,
+      "paint_high": 1070444688
+    },
+    "modes": {
+      "Coast": {
+        "min_us": 9961,
+        "max_us": 22489,
+        "max_case": "polar-20",
+        "stack_min": 3328,
+        "stack_max": 3328
+      },
+      "FrameOn": {
+        "min_us": 30775,
+        "max_us": 156649,
+        "max_case": "iss-ground-20",
+        "stack_min": 4448,
+        "stack_max": 4448
+      },
+      "FrameOff": {
+        "min_us": 18308,
+        "max_us": 136694,
+        "max_case": "iss-ground-20",
+        "stack_min": 3536,
+        "stack_max": 3720
+      },
+      "Late": {
+        "min_us": 58426,
+        "max_us": 170928,
+        "max_case": "iss-ground-20",
+        "stack_min": 4448,
+        "stack_max": 4448
+      },
+      "LateWarning": {
+        "min_us": 58545,
+        "max_us": 171282,
+        "max_case": "iss-ground-20",
+        "stack_min": 4448,
+        "stack_max": 4448
+      }
+    }
+  },
+  "coast_cases": {
+    "sf-tight": {
+      "median_us": 10715,
+      "max_us": 10895
+    },
+    "sf-1": {
+      "median_us": 10804,
+      "max_us": 11011
+    },
+    "sf-5": {
+      "median_us": 13515,
+      "max_us": 13716
+    },
+    "sf-100": {
+      "median_us": 17946,
+      "max_us": 18131
+    },
+    "colorado-20": {
+      "median_us": 18677,
+      "max_us": 18871
+    },
+    "polar-20": {
+      "median_us": 22304,
+      "max_us": 22489
+    },
+    "dateline-5": {
+      "median_us": 10802,
+      "max_us": 10990
+    },
+    "limb-20": {
+      "median_us": 17481,
+      "max_us": 17671
+    },
+    "limb-100": {
+      "median_us": 17205,
+      "max_us": 17397
+    },
+    "viewport-tight": {
+      "median_us": 9964,
+      "max_us": 10162
+    },
+    "iss-ground-20": {
+      "median_us": 16085,
+      "max_us": 16173
+    }
+  },
+  "exact_host_masks": 48
+}

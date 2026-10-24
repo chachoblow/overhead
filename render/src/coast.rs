@@ -302,6 +302,8 @@ pub(super) fn draw_with_hook<D: DrawTarget<Color = BinaryColor>>(
 mod candidate_spike;
 #[cfg(test)]
 mod cost_preflight;
+#[cfg(any(test, feature = "representation-measurement"))]
+pub(crate) mod representation_spike;
 #[cfg(test)]
 mod visibility_bound_study;
 #[cfg(test)]

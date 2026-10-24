@@ -139,6 +139,61 @@ impl<D: DrawTarget<Color = BinaryColor>> DrawTarget for InkTarget<'_, D> {
     }
 }
 
+/// The accepted host trial, exposed only for the separately authorized S3 check.
+/// Still restricted to an infallible RAM target, not a production display API.
+#[cfg(feature = "representation-measurement")]
+pub use crate::coast::representation_spike::{
+    Counts as RepresentationCounts, candidate_draw, pending_bytes,
+};
+
+/// Shares the existing frame compositor and its exceptional rollback, but does
+/// not replace production coast drawing. Late injection occurs AFTER the whole
+/// candidate succeeds with ink, not at the old renderer's interval threshold.
+#[cfg(feature = "representation-measurement")]
+pub fn frame_candidate<D: DrawTarget<Color = BinaryColor, Error = core::convert::Infallible>>(
+    display: &mut D,
+    app: &RadarApp,
+    bytes: &[u8],
+    warning: bool,
+    inject_late: bool,
+) -> bool {
+    let completed = Cell::new(false);
+    draw_frame_with_coast(
+        display,
+        app,
+        Layout::wide(),
+        warning,
+        None,
+        Some(bytes),
+        |display, site, view, _, bytes| {
+            let ok = candidate_draw(display, site, view, bytes)
+                .is_ok_and(|counts| !inject_late || counts.strokes > 0);
+            completed.set(ok);
+            Ok(ok && !inject_late)
+        },
+    )
+    .unwrap();
+    completed.get()
+}
+
+/// Independent immediate-failure control without retaining either coast asset.
+#[cfg(feature = "representation-measurement")]
+pub fn candidate_failure_control<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    app: &RadarApp,
+    warning: bool,
+) -> Result<(), D::Error> {
+    draw_frame_with_coast(
+        display,
+        app,
+        Layout::wide(),
+        warning,
+        None,
+        Some(&[]),
+        |_, _, _, _, _| Ok(false),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

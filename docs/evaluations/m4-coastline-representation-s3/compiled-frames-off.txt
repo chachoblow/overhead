@@ -1,0 +1,4 @@
+42022e30 <overhead_s3_coast_representation::sample>:
+42022e30:	016136        	entry	a1, 176
+420250f0 <overhead_s3_benchmark::stack_watermark::target::exercise_stack>:
+420250f0:	406136        	entry	a1, 0x2030

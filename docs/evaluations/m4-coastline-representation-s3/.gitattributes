@@ -1,0 +1,6 @@
+# Preserve unmodified UART/monitor output including CRLF and bootloader spacing.
+*.log -text whitespace=-blank-at-eol
+*.zip -text
+# Preserve trailing blank output emitted by the retained tools.
+host-extraction.txt whitespace=-blank-at-eof
+toolchain.txt whitespace=-blank-at-eof

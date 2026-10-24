@@ -64,7 +64,12 @@ than hundreds. Pass prediction remains useful but secondary to radar quality
 The radar is a north-up perspective view of actual 3D satellite positions,
 from a fixed camera above the configured observer looking down toward that
 location. Lens zoom narrows or widens the field of view without moving the camera.
-Earth and satellites share the perspective; altitude affects marker placement,
+This iteration may reuse prepared coastline geography for a fixed observer during
+use; the user would like to keep globe scrolling/panning open for a future
+iteration, not require it now. [0057](decisions/0057-fixed-observer-coastline-preparation-scope.md)
+scopes that direction without selecting a location UI, cache or production
+implementation. Earth and satellites share the perspective; altitude affects
+marker placement,
 and satellites can appear outside Earth's silhouette rather than being flattened
 onto its surface. Objects outside the view or behind the camera are clipped;
 zoom alone cannot move an object behind the camera.

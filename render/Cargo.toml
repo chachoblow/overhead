@@ -6,6 +6,8 @@ edition = "2024"
 [features]
 # Explicitly enabled only by a separate measurement harness; not a UI setting.
 measurement = []
+# Accepted host trial exposed only to the isolated target feasibility image.
+representation-measurement = ["measurement"]
 
 [dependencies]
 embedded-graphics.workspace = true

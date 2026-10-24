@@ -1,0 +1,2 @@
+# Preserve verbatim Rust test output, including its trailing blank line.
+host-run*.txt whitespace=-blank-at-eof
