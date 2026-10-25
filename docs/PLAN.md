@@ -267,14 +267,16 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   snapshot review: filled off-screen arrows, 1px white backing behind the
   selected ID and selected diamond, and `NONE IN VIEW` replacing `SKY OUTSIDE VIEW`.
   Unselected markers stay unchanged after a style comparison.
-- [ ] Refine secondary information with visual feedback and choose any further
+- [x] Refine secondary information with visual feedback and choose any further
   true-state readouts separately. 0032 removes routine normal-view FOV/counts;
   time and data age are not starting-layout requirements. The [range comparison](mockups/0050-range-vs-no-readout.md)
   ended with range remaining in debug under [0050](decisions/0050-keep-range-in-debug-and-defer-display-prediction.md);
   no additional normal-view readout was approved.
-- [ ] Refine empty-sky behavior without adding display prediction for now;
+  Marked done for now (user, 2026-10-24) after the 0061 snapshot review.
+- [x] Refine empty-sky behavior without adding display prediction for now;
   next-pass countdown study/integration is deferred under 0050, not cancelled
   or substituted for [0048's notices](decisions/0048-refined-empty-view-notices.md).
+  Marked done for now (user, 2026-10-24): current empty-sky feel accepted.
 - [x] Prepare coastlines offline and render them legibly across zoom levels.
   Marked done for now (user, 2026-10-24); device feel and timing follow 0060.
   [0051's reviewed angular appearance direction](decisions/0051-angular-coastline-appearance-direction.md)
