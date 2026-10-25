@@ -160,7 +160,7 @@ recover this direction; the retained PNGs and text are sufficient.
   familiar-name exception `25544 -> ISS`. Implemented in the opt-in wide view
   under [0034](decisions/0034-selected-marker-identification.md): right-side text,
   left-side fallback, vertical clamping and overlaps allowed; 0061 adds a 1px
-  white backing behind the ID text. The
+  white backing behind the ID text and the selected diamond. The
   complete ID stays inside the radar, with the marker rather than at the top of
   the strip. [0035](decisions/0035-label-zoom-visibility.md) hides the text at ≥70°
   vertical FOV and restores it at ≤60°, retaining visibility between thresholds.

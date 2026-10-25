@@ -265,7 +265,8 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   selection continuity as well as the code/contract, separately from host tests.
 - [x] [0061](decisions/0061-filled-arrows-id-backing-none-in-view.md) after a
   snapshot review: filled off-screen arrows, 1px white backing behind the
-  selected ID, and `NONE IN VIEW` replacing `SKY OUTSIDE VIEW`.
+  selected ID and selected diamond, and `NONE IN VIEW` replacing `SKY OUTSIDE VIEW`.
+  Unselected markers stay unchanged after a style comparison.
 - [ ] Refine secondary information with visual feedback and choose any further
   true-state readouts separately. 0032 removes routine normal-view FOV/counts;
   time and data age are not starting-layout requirements. The [range comparison](mockups/0050-range-vs-no-readout.md)

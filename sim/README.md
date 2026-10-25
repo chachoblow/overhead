@@ -357,7 +357,8 @@ Only identity controls this exception, not the catalogue name. The 6×10 text
 prefers the diamond's right side, flips left if needed, and clamps vertically to
 keep the entire label inside the drawable radar. Longer IDs are not truncated to
 five or six digits. Under 0061 the text has a borderless 1px white backing, so
-scene graphics cannot cross it; there is still no collision search or displacement. Selection/zoom updates the label
+scene graphics cannot cross it; the selected diamond likewise has a 1px backing
+and is drawn above other markers. There is still no collision search or displacement. Selection/zoom updates the label
 immediately; arrows are never labelled. Wide zoom hides the label as described
 below; the selected diamond and square baseline are unchanged.
 

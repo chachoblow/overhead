@@ -31,3 +31,14 @@ debug and other notices are unchanged. Host tests pin the filled interior, the
 label's exact change region and the new string. Earlier mocks and decision text
 that show hollow arrows, transparent IDs or `SKY OUTSIDE VIEW` remain historical
 references.
+
+## Follow-up — 2026-10-24: backed selected diamond
+
+At the user's request, the wide view's selected diamond also gets a 1px
+diamond-shaped white backing (all pixels within Manhattan distance 4 of its
+centre are cleared, clipped to the radar), and it is drawn after every other
+marker so the backing and diamond sit on top. Coastline, limb, arrows, the aim
+cross or a coincident marker no longer cross it. Unselected markers keep their
+unbacked 5px `+` (the user reviewed square, diamond and halo alternatives and
+kept the current markers). Square/circular diagnostics are unchanged. Other
+selected-marker behavior (0035, 0040, 0049) is unchanged.

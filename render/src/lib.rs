@@ -222,14 +222,22 @@ where
     }
 
     let mut selected_marker = None;
+    let wide = viewport == Viewport::Rectangle;
     for (entry, _, point) in app.markers() {
         let marker = layout.marker(point);
         let id = entry.elements().norad_id;
         let selected = app.selected_id() == Some(id);
-        draw_marker(&mut display, marker, selected, layout, viewport)?;
+        // Wide view draws the selected marker last, so its backing and diamond
+        // sit above every other marker (0061 follow-up). Diagnostics unchanged.
+        if !(selected && wide) {
+            draw_marker(&mut display, marker, selected, layout, viewport)?;
+        }
         if selected {
             selected_marker = Some((id, marker));
         }
+    }
+    if wide && let Some((_, marker)) = selected_marker {
+        draw_marker(&mut display, marker, true, layout, viewport)?;
     }
 
     if viewport == Viewport::Rectangle {
@@ -385,6 +393,18 @@ fn draw_marker<D: DrawTarget<Color = BinaryColor>>(
 ) -> Result<(), D::Error> {
     // Clip every glyph pixel to the viewport, not just the center. A highlighted
     // edge marker must not spill into the information area.
+    if selected && viewport == Viewport::Rectangle {
+        // 0061 follow-up: clear a 1px diamond-shaped backing first, so scene ink
+        // (coast, limb, arrows, other markers) cannot cross the selected diamond.
+        let backing = (-4_i32..=4)
+            .flat_map(|y| (-4_i32..=4).map(move |x| (x, y)))
+            .filter_map(|(x, y)| {
+                let p = marker + Point::new(x, y);
+                (x.abs() + y.abs() <= 4 && layout.contains(p, viewport))
+                    .then_some(Pixel(p, BinaryColor::Off))
+            });
+        display.draw_iter(backing)?;
+    }
     let pixels = (-3_i32..=3)
         .flat_map(|y| (-3_i32..=3).map(move |x| (x, y)))
         .filter_map(|(x, y)| {
@@ -1060,6 +1080,57 @@ mod tests {
             draw_indicator(&mut screen, arrow, layout).unwrap();
             assert_eq!(screen.pixels, expected); // Exact overlaps are permitted.
         }
+    }
+
+    #[test]
+    fn selected_diamond_has_white_backing_and_unselected_markers_do_not() {
+        let layout = Layout::wide();
+        let marker = Point::new(176, 120);
+        for selected in [false, true] {
+            let mut screen = Screen {
+                pixels: [[true; 400]; 240],
+            };
+            draw_marker(&mut screen, marker, selected, layout, Viewport::Rectangle).unwrap();
+            for dy in -5_i32..=5 {
+                for dx in -5_i32..=5 {
+                    let d = dx.abs() + dy.abs();
+                    let on = screen.pixels[(120 + dy) as usize][(176 + dx) as usize];
+                    let expected = if selected {
+                        d > 4 || d == 3 || d == 0
+                    } else {
+                        true // No backing: the full-ink scene is untouched.
+                    };
+                    assert_eq!(on, expected, "selected={selected} ({dx}, {dy})");
+                }
+            }
+        }
+        // Square/circular diagnostics keep the unbacked diamond.
+        let mut square = Screen {
+            pixels: [[true; 400]; 240],
+        };
+        let diagnostic = Layout::new(240).unwrap();
+        draw_marker(
+            &mut square,
+            diagnostic.center(),
+            true,
+            diagnostic,
+            Viewport::Square,
+        )
+        .unwrap();
+        assert!(square.pixels.iter().flatten().all(|&on| on));
+        // Backing is clipped like the ink: nothing spills into the strip.
+        let mut screen = Screen {
+            pixels: [[true; 400]; 240],
+        };
+        draw_marker(
+            &mut screen,
+            Point::new(348, 120),
+            true,
+            layout,
+            Viewport::Rectangle,
+        )
+        .unwrap();
+        assert!((350..400).all(|x| screen.pixels[120][x]));
     }
 
     fn reference_elevation(elevation: f64) -> [[bool; 24]; 24] {
