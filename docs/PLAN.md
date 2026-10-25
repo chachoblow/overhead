@@ -271,7 +271,8 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
 - [ ] Refine empty-sky behavior without adding display prediction for now;
   next-pass countdown study/integration is deferred under 0050, not cancelled
   or substituted for [0048's notices](decisions/0048-refined-empty-view-notices.md).
-- [ ] Prepare coastlines offline and render them legibly across zoom levels.
+- [x] Prepare coastlines offline and render them legibly across zoom levels.
+  Marked done for now (user, 2026-10-24); device feel and timing follow 0060.
   [0051's reviewed angular appearance direction](decisions/0051-angular-coastline-appearance-direction.md)
   and [native 1-bit comparisons](mockups/0054-coastline-overview-comparison.md)
   cover 5°–100°. [0054](decisions/0054-first-executable-coastline-comparison.md)
