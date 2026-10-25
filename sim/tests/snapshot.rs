@@ -90,7 +90,7 @@ fn wide_empty_status_distinguishes_real_arrows_from_clean_horizon() {
         report.contains("catalogue=16 sky=4 visible=0 failed=0 indicators=4"),
         "{report}"
     );
-    assert_snapshot_notices(&scratch, "arrows.png", &["SKY OUTSIDE VIEW"]);
+    assert_snapshot_notices(&scratch, "arrows.png", &["NONE IN VIEW"]);
 
     let iss: Value =
         serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
@@ -389,7 +389,7 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                         &scratch,
                         "wide.png",
                         &[if indicators > 0 {
-                            "SKY OUTSIDE VIEW"
+                            "NONE IN VIEW"
                         } else {
                             "NONE ABOVE HORIZON"
                         }],
@@ -837,7 +837,7 @@ fn assert_snapshot_notices(scratch: &Scratch, path: &str, lines: &[&str]) {
     if lines.iter().any(|line| {
         matches!(
             *line,
-            "NO MARKERS" | "NO FRAME" | "SKY OUTSIDE VIEW" | "NONE ABOVE HORIZON"
+            "NO MARKERS" | "NO FRAME" | "NONE IN VIEW" | "NONE ABOVE HORIZON"
         )
     }) {
         assert_snapshot_fields(scratch, path, None, None, None, None, None);

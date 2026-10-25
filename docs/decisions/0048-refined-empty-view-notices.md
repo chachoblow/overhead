@@ -100,3 +100,7 @@ are **illustrative composites**, not simulator output of the new wording.
 reproduction. Host implementation checks/tests cover the status rules, notice
 raster and headless replay cases. The user separately accepted the fresh
 executable output; this does not establish physical-display legibility or target costs.
+
+## Follow-up — 2026-10-24
+
+[0061](0061-filled-arrows-id-backing-none-in-view.md): the arrow-case wording is now `NONE IN VIEW`, at the user's choice.

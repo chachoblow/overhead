@@ -63,3 +63,7 @@ stretch Earth to fill the rectangle.
   slowdown, panning, fetching, production limits/cadences, dependencies, firmware
   work or frozen-M2 evidence renewal. Simulator visuals do not establish device
   performance or physical-display legibility.
+
+## Follow-up — 2026-10-24
+
+[0061](0061-filled-arrows-id-backing-none-in-view.md): arrows are now filled, at the user's choice.

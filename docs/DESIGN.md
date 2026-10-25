@@ -149,7 +149,7 @@ recover this direction; the retained PNGs and text are sufficient.
   48-pixel strip; these dimensions are provisional and now used by the opt-in
   comparison. Keep breathing room and no perimeter border. Earth is not stretched
   to fill the rectangle.
-- **Outside-view context:** small hollow, outward-pointing edge indicators for
+- **Outside-view context:** small filled ([0061](decisions/0061-filled-arrows-id-backing-none-in-view.md); originally hollow), outward-pointing edge indicators for
   above-horizon satellites outside the viewport. Wider zoom brings them into
   view as actual markers. Use one arrow per eligible off-screen satellite;
   overlaps are allowed for the first comparison, without suppression, merging
@@ -159,7 +159,8 @@ recover this direction; the retained PNGs and text are sufficient.
 - **Identification:** bare NORAD ID beside the selected marker, with the sole
   familiar-name exception `25544 -> ISS`. Implemented in the opt-in wide view
   under [0034](decisions/0034-selected-marker-identification.md): right-side text,
-  left-side fallback, vertical clamping and transparent overlaps allowed. The
+  left-side fallback, vertical clamping and overlaps allowed; 0061 adds a 1px
+  white backing behind the ID text. The
   complete ID stays inside the radar, with the marker rather than at the top of
   the strip. [0035](decisions/0035-label-zoom-visibility.md) hides the text at ≥70°
   vertical FOV and restores it at ≤60°, retaining visibility between thresholds.
@@ -539,7 +540,8 @@ and accepting the interactive output. Square diagnostics retain visible-only
 selection.
 
 [0048](decisions/0048-refined-empty-view-notices.md) now accepts a bounded
-wide-radar empty-view refinement: `SKY OUTSIDE VIEW` when there are eligible
+wide-radar empty-view refinement: `NONE IN VIEW` (0061's wording; originally
+`SKY OUTSIDE VIEW`) when there are eligible
 arrows, `NONE ABOVE HORIZON` only for a clean nonempty loaded catalogue with
 nothing above the horizon, and conservative `NO MARKERS` otherwise. Independent
 tracking/ingestion warnings remain. The wording and wider white backing were

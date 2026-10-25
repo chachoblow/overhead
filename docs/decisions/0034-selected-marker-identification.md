@@ -43,3 +43,7 @@ collision handling; implementation is not a claim of user visual approval.
 - Defer category/data glyph mappings and transitions, final normal/debug access,
   refined empty/incomplete-state treatment, prediction, fetching, slowdown,
   capacity/cadence policy, firmware and frozen-M2 changes.
+
+## Follow-up — 2026-10-24
+
+[0061](0061-filled-arrows-id-backing-none-in-view.md): the ID now has a 1px white backing, at the user's choice.

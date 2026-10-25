@@ -318,7 +318,7 @@ is admitted horizontally. The 48-pixel strip holds the selected satellite's
 [period](#static-period-glyph) glyphs; status notices are at bottom-left
 inside the radar, not in the strip.
 
-One hollow outward arrow is drawn for each successful, above-horizon satellite
+One filled outward arrow ([0061](../docs/decisions/0061-filled-arrows-id-backing-none-in-view.md)) is drawn for each successful, above-horizon satellite
 whose finite projection is outside the view and whose camera depth is at least
 1 km. Arrows follow the projection direction, inset to fit the complete glyph.
 They are not velocities, physical edge positions, or distance encodings.
@@ -356,8 +356,8 @@ ID, except `25544` shows `ISS`.
 Only identity controls this exception, not the catalogue name. The 6×10 text
 prefers the diamond's right side, flips left if needed, and clamps vertically to
 keep the entire label inside the drawable radar. Longer IDs are not truncated to
-five or six digits. Text is transparent: overlaps with scene graphics are allowed,
-without a clearing mask or collision search. Selection/zoom updates the label
+five or six digits. Under 0061 the text has a borderless 1px white backing, so
+scene graphics cannot cross it; there is still no collision search or displacement. Selection/zoom updates the label
 immediately; arrows are never labelled. Wide zoom hides the label as described
 below; the selected diamond and square baseline are unchanged.
 
@@ -373,7 +373,7 @@ or Earth within that small area. This does not change eligibility, physical stat
 selection or reported counts; counts are not an unoccluded-pixel tally.
 
 Notices are condition-driven, not timed pop-ups:
-- `SKY OUTSIDE VIEW`: no in-view markers but at least one valid off-screen arrow.
+- `NONE IN VIEW` ([0061](../docs/decisions/0061-filled-arrows-id-backing-none-in-view.md); formerly `SKY OUTSIDE VIEW`): no in-view markers but at least one valid off-screen arrow.
   This reports tracked sky outside this viewport, not a promise that zoom can
   reveal every tracked object.
 - `NONE ABOVE HORIZON`: no in-view markers or arrows, and a nonempty accepted
@@ -806,8 +806,8 @@ The others show `ISS` (1 marker, no arrows) and `100530` (1 marker, 25 arrows)
 near the aim point; all have zero tracking failures. The latter sites approximate
 those satellites' subpoints from `overhead-track` at the supplied UTC. Repeat the
 weather/GPS comparison at 100° to review the now-unlabelled overview: user review
-of its formerly crowded label led to 0035. Below the hide cutoff, transparent
-overlap remains allowed by 0034; no collision avoidance has been added.
+of its formerly crowded label led to 0035. Below the hide cutoff, overlaps remain
+allowed (the backed label simply covers what is beneath it); no collision avoidance.
 
 ## Verify
 
@@ -827,7 +827,7 @@ and determinism. Wide tests additionally cover rectangular aspect and pixel scal
 per-object arrows despite coincident positions, directional glyph clipping,
 marker entry, and visible warnings in empty and partially successful frames.
 Identification tests cover ISS/five-/six-/longer IDs, complete edge/corner fit,
-transparent overlaps, selection changes and stale-label clearing, baseline
+backed overlaps, selection changes and stale-label clearing, baseline
 isolation, and headless identity-versus-name behavior using a real orbit with
 explicitly synthetic identity metadata. Zoom-label tests cover inclusive
 thresholds, retained history in both directions, startup in the intervening band,

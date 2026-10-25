@@ -10,7 +10,7 @@ use embedded_graphics::{
     mono_font::{MonoTextStyle, ascii::FONT_6X10},
     pixelcolor::BinaryColor,
     prelude::*,
-    primitives::{Circle, Line, PrimitiveStyle, Rectangle},
+    primitives::{Circle, Line, PrimitiveStyle, PrimitiveStyleBuilder, Rectangle, Triangle},
     text::{Baseline, Text},
 };
 use overhead_app::{
@@ -313,7 +313,7 @@ where
             } else if counts.failed > 0 {
                 "NO MARKERS / ERRORS"
             } else if counts.above_horizon > 0 {
-                "SKY OUTSIDE VIEW"
+                "NONE IN VIEW"
             } else {
                 "NONE ABOVE HORIZON"
             }
@@ -432,12 +432,17 @@ fn draw_indicator<D: DrawTarget<Color = BinaryColor>>(
         ),
     );
     let mut clipped = display.clipped(&bounds);
-    let stroke = PrimitiveStyle::with_stroke(BinaryColor::On, 1);
-    for (start, end) in [(tip, a), (a, b), (b, tip)] {
-        Line::new(start, end)
-            .into_styled(stroke)
-            .draw(&mut clipped)?;
-    }
+    // Filled (0061): same outline pixels plus the interior, for contrast
+    // against coastline and edges. Overlaps still merge, never suppressed.
+    Triangle::new(tip, a, b)
+        .into_styled(
+            PrimitiveStyleBuilder::new()
+                .fill_color(BinaryColor::On)
+                .stroke_color(BinaryColor::On)
+                .stroke_width(1)
+                .build(),
+        )
+        .draw(&mut clipped)?;
     Ok(())
 }
 
@@ -487,9 +492,18 @@ fn draw_selected_label<D: DrawTarget<Color = BinaryColor>>(
         Baseline::Top,
     );
     let origin = selected_label_origin(marker, text.bounding_box().size, layout);
-    // Transparent ink only: scene overlaps are allowed, with no clearing mask,
+    // 0061: a 1px white backing behind the text keeps it legible over coast,
+    // limb or arrows. It may cover scene pixels in that box only; still no
     // collision search, leader line or displacement of markers/arrows.
-    text.translate(origin).draw(display)?;
+    let text = text.translate(origin);
+    let bounds = text.bounding_box();
+    Rectangle::new(
+        bounds.top_left - Point::new(1, 1),
+        bounds.size + Size::new(2, 2),
+    )
+    .into_styled(PrimitiveStyle::with_fill(BinaryColor::Off))
+    .draw(display)?;
+    text.draw(display)?;
     Ok(())
 }
 
@@ -533,7 +547,7 @@ fn wide_empty_status(
     } else if counts.visible > 0 {
         None
     } else if has_indicator {
-        Some("SKY OUTSIDE VIEW")
+        Some("NONE IN VIEW")
     } else if counts.catalogue > 0
         && counts.above_horizon == 0
         && counts.failed == 0
@@ -1007,7 +1021,7 @@ mod tests {
     }
 
     #[test]
-    fn arrows_are_hollow_outward_and_clipped_including_corner_directions() {
+    fn arrows_are_filled_outward_and_clipped_including_corner_directions() {
         use overhead_app::projection::CameraPoint;
         let layout = Layout::wide();
         let view = View::rectangular(20.0, layout.aspect_ratio()).unwrap();
@@ -1040,7 +1054,7 @@ mod tests {
                 assert!(screen.pixels[120][346]); // Outward tip.
                 assert!(screen.pixels[118][341]); // Base corners.
                 assert!(screen.pixels[122][341]);
-                assert!(!screen.pixels[120][343]); // Hollow interior.
+                assert!(screen.pixels[120][343]); // Filled interior (0061).
             }
             let expected = screen.pixels;
             draw_indicator(&mut screen, arrow, layout).unwrap();
@@ -2081,15 +2095,15 @@ mod tests {
         );
         assert_eq!(
             wide_empty_status(true, clean, true, false),
-            Some("SKY OUTSIDE VIEW")
+            Some("NONE IN VIEW")
         );
         assert_eq!(
             wide_empty_status(true, clean, true, true),
-            Some("SKY OUTSIDE VIEW")
+            Some("NONE IN VIEW")
         );
         assert_eq!(
             wide_empty_status(true, Counts { failed: 1, ..clean }, true, false),
-            Some("SKY OUTSIDE VIEW")
+            Some("NONE IN VIEW")
         );
         assert_eq!(
             wide_empty_status(true, clean, false, false),
@@ -2120,7 +2134,7 @@ mod tests {
             [None, None, None, None],
             [Some("NO FRAME"), None, None, None],
             [Some("NO MARKERS"), None, None, None],
-            [Some("SKY OUTSIDE VIEW"), None, None, None],
+            [Some("NONE IN VIEW"), None, None, None],
             [
                 Some("NONE ABOVE HORIZON"),
                 Some("TRACK ERROR"),
@@ -2413,7 +2427,7 @@ mod tests {
     }
 
     #[test]
-    fn selected_label_is_transparent_over_scene_graphics() {
+    fn selected_label_has_white_backing_over_scene_graphics() {
         let layout = Layout::wide();
         let mut scene = Screen {
             pixels: [[false; 400]; 240],
@@ -2445,11 +2459,31 @@ mod tests {
         };
         draw_selected_label(&mut ink, 1_234_567, marker, layout).unwrap();
         draw_selected_label(&mut scene, 1_234_567, marker, layout).unwrap();
+        // Text ink bounds plus 1px is the only region the label may change:
+        // inside it, exactly the text; outside, the scene is untouched.
+        let lit: Vec<_> = (0..240)
+            .flat_map(|y| (0..400).map(move |x| (x, y)))
+            .filter(|&(x, y)| ink.pixels[y][x])
+            .collect();
+        let origin = selected_label_origin(marker, Size::new(42, 10), layout);
+        let (x0, y0) = (origin.x as usize - 1, origin.y as usize - 1);
+        let (x1, y1) = (x0 + 44, y0 + 12);
+        assert!(
+            lit.iter()
+                .all(|&(x, y)| (x0..x1).contains(&x) && (y0..y1).contains(&y))
+        );
+        let mut covered = false;
         for (y, row) in before.iter().enumerate() {
             for (x, &was_on) in row.iter().enumerate() {
-                assert_eq!(scene.pixels[y][x], was_on || ink.pixels[y][x]);
+                if (x0..x1).contains(&x) && (y0..y1).contains(&y) {
+                    assert_eq!(scene.pixels[y][x], ink.pixels[y][x]);
+                    covered |= was_on && !ink.pixels[y][x];
+                } else {
+                    assert_eq!(scene.pixels[y][x], was_on);
+                }
             }
         }
+        assert!(covered, "fixture never placed scene ink under the label");
     }
 
     #[test]
