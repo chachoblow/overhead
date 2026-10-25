@@ -46,7 +46,10 @@ verification provenance in the [fixture README](../core/tests/fixtures/README.md
 - [x] Benchmark propagation and prediction on confirmed S3 hardware; record board,
   build, mixed LEO/HEO/GNSS/GEO workloads, and timings
   ([first target baseline](evaluations/s3-costs.md)).
-- [ ] Validate minimal Sharp output/refresh before full firmware integration.
+- [x] Validate minimal Sharp output/refresh before full firmware integration:
+  the opt-in [wiring/refresh test](../firmware/README.md#isolated-sharp-wiringrefresh-test)
+  booted on the S3 and the user confirmed the alternating pattern on the physical
+  #4694 panel. This is not radar integration or whole-device cadence evidence.
 
 Ask before flashing or changing toolchains. Simulator work need not wait for
 hardware; the first S3 kernel baseline alone does not justify capacity or cadence.
@@ -372,6 +375,49 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
 **Done when:** fast passes are watchable without contaminating physical state.
 
 ## M6 — Standalone device
+- [x] First bounded physical integration: a fixed-time, single real-ISS
+  [radar frame](../firmware/README.md#fixed-fixture-radar-on-sharp-candidate)
+  from the shared app/renderer reached the Sharp panel; the user confirmed the
+  ISS marker and labelled strip. This does not establish motion, live inputs,
+  responsiveness or device cadence.
+- [x] A deliberately accelerated [deterministic ISS replay](../firmware/README.md#deterministic-radar-replay-v2-physically-accepted)
+  repaints the shared frame on the S3; the user confirmed visible movement and
+  the repeating reset on the physical panel. The first, too-short replay looked
+  static and was not accepted. This verifies motion output, not a live clock,
+  natural-speed orbit, 20 Hz cadence or sustained operation.
+  A separate [host-only timing preflight](../firmware/README.md#utcframe-scheduling-preflight-host-only)
+  now tests trusted-UTC gating, monotonic frame deadlines/overrun skips and idle
+  VCOM. It is not integrated on the board; the uncached replay's ~196 ms
+  update/render/transfer exceeded the 50 ms target frame interval. A separate [cost-profile diagnostic](../firmware/README.md#sharp-full-frame-cost-diagnostic-flashed-short-uart-capture)
+  was approved, gated, flashed and UART-captured on the S3; the user confirmed
+  that its moving replay remains visible on the panel. The ~141 ms full
+  render contrasts with offscreen controls of ~13.7 ms full clear, ~1.1 ms cached
+  coast (including fast RAM clear) and ~138 ms full coast-free frame; controls
+  are not additive. The [host-tested stage trace](../firmware/README.md#stage-trace-follow-up-flashed-short-uart-capture)
+  was approved, offline-gated, flashed and UART-captured. In the ~138 ms
+  offscreen coast-free draw, ~13.8 ms is clear, ~6.1 ms Earth and **~116.2 ms
+  data glyphs**. [Individual-glyph v3](../firmware/README.md#individual-glyph-trace-v3-flashed-short-uart-capture)
+  was host-tested, approved, offline-gated, flashed and UART-captured. The
+  offscreen strip's ~116.5 ms includes **~115.02 ms in the period field** (label,
+  4,097 samples and raster). An opt-in host-tested renderer period cache now
+  reuses exactly the same raster for an unchanged mapped turn count; ordinary
+  replay firmware and simulator still use the uncached entry points. A [separate cache
+  comparison image](../firmware/README.md#period-cache-comparison-v1-flashed-short-uart-capture)
+  was approved, gated, flashed and short-captured. It sends cached frames and
+  compares each to an uncached offscreen byte oracle; all captured buffers matched.
+  Warm cached render ~26 ms versus ~141 ms separate uncached draw; full-frame
+  2 MHz transfer still takes ~52.4 ms and update/render/transfer ~82 ms. The
+  user confirmed moving replay on v2 and v3 and that the cache comparison's
+  moving replay still looks correct on the panel. At the datasheet's 2 MHz maximum,
+  a full frame has a ~49.9 ms wire-time floor before overhead. A separate
+  [host-only line-transfer preflight](../firmware/README.md#sharp-line-transfer-feasibility-host-only)
+  reconstructs exact pixels across three fixture loops with 18–34 changed lines
+  per transition. A [separate selective-line diagnostic](../firmware/README.md#selective-line-target-diagnostic-flashed-short-uart-capture-user-visual-check)
+  now has host pixel-parity/error-resync tests, gated target image and approved
+  flash. Its short UART capture reports ~5.4–8.8 ms changed-line transfers and
+  ~52.4 ms periodic full transfers. Asked about movement, reset and stale rows,
+  the user reported the display looks good. Sustained service remains open;
+  the diagnostic ticks at 500 ms, not 20 Hz.
 - [ ] Run shared engine/renderer on S3 + Sharp. Intended controls under 0060:
   button cycles satellites, knob zooms continuously (presets as fallback).
 - [ ] Add Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes

@@ -17,10 +17,23 @@ use overhead_core::{
 
 #[cfg(feature = "coast-measurement")]
 pub mod coast_measurement;
+#[cfg(feature = "sharp-radar")]
+pub mod device_timing;
 #[cfg(feature = "coast-prepared")]
 pub mod prepared_measurement;
 #[cfg(feature = "coast-representation")]
 pub mod representation_measurement;
+#[cfg(feature = "sharp-cache")]
+pub mod sharp_cache;
+#[cfg(feature = "sharp-lines")]
+pub mod sharp_lines;
+#[cfg(feature = "sharp-profile")]
+pub mod sharp_profile;
+#[cfg(feature = "sharp-test")]
+pub mod sharp_test;
+// Offline transport feasibility only; not linked into any target image.
+#[cfg(all(test, feature = "sharp-replay"))]
+mod sharp_transport;
 pub mod suites;
 
 #[cfg(feature = "numerical-reference")]

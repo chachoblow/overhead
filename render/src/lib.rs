@@ -28,6 +28,7 @@ pub mod measurement;
 pub mod presentation;
 
 pub use coast::CoastLayer;
+pub use glyphs::PeriodCache;
 
 pub const DISPLAY_SIZE: Size = Size::new(400, 240);
 
@@ -105,6 +106,28 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
     draw_frame(display, app, layout, ingestion_warning, None, Some(coast))
 }
 
+/// Same pixels as `draw`, reusing the approved period raster when the mapped
+/// period is unchanged. Keep the cache in long-lived renderer storage, not app
+/// physical state. No other glyph, coast or framebuffer work is cached.
+pub fn draw_cached<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    app: &RadarApp,
+    layout: Layout,
+    ingestion_warning: bool,
+    coast: &mut CoastLayer,
+    period_cache: &mut PeriodCache,
+) -> Result<(), D::Error> {
+    draw_frame_cached(
+        display,
+        app,
+        layout,
+        ingestion_warning,
+        None,
+        Some(coast),
+        Some(period_cache),
+    )
+}
+
 /// Provisional full-screen loading frame shown while the observer's coastline
 /// is prepared (0058). Wording/layout are not a final contract; it never shows
 /// geography, markers or notices from a previous preparation.
@@ -139,6 +162,31 @@ pub fn draw_at<D: DrawTarget<Color = BinaryColor>>(
     draw_frame(display, app, layout, ingestion_warning, values, Some(coast))
 }
 
+/// Explicit-time counterpart to `draw_cached`; the exact current presentation
+/// turn count is the key, so intermediate animated spirals do not become stale.
+pub fn draw_at_cached<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    app: &RadarApp,
+    layout: Layout,
+    ingestion_warning: bool,
+    presentation: &mut presentation::Presentation,
+    time: Duration,
+    coast: &mut CoastLayer,
+    period_cache: &mut PeriodCache,
+) -> Result<(), D::Error> {
+    let values =
+        (app.view().viewport() == Viewport::Rectangle).then(|| presentation.values(app, time));
+    draw_frame_cached(
+        display,
+        app,
+        layout,
+        ingestion_warning,
+        values,
+        Some(coast),
+        Some(period_cache),
+    )
+}
+
 /// `coast: None` omits geography without a notice: test/measurement controls only.
 fn draw_frame<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
@@ -148,7 +196,19 @@ fn draw_frame<D: DrawTarget<Color = BinaryColor>>(
     values: Option<glyphs::Params>,
     coast: Option<&mut CoastLayer>,
 ) -> Result<(), D::Error> {
-    draw_frame_with_coast(
+    draw_frame_cached(display, app, layout, ingestion_warning, values, coast, None)
+}
+
+fn draw_frame_cached<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    app: &RadarApp,
+    layout: Layout,
+    ingestion_warning: bool,
+    values: Option<glyphs::Params>,
+    coast: Option<&mut CoastLayer>,
+    period_cache: Option<&mut PeriodCache>,
+) -> Result<(), D::Error> {
+    draw_frame_with_coast_cached(
         display,
         app,
         layout,
@@ -159,9 +219,28 @@ fn draw_frame<D: DrawTarget<Color = BinaryColor>>(
             Some(coast) => coast.draw(display, observer, view, layout),
             None => Ok(true),
         },
+        period_cache,
     )
 }
 
+/// Measurement boundaries, in compositor order. The production wrapper passes
+/// a no-op callback, monomorphized away. Timing the callback is diagnostic only.
+#[doc(hidden)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[repr(u8)]
+pub enum FrameStage {
+    Clear,
+    Coast,
+    Earth,
+    Radar,
+    Markers,
+    Label,
+    Category,
+    Glyphs,
+    Status,
+}
+
+#[cfg(any(test, feature = "measurement"))]
 fn draw_frame_with_coast<'a, D, F>(
     display: &'a mut D,
     app: &RadarApp,
@@ -180,8 +259,75 @@ where
         Layout,
     ) -> Result<bool, D::Error>,
 {
+    draw_frame_with_coast_cached(
+        display,
+        app,
+        layout,
+        ingestion_warning,
+        values,
+        coast_enabled,
+        coast_draw,
+        None,
+    )
+}
+
+fn draw_frame_with_coast_cached<'a, D, F>(
+    display: &'a mut D,
+    app: &RadarApp,
+    layout: Layout,
+    ingestion_warning: bool,
+    values: Option<glyphs::Params>,
+    coast_enabled: bool,
+    coast_draw: F,
+    period_cache: Option<&mut PeriodCache>,
+) -> Result<(), D::Error>
+where
+    D: DrawTarget<Color = BinaryColor>,
+    F: FnOnce(
+        &mut embedded_graphics::draw_target::Clipped<'a, D>,
+        overhead_core::GeodeticPosition,
+        overhead_app::projection::View,
+        Layout,
+    ) -> Result<bool, D::Error>,
+{
+    draw_frame_traced(
+        display,
+        app,
+        layout,
+        ingestion_warning,
+        values,
+        coast_enabled,
+        coast_draw,
+        |_| {},
+        |_| {},
+        period_cache,
+    )
+}
+
+fn draw_frame_traced<'a, D, F>(
+    display: &'a mut D,
+    app: &RadarApp,
+    layout: Layout,
+    ingestion_warning: bool,
+    values: Option<glyphs::Params>,
+    coast_enabled: bool,
+    coast_draw: F,
+    mut trace: impl FnMut(FrameStage),
+    glyph_trace: impl FnMut(glyphs::GlyphStage),
+    period_cache: Option<&mut PeriodCache>,
+) -> Result<(), D::Error>
+where
+    D: DrawTarget<Color = BinaryColor>,
+    F: FnOnce(
+        &mut embedded_graphics::draw_target::Clipped<'a, D>,
+        overhead_core::GeodeticPosition,
+        overhead_app::projection::View,
+        Layout,
+    ) -> Result<bool, D::Error>,
+{
     let mut display = display.clipped(&Rectangle::new(Point::zero(), DISPLAY_SIZE));
     display.clear(BinaryColor::Off)?;
+    trace(FrameStage::Clear);
     let mut coast_error = false;
     if app.view().viewport() == Viewport::Rectangle
         && coast_enabled
@@ -192,6 +338,7 @@ where
         display.clear(BinaryColor::Off)?;
         coast_error = true;
     }
+    trace(FrameStage::Coast);
     let stroke = PrimitiveStyle::with_stroke(BinaryColor::On, 1);
     let center = layout.center();
     let radius = layout.radius();
@@ -202,6 +349,7 @@ where
             .draw(&mut display)?;
     }
     draw_earth(&mut display, app.earth_limb(), layout, viewport)?;
+    trace(FrameStage::Earth);
     Line::new(center - Point::new(3, 0), center + Point::new(3, 0))
         .into_styled(stroke)
         .draw(&mut display)?;
@@ -220,6 +368,7 @@ where
             draw_indicator(&mut display, indicator, layout)?;
         }
     }
+    trace(FrameStage::Radar);
 
     let mut selected_marker = None;
     let wide = viewport == Viewport::Rectangle;
@@ -239,16 +388,19 @@ where
     if wide && let Some((_, marker)) = selected_marker {
         draw_marker(&mut display, marker, true, layout, viewport)?;
     }
+    trace(FrameStage::Markers);
 
     if viewport == Viewport::Rectangle {
         if let Some((id, marker)) = selected_marker.filter(|_| app.selected_label_visible()) {
             draw_selected_label(&mut display, id, marker, layout)?;
         }
+        trace(FrameStage::Label);
         category::draw(&mut display, app.selected_category())?;
+        trace(FrameStage::Category);
         if let Some(values) = values {
-            glyphs::draw_strip_params(&mut display, values)?;
+            glyphs::draw_strip_params_traced(&mut display, values, glyph_trace, period_cache)?;
         } else {
-            glyphs::draw_strip(
+            glyphs::draw_strip_traced(
                 &mut display,
                 app.selected()
                     .map(|(_, sample)| sample.physical.look.elevation_rad),
@@ -257,9 +409,14 @@ where
                 app.selected()
                     .map(|(_, sample)| sample.physical.teme_speed_km_s),
                 app.selected_period_minutes(),
+                glyph_trace,
+                period_cache,
             )?;
         }
-        return draw_wide_status(&mut display, app, ingestion_warning, coast_error);
+        trace(FrameStage::Glyphs);
+        draw_wide_status(&mut display, app, ingestion_warning, coast_error)?;
+        trace(FrameStage::Status);
+        return Ok(());
     }
 
     let x = layout.radar_width as i32 + 10;
@@ -1829,6 +1986,161 @@ mod tests {
         assert_ne!(speed_pixels(&screen.pixels), speed_pixels(&initial));
         assert_eq!(period_pixels(&screen.pixels), period_pixels(&initial));
         assert_eq!(app.selected_period_minutes(), Some(720.0));
+    }
+
+    #[test]
+    fn cached_period_matches_full_frame_across_motion_loss_and_recovery() {
+        let mut app = app_with_viewport(Viewport::Rectangle);
+        let mut reference = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        let mut cached = Screen {
+            pixels: [[true; 400]; 240],
+        };
+        let mut reference_coast = CoastLayer::prepare(app.observer());
+        let mut cached_coast = CoastLayer::prepare(app.observer());
+        let mut cache = PeriodCache::new();
+        let epoch = app.time().unwrap();
+        for offset in [0, 50, 100, 150, 0] {
+            app.update(epoch + overhead_core::sgp4::chrono::Duration::seconds(offset))
+                .unwrap();
+            super::draw(
+                &mut reference,
+                &app,
+                Layout::wide(),
+                false,
+                &mut reference_coast,
+            )
+            .unwrap();
+            super::draw_cached(
+                &mut cached,
+                &app,
+                Layout::wide(),
+                false,
+                &mut cached_coast,
+                &mut cache,
+            )
+            .unwrap();
+            assert_eq!(cached.pixels, reference.pixels, "offset {offset}");
+        }
+        assert_eq!(cache.miss_count(), 1);
+        // Lost selection must not retain an old glyph; recovery may reuse it.
+        let invalid = overhead_core::sgp4::chrono::NaiveDate::from_ymd_opt(2101, 1, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        assert!(app.update(invalid).is_err());
+        for layout in [Layout::wide(), Layout::new(240).unwrap()] {
+            super::draw(&mut reference, &app, layout, true, &mut reference_coast).unwrap();
+            super::draw_cached(
+                &mut cached,
+                &app,
+                layout,
+                true,
+                &mut cached_coast,
+                &mut cache,
+            )
+            .unwrap();
+            assert_eq!(cached.pixels, reference.pixels);
+        }
+        assert_eq!(cache.miss_count(), 1);
+        app.update(epoch).unwrap();
+        super::draw(
+            &mut reference,
+            &app,
+            Layout::wide(),
+            false,
+            &mut reference_coast,
+        )
+        .unwrap();
+        super::draw_cached(
+            &mut cached,
+            &app,
+            Layout::wide(),
+            false,
+            &mut cached_coast,
+            &mut cache,
+        )
+        .unwrap();
+        assert_eq!(cached.pixels, reference.pixels);
+        assert_eq!(cache.miss_count(), 1);
+    }
+
+    #[test]
+    fn animated_period_cache_matches_unmodified_draw_on_reselection() {
+        // Two valid periods force an animated intermediate turn count and a
+        // distinct final raster; cache must never replace true app readouts.
+        let mut data: serde_json::Value =
+            serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
+        let mut builder = CatalogueBuilder::new();
+        for (record, motion) in [2.0, 1.0].into_iter().enumerate() {
+            data[0]["NORAD_CAT_ID"] = serde_json::json!(90_001 + record);
+            data[0]["MEAN_MOTION"] = serde_json::json!(motion);
+            data[0]["ECCENTRICITY"] = serde_json::json!(0.5);
+            data[0]["MEAN_ANOMALY"] = serde_json::json!(0.0);
+            let elements: Vec<OmmElements> = serde_json::from_value(data.clone()).unwrap();
+            builder.push(
+                RecordOrigin {
+                    group: record,
+                    record,
+                },
+                elements.into_iter().next().unwrap(),
+            );
+        }
+        let catalogue = builder.finish().unwrap();
+        let satellite = catalogue.entries()[0].satellite();
+        let epoch = satellite.epoch();
+        let mut observer =
+            ecef_to_geodetic(satellite.state_at(epoch).unwrap().to_ecef().unwrap()).unwrap();
+        observer.altitude_km = 0.0;
+        let mut app = RadarApp::new(
+            catalogue,
+            observer,
+            View::rectangular(100.0, Layout::wide().aspect_ratio()).unwrap(),
+        )
+        .unwrap();
+        app.update(epoch).unwrap();
+        assert_eq!(app.counts().visible, 2);
+        let mut reference = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        let mut cached = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        let mut reference_coast = CoastLayer::prepare(app.observer());
+        let mut cached_coast = CoastLayer::prepare(app.observer());
+        let mut reference_state = presentation::Presentation::new();
+        let mut cached_state = presentation::Presentation::new();
+        let mut cache = PeriodCache::new();
+        for millis in [0, 125, 250, 251, 375, 501, 600] {
+            if millis == 251 {
+                app.select_next();
+                assert_eq!(app.selected_period_minutes(), Some(1440.0));
+            }
+            super::draw_at(
+                &mut reference,
+                &app,
+                Layout::wide(),
+                false,
+                &mut reference_state,
+                Duration::from_millis(millis),
+                &mut reference_coast,
+            )
+            .unwrap();
+            super::draw_at_cached(
+                &mut cached,
+                &app,
+                Layout::wide(),
+                false,
+                &mut cached_state,
+                Duration::from_millis(millis),
+                &mut cached_coast,
+                &mut cache,
+            )
+            .unwrap();
+            assert_eq!(cached.pixels, reference.pixels, "millis {millis}");
+        }
+        assert!(cache.miss_count() >= 3, "intermediate period needs a miss");
     }
 
     #[test]

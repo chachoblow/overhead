@@ -58,6 +58,64 @@ impl Params {
     }
 }
 
+/// One cached period raster, keyed by the exact mapped turn-count bits.
+/// Kept by a renderer caller, never by physical/app state. A miss uses the
+/// unchanged 0044 sampled spiral; no approximation or turn quantization.
+#[derive(Debug, Default)]
+pub struct PeriodCache {
+    raster: Option<(u64, [u32; 23])>,
+    #[cfg(test)]
+    misses: usize,
+}
+
+impl PeriodCache {
+    pub const fn new() -> Self {
+        Self {
+            raster: None,
+            #[cfg(test)]
+            misses: 0,
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.raster = None;
+    }
+
+    #[cfg(test)]
+    pub(crate) fn miss_count(&self) -> usize {
+        self.misses
+    }
+
+    fn rows(&mut self, turns: f64) -> [u32; 23] {
+        let key = turns.to_bits();
+        if let Some((cached, rows)) = self.raster
+            && cached == key
+        {
+            return rows;
+        }
+        let rows = period_rows(turns);
+        #[cfg(test)]
+        {
+            self.misses += 1;
+        }
+        self.raster = Some((key, rows));
+        rows
+    }
+}
+
+/// Boundaries of the actual strip draw. Exposed only through measurement APIs.
+#[doc(hidden)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[repr(u8)]
+pub enum GlyphStage {
+    Separator,
+    Elevation,
+    Altitude,
+    Speed,
+    Period,
+}
+
+#[cfg(test)]
 pub(super) fn draw_strip<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
     elevation: Option<f64>,
@@ -65,17 +123,42 @@ pub(super) fn draw_strip<D: DrawTarget<Color = BinaryColor>>(
     speed_km_s: Option<f64>,
     period_minutes: Option<f64>,
 ) -> Result<(), D::Error> {
-    draw_strip_params(
+    draw_strip_traced(
         display,
-        Params::from_readouts(elevation, altitude_km, speed_km_s, period_minutes),
+        elevation,
+        altitude_km,
+        speed_km_s,
+        period_minutes,
+        |_| {},
+        None,
     )
 }
 
-pub(crate) fn draw_strip_params<D: DrawTarget<Color = BinaryColor>>(
+pub(super) fn draw_strip_traced<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    elevation: Option<f64>,
+    altitude_km: Option<f64>,
+    speed_km_s: Option<f64>,
+    period_minutes: Option<f64>,
+    trace: impl FnMut(GlyphStage),
+    period_cache: Option<&mut PeriodCache>,
+) -> Result<(), D::Error> {
+    draw_strip_params_traced(
+        display,
+        Params::from_readouts(elevation, altitude_km, speed_km_s, period_minutes),
+        trace,
+        period_cache,
+    )
+}
+
+pub(crate) fn draw_strip_params_traced<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
     Params([elevation, altitude_radius, speed, turns]): Params,
+    mut trace: impl FnMut(GlyphStage),
+    mut period_cache: Option<&mut PeriodCache>,
 ) -> Result<(), D::Error> {
     display.draw_iter((12..=227).map(|y| Pixel(Point::new(352, y), BinaryColor::On)))?;
+    trace(GlyphStage::Separator);
     if let Some(elevation) = elevation {
         Text::new(
             "Elev",
@@ -85,6 +168,7 @@ pub(crate) fn draw_strip_params<D: DrawTarget<Color = BinaryColor>>(
         .draw(display)?;
         draw_elevation(display, elevation)?;
     }
+    trace(GlyphStage::Elevation);
     if let Some(radius) = altitude_radius {
         Text::new(
             "Alt",
@@ -97,6 +181,7 @@ pub(crate) fn draw_strip_params<D: DrawTarget<Color = BinaryColor>>(
         circle(&mut rows, i32::from(round_radius(radius)));
         draw_rows(display, rows, Point::new(365, 116))?;
     }
+    trace(GlyphStage::Altitude);
     if let Some(speed) = speed {
         Text::new(
             "Spd",
@@ -110,6 +195,7 @@ pub(crate) fn draw_strip_params<D: DrawTarget<Color = BinaryColor>>(
         }
         draw_rows(display, rows, Point::new(365, 163))?;
     }
+    trace(GlyphStage::Speed);
     if let Some(turns) = turns {
         Text::new(
             "Per",
@@ -117,8 +203,13 @@ pub(crate) fn draw_strip_params<D: DrawTarget<Color = BinaryColor>>(
             MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
         )
         .draw(display)?;
-        draw_rows(display, period_rows(turns), Point::new(365, 209))?;
+        let rows = match period_cache.as_mut() {
+            Some(cache) => cache.rows(turns),
+            None => period_rows(turns),
+        };
+        draw_rows(display, rows, Point::new(365, 209))?;
     }
+    trace(GlyphStage::Period);
     Ok(())
 }
 
@@ -343,6 +434,26 @@ fn radial(rows: &mut [u32; 23], endpoint: Point) {
 mod tests {
     extern crate std;
     use super::*;
+
+    #[test]
+    fn period_cache_keys_exact_turns_and_preserves_original_raster() {
+        let mut cache = PeriodCache::new();
+        for (minutes, expected_misses) in [
+            (90.0, 1),
+            (90.0, 1),
+            (89.0, 1), // Saturated input shares the exact mapped turn count.
+            (720.0, 2),
+            (1440.0, 3),
+            (90.0, 4), // One-entry eviction is safe, not a stale hit.
+        ] {
+            let turns = period_turns(minutes).unwrap();
+            assert_eq!(cache.rows(turns), period_rows(turns));
+            assert_eq!(cache.miss_count(), expected_misses);
+        }
+        cache.clear();
+        assert_eq!(cache.rows(period_turns(90.0).unwrap()), period_rows(2.5));
+        assert_eq!(cache.miss_count(), 5);
+    }
 
     #[test]
     fn period_scale_is_fixed_saturating_and_monotonic() {

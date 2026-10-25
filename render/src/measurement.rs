@@ -6,7 +6,45 @@ use embedded_graphics::{
 };
 use overhead_app::RadarApp;
 
-use crate::{DISPLAY_SIZE, Layout, coast, draw_frame_with_coast};
+use crate::{DISPLAY_SIZE, Layout, coast, draw_frame_traced, draw_frame_with_coast};
+
+pub use crate::{FrameStage as Stage, glyphs::GlyphStage};
+
+/// Trace cumulative stage boundaries in the actual coast-free compositor.
+/// The callback must be cheap and must not draw or log; sample time there and
+/// report after the frame. Stage differences describe this diagnostic draw,
+/// not additive costs to subtract from a separately optimized build.
+pub fn frame_off_traced<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    app: &RadarApp,
+    warning: bool,
+    trace: impl FnMut(Stage),
+) -> Result<(), D::Error> {
+    frame_off_fields_traced(display, app, warning, trace, |_| {})
+}
+
+/// In addition to frame stages, timestamp the separator and four static fields.
+/// Both callbacks run within the same coast-free draw and must not do I/O.
+pub fn frame_off_fields_traced<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    app: &RadarApp,
+    warning: bool,
+    trace: impl FnMut(Stage),
+    glyph_trace: impl FnMut(GlyphStage),
+) -> Result<(), D::Error> {
+    draw_frame_traced(
+        display,
+        app,
+        Layout::wide(),
+        warning,
+        None,
+        false,
+        |_, _, _, _| Ok(true),
+        trace,
+        glyph_trace,
+        None,
+    )
+}
 
 pub fn coast_only<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
@@ -324,6 +362,42 @@ mod tests {
                 crate::draw_frame(&mut expected, &app, Layout::wide(), warning, None, None)
                     .unwrap();
                 assert_eq!(actual.0, expected.0);
+                let mut traced = Screen([[true; 400]; 240]);
+                let mut stages = Vec::new();
+                let mut glyph_stages = Vec::new();
+                frame_off_fields_traced(
+                    &mut traced,
+                    &app,
+                    warning,
+                    |stage| stages.push(stage),
+                    |stage| glyph_stages.push(stage),
+                )
+                .unwrap();
+                assert_eq!(traced.0, expected.0);
+                assert_eq!(
+                    glyph_stages,
+                    [
+                        GlyphStage::Separator,
+                        GlyphStage::Elevation,
+                        GlyphStage::Altitude,
+                        GlyphStage::Speed,
+                        GlyphStage::Period,
+                    ]
+                );
+                assert_eq!(
+                    stages,
+                    [
+                        Stage::Clear,
+                        Stage::Coast,
+                        Stage::Earth,
+                        Stage::Radar,
+                        Stage::Markers,
+                        Stage::Label,
+                        Stage::Category,
+                        Stage::Glyphs,
+                        Stage::Status,
+                    ]
+                );
             }
         }
     }

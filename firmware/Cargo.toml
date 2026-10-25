@@ -15,6 +15,19 @@ coast-representation = ["coast-measurement", "overhead-render/representation-mea
 coast-representation-on = ["coast-representation"]
 # Prepared/cached layer image (0058/0059); keeps the candidate for exactness checks.
 coast-prepared = ["coast-representation"]
+# Isolated Sharp 400x240 wiring/refresh test; no radar, allocator or network.
+sharp-test = []
+# First fixed-fixture radar on the panel. Reuses the already tested target
+# fixture/framebuffer/renderer path; distinct from the historical images.
+sharp-radar = ["sharp-test", "coast-prepared"]
+# Separate deterministic short-loop radar replay; does not replace the static image.
+sharp-replay = ["sharp-radar"]
+# Separate display-cost diagnostic; shares the accepted replay, never frozen images.
+sharp-profile = ["sharp-replay"]
+# Opt-in period-cache comparison, separate from the visually accepted v3 image.
+sharp-cache = ["sharp-replay"]
+# Separate selective-line transport diagnostic; not the accepted cache image.
+sharp-lines = ["sharp-replay"]
 
 [dependencies]
 overhead-core = { path = "../core" }
@@ -71,6 +84,48 @@ bench = false
 name = "overhead-s3-coast-prepared"
 path = "src/prepared_main.rs"
 required-features = ["coast-prepared"]
+test = false
+bench = false
+
+[[bin]]
+name = "overhead-s3-sharp-test"
+path = "src/sharp_main.rs"
+required-features = ["sharp-test"]
+test = false
+bench = false
+
+[[bin]]
+name = "overhead-s3-sharp-radar"
+path = "src/sharp_radar_main.rs"
+required-features = ["sharp-radar"]
+test = false
+bench = false
+
+[[bin]]
+name = "overhead-s3-sharp-replay"
+path = "src/sharp_replay_main.rs"
+required-features = ["sharp-replay"]
+test = false
+bench = false
+
+[[bin]]
+name = "overhead-s3-sharp-profile"
+path = "src/sharp_profile_main.rs"
+required-features = ["sharp-profile"]
+test = false
+bench = false
+
+[[bin]]
+name = "overhead-s3-sharp-cache"
+path = "src/sharp_cache_main.rs"
+required-features = ["sharp-cache"]
+test = false
+bench = false
+
+[[bin]]
+name = "overhead-s3-sharp-lines"
+path = "src/sharp_lines_main.rs"
+required-features = ["sharp-lines"]
 test = false
 bench = false
 
