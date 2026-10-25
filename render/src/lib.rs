@@ -400,7 +400,7 @@ fn draw_marker<D: DrawTarget<Color = BinaryColor>>(
     display.draw_iter(pixels)
 }
 
-/// Hollow triangle pointing along the true image-plane direction. Intersect
+/// Filled triangle (0061) pointing along the true image-plane direction. Intersect
 /// the same ray with a slightly inset rectangle so the complete glyph fits.
 /// No sorting, suppression, grouping or displacement to avoid other arrows.
 fn draw_indicator<D: DrawTarget<Color = BinaryColor>>(
