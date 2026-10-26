@@ -418,6 +418,24 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   ~52.4 ms periodic full transfers. Asked about movement, reset and stale rows,
   the user reported the display looks good. Sustained service remains open;
   the diagnostic ticks at 500 ms, not 20 Hz.
+  A separate [natural-speed historical fixture diagnostic](../firmware/README.md#natural-speed-historical-diagnostic-flashed-short-uart-capture)
+  now wires host-preflight frame/refresh policy to the cached renderer and
+  selective sender at a 50 ms target grid. Its offline-gated S3 image received
+  an approved flash and physical visual acceptance. A short capture found three
+  initial full-frame overrun skips; an 85-second UART-only follow-up logged ten
+  ~8-second retained full refreshes without reported panic or additional skips.
+  A separate 315-second UART-only run crossed the 300-second historical fixture
+  wrap and logged 38 full refresh completions with **four further skipped frame
+  deadlines immediately after full refreshes**; it reported no panic. This
+  remains fixture time, **not** trusted UTC, network/controls, per-frame timing
+  proof, sustained VCOM verification, or production 20 Hz capacity. A separately
+  [host-tested and offline-gated v2 command audit](../firmware/README.md#natural-speed-command-audit-v2-flashed-bounded-uart-capture)
+  was separately approved, flashed and captured for ~115 seconds. It reported
+  one over-50-ms frame (startup), four skipped deadlines (three startup, one
+  after retained refresh), 14 retained full transfers of ~51.7 ms, and
+  alternating issued VCOM bits across completed commands. This is not physical
+  COM-edge or production 20 Hz verification. The user separately confirmed v2
+  looks stable, with gradual motion and no visible flicker or stale rows.
 - [ ] Run shared engine/renderer on S3 + Sharp. Intended controls under 0060:
   button cycles satellites, knob zooms continuously (presets as fallback).
 - [ ] Add Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes

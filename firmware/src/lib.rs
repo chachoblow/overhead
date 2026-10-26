@@ -19,6 +19,8 @@ use overhead_core::{
 pub mod coast_measurement;
 #[cfg(feature = "sharp-radar")]
 pub mod device_timing;
+#[cfg(feature = "sharp-natural-audit")]
+pub mod natural_audit;
 #[cfg(feature = "coast-prepared")]
 pub mod prepared_measurement;
 #[cfg(feature = "coast-representation")]

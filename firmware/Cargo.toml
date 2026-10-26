@@ -28,6 +28,10 @@ sharp-profile = ["sharp-replay"]
 sharp-cache = ["sharp-replay"]
 # Separate selective-line transport diagnostic; not the accepted cache image.
 sharp-lines = ["sharp-replay"]
+# Separate natural-speed historical fixture experiment; never the live app.
+sharp-natural = ["sharp-lines"]
+# Same historical diagnostic with opt-in per-command telemetry; separate ELF.
+sharp-natural-audit = ["sharp-natural"]
 
 [dependencies]
 overhead-core = { path = "../core" }
@@ -128,6 +132,11 @@ path = "src/sharp_lines_main.rs"
 required-features = ["sharp-lines"]
 test = false
 bench = false
+
+[[bin]]
+name = "overhead-s3-sharp-natural"
+path = "src/sharp_natural_main.rs"
+required-features = ["sharp-natural"]
 
 [[example]]
 name = "prepared_expected"

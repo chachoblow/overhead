@@ -390,8 +390,9 @@ checks are needed before any device adoption.
 ## Selective-line target diagnostic (flashed; short UART capture, user visual check)
 
 `overhead-s3-sharp-lines` (`--features sharp-lines`) is a **separate opt-in**
-fixture image, currently on the board, not a live clock. It keeps the same
-5° real-ISS excerpt, cached period raster, 2 MHz SPI and 500 ms display step.
+historical fixture image (since replaced on the board by `sharp-natural-audit`
+v2), not a live clock. It keeps the same 5° real-ISS excerpt, cached period
+raster, 2 MHz SPI and 500 ms display step.
 In every eight steps, it renders the seven +0…+300 s fixture frames (50 s
 apart), then performs one display-mode, no-render VCOM-only step holding +300 s.
 Every 16th step (8 s) sends a full frame, including startup and the second
@@ -445,17 +446,189 @@ espflash flash --port <UART> --chip esp32s3 --flash-size 8mb \
 
 ## UTC/frame scheduling preflight (host only)
 
-`src/device_timing.rs` is an opt-in, no-alloc timing policy tested under
-`sharp-replay`; **it is not wired into any S3 image yet**. A trusted/validated
-UTC sample must be supplied by a future SNTP integration before a frame is due;
-invalid time suppresses frame sampling. The 50 ms target grid uses monotonic
-uptime to sample UTC at the actual frame start, skipping missed deadlines rather
+`src/device_timing.rs` is an opt-in, no-alloc timing preflight tested under
+`sharp-replay` (with sender-resync coverage under `sharp-lines`). Its diagnostic
+action policy is wired only into the separate `sharp-natural` historical-fixture
+S3 image, not a live device loop. A trusted/validated UTC sample must be supplied
+by a future SNTP integration before live frame sampling; the historical UTC
+anchor in its host test is explicit fixture data, not a trusted device clock.
+Invalid time suppresses frame sampling. The 50 ms target grid uses monotonic
+uptime to sample UTC at actual frame start, skipping missed deadlines rather
 than bursting stale frames. A separate 500 ms idle-VCOM reminder alternates its
-bit after successful transfers, even when there is no render. Neither helper
-can maintain VCOM during a blocked loop, verify UTC quality or make the current
-~196 ms render+transfer meet the 50 ms target. This offline timing policy added
-no dependency and is not used by the selective-line image currently on the
-board.
+bit after successful transfers even without renders. A monotonic 8-second
+**diagnostic** full-data reminder (matching the existing replay's interval)
+counts only completed full transfers, not rendered ticks or VCOM-only commands;
+a failure makes the next send require full resync. With invalid UTC, a due
+refresh requires resending retained, confirmed framebuffer pixels rather than
+inventing a new orbital sample. The host timeline exercises an ~82 ms full
+operation overrunning the 50 ms grid, a ~36 ms partial, loss of UTC, idle VCOM,
+and full resync after failed partial write. Those durations are inputs based on
+short target captures, **not** measured scheduling behavior. A combined
+`DiagnosticSchedule` chooses a due frame first (full if refresh is due), then a
+retained-pixel full refresh without UTC, then idle VCOM. It credits only
+successful completed transfers; after a failed command it refuses idle service
+until a full resync. If the panel is unknown and no retained pixels or valid
+frame are available, it waits rather than claiming safe service. Host tests
+preflight this action policy; the fixture image exercises it on the S3, without
+a guarantee during failure.
+
+No helper preempts a blocked loop, validates time quality, bounds stack or
+network latency, establishes safe VCOM polarity after a partly failed command,
+or proves a still-image refresh deadline or 20 Hz. The 8-second interval is not
+a production policy. A live loop still needs decisions on blocked/failure
+service, retained-frame availability and full-frame overrun handling. This
+preflight added no dependency; the board now runs the separate natural-speed
+command-audit v2 historical-fixture image.
+
+## Natural-speed historical diagnostic (flashed; short UART capture)
+
+`overhead-s3-sharp-natural` (`--features sharp-natural`) is a separate opt-in
+S3 image using the checked single-ISS fixture, cached period raster and
+selective-line sender at 2 MHz. It repeats a 300-second **historical** excerpt
+at natural elapsed speed, sampling each due frame at actual monotonic start
+rather than advancing fixture time by a fixed amount per draw. It runs the
+host-preflight action policy above: a 50 ms target grid with skipped overruns,
+500 ms idle VCOM reminder, and 8-second diagnostic full-data reminder based on
+completed transfers. A full frame can overrun the grid; it does not attempt to
+catch up. Only occasional frame/full/skip lines are printed to avoid turning
+every frame into a UART workload. The fixture anchor is never SNTP or live UTC.
+
+This is not an adopted production loop. The release ELF and application image
+passed the **offline** image gate, then after a separate go-ahead the port,
+ELF/hash and image gate were rechecked and the image was flashed on the S3.
+An 18-second bounded UART monitor captured clean boot and sample logs through
+frame 320 (~16.1 historical seconds), with no reported panic. The initial
+full frame took 204,741 µs (2,384 update, 150,436 render, 51,921 transfer),
+then frame 2 sampled at +206,205 µs and reported **three skipped deadlines**.
+Among the 18 logged frames (most frames are deliberately not printed), 16
+unchanged-pixel sends used display mode; sampled steady totals were ~30.2–30.3
+ms including ~25.8 ms render and ~1.05 ms idle transfer. One logged changed
+frame sent six rows in 2,402 µs (~31.6 ms total). A retained-pixel full
+refresh was reported at uptime 8,282,399 µs; this image does **not** log its
+transfer duration. These are selective logs, not a measurement of every frame
+or a verified 20 Hz output cadence. Asked whether the panel looked stable,
+with gradual ISS movement and without stale rows or visible flicker, the user
+answered **yes**. That is a separate physical visual check, not sustained
+VCOM, stack, network or controls validation. On SPI error the diagnostic halts
+visibly rather than claiming panel service;
+blocked work cannot preemptively service COM. The raw 18-second UART log is
+ignored local `target/sharp-natural-v1-short.log` (SHA-256
+`62c5d396953e11fecee533d1e3c8fb9a2b72360d0ecc5a6ee4efd5ce71efe74b`).
+
+A second **UART-only** monitor of the same ELF (no rebuild or flash) ran for
+85 seconds after a monitor reset. The last sampled log is frame 1660 at fixture
++83.1 seconds. Ten retained-pixel full refreshes were reported at uptime
+8.282–80.748 seconds, spaced ~8.052 seconds apart; the only logged skipped
+frame deadlines were the same three immediately after the initial full frame.
+Of 85 printed frames, 81 reported idle sends, three changed-line sends, and
+one initial full send. Sampled warm idle totals were 30.169–30.301 ms. No panic
+was reported. The ignored raw log is `target/sharp-natural-v1-extended.log`
+(SHA-256 `8de83f74ae8618d39569ed61d2d1f7dc9c973eebc7f5d4a96e3a3082f990262f`).
+This is a bounded **diagnostic** run, not a sustained panel-service or live-UTC
+validation: only every twentieth frame and exceptional events were printed,
+full-refresh duration and COM polarity were not logged, fixture wrap at 300
+seconds was not reached, and physical appearance was not rechecked over the
+longer interval. In particular, sparse nominal grid samples do not prove every
+frame completed inside 50 ms or establish production 20 Hz operation.
+
+A third **UART-only** capture of the unchanged, hash-checked ELF ran for 315
+seconds (monitor reset; no rebuild or flash). It reached frame 6240 at uptime
+~312.3 seconds. The printed historical offset went from +299.3 seconds on
+frame 5980 to +0.3 seconds on frame 6000: the 300-second **fixture wrap**
+was crossed without a reported panic. Thirty-eight retained full-refresh
+completions were logged, with completion intervals of 8.051716–8.081107
+seconds. Unlike the 85-second capture, this run reported **four additional
+missed frame deadlines**, each immediately after a retained full refresh (at
+~88.8, 96.85, 193.50 and 290.15 seconds), in addition to three after the
+initial full frame. That is expected contention, not evidence that every
+refresh fits between frames. Among 318 printed frames (every twentieth plus
+exceptions), 311 were unchanged-pixel sends; this does not account for every
+transfer or prove VCOM polarity, physical appearance through the wrap, or
+sustained 20 Hz. Ignored raw log: `target/sharp-natural-v1-wrap.log`, SHA-256
+`f961c4cdef0b5554ac3cb8e16eb6dcb630bb1b6ac8600c2ab9640111c7e7664b`.
+No renewed visual check was requested for this interval.
+
+### Natural-speed command audit v2 (flashed; bounded UART capture)
+
+`--features sharp-natural-audit` adds opt-in telemetry to the same fixture
+binary, without changing the production crates or the v1 source path. Every
+completed command is counted and checked for alternating **issued** VCOM bits;
+its maximum start-to-start gap, maximum gap between last completion and next
+start, and maximum full-data transfer duration are accumulated. Every frame
+contributes an end-to-end occupancy, over-50-ms count and skipped-grid count.
+A compact cumulative audit is printed with the existing sampled frame logs,
+and retained full refreshes report their transfer duration. These are
+**command-side** observations, not a physical M1/panel-edge measurement;
+failed commands halt rather than being credited. Serial output itself affects
+workload. No network, live UTC, controls, clock-invalid recovery on device,
+stack bound, visual check or sustained-display guarantee is implied.
+
+Host tests: `cargo +stable test --manifest-path firmware/Cargo.toml --lib
+--locked --features sharp-natural-audit` (32 passed). From `firmware/`, v2 was
+built with `cargo build --release --locked --bin overhead-s3-sharp-natural
+--features sharp-natural-audit`. The exact ELF was copied to
+`target/sharp-natural-audit-v2.elf` before gating:
+
+```sh
+espflash save-image --chip esp32s3 --flash-size 8mb --flash-mode dio \
+  --flash-freq 40mhz --skip-update-check \
+  target/sharp-natural-audit-v2.elf target/sharp-natural-audit-v2.bin
+python3 image_gate.py target/sharp-natural-audit-v2.elf \
+  target/sharp-natural-audit-v2.bin
+```
+
+The offline gate passed on the 450,992-byte application image. ELF SHA-256:
+`d87028ff7d63715e0fa5ba7ed091c8da3b980a4dc10afc35b04f628fbf3b7c0c`;
+image SHA-256:
+`a1dd2050d0d2f72014ecbc88aa9837b29f0a1b2620fcd1221b172bec92996a44`.
+Both are ignored local artifacts. After a separate go-ahead, the current port,
+exact ELF/hash and image gate were rechecked, and v2 replaced v1 on the S3.
+An approximately 115-second bounded UART monitor then booted v2 and logged
+through frame 2260 at historical fixture +113.15 seconds, without a reported
+panic. The final cumulative audit reports 2,260 completed frames, **one**
+over-50-ms frame (the initial 204,940 µs full frame), four missed frame-grid
+deadlines (three after that startup frame, one after a retained full refresh),
+2,275 completed commands including the clear and 14 retained full refreshes,
+and 15 full data transfers. Retained full transfers measured 51,732–51,738 µs;
+the cumulative maximum full-data transfer was 51,914 µs (startup). The
+largest completed-command start-to-start gap was 153,379 µs and the largest
+prior-completion-to-next-start gap was 153,143 µs, **both dominated by startup
+rendering**. The audit rejected no duplicate issued VCOM phase, but does not
+measure actual panel COM edges. A retained refresh can miss a frame deadline
+even though that frame's own update/render/send occupancy is under 50 ms.
+The ignored raw log is `target/sharp-natural-audit-v2-110s.log`, SHA-256
+`31582ceed40224a4705431b45913461782b351bf1eb360761b15bd5589ccf6e5`.
+Asked separately about the v2 image, the user confirmed stable, gradual ISS
+motion without stale rows or visible flicker. This is one bounded fixture
+capture and a separate visual check, not endurance, per-edge VCOM or production
+20 Hz validation; serial auditing changes the workload.
+The exact v1 ELF remains saved locally as `target/sharp-natural-v1.elf`.
+
+### Original v1 image reproduction
+
+The scheduler tests and historical wrap test can be run without an S3 using
+`cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked --features sharp-natural`.
+
+From `firmware/`, using the already installed toolchain, the exact checked
+artifact was built with `cargo build --release --locked --bin
+overhead-s3-sharp-natural --features sharp-natural`. A copy of that original
+ELF was retained before building the separately instrumented v2 variant;
+**the ordinary release ELF path now holds v2, not the original v1 image**.
+For the original image:
+
+```sh
+ELF=target/sharp-natural-v1.elf
+espflash save-image --chip esp32s3 --flash-size 8mb --flash-mode dio \
+  --flash-freq 40mhz --skip-update-check "$ELF" target/sharp-natural-v1.bin
+python3 image_gate.py "$ELF" target/sharp-natural-v1.bin
+```
+
+The offline gate passed (447,776-byte application image). ELF SHA-256:
+`153252a719d573ee35b800f1fe4252b28da1bc615ed34d94c52a8fd4b24ae1ab`;
+image SHA-256:
+`89fdb097d1752a18869e3ea12c1443851f7a4b16110abb8776e3a8ed6baaaa2a`.
+The `.bin` and ELF are ignored local artifacts. A rebuild changes their
+identity and requires a fresh gate. The existing linker RWX warning remains.
 
 ## Hardware and permission
 
