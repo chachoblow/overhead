@@ -580,3 +580,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Host preflights for cold boot, UTC loss and recovery ([0062](decisions/0062-no-trusted-time-display-preflight.md)) and a UTC trust gate with bounded holdover ([0063](decisions/0063-bounded-utc-holdover-direction.md)); pure SNTP reply screen and month-end leap boundary ([0064](decisions/0064-prototype-sntp-screen-and-leap-boundary.md)).
 - Flashed a 3-hour UART drift capture: S3 timer ≈+1.2 ppm vs UTC (host-reference-limited); user accepted `D = 20 ppm`, `H = 3,600 s` ([0065](decisions/0065-prototype-drift-bound-and-holdover.md)).
 - User approved an opt-in Wi-Fi/UDP stack and Cloudflare/NIST source ([0066](decisions/0066-prototype-live-sntp-stack-and-source.md)); a 1-hour live run accepted 59/59 replies (`U0` median 28 ms) with all consistency checks in bound. Board restored to v2; trust gate and radar not yet combined on target.
+
+## 2026-10-26 UTC (first live-UTC radar, fixture-only)
+- Under [0067](decisions/0067-opt-in-live-utc-iss-radar-scope.md), added host composition tests and a separate S3 image with a display/SPI owner and bounded SNTP-event channel; checked-in ISS elements only, no fetch or production cadence.
+- With separate flash approval, gated the real-credential image and captured ~90 s: `NO FRAME` full send, two accepted syncs, nine retained-full logs, no failure marker. User saw an empty-sky notice, not a verified ISS marker/motion or COM edges; board remains on this image. [Evidence](../firmware/README.md#live-utc-iss-radar-candidate-flashed-bounded-uart-capture).
+- Workspace check/tests, firmware host suites (6/55/53), formatting and exact target image gate passed; RWX warning remains. Credential-bearing ELF/image and raw UART log remain ignored local artifacts; no frozen M2 refresh.
+- Next: explain the empty-sky scene headlessly with the aged fixture and recorded UTC before agreeing a fresh-element/visible-marker proof; no further flash without approval.

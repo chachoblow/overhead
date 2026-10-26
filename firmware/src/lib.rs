@@ -19,6 +19,8 @@ use overhead_core::{
 pub mod coast_measurement;
 #[cfg(feature = "sharp-radar")]
 pub mod device_timing;
+#[cfg(feature = "sharp-radar")]
+pub mod live_utc;
 #[cfg(feature = "sharp-natural-audit")]
 pub mod natural_audit;
 #[cfg(feature = "coast-prepared")]
@@ -37,6 +39,9 @@ pub mod sharp_test;
 pub mod sntp_screen;
 #[cfg(feature = "sharp-radar")]
 pub mod utc_trust;
+// Host-only live-UTC composition preflight; no target loop or network tasks.
+#[cfg(all(test, feature = "sharp-lines"))]
+mod live_utc_preflight;
 // Offline transport feasibility only; not linked into any target image.
 #[cfg(all(test, feature = "sharp-replay"))]
 mod sharp_transport;

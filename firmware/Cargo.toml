@@ -36,6 +36,9 @@ sharp-natural-audit = ["sharp-natural"]
 clock-drift = ["sharp-test"]
 # Separate live SNTP source-evidence diagnostic (Wi-Fi/UDP); never the device app.
 live-sntp = ["sharp-test", "dep:esp-alloc", "esp-alloc/global-allocator", "esp-alloc/compat", "esp-hal/unstable", "dep:esp-radio", "dep:esp-rtos", "dep:embassy-executor", "dep:embassy-net", "dep:embassy-time", "dep:static_cell"]
+# Separate target build: screened live UTC drives checked-in ISS radar. No fetch.
+# The bounded channel lets the network wait without owning SPI or blocking display polls.
+live-utc-radar = ["live-sntp", "sharp-natural", "dep:embassy-sync"]
 
 [dependencies]
 overhead-core = { path = "../core" }
@@ -65,6 +68,8 @@ embassy-executor = { version = "0.10.0", optional = true }
 embassy-net = { version = "0.9", features = ["dhcpv4", "medium-ethernet", "udp", "dns", "proto-ipv4"], optional = true }
 embassy-time = { version = "0.5.0", optional = true }
 static_cell = { version = "2.1.0", optional = true }
+# Reuses embassy-net's already-locked version; bounded cross-task SNTP events.
+embassy-sync = { version = "=0.8.0", optional = true }
 
 [build-dependencies]
 # Convert original fixtures on the host; the default target remains allocation-free.
@@ -163,6 +168,13 @@ bench = false
 name = "overhead-s3-live-sntp"
 path = "src/live_sntp_main.rs"
 required-features = ["live-sntp"]
+test = false
+bench = false
+
+[[bin]]
+name = "overhead-s3-live-utc-radar"
+path = "src/live_utc_main.rs"
+required-features = ["live-utc-radar"]
 test = false
 bench = false
 

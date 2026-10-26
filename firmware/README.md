@@ -514,11 +514,34 @@ UTC month end (possible leap). [`sntp_screen`](src/sntp_screen.rs) is a pure
 reply screen producing those events under
 [0064](../docs/decisions/0064-prototype-sntp-screen-and-leap-boundary.md); no
 socket or wireless stack. [The UTC proposal](../docs/utc-trust-loss-proposal.md)
-owns open source, capture-bound and drift questions. Host tests run under
+records source, capture-bound and drift reasoning. Host tests run under
 the same feature command above; neither these test parameters nor a public
 struct named “screened” establish actual SNTP quality.
 
-No device image was built or flashed for this lifecycle.
+The 0062 lifecycle preflight itself did not build or flash a device image; the
+separate opt-in live-UTC candidate below was built and flashed later.
+
+### Live-UTC ISS composition preflight (host only)
+
+`src/live_utc_preflight.rs` composes the pure SNTP reply screen, 0065's
+`UtcTrustPreflight::prototype()`, checked-in ISS *elements*, wide cached
+renderer and selective Sharp sender in host tests. It tests cold-boot `NO FRAME`,
+a pending network request with independent idle-COM/retained-refresh actions,
+first accepted sync, bounded holdover/expiry, fresh resync after a UTC jump,
+unmatched/too-uncertain/KoD replies, pending leap revocation, and failed full
+`NO FRAME` send/retry. Run:
+
+```sh
+cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked \
+  --features sharp-natural-audit live_utc_preflight
+```
+
+The checked-in elements are not a live fetch or a time source. These tests
+inject packets at the peer-validated boundary; synthetic bracketing captures
+are not measured radio capture evidence. The network-pending timeline proves
+only that *polled* display actions remain available, not target COM service.
+The separate opt-in image below owns SPI in an independent task; its service
+under Wi-Fi contention and physical COM behavior are untested.
 
 ## Natural-speed historical diagnostic (flashed; short UART capture)
 
@@ -743,6 +766,82 @@ holdover. This is one network, one hour and one board; not a guarantee for
 other networks, a WPA3-only access point, a congested link or the handheld.
 Raw log and summary: ignored `target/live-sntp-v1-run.*`. The board was then
 restored to the gated natural-audit v2 image (boot line confirmed).
+
+## Live-UTC ISS radar candidate (flashed; bounded UART capture)
+
+`overhead-s3-live-utc-radar` (`--features live-utc-radar`) is a separate opt-in
+image combining the existing `live-sntp` Wi-Fi/UDP adapter with
+`UtcTrustPreflight::prototype()`, the checked-in single-ISS elements and the
+natural-speed cached-render/selective-line diagnostic policy. A dedicated
+Embassy display task alone owns app, gate, framebuffer, Sharp SPI and VCOM;
+the network side checks exact peer, nonce and bracketing capture, then sends
+screened outcomes through a bounded `embassy-sync` channel. This dependency
+is already locked transitively at 0.8.0; it is direct only for this feature to
+avoid shared mutable display/time state and permit Wi-Fi awaits without waiting
+for a Sharp command. An observation is evaluated at **processing** uptime;
+channel backlog cannot extend its holdover. A matched KoD stops all subsequent
+queries until reboot (conservative diagnostic handling); unmatched packets,
+failed DNS/send/timeout and disconnect cannot renew time. Cloudflare then NIST
+is attempted only when the first yields no reply.
+
+Use *dummy* credentials for a build-only/offline-gate check (the ELF embeds the
+actual `SSID`/`PASSWORD` supplied to it). From `firmware/`, with the existing
+Espressif exports, **do not flash again without a separate go-ahead**:
+
+```sh
+SSID=BUILD_ONLY PASSWORD=BUILD_ONLY cargo build --release --locked \
+  --bin overhead-s3-live-utc-radar --features live-utc-radar
+ELF=target/xtensa-esp32s3-none-elf/release/overhead-s3-live-utc-radar
+espflash save-image --chip esp32s3 --flash-size 8mb --flash-mode dio \
+  --flash-freq 40mhz --skip-update-check "$ELF" target/live-utc-radar-build-only.bin
+python3 image_gate.py "$ELF" target/live-utc-radar-build-only.bin
+```
+
+On 2026-10-26 the dummy-credential release build and exact-image offline gate
+passed (909,984 B image; ELF SHA-256 `ed14efb2261638b773bb067f492d5dc94d026f43a73049a1b915a86258687c1e`;
+image SHA-256 `2026771b8a2b29e40094d06d59d587c52b5e67a84c5ba6ff18dfbfb41af5ba13`).
+That hash is **not** a usable Wi-Fi image; any rebuild must be re-gated.
+The existing linker RWX warning persists. That dummy image was not flashed.
+
+**First local-credential run (2026-10-26):** after separate user approval, a
+real-credential ELF was built locally, paired with its 910,048-byte image and
+passed the exact-ELF offline gate again immediately before flashing. ELF
+SHA-256 `6c7f7fb07ee9f8b71fd4fca07f9ca4223d052a06d90d5892e5432a8062168b77`;
+image SHA-256 `65d92fc3b72de2f5605e0b48ea5c08f8ba30b44378a55e05fd1998f2cd8ba7fa`.
+Board-info confirmed the expected S3 MAC `80:45:6b:2a:45:08` on
+`/dev/cu.usbserial-10`. Flash completed, replacing the historical audit v2.
+The credential-bearing ELF/image and raw UART log remain **ignored local
+artifacts**; do not share them.
+
+A bounded ~90-second monitor reset the board and captured one boot and the
+`NO FRAME` full-send completion at uptime 0.498 s, followed by Wi-Fi connection
+and two Cloudflare `Observation` outcomes accepted by the trust gate (at
+uptime ~11.75 s and ~75.83 s). Nine retained-full completion lines were logged;
+the last sampled report reached frame 1,520 at UTC Unix
+`1793055175026776` µs, with three logged skipped-grid counts after refreshes,
+and no failure marker. Of 80 printed frame summaries,
+79 reported an unchanged-frame idle command and one a full transfer; summaries
+are sampled/event-driven, not every frame. The raw ignored log is
+`target/live-utc-radar-first-90s.log` (SHA-256
+`9a6cd973f69b15a3129e0bf36d25fee949dcf21a7e5dda2bd2f1d2a8c72eab1e`).
+The user subsequently reported seeing an **empty-sky notice** on the physical
+Sharp panel. That confirms a legible post-sync empty view, not an ISS marker,
+visible motion, cold-boot `NO FRAME` appearance, absence of flicker/stale rows,
+or physical COM edges. The UART capture remains **command-side** evidence, not
+verified 20 Hz throughput or a complete frame-timing trace. The board currently
+runs this candidate; no restoration flash has been made.
+
+The 8-second full refresh, 50 ms grid, 500 ms idle reminder and 5 ms owner poll
+are **diagnostic**, not selected production timing or a guaranteed physical
+VCOM bound. The reported unchanged frames and historical element age cannot
+establish visible ISS motion in this 90-second window. On failed SPI the image
+panics with panel state unknown, so it cannot promise subsequent COM service.
+The async owner does not preempt blocking renderer/SPI, Wi-Fi driver, or a
+stalled executor. Neither image gate
+nor host tests measure stack/heap peaks, scheduler contention, power-on safety,
+or sustained panel behavior. The pinned ISS elements are historical and will
+age further; a live UTC frame is **not** an accurate current ISS position claim.
+No HTTPS, persistence, data-age policy, controls or provisioning is present.
 
 ## Hardware and permission
 

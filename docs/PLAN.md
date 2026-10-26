@@ -440,15 +440,15 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   explicit app-frame invalidation and `NO FRAME` replacement on boot/time loss,
   with tested full-send confirmation, idle COM/retained-refresh independence and
   checked UTC representation, monotonic/overflow fault rejection and new-anchor
-  recovery. External time trust, live sources and device-loop integration remain open.
+  recovery. That 0062 preflight alone supplies no external time source or device loop.
   [0063](decisions/0063-bounded-utc-holdover-direction.md) accepts bounded
   holdover between connections, a desired ≤100 ms total UTC-error budget and
   immediate fresh-frame reanchoring on a source-validated time jump, and
   screened ordinary unicast SNTP for the first prototype (not authenticated).
   A separately approved [host-only trust gate](../firmware/src/utc_trust.rs)
   composes 0062's preflight with injected screened observations and explicit
-  test uncertainty/drift/holdover inputs; it is not an SNTP client or device
-  policy. [0064](decisions/0064-prototype-sntp-screen-and-leap-boundary.md)
+  test uncertainty/drift/holdover inputs; by itself it is not an SNTP client
+  or device policy. [0064](decisions/0064-prototype-sntp-screen-and-leap-boundary.md)
   adds a pure host [SNTP reply screen](../firmware/src/sntp_screen.rs) (unique-era,
   status, timing/uncertainty) and ends holdover before any UTC month end
   (possible leap). Bracketing send/receive captures reduce `C` to resolution
@@ -459,8 +459,21 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   adds an opt-in Wi-Fi/UDP stack and Cloudflare/NIST source; a one-hour
   [live run](../firmware/README.md#live-sntp-source-evidence-flashed-1-hour-uart-run)
   accepted all 59 replies (`U0` median 28 ms) with every consistency check in
-  bound. Open: trust gate and radar on target (device loop)
-  ([proposal](utc-trust-loss-proposal.md#remaining-evidence-capture-bound-drift-and-stack-proposal)).
+  bound. The remaining device-loop validation was outlined in the
+  [proposal](utc-trust-loss-proposal.md#remaining-evidence-capture-bound-drift-and-stack-proposal).
+  Under [0067's bounded fixture-only integration scope](decisions/0067-opt-in-live-utc-iss-radar-scope.md),
+  a [host-only composition preflight](../firmware/README.md#live-utc-iss-composition-preflight-host-only)
+  now checks screened replies through trust, frame rendering and Sharp command
+  intent using the checked-in ISS elements. A separate
+  [live-UTC radar candidate](../firmware/README.md#live-utc-iss-radar-candidate-flashed-bounded-uart-capture)
+  has an independently polled display/SPI task and a bounded network-event
+  channel. Its separately approved, exact-gated local-credential image was
+  flashed; a bounded 90-second UART capture logged cold-boot `NO FRAME`, two
+  accepted live syncs, frame activity and retained transfers without a reported
+  panic. The user reported a visible empty-sky notice on the Sharp panel;
+  the board runs this image. **No ISS marker/motion or physical COM-edge evidence
+  follows.** Wi-Fi/display contention, SPI failure service, aged elements and
+  whole-device timing remain open.
 - [ ] Run shared engine/renderer on S3 + Sharp. Intended controls under 0060:
   button cycles satellites, knob zooms continuously (presets as fallback).
 - [ ] Add Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes
