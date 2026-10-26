@@ -480,6 +480,46 @@ service, retained-frame availability and full-frame overrun handling. This
 preflight added no dependency; the board now runs the separate natural-speed
 command-audit v2 historical-fixture image.
 
+[0062's host-only time-loss preflight](../docs/decisions/0062-no-trusted-time-display-preflight.md)
+adds `RadarApp::invalidate_frame` and an opt-in `TimeLossPreflight` wrapper,
+without changing that fixture image. Polling the cold-boot/time-loss action
+clears even pre-populated app tracking before requesting a full draw/send of the
+existing `NO FRAME` state. A retry clears it again if it was repopulated while
+the panel replacement remained unconfirmed. Only successful completion confirms
+the replacement; thereafter
+idle VCOM and diagnostic full-data reminders continue independently of UTC,
+using the newly retained warning pixels. A failed command receives no credit;
+recovery samples only a new, externally trusted UTC anchor after checking the
+shared supported-year/leap-second contract. A rejected sync, poll-time monotonic
+regression (including relative to the last completed transfer) or UTC/deadline
+arithmetic overflow invalidates previous tracking and requests `NO FRAME`
+before old tracking pixels can be refreshed; only a new sync can resume frames.
+This representation check cannot verify SNTP provenance, clock age/drift or
+element freshness. The wrapper does not guarantee panel service through a
+blocked loop or failed SPI transaction. Host coverage (including real rendered
+framebuffer and selective sender) runs with:
+
+```sh
+cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked --features sharp-natural-audit
+```
+
+A separate host-only [`UtcTrustPreflight`](src/utc_trust.rs) now composes
+that lifecycle with injected *screened* observations. It checks time/uncertainty
+and explicit test-only drift/holdover limits on every poll (including between
+frames), rejects invalid calendar values, clears old samples on resync and
+prevents a pending fresh frame from resending previous tracking pixels. A
+failed/no-response event cannot renew trust; a matched unsynchronized response
+revokes it, as does a pending-leap reply; holdover also ends 100 ms before any
+UTC month end (possible leap). [`sntp_screen`](src/sntp_screen.rs) is a pure
+reply screen producing those events under
+[0064](../docs/decisions/0064-prototype-sntp-screen-and-leap-boundary.md); no
+socket or wireless stack. [The UTC proposal](../docs/utc-trust-loss-proposal.md)
+owns open source, capture-bound and drift questions. Host tests run under
+the same feature command above; neither these test parameters nor a public
+struct named “screened” establish actual SNTP quality.
+
+No device image was built or flashed for this lifecycle.
+
 ## Natural-speed historical diagnostic (flashed; short UART capture)
 
 `overhead-s3-sharp-natural` (`--features sharp-natural`) is a separate opt-in
@@ -629,6 +669,80 @@ image SHA-256:
 `89fdb097d1752a18869e3ea12c1443851f7a4b16110abb8776e3a8ed6baaaa2a`.
 The `.bin` and ELF are ignored local artifacts. A rebuild changes their
 identity and requires a fresh gate. The existing linker RWX warning remains.
+
+## S3 clock-drift capture (flashed; 3-hour UART run)
+
+`overhead-s3-clock-drift` (`--features clock-drift`) prints
+`DRIFT seq=N uptime_us=…` (`esp_hal::time::Instant`, 240 MHz CPU config) once
+per nominal second and holds the Sharp panel white with serial VCOM alternating
+~1 Hz. No network, radar or new dependency. `drift_capture.py` (stdlib, tests in
+`test_drift_capture.py`) stamps each UART line with the host wall clock and fits
+the rate, optionally correcting host stamps by interpolated `sntp` offsets.
+
+```sh
+BENCH_SUITE=baseline BENCH_SAMPLES=5 cargo build --release --locked \
+  --bin overhead-s3-clock-drift --features clock-drift
+# save-image + image_gate.py as above; flash with approval, then:
+python3 drift_capture.py capture --port <UART> --elf "$E" --output target/drift.log --duration 10800
+# in parallel, every 300 s: (date -u +%FT%TZ; sntp time.nist.gov; sntp time.cloudflare.com) >> target/offsets.log
+python3 drift_capture.py fit target/drift.log --offsets target/offsets.log
+```
+
+2026-10-26, `/dev/cu.usbserial-21410`, ELF SHA-256
+`745efe125e05d16cc43ae1876bee79928d83286fec0dbabf01814bebbc978d99`, image
+`384c2fdcddb38ef9c94f42c5719329222981e0429456f26acb9b0ad9a34b50c7` (gate passed,
+105,520 bytes). 10,798 consecutive samples over ~3.0 h, no reset or failure;
+indoor room temperature, USB-powered, unmeasured. Result, S3 rate relative to
+UTC via the corrected host clock: **+1.2 ppm** (least squares over 3 h); per-hour
+thirds 0.8, 1.5 and 2.4 ppm. The *host* clock was the limiting reference: its
+`sntp` offset wandered between +0.5 and +40.6 ms (several ppm over an hour), and
+lower-envelope estimates scattered 2–8 ppm. Read this as "the S3 timer is within
+a few ppm of UTC on this board, at this temperature, over three hours"; it is
+not a temperature, voltage, aging or multi-board bound. Raw logs are ignored
+local files (`target/clock-drift-v1-3h*.log`). The board was then restored to
+the gated natural-audit v2 image (hashes unchanged; boot line confirmed).
+[0065](../docs/decisions/0065-prototype-drift-bound-and-holdover.md) uses this
+evidence for the prototype `D = 20 ppm`, `H = 3,600 s`
+(`UtcTrustPreflight::prototype()`).
+
+## Live SNTP source evidence (flashed; 1-hour UART run)
+
+`overhead-s3-live-sntp` (`--features live-sntp`) joins Wi-Fi (WPA/WPA2), queries
+`time.cloudflare.com` every 64 s (NIST fallback) under
+[0066](../docs/decisions/0066-prototype-live-sntp-stack-and-source.md), screens each
+reply with `sntp_screen` using bracketing uptime captures and 0065's 20 ppm, and
+logs `SNTP …` and `SNTP_CHECK …` lines. The check compares each accepted
+observation with UTC predicted from the previous one by monotonic time; it must
+fall within both uncertainties plus drift. The panel is held white with VCOM
+alternating ~1 Hz. No trust gate, radar or persistence on target.
+
+```sh
+# firmware/.wifi.env (ignored): SSID=… and PASSWORD=… lines
+export SSID="$(sed -n 's/^SSID=//p' .wifi.env)" PASSWORD="$(sed -n 's/^PASSWORD=//p' .wifi.env)"
+BENCH_SUITE=baseline BENCH_SAMPLES=5 cargo build --release --locked \
+  --bin overhead-s3-live-sntp --features live-sntp
+# save-image + image_gate.py as above; flash with approval; capture with
+# espflash monitor, then:
+python3 drift_capture.py sntp target/live-sntp.log
+```
+
+The ELF embeds the Wi-Fi credentials: keep it local and unshared. On
+2026-10-26 (`/dev/cu.usbserial-10`, same MAC as before; 550,080-byte image,
+gate passed) a ~62-minute run on a home 2.4 GHz network gave 59 consecutive
+Cloudflare observations, none rejected, timed out or failed over:
+
+| Metric | Result |
+|---|---|
+| RTT min / median / max | 12.9 / 26.0 / 85.8 ms |
+| Initial uncertainty `U0` min / median / max | 21.3 / 27.7 / 57.7 ms |
+| Consistency checks within bound | 58 / 58; worst \|diff\| 36.5 ms = 45% of its bound |
+| S3 rate vs UTC (fit over 3,717 s) | −0.4 ppm (± a few ppm at this noise) |
+
+With 0065's `D = 20 ppm`, a median `U0` leaves ~72 ms, about 3,600 s of
+holdover. This is one network, one hour and one board; not a guarantee for
+other networks, a WPA3-only access point, a congested link or the handheld.
+Raw log and summary: ignored `target/live-sntp-v1-run.*`. The board was then
+restored to the gated natural-audit v2 image (boot line confirmed).
 
 ## Hardware and permission
 

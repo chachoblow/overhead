@@ -32,6 +32,10 @@ sharp-lines = ["sharp-replay"]
 sharp-natural = ["sharp-lines"]
 # Same historical diagnostic with opt-in per-command telemetry; separate ELF.
 sharp-natural-audit = ["sharp-natural"]
+# Separate monotonic-clock drift capture over UART; panel held white with VCOM.
+clock-drift = ["sharp-test"]
+# Separate live SNTP source-evidence diagnostic (Wi-Fi/UDP); never the device app.
+live-sntp = ["sharp-test", "dep:esp-alloc", "esp-alloc/global-allocator", "esp-alloc/compat", "esp-hal/unstable", "dep:esp-radio", "dep:esp-rtos", "dep:embassy-executor", "dep:embassy-net", "dep:embassy-time", "dep:static_cell"]
 
 [dependencies]
 overhead-core = { path = "../core" }
@@ -49,8 +53,18 @@ esp-hal = { version = "=1.2.2", features = ["esp32s3"] }
 esp-println = { version = "=0.18.0", default-features = false, features = ["esp32s3", "uart", "critical-section"] }
 # ESP-IDF-format image descriptor required by the flasher/bootloader.
 esp-bootloader-esp-idf = { version = "=0.6.0", features = ["esp32s3"] }
-# Bounded internal-RAM experiment; no C allocator exports or implicit global heap.
+# Bounded internal-RAM experiment; no C allocator exports or implicit global heap
+# (except `live-sntp`, whose Wi-Fi driver needs both).
 esp-alloc = { version = "=0.11.0", default-features = false, features = ["esp32s3"], optional = true }
+# live-sntp only: Wi-Fi driver (pre-release; Espressif binary blobs) and the
+# scheduler it requires; embassy-net gives DHCP/DNS and a raw UDP socket so
+# sntp_screen sees the whole reply, peer endpoint and bracketing captures.
+esp-radio = { version = "=1.0.0-beta.1", features = ["esp32s3", "wifi"], optional = true }
+esp-rtos = { version = "=0.4.0", features = ["esp32s3", "esp-radio", "embassy"], optional = true }
+embassy-executor = { version = "0.10.0", optional = true }
+embassy-net = { version = "0.9", features = ["dhcpv4", "medium-ethernet", "udp", "dns", "proto-ipv4"], optional = true }
+embassy-time = { version = "0.5.0", optional = true }
+static_cell = { version = "2.1.0", optional = true }
 
 [build-dependencies]
 # Convert original fixtures on the host; the default target remains allocation-free.
@@ -137,6 +151,20 @@ bench = false
 name = "overhead-s3-sharp-natural"
 path = "src/sharp_natural_main.rs"
 required-features = ["sharp-natural"]
+
+[[bin]]
+name = "overhead-s3-clock-drift"
+path = "src/clock_drift_main.rs"
+required-features = ["clock-drift"]
+test = false
+bench = false
+
+[[bin]]
+name = "overhead-s3-live-sntp"
+path = "src/live_sntp_main.rs"
+required-features = ["live-sntp"]
+test = false
+bench = false
 
 [[example]]
 name = "prepared_expected"

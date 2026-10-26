@@ -33,6 +33,10 @@ pub mod sharp_lines;
 pub mod sharp_profile;
 #[cfg(feature = "sharp-test")]
 pub mod sharp_test;
+#[cfg(any(feature = "sharp-radar", feature = "live-sntp"))]
+pub mod sntp_screen;
+#[cfg(feature = "sharp-radar")]
+pub mod utc_trust;
 // Offline transport feasibility only; not linked into any target image.
 #[cfg(all(test, feature = "sharp-replay"))]
 mod sharp_transport;

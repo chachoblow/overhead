@@ -9,3 +9,6 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# Local Wi-Fi credentials for opt-in network diagnostics; never commit.
+/firmware/.wifi.env

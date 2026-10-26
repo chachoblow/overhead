@@ -436,6 +436,31 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   alternating issued VCOM bits across completed commands. This is not physical
   COM-edge or production 20 Hz verification. The user separately confirmed v2
   looks stable, with gradual motion and no visible flicker or stale rows.
+- [x] [0062's host-only no-trusted-time preflight](decisions/0062-no-trusted-time-display-preflight.md):
+  explicit app-frame invalidation and `NO FRAME` replacement on boot/time loss,
+  with tested full-send confirmation, idle COM/retained-refresh independence and
+  checked UTC representation, monotonic/overflow fault rejection and new-anchor
+  recovery. External time trust, live sources and device-loop integration remain open.
+  [0063](decisions/0063-bounded-utc-holdover-direction.md) accepts bounded
+  holdover between connections, a desired ≤100 ms total UTC-error budget and
+  immediate fresh-frame reanchoring on a source-validated time jump, and
+  screened ordinary unicast SNTP for the first prototype (not authenticated).
+  A separately approved [host-only trust gate](../firmware/src/utc_trust.rs)
+  composes 0062's preflight with injected screened observations and explicit
+  test uncertainty/drift/holdover inputs; it is not an SNTP client or device
+  policy. [0064](decisions/0064-prototype-sntp-screen-and-leap-boundary.md)
+  adds a pure host [SNTP reply screen](../firmware/src/sntp_screen.rs) (unique-era,
+  status, timing/uncertainty) and ends holdover before any UTC month end
+  (possible leap). Bracketing send/receive captures reduce `C` to resolution
+  plus drift. A 3-hour UART capture measured the S3 timer at ≈+1.2 ppm versus
+  UTC (one board, room temperature, host-reference-limited);
+  [0065](decisions/0065-prototype-drift-bound-and-holdover.md) sets prototype
+  `D = 20 ppm` and `H = 3,600 s`. [0066](decisions/0066-prototype-live-sntp-stack-and-source.md)
+  adds an opt-in Wi-Fi/UDP stack and Cloudflare/NIST source; a one-hour
+  [live run](../firmware/README.md#live-sntp-source-evidence-flashed-1-hour-uart-run)
+  accepted all 59 replies (`U0` median 28 ms) with every consistency check in
+  bound. Open: trust gate and radar on target (device loop)
+  ([proposal](utc-trust-loss-proposal.md#remaining-evidence-capture-bound-drift-and-stack-proposal)).
 - [ ] Run shared engine/renderer on S3 + Sharp. Intended controls under 0060:
   button cycles satellites, knob zooms continuously (presets as fallback).
 - [ ] Add Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes

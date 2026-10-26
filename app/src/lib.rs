@@ -150,6 +150,15 @@ impl RadarApp {
         self.label_visible && self.selected.is_some()
     }
 
+    /// Discard tracking when UTC is no longer trusted, without inventing an
+    /// invalid timestamp. Retain catalogue, observer and presentation settings.
+    /// The renderer can now show NO FRAME instead of stale markers/readouts.
+    pub fn invalidate_frame(&mut self) {
+        self.time = None;
+        self.samples.clear();
+        self.selected = None;
+    }
+
     /// Compute a complete synchronous frame at caller-supplied UTC. Each entry
     /// gets a new result; a failed update cannot retain an old successful marker.
     /// Invalid UTC invalidates the entire previous frame before returning Err.
@@ -157,7 +166,7 @@ impl RadarApp {
         self.time = None;
         self.samples.clear();
         if let Err(error) = validate_utc_time(time) {
-            self.selected = None;
+            self.invalidate_frame();
             return Err(error);
         }
         for entry in self.catalogue.entries() {
@@ -519,6 +528,32 @@ mod tests {
             s.edge_indicator(View::rectangular(0.1, 173.0 / 117.0).unwrap())
                 .is_none()
         );
+    }
+
+    #[test]
+    fn explicit_time_loss_clears_tracking_and_recovers_without_changing_configuration() {
+        let mut app = app().with_group_categories(alloc::vec![Category::Station]);
+        let time = app.catalogue.entries()[0].satellite().epoch();
+        app.update(time).unwrap();
+        let observer = app.observer();
+        let view = app.view();
+        assert!(app.selected().is_some());
+        app.invalidate_frame();
+        assert_eq!(app.time(), None);
+        assert_eq!(app.objects().count(), 0);
+        assert_eq!(app.markers().count(), 0);
+        assert_eq!(app.indicators().count(), 0);
+        assert_eq!(app.selected_id(), None);
+        assert_eq!(app.selected_category(), None);
+        assert_eq!(app.selected_period_minutes(), None);
+        assert_eq!(app.counts().catalogue, 1);
+        assert_eq!(app.observer(), observer);
+        assert_eq!(app.view(), view);
+        app.invalidate_frame(); // repeated loss is harmless
+        app.update(time + Duration::seconds(1)).unwrap();
+        assert_eq!(app.time(), Some(time + Duration::seconds(1)));
+        assert!(app.selected().is_some());
+        assert_eq!(app.selected_category(), Some(Category::Station));
     }
 
     #[test]
