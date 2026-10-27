@@ -843,6 +843,184 @@ or sustained panel behavior. The pinned ISS elements are historical and will
 age further; a live UTC frame is **not** an accurate current ISS position claim.
 No HTTPS, persistence, data-age policy, controls or provisioning is present.
 
+**Headless empty-view diagnosis (same checked-in elements and first-capture UTC):**
+`src/live_utc_preflight.rs::first_live_utc_capture_empty_view_diagnostic`
+reuses the candidate's `iss-ground-20` fixture setup (observer fixed at the
+ISS subpoint at element epoch, 5° wide view), then samples the captured
+`1793055175026776` µs UTC and ±45 seconds. At the captured instant
+(2026-10-26 22:52:55.026776 UTC), the elements from
+2026-10-04 12:43:41.833056 UTC are **22 days 10:09:13.193720 old**.
+The fixed observer is approximately 0.0000174° N, 85.1803573° W; the
+single ISS sample propagates successfully but has about **−48.385° observer
+elevation**. All three tested instants have one accepted entry, zero tracking
+failures, zero above-horizon objects, zero visible markers and zero indicators.
+The same observer has a visible marker at the fixture epoch (control).
+With a valid trusted frame and no ingestion warning, the wide renderer's
+[0048/0061 notice rules](../docs/decisions/0048-refined-empty-view-notices.md)
+therefore select exactly **`NONE ABOVE HORIZON`** (not `NONE IN VIEW`,
+`NO MARKERS`, `TRACK ERROR` or `NO FRAME`). This explains why an empty view
+is expected near the sampled time; the user reported only an empty-sky notice,
+not its text, and no framebuffer from that run was captured. This is a
+propagation/classification diagnostic, **not** a claim that 22-day-old
+predictions describe the real ISS or that the physical panel displayed those
+exact pixels. Reproduce on the host with:
+
+```sh
+cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked \
+  --features sharp-natural-audit first_live_utc_capture_empty_view_diagnostic -- --nocapture
+```
+
+**Fresh-element host-only visibility proof (2026-10-26):** CelesTrak's
+[ISS GP JSON](https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=JSON)
+was retrieved as a *temporary local input* (manifest fetch metadata
+`2026-10-26T23:02:53Z`). The one-record JSON's SHA-256 is
+`418a12a93d28234192d8b4fc8876937f381e87012d6fb747decfab6a1e3dde27`;
+NORAD 25544's element epoch is `2026-10-26T05:01:03.508032Z`.
+The initial input, manifest and headless PNGs live in ignored
+`target/fresh-iss-host-proof/`. A separately dated copy of the OMM is now
+[checked in for the opt-in diagnostic](fixtures/README.md); the live endpoint
+can change, so a later fetch does **not** reproduce these exact bytes.
+No on-device fetching or runtime cache was added.
+
+Using **the same fixed observer and 5° wide view as the candidate**, an
+explicit host pass search from `2026-10-26T23:03:00Z` found a modelled
+above-horizon interval on 2026-10-27 approximately
+`02:34:52..02:43:08Z` (30 s detection grid, 5 s crossing tolerance,
+0° threshold; brackets, not real-world timing guarantees). At
+`2026-10-27T02:39:00Z` (elements age 21:37:56.491968), the shared
+`overhead-track` pipeline computes **+8.338° elevation**, and the headless
+`overhead-sim --wide --fov-deg 5 --snapshot` reports
+`catalogue=1 sky=1 visible=1 failed=0 indicators=0`. Its 400×240
+black/white PNG shows the selected `ISS` diamond and strip;
+PNGs at ±30 s show
+its screen position changing. At the earlier board-capture sample with these
+fresh elements, the host still reports `sky=0 visible=0`—freshness alone
+cannot promise a visible marker at an arbitrary instant. The old fixture
+also happens to yield a visible marker at 02:39, so this is a **positive
+host visibility control, not an attribution of a changed position to
+freshness**. The host snapshots are neither physical-panel evidence nor a
+live-UTC/device-cadence test. The 02:39 sample was a *future model time* when
+this host proof was run, not a captured device observation.
+
+Reproduce from the checked-in dated OMM (host only, repo root; outputs ignored):
+
+```sh
+mkdir -p target/fresh-iss-host-proof
+printf '%s\n' '{"groups":[{"name":"iss","path":"../../firmware/fixtures/live-utc-iss-20261026.json","category":"station"}]}' \
+  > target/fresh-iss-host-proof/pinned-catalogue.json
+cargo run -p overhead-tools --bin overhead-catalogue -- target/fresh-iss-host-proof/pinned-catalogue.json
+cargo run -p overhead-tools --bin overhead-track -- \
+  firmware/fixtures/live-utc-iss-20261026.json 2026-10-27T02:39:00Z \
+  0.000017408882706672767 -85.18035731481179 0
+cargo run -p overhead-sim -- target/fresh-iss-host-proof/pinned-catalogue.json \
+  2026-10-27T02:39:00Z 0.000017408882706672767 -85.18035731481179 0 \
+  --wide --fov-deg 5 --snapshot target/fresh-iss-host-proof/visible-5deg.png
+```
+
+This host proof selects no production data-age rule, fetch/persistence path,
+network credentials policy or scheduler.
+
+## Pinned-OMM live-UTC marker diagnostic (flashed; no visual observation)
+
+After authorization to stage an image (not a flash), the [dated OMM and
+provenance](fixtures/README.md) were checked in separately from the old
+fixture. `overhead-s3-live-utc-fresh-iss` (`--features live-utc-fresh-iss`)
+copies the existing display/network diagnostic runtime without editing the
+original image's source, but builds its own app from this pinned source at the
+**same fixed observer** and 5° wide view. The original candidate's source
+still loads its historical elements; neither image fetches OMM or implements
+an age policy. [Trial scope and completed gates](../docs/live-utc-visible-marker-proposal.md)
+remain separate from 0067.
+
+Host `pinned_fresh_iss_diagnostic_keeps_site_and_renders_marker_motion` checks
+that the new input preserves the original observer/view, that cold boot clears
+the epoch frame to `NO FRAME`, that screened time at the first capture's UTC
+remains empty, and that 02:38:30/02:39:00/02:39:30 UTC on 2026-10-27 each
+produces one selected, in-view ISS with changing marker positions and changed
+selective-sender pixels. These are historical *test timestamps* after this
+window passes. Re-evaluate any new capture window against the pinned OMM and
+confirm it is still timely **before** seeking physical approval.
+
+For a **build-only** check with dummy Wi-Fi credentials, from `firmware/`
+with the existing Espressif exports (do **not** flash):
+
+```sh
+SSID=BUILD_ONLY PASSWORD=BUILD_ONLY cargo build --release --locked \
+  --bin overhead-s3-live-utc-fresh-iss --features live-utc-fresh-iss
+ELF=target/xtensa-esp32s3-none-elf/release/overhead-s3-live-utc-fresh-iss
+espflash save-image --chip esp32s3 --flash-size 8mb --flash-mode dio \
+  --flash-freq 40mhz --skip-update-check "$ELF" target/live-utc-fresh-iss-build-only.bin
+python3 image_gate.py "$ELF" target/live-utc-fresh-iss-build-only.bin
+```
+
+On 2026-10-26 this target release build and exact offline image gate passed
+for **dummy** credentials: image 908,672 B, ELF SHA-256
+`0fd6f2a91f4d78657db4c847a8e447dd5d5a6f5f5dfb65bc949bd598f9720a8a`,
+image SHA-256
+`632094ea92508e39530771aa7fdb056accc2b7c57a6f7ef53601fea78b73c2ce`.
+The linker RWX warning persists. These hashes do **not** identify a usable
+Wi-Fi image. No board-info, flash, UART capture or visual review was done.
+A subsequent **local credential-bearing build-only** preparation on
+2026-10-27 at ~01:45 UTC produced a distinct, ignored
+`target/live-utc-fresh-iss-real-20261027.elf` paired with
+`target/live-utc-fresh-iss-real-20261027.bin`. The exact offline gate passed:
+908,672 B / 8,323,072 B partition (10.92%), ELF SHA-256
+`a1fb3c4870d853b1cdc94e8b3c23d52d11879e924fdd087300961c80c5497b66`,
+image SHA-256
+`db12cba295d58e0299bfb54998370dfeea75f9480d613f1f898f599a3442f882`.
+Credentials and binary remain local; **no board access, MAC check, flash,
+monitor or physical review** was performed by this preparation. Any rebuild
+invalidates these identities and requires a new exact-image gate.
+
+At 2026-10-27 01:44 UTC an explicit **host-only** repeat of the pass search
+using the checked-in OMM (not the mutable endpoint) and the original fixed
+observer, 30 s detection, 5 s crossing tolerance, 0° threshold, 2 h horizon
+and 3,000 evaluation allowances completed (247 evaluations). It bracketed
+above-horizon start `02:34:52.500..02:34:56.250Z` and end
+`02:43:03.750..02:43:07.500Z`. Headless wide 5° snapshots every 30 s from
+`02:37:00` through `02:41:00Z` each reported
+`catalogue=1 sky=1 visible=1 failed=0 indicators=0`. This is the **2026-10-27
+UTC** predicted window, not a guarantee of physical visibility or a later-day
+window; the ~21.5-hour-old elements and fixed historical observer still limit
+real-world claims. The ignored host manifest and PNGs are in
+`target/fresh-iss-host-proof/`. No device or visual observations follow.
+
+**Single authorized physical trial (2026-10-27):** after explicit user
+approval of this *exact* credential-bearing ELF and the 02:37–02:41 UTC
+window, the expected UART bridge `/dev/cu.usbserial-10`, S3 revision v0.2,
+8 MB flash and MAC `80:45:6b:2a:45:08` were confirmed. The source JSON, ELF,
+image and exact-image offline gate were rechecked immediately before the
+flash, with the same SHA-256 hashes above. The one flash completed at about
+`02:33:18Z`; a single local monitor ran from that boot until `02:43:30Z`,
+then stopped. An initial timed host wait stopped slightly early **without a
+flash**; the immediate retry passed every guard before this one flash. No
+restoration flash was done. The raw credential-adjacent UART log remains
+**ignored and local** at `target/live-utc-fresh-iss-20261027-window.log`
+(SHA-256 `8bc22d0a6c7b9e8badc952bae40570db9a2640105fe76c421f463dde91d8406d`,
+62,898 bytes); do not share it or the ELF/image.
+
+The bounded log has one diagnostic banner, one completed cold-boot `NO FRAME`
+send, Wi-Fi connection, **10 screened SNTP observations accepted** by the
+gate, 58 reported retained-full completions, and 645 *sampled/event-logged*
+frame summaries from `02:33:32.951787Z` to `02:43:29.605559Z`: 615 idle,
+17 full, 13 changed-line summaries; zero logged panics or `LIVE_UTC failure`
+lines. From `02:37:00` to `02:41:01Z` the sampled summaries include seven
+changed-line and seven full sends; changed-line sends total 61 rows. These
+are **not all frames**, physical COM edges, a 20 Hz guarantee, marker/selection
+telemetry, or proof of display contents. The live-UTC source code logs only
+transfer kinds, not observed marker coordinates; the host-predicted marker
+cannot be inferred from these UART lines. **The user was not watching the
+panel during the predicted window. No visual marker, motion or notice was
+observed or accepted.** The nearly hour-long wait between authorization and
+capture was not coordinated with the user; do not repeat that unattended
+scheduling approach. The device remains on the diagnostic image; this short
+capture neither tests unattended service nor authorizes another flash.
+
+Do not infer visual success from UART or reuse the expired window as permission
+for a later capture. First agree a time when the user is ready to look; recheck
+an upcoming window against appropriately reviewed input, then seek fresh
+approval before any further board access or flash.
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing

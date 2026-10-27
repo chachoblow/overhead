@@ -471,9 +471,11 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   flashed; a bounded 90-second UART capture logged cold-boot `NO FRAME`, two
   accepted live syncs, frame activity and retained transfers without a reported
   panic. The user reported a visible empty-sky notice on the Sharp panel;
-  the board runs this image. **No ISS marker/motion or physical COM-edge evidence
-  follows.** Wi-Fi/display contention, SPI failure service, aged elements and
-  whole-device timing remain open.
+  the board later switched to a [separate dated-OMM diagnostic](../firmware/README.md#pinned-omm-live-utc-marker-diagnostic-flashed-no-visual-observation).
+  That image has host marker-motion and bounded UART evidence, but the user was
+  not watching during its predicted window. **No physical ISS marker/motion or
+  COM-edge evidence follows.** Wi-Fi/display contention, SPI failure service,
+  aging elements and whole-device timing remain open.
 - [ ] Run shared engine/renderer on S3 + Sharp. Intended controls under 0060:
   button cycles satellites, knob zooms continuously (presets as fallback).
 - [ ] Add Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes

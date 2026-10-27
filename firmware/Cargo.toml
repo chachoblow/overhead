@@ -39,6 +39,8 @@ live-sntp = ["sharp-test", "dep:esp-alloc", "esp-alloc/global-allocator", "esp-a
 # Separate target build: screened live UTC drives checked-in ISS radar. No fetch.
 # The bounded channel lets the network wait without owning SPI or blocking display polls.
 live-utc-radar = ["live-sntp", "sharp-natural", "dep:embassy-sync"]
+# Separately named pinned-OMM visibility diagnostic; original source path retained.
+live-utc-fresh-iss = ["live-utc-radar"]
 
 [dependencies]
 overhead-core = { path = "../core" }
@@ -175,6 +177,13 @@ bench = false
 name = "overhead-s3-live-utc-radar"
 path = "src/live_utc_main.rs"
 required-features = ["live-utc-radar"]
+test = false
+bench = false
+
+[[bin]]
+name = "overhead-s3-live-utc-fresh-iss"
+path = "src/live_utc_fresh_main.rs"
+required-features = ["live-utc-fresh-iss"]
 test = false
 bench = false
 

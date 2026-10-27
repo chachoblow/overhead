@@ -75,6 +75,42 @@ pub fn app(name: &str, lat: f64, lon: f64, fov: f64) -> RadarApp {
     app
 }
 
+/// Original candidate site, fixed at the historical element epoch's subpoint.
+/// Do not recenter the observer when using another element set.
+pub const LIVE_UTC_ISS_OBSERVER: GeodeticPosition = GeodeticPosition {
+    latitude_rad: 3.038_423_223_249_419_6e-7,
+    longitude_rad: -1.486_677_693_168_701_6,
+    altitude_km: 0.0,
+};
+
+/// Separate opt-in pinned-OMM diagnostic. The site is supplied explicitly;
+/// unlike `iss-ground-20`, a new element epoch must not move the observer.
+/// The time preflight invalidates this initial epoch frame before cold-boot draw.
+pub fn app_from_omm(json: &str, observer: GeodeticPosition, fov: f64) -> RadarApp {
+    let elements: alloc::vec::Vec<OmmElements> =
+        serde_json::from_str(json).expect("pinned diagnostic OMM array");
+    assert_eq!(elements.len(), 1, "expected one pinned ISS record");
+    assert_eq!(
+        elements[0].elements().norad_id,
+        25544,
+        "expected ISS NORAD ID"
+    );
+    let mut builder = CatalogueBuilder::new();
+    builder.push(
+        RecordOrigin {
+            group: 0,
+            record: 0,
+        },
+        elements.into_iter().next().unwrap(),
+    );
+    let catalogue = builder.finish().expect("pinned diagnostic catalogue");
+    let epoch = catalogue.entries()[0].satellite().epoch();
+    let view = View::rectangular(fov, Layout::wide().aspect_ratio()).unwrap();
+    let mut app = RadarApp::new(catalogue, observer, view).unwrap();
+    app.update(epoch).unwrap();
+    app
+}
+
 /// Storage is owned by the caller, not allocated in a timed draw. Full 12 KB
 /// target is a measurement baseline, NOT coast-attributable scratch.
 pub struct Screen {

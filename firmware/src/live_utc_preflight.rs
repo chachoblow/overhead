@@ -1,8 +1,10 @@
 //! Host-only composition of the proposed live-UTC ISS radar path. The fixture
 //! supplies *elements*, never a clock. No target loop, socket, COM-edge proof
 //! or service guarantee while an actual blocking operation is in progress.
+extern crate std;
+
 use crate::{
-    coast_measurement::{Screen, app as fixture_app},
+    coast_measurement::{LIVE_UTC_ISS_OBSERVER, Screen, app as fixture_app, app_from_omm},
     device_timing::{DiagnosticAction, LifecycleAction},
     live_utc,
     sharp_lines::{Kind, LineSender},
@@ -15,6 +17,123 @@ use overhead_render::{CoastLayer, Layout, PeriodCache, draw_cached};
 
 const NONCE: u64 = 0x1234_5678_90ab_cdef;
 const NTP_OFFSET: i64 = 2_208_988_800;
+
+// Last sampled UTC reported by the first bounded live-UTC board capture.
+const FIRST_LIVE_UTC_SAMPLE_US: i64 = 1_793_055_175_026_776;
+
+#[test]
+fn first_live_utc_capture_empty_view_diagnostic() {
+    use overhead_core::sgp4::chrono::Duration;
+
+    // Exactly the candidate's fixed site (ISS subpoint at element epoch),
+    // not the subpoint at live UTC. The fixture is elements, not current data.
+    let mut app = fixture_app("iss-ground-20", 0.0, 0.0, 5.0);
+    let epoch = app.time().unwrap();
+    let at = frame_time(FIRST_LIVE_UTC_SAMPLE_US);
+    let age = at - epoch;
+    assert_eq!(age, Duration::microseconds(1_937_353_193_720));
+    assert_eq!(app.view().fov_deg(), 5.0);
+    assert_eq!(app.counts().visible, 1); // Epoch-ground observer control.
+    for time in [at - Duration::seconds(45), at, at + Duration::seconds(45)] {
+        app.update(time).unwrap();
+        let counts = app.counts();
+        assert_eq!(counts.catalogue, 1);
+        assert_eq!(counts.failed, 0, "propagation failed at {time}");
+        assert_eq!(counts.above_horizon, 0, "horizon changed at {time}");
+        assert_eq!(counts.visible, 0);
+        assert_eq!(app.indicators().count(), 0);
+        assert_eq!(app.selected_id(), None);
+        let (entry, result) = app.objects().next().unwrap();
+        assert_eq!(entry.elements().norad_id, 25544);
+        let sample = result.as_ref().unwrap();
+        let elevation_deg = sample.physical.look.elevation_rad.to_degrees();
+        assert!((-50.0..-45.0).contains(&elevation_deg));
+        std::println!(
+            "at={time} element_age={:?} observer={:?} elevation_deg={elevation_deg:.3} counts={counts:?} indicators=0; clean NONE ABOVE HORIZON",
+            time - epoch,
+            app.observer(),
+        );
+    }
+}
+
+#[test]
+fn pinned_fresh_iss_diagnostic_keeps_site_and_renders_marker_motion() {
+    use overhead_core::sgp4::chrono::Duration;
+
+    // Same bytes compiled into the separate target binary; the historical
+    // fixture and its first live-UTC image are not replaced.
+    let mut app = app_from_omm(
+        include_str!("../fixtures/live-utc-iss-20261026.json"),
+        LIVE_UTC_ISS_OBSERVER,
+        5.0,
+    );
+    let old = fixture_app("iss-ground-20", 0.0, 0.0, 5.0);
+    assert_eq!(app.observer(), old.observer());
+    assert_eq!(app.view(), old.view());
+    assert_eq!(
+        app.time().unwrap().and_utc().timestamp_micros(),
+        1_792_990_863_508_032
+    );
+    let mut display = Display::new(&app);
+    let mut gate = UtcTrustPreflight::prototype();
+    assert_eq!(
+        gate.next(&mut app, 0, false),
+        LifecycleAction::RenderNoFrame
+    );
+    display.draw(&app);
+    assert_eq!(app.time(), None);
+    assert_eq!(display.send(gate.next_phase(), true), Kind::Full);
+    gate.no_frame_succeeded(52_000, gate.next_phase());
+
+    // A new element epoch does not manufacture a visible marker at the prior
+    // capture UTC. Fresh time is still supplied only by the trust gate.
+    let sent = 9_000_000;
+    let received = sent + 20_000;
+    deliver(
+        &mut gate,
+        &mut app,
+        received,
+        screened(&reply(FIRST_LIVE_UTC_SAMPLE_US, 0, 2), sent, received),
+    );
+    let LifecycleAction::Scheduled(DiagnosticAction::Frame { sample, .. }) =
+        gate.next(&mut app, received, true)
+    else {
+        panic!("accepted UTC must request a frame");
+    };
+    app.update(frame_time(sample.utc_unix_us)).unwrap();
+    assert_eq!(app.counts().catalogue, 1);
+    assert_eq!(app.counts().failed, 0);
+    assert_eq!(app.counts().above_horizon, 0);
+    assert_eq!(app.counts().visible, 0);
+    assert_eq!(app.indicators().count(), 0);
+    display.draw(&app);
+    let empty = display.screen.pixels;
+
+    let center = frame_time(1_793_068_740_000_000); // 2026-10-27 02:39 UTC.
+    let mut marker_pixels = None;
+    for at in [
+        center - Duration::seconds(30),
+        center,
+        center + Duration::seconds(30),
+    ] {
+        app.update(at).unwrap();
+        assert_eq!(app.counts().catalogue, 1);
+        assert_eq!(app.counts().failed, 0);
+        assert_eq!(app.counts().above_horizon, 1);
+        assert_eq!(app.counts().visible, 1);
+        assert_eq!(app.indicators().count(), 0);
+        assert_eq!(app.selected_id(), Some(25544));
+        let marker = app.markers().next().unwrap().2;
+        display.draw(&app);
+        assert_ne!(display.screen.pixels, empty);
+        if let Some(previous) = marker_pixels {
+            assert_ne!(marker, previous, "marker must move in 30 seconds");
+        }
+        marker_pixels = Some(marker);
+        let phase = gate.next_phase();
+        assert_ne!(display.send(phase, false), Kind::Idle);
+    }
+}
 
 fn ntp(unix_us: i64) -> u64 {
     let sec = (unix_us.div_euclid(1_000_000) + NTP_OFFSET) as u64;

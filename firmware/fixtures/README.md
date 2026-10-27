@@ -1,4 +1,4 @@
-# Measurement-only fixtures
+# Experimental firmware fixtures
 
 ## `coast-quadratic-trial.bin`
 
@@ -32,3 +32,20 @@ renderer still uses its original asset. Actual link inspection confirmed this
 candidate asset only in the on image and neither coastline asset in the off image.
 Changing this file would invalidate the recorded target-image evidence; do not
 regenerate it to conceal a mismatch.
+
+## `live-utc-iss-20261026.json`
+
+A **separate diagnostic-only** single-record ISS OMM array, not a replacement
+for `core/tests/fixtures/iss-25544.json` or any frozen M2 input.
+
+- Source: [CelesTrak GP by CATNR=25544, JSON](https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=JSON), retrieved on 2026-10-26 UTC; host manifest recorded `2026-10-26T23:02:53Z` as fetch metadata. The endpoint is mutable.
+- NORAD ID: 25544; element epoch: `2026-10-26T05:01:03.508032Z`.
+- Exact checked-in bytes SHA-256: `418a12a93d28234192d8b4fc8876937f381e87012d6fb747decfab6a1e3dde27` (one JSON array line followed by LF). The original response was fetched through a web tool; the checked-in file records its returned JSON with an LF, so this hash is for **these checked-in bytes**, not an attestation of the remote HTTP response bytes.
+- Consumer: only the separately named `overhead-s3-live-utc-fresh-iss` diagnostic and its host preflight. The existing `overhead-s3-live-utc-radar` still uses the old fixture. The new target image neither fetches nor refreshes this data.
+
+This is a **dated visibility experiment**, not a lasting claim of current ISS
+accuracy. The [firmware guide](../README.md#pinned-omm-live-utc-marker-diagnostic-flashed-no-visual-observation)
+records host, build and bounded UART evidence; recheck input age and an upcoming in-view
+window before any proposed physical capture. Never refresh this file silently
+or treat a newly fetched response as the same image. No production data-age,
+fetch, persistence or display policy follows.
