@@ -472,10 +472,14 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   accepted live syncs, frame activity and retained transfers without a reported
   panic. The user reported a visible empty-sky notice on the Sharp panel;
   the board later switched to a [separate dated-OMM diagnostic](../firmware/README.md#pinned-omm-live-utc-marker-diagnostic-flashed-no-visual-observation).
-  That image has host marker-motion and bounded UART evidence, but the user was
-  not watching during its predicted window. **No physical ISS marker/motion or
-  COM-edge evidence follows.** Wi-Fi/display contention, SPI failure service,
-  aging elements and whole-device timing remain open.
+  That image has host marker-motion and bounded UART evidence; the user was
+  not watching during the original predicted window. On 2026-10-29 PDT, the
+  user separately observed ISS moving on the Sharp panel during a later modelled
+  fixed-observer window, then leaving as the empty-horizon notice returned.
+  This is visual evidence, not independently verified clock/image identity,
+  actual-location accuracy, physical COM edges or sustained cadence.
+  Wi-Fi/display contention, SPI failure service, aging elements and whole-device
+  timing remain open.
 - [ ] Run shared engine/renderer on S3 + Sharp. Intended controls under 0060:
   button cycles satellites, knob zooms continuously (presets as fallback).
 - [ ] Add Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes

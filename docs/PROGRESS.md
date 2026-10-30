@@ -597,3 +597,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Four headless 5° wide frames from the pinned 2026-10-26 ISS OMM at the diagnostic's fixed observer showed one empty-horizon notice and a selected, moving marker at three historical UTCs; user accepted the host images. [Reproduction and limits](HANDOFF.md#this-session-host-only-2026-10-29).
 - Host-only pass search on a separate, newly fetched 2026-10-28 OMM predicted a 2026-10-29 14:11–14:22 UTC fixed-site interval; minute snapshots showed an in-view marker. The user declined that window and deferred physical observation; no board access, capture or new approval.
 - No production age/fetch policy, button behavior, or milestone completion was selected. Ignored `target/` inputs/PNGs are local only; no tracked code changes. Headless simulator/pass CLI runs succeeded; docs-only wrap-up checks recorded in HANDOFF, no workspace/firmware build or test rerun.
+
+## 2026-10-30 UTC (user-observed ISS diagnostic pass)
+- Fresh CelesTrak OMM and separately checked-in pinned OMM both predicted a ~03:25–03:34 UTC ISS horizon window for the configured fixed observer; 5° host snapshots showed in-view markers. Ignored `target/iss-next-pass/` is not committed evidence.
+- User watched the already-running Sharp display on 2026-10-29 evening PDT: reported `NONE ABOVE THE HORIZON`, then ISS moving slowly through the frame, then marker exit and notice return. No board access, capture, reset or flash this session.
+- This closes the missing user visual marker/motion observation for the diagnostic, not clock/image identity, actual-location accuracy, 20 Hz, long-run or COM-edge proof. M2/M6 remain open; BOOT-button cycling discussion is the next bounded step.
+- Docs-only wrap-up checks and any limits are in [HANDOFF](HANDOFF.md#verification-and-remaining-risks); no Rust source, fixture, or production contract changed.
