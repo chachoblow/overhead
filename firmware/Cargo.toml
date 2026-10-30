@@ -20,6 +20,8 @@ sharp-test = []
 # First fixed-fixture radar on the panel. Reuses the already tested target
 # fixture/framebuffer/renderer path; distinct from the historical images.
 sharp-radar = ["sharp-test", "coast-prepared"]
+# Distinct fixed-historical multi-OMM BOOT cycling diagnostic; not the live app.
+sharp-boot-cycle = ["sharp-radar"]
 # Separate deterministic short-loop radar replay; does not replace the static image.
 sharp-replay = ["sharp-radar"]
 # Separate display-cost diagnostic; shares the accepted replay, never frozen images.
@@ -39,6 +41,9 @@ live-sntp = ["sharp-test", "dep:esp-alloc", "esp-alloc/global-allocator", "esp-a
 # Separate target build: screened live UTC drives checked-in ISS radar. No fetch.
 # The bounded channel lets the network wait without owning SPI or blocking display polls.
 live-utc-radar = ["live-sntp", "sharp-natural", "dep:embassy-sync"]
+# Opt-in BOOT input experiment in the live-UTC display owner.
+# Does not change the ordinary live-UTC radar image unless opted in.
+live-utc-boot = ["live-utc-radar"]
 # Separately named pinned-OMM visibility diagnostic; original source path retained.
 live-utc-fresh-iss = ["live-utc-radar"]
 
@@ -123,6 +128,13 @@ bench = false
 name = "overhead-s3-sharp-radar"
 path = "src/sharp_radar_main.rs"
 required-features = ["sharp-radar"]
+test = false
+bench = false
+
+[[bin]]
+name = "overhead-s3-sharp-boot-cycle"
+path = "src/sharp_boot_cycle_main.rs"
+required-features = ["sharp-boot-cycle"]
 test = false
 bench = false
 

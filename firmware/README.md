@@ -767,6 +767,90 @@ other networks, a WPA3-only access point, a congested link or the handheld.
 Raw log and summary: ignored `target/live-sntp-v1-run.*`. The board was then
 restored to the gated natural-audit v2 image (boot line confirmed).
 
+## Historical multi-marker BOOT cycle diagnostic (flashed; short UART capture)
+
+`overhead-s3-sharp-boot-cycle` (`--features sharp-boot-cycle`) is a **separate**
+fixed-time #4694 display experiment, not a live-UTC image or a current-sky
+claim. It loads the [pinned 16-object M2 pool](../tools/fixtures/m2-pool/README.md)
+without fetching anything, fixes UTC at 2026-10-10T00:00:00Z and observer at
+39.007° N, 104.883° W, 2.187 km, with a 100° wide view. A host test checks
+that two distinct in-view IDs cycle and change the actual 1-bit render pixels.
+The active-low BOOT/GPIO0 input uses the provisional 20 ms completed-press
+filter; one press triggers one shared `select_next()` and redraw. Full panel
+frames also repeat every 500 ms for VCOM. A 5 ms loop poll cannot see presses
+hidden by blocking render/SPI, and neither input timing nor COM edges have
+been measured for this candidate. No Wi-Fi, SNTP, knob or device scheduler is
+included. A BOOT hold across reset can invoke the ROM downloader instead.
+
+Offline build/gate from `firmware/` after sourcing `$HOME/export-esp.sh`:
+
+```sh
+cargo build --release --locked --bin overhead-s3-sharp-boot-cycle \
+  --features sharp-boot-cycle
+ELF=target/xtensa-esp32s3-none-elf/release/overhead-s3-sharp-boot-cycle
+espflash save-image --chip esp32s3 --flash-size 8mb --flash-mode dio \
+  --flash-freq 40mhz --skip-update-check "$ELF" target/sharp-boot-cycle-build-only.bin
+python3 image_gate.py "$ELF" target/sharp-boot-cycle-build-only.bin
+```
+
+Host tests, release build and exact-image offline gate passed; the existing
+linker RWX warning remains. After separate approval, the MAC-confirmed board
+was flashed with this exact image and a bounded 35-second reset-and-UART
+capture logged `visible=4 selected=Some(19548)` at ready, then two completed
+press selections `Some(21639)` and `Some(22314)`. This is physical event and
+selection-state evidence for one historical scene. The user separately
+reported that the selected label/marker **changed with each of the two
+presses** on the Sharp panel. That visual report supports this bounded BOOT
+cycle, **not** exhaustive cycling, missed-short-press bounds,
+production cadence or live UTC. Raw UART is an ignored local artifact. The
+board now runs this historical diagnostic, not the live-UTC image. Further
+board access/reset/flash requires separate authorization.
+
+## Opt-in BOOT selection on the live-UTC diagnostic (flashed; event capture)
+
+The `live-utc-boot` feature adds active-low GPIO0 BOOT sampling to the existing
+`overhead-s3-live-utc-radar` display owner. A provisional 20 ms press **and**
+release qualification calls shared `select_next()` only with a valid app frame;
+invalid-frame presses are consumed, not queued, and a startup hold is ignored.
+Sampling occurs at the display loop boundary (nominal 5 ms wait), **not** during
+blocking render/SPI or executor stalls: short presses can be missed. Selection
+appears on the next scheduled UTC frame, not an immediate redraw. The current
+ISS diagnostic has only one marker, so this image cannot demonstrate multi-object
+cycling on the panel; the host tests cover it. Knob, physical input timing and
+whole-device latency remain unverified. GPIO0 is also a boot strap: holding
+BOOT across reset can enter the ROM downloader.
+
+Build and gate offline with dummy credentials, from `firmware/` after sourcing
+`$HOME/export-esp.sh`; this does **not** authorize flashing or board access:
+
+```sh
+SSID=BUILD_ONLY PASSWORD=BUILD_ONLY cargo build --release --locked \
+  --bin overhead-s3-live-utc-radar --features live-utc-boot
+ELF=target/xtensa-esp32s3-none-elf/release/overhead-s3-live-utc-radar
+espflash save-image --chip esp32s3 --flash-size 8mb --flash-mode dio \
+  --flash-freq 40mhz --skip-update-check "$ELF" target/live-utc-boot-build-only.bin
+python3 image_gate.py "$ELF" target/live-utc-boot-build-only.bin
+```
+
+The dummy-credential build and offline exact-image gate passed locally. After
+separate physical approval, a credential-bearing rebuild passed the same gate,
+and was flashed to the MAC-confirmed DevKitC-1 on `/dev/cu.usbserial-21410`.
+A bounded 28-second UART capture logged the diagnostic boot, `NO FRAME`
+completion at uptime ~0.50 s and an accepted UTC source at ~11.78 s. In a
+separately approved reset-and-36-second capture, the user operated BOOT and
+UART logged **two** completed presses at uptime ~14.40 s and ~21.41 s, each
+`valid=true selected=None` (no in-view ISS to cycle at that UTC). This confirms
+sampled BOOT events on the physical board in this run; the user confirmed two
+presses. The user's tentative recollection of `NO FRAME` on the panel was not
+a focused observation at either press, and does not override UART's valid UTC
+state at those moments. This does **not** establish in-view cycling,
+missed-short-press bounds, bounce rejection under stress, or a visual change.
+An attempted no-reset capture connected through the flash stub and yielded no
+application output; it is not negative button evidence. The existing linker
+RWX warning remains. The credential-bearing image and raw UART log are
+ignored local artifacts; do not share them. The BOOT/GPIO0 startup role is
+recorded in [Espressif's boot-mode guide](https://docs.espressif.com/projects/esptool/en/latest/esp32s3/advanced-topics/boot-mode-selection.html).
+
 ## Live-UTC ISS radar candidate (flashed; bounded UART capture)
 
 `overhead-s3-live-utc-radar` (`--features live-utc-radar`) is a separate opt-in

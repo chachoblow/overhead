@@ -12,6 +12,8 @@ use embassy_net::{
 };
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel};
 use embassy_time::{Duration as Wait, Timer, with_timeout};
+#[cfg(feature = "live-utc-boot")]
+use esp_hal::gpio::{Input, InputConfig, Pull};
 use esp_hal::{
     clock::CpuClock,
     gpio::{Level, Output, OutputConfig},
@@ -30,6 +32,8 @@ use esp_radio::wifi::{
 };
 use overhead_core::sgp4::chrono::DateTime;
 use overhead_render::{CoastLayer, Layout, PeriodCache};
+#[cfg(feature = "live-utc-boot")]
+use overhead_s3_benchmark::button_input::CompletedPress;
 use overhead_s3_benchmark::{
     coast_measurement::{self, Screen},
     device_timing::{DiagnosticAction, LifecycleAction},
@@ -85,7 +89,19 @@ async fn main(spawner: Spawner) -> ! {
     .expect("SPI configuration")
     .with_sck(p.GPIO13)
     .with_mosi(p.GPIO11);
-    spawner.spawn(display(spi, cs).unwrap());
+    // GPIO0 is the DevKitC-1 BOOT strap. Configure only after startup;
+    // a held BOOT at startup is ignored by CompletedPress until released.
+    #[cfg(feature = "live-utc-boot")]
+    let boot = Input::new(p.GPIO0, InputConfig::default().with_pull(Pull::Up));
+    spawner.spawn(
+        display(
+            spi,
+            cs,
+            #[cfg(feature = "live-utc-boot")]
+            boot,
+        )
+        .unwrap(),
+    );
 
     let station = Config::Station(
         StationConfig::default()
@@ -141,7 +157,11 @@ async fn main(spawner: Spawner) -> ! {
 }
 
 #[embassy_executor::task]
-async fn display(mut spi: Spi<'static, esp_hal::Blocking>, mut cs: Output<'static>) {
+async fn display(
+    mut spi: Spi<'static, esp_hal::Blocking>,
+    mut cs: Output<'static>,
+    #[cfg(feature = "live-utc-boot")] boot: Input<'static>,
+) {
     // Fixture epoch initializes elements/observer only; the gate invalidates
     // this pre-populated sample before a cold-boot draw unless sync arrives.
     let mut app = coast_measurement::app("iss-ground-20", 0.0, 0.0, 5.0);
@@ -156,6 +176,10 @@ async fn display(mut spi: Spi<'static, esp_hal::Blocking>, mut cs: Output<'stati
     let mut gate = UtcTrustPreflight::prototype();
     let mut retained = false;
     let mut frames = 0u64;
+    // Provisional 20 ms qualification; sampling occurs at the display loop
+    // boundary, not during blocking render/SPI or network execution.
+    #[cfg(feature = "live-utc-boot")]
+    let mut press = CompletedPress::new(20_000).unwrap();
     loop {
         while let Ok(event) = EVENTS.try_receive() {
             let now = uptime_us();
@@ -163,6 +187,14 @@ async fn display(mut spi: Spi<'static, esp_hal::Blocking>, mut cs: Output<'stati
             println!("LIVE_UTC source={decision:?} uptime_us={now}");
         }
         let now = uptime_us();
+        #[cfg(feature = "live-utc-boot")]
+        if press.poll_selection(now, boot.is_low(), &mut app) {
+            println!(
+                "BOOT completed uptime_us={now} valid={} selected={:?}",
+                app.time().is_some(),
+                app.selected_id()
+            );
+        }
         match gate.next(&mut app, now, retained) {
             LifecycleAction::RenderNoFrame => {
                 overhead_render::draw_cached(screen, &app, Layout::wide(), false, coast, period)
@@ -240,8 +272,9 @@ async fn display(mut spi: Spi<'static, esp_hal::Blocking>, mut cs: Output<'stati
             }
             LifecycleAction::Scheduled(DiagnosticAction::Wait) => {}
         }
-        // Independent of DNS, association and UDP awaits. Does NOT preempt
-        // a blocking SPI/render, driver call or a stalled executor.
+        // Independent of DNS, association and UDP awaits. BOOT sampling does
+        // NOT preempt blocking SPI/render, driver calls or a stalled executor;
+        // short presses can be missed and selection paints on the next frame.
         Timer::after(Wait::from_millis(5)).await;
     }
 }

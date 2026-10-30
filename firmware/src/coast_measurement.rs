@@ -75,6 +75,35 @@ pub fn app(name: &str, lat: f64, lon: f64, fov: f64) -> RadarApp {
     app
 }
 
+/// Deterministic historical multi-object scene for an isolated BOOT cycling
+/// diagnostic. No live time, fresh catalogue or current-sky claim is implied.
+#[cfg(feature = "sharp-boot-cycle")]
+pub fn boot_cycle_app() -> RadarApp {
+    use overhead_core::sgp4::chrono::NaiveDate;
+
+    let elements: alloc::vec::Vec<OmmElements> =
+        serde_json::from_str(include_str!("../../tools/fixtures/m2-pool/pool.json"))
+            .expect("pinned multi-OMM fixture");
+    let mut builder = CatalogueBuilder::new();
+    for (record, elements) in elements.into_iter().enumerate() {
+        builder.push(RecordOrigin { group: 0, record }, elements);
+    }
+    let observer = GeodeticPosition {
+        latitude_rad: 39.007_f64.to_radians(),
+        longitude_rad: (-104.883_f64).to_radians(),
+        altitude_km: 2.187,
+    };
+    let view = View::rectangular(100.0, Layout::wide().aspect_ratio()).unwrap();
+    let mut app = RadarApp::new(builder.finish().unwrap(), observer, view).unwrap();
+    let time = NaiveDate::from_ymd_opt(2026, 10, 10)
+        .unwrap()
+        .and_hms_opt(0, 0, 0)
+        .unwrap();
+    app.update(time).expect("historical scene propagates");
+    assert!(app.counts().visible > 1, "multi-object scene required");
+    app
+}
+
 /// Original candidate site, fixed at the historical element epoch's subpoint.
 /// Do not recenter the observer when using another element set.
 pub const LIVE_UTC_ISS_OBSERVER: GeodeticPosition = GeodeticPosition {

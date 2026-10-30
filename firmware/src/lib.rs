@@ -15,6 +15,7 @@ use overhead_core::{
     sgp4::chrono::{NaiveDateTime, TimeDelta},
 };
 
+pub mod button_input;
 #[cfg(feature = "coast-measurement")]
 pub mod coast_measurement;
 #[cfg(feature = "sharp-radar")]
