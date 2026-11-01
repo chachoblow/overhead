@@ -285,6 +285,158 @@ mod tests {
         );
     }
 
+    // Sampling-gap model: the firmware loops sample BOOT only between blocking
+    // render/SPI work, so the filter sees sparse samples. These tests pin what
+    // the provisional 20 ms filter guarantees for a clean press of duration P
+    // under modelled sample schedules; they do not measure target timing.
+    const D: u64 = 20_000;
+
+    fn events(samples: impl Iterator<Item = u64>, pressed: impl Fn(u64) -> bool) -> usize {
+        let mut input = CompletedPress::new(D).unwrap();
+        samples.filter(|&t| input.sample(t, pressed(t))).count()
+    }
+
+    fn regular(step: u64, end: u64) -> impl Iterator<Item = u64> {
+        (0..).map(move |k| k * step).take_while(move |&t| t < end)
+    }
+
+    /// 5 ms samples, except one blocking gap after the sample at `gap_at`.
+    fn with_gap(gap_at: u64, gap: u64, end: u64) -> impl Iterator<Item = u64> {
+        core::iter::successors(Some(0), move |&t| {
+            let next = t + if t == gap_at { gap } else { 5_000 };
+            (next < end).then_some(next)
+        })
+    }
+
+    /// Repeating cycle of sample offsets (e.g. one 50 ms frame-grid period).
+    fn cyclic(period: u64, offsets: &'static [u64], end: u64) -> impl Iterator<Item = u64> {
+        (0..)
+            .flat_map(move |k| offsets.iter().map(move |o| k * period + o))
+            .take_while(move |&t| t < end)
+    }
+
+    #[test]
+    fn regular_sampling_guarantee_is_ceil_d_over_s_plus_one_samples() {
+        // Spacings: idle 5 ms; ~36.6 ms partial frame + 5 ms wait; ~56.7 ms
+        // retained full transfer + wait; ~87 ms full-data frame + wait.
+        for step in [5_000, 36_600, 56_700, 87_000] {
+            let guaranteed = (D.div_ceil(step) + 1) * step;
+            for phase in (0..step).step_by(250) {
+                let a = 1_000_000 + phase;
+                let end = a + 3 * guaranteed + 4 * step;
+                for p in [guaranteed, guaranteed + step / 2] {
+                    let n = events(regular(step, end), |t| (a..a + p).contains(&t));
+                    assert_eq!(n, 1, "step={step} phase={phase} p={p}");
+                }
+                // Two presses separated by an equally long release stay distinct.
+                let g = guaranteed;
+                let two = events(regular(step, end + 2 * g), |t| {
+                    (a..a + g).contains(&t) || (a + 2 * g..a + 3 * g).contains(&t)
+                });
+                assert_eq!(two, 2, "step={step} phase={phase}");
+                // At or below the interval itself no press can ever qualify.
+                assert_eq!(events(regular(step, end), |t| (a..a + D).contains(&t)), 0);
+            }
+        }
+    }
+
+    #[test]
+    fn regular_sampling_below_guarantee_can_miss_but_never_overcounts() {
+        for step in [36_600, 56_700, 87_000] {
+            let guaranteed = (D.div_ceil(step) + 1) * step;
+            let p = guaranteed - 1;
+            for phase in (0..step).step_by(250) {
+                let a = 1_000_000 + phase;
+                let n = events(regular(step, a + 4 * guaranteed), |t| {
+                    (a..a + p).contains(&t)
+                });
+                assert!(n <= 1);
+            }
+            // Worst alignment: the press begins just after a sample.
+            let a = (1_000_000 / step + 1) * step + 1;
+            let n = events(regular(step, a + 4 * guaranteed), |t| {
+                (a..a + p).contains(&t)
+            });
+            assert_eq!(n, 0, "step={step}: p={p} must be missable");
+        }
+    }
+
+    #[test]
+    fn press_inside_a_blocking_gap_is_missed_and_straddling_needs_gap_plus_d() {
+        // Boot-cycle VCOM refresh: ~52.4 ms full transfer between samples.
+        let (gap_at, gap) = (1_000_000, 52_400);
+        let end = 2_000_000;
+        // Entirely hidden: never sampled pressed.
+        let hidden = events(with_gap(gap_at, gap, end), |t| {
+            (gap_at + 1..gap_at + gap).contains(&t)
+        });
+        assert_eq!(hidden, 0);
+        // Begins just after the last pre-gap sample: first pressed sample is
+        // at gap end, so P must exceed gap + D (+ one 5 ms step) to qualify.
+        let a = gap_at + 1;
+        let short = events(with_gap(gap_at, gap, end), |t| {
+            (a..a + gap + D - 1).contains(&t)
+        });
+        assert_eq!(short, 0);
+        let long = events(with_gap(gap_at, gap, end), |t| {
+            (a..a + gap + D + 5_000).contains(&t)
+        });
+        assert_eq!(long, 1);
+    }
+
+    #[test]
+    fn release_hidden_in_a_gap_merges_two_taps_into_one_event() {
+        let (gap_at, gap) = (1_000_000, 52_400);
+        // Both taps are sampled pressed across the gap; the release between
+        // them is never seen, so the filter reports one completed press.
+        let n = events(with_gap(gap_at, gap, 2_000_000), |t| {
+            (gap_at - 30_000..gap_at + 10_000).contains(&t)
+                || (gap_at + 20_000..gap_at + gap + 40_000).contains(&t)
+        });
+        assert_eq!(n, 1);
+    }
+
+    #[test]
+    fn bounced_press_never_overcounts_under_sparse_sampling() {
+        // 3 ms of 1 ms contact chatter at both edges.
+        for step in [5_000, 36_600, 87_000] {
+            let guaranteed = (D.div_ceil(step) + 1) * step + 6_000;
+            for phase in (0..step).step_by(250) {
+                let a = 1_000_000 + phase;
+                let b = a + guaranteed;
+                let n = events(regular(step, b + 3 * guaranteed), |t| {
+                    let chatter =
+                        |e: u64| t >= e && t < e + 3_000 && ((t - e) / 1_000).is_multiple_of(2);
+                    (a + 3_000..b - 3_000).contains(&t) || chatter(a) || chatter(b - 3_000)
+                });
+                assert_eq!(n, 1, "step={step} phase={phase}");
+            }
+        }
+    }
+
+    #[test]
+    fn live_utc_partial_frame_cycle_needs_about_two_frames_of_press() {
+        // Modelled live-UTC partial-frame loop on the 50 ms grid: a sample
+        // before ~31.6 ms of blocking update/render/send, then 5 ms waits.
+        // Offsets are an estimate from one bounded capture, not a target bound.
+        const OFFSETS: &[u64] = &[0, 36_600, 41_600, 46_600];
+        let mut missed_60 = false;
+        for phase in (0..50_000).step_by(250) {
+            let a = 1_000_000 + phase;
+            let end = a + 400_000;
+            let p90 = events(cyclic(50_000, OFFSETS, end), |t| {
+                (a..a + 90_000).contains(&t)
+            });
+            assert_eq!(p90, 1, "phase={phase}");
+            let p60 = events(cyclic(50_000, OFFSETS, end), |t| {
+                (a..a + 60_000).contains(&t)
+            });
+            assert!(p60 <= 1);
+            missed_60 |= p60 == 0;
+        }
+        assert!(missed_60, "a 60 ms press must be missable in this model");
+    }
+
     #[test]
     fn large_uptime_does_not_overflow() {
         let mut input = CompletedPress::new(10).unwrap();
