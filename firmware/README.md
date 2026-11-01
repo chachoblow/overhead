@@ -1279,6 +1279,43 @@ including the 160 KiB heap and an 18 KiB response buffer. ELF SHA-256
 gate passed. The image was **not flashed or run**; handshake time, memory peak
 and the CelesTrak response are unmeasured.
 
+## HTTPS element fetch on the board (flashed; one-boot UART capture)
+
+Same `live-fetch` image, built with the user's ignored `.wifi.env` (see the
+live-SNTP section for the export), gated as above, then flashed and captured
+in **one** command so the board boots once and makes one request (a separate
+`espflash monitor` resets it again and costs a second request):
+
+```sh
+timeout 150 espflash flash --port <UART> --chip esp32s3 --flash-size 8mb \
+  --flash-mode dio --flash-freq 40mhz --non-interactive --skip-update-check \
+  --monitor "$ELF" > target/live-fetch-run1.log 2>&1
+```
+
+Certificate validity dates are still unchecked, as accepted for this
+diagnostic in [0073](../docs/decisions/0073-diagnostic-fetch-without-certificate-dates.md).
+The ELF and image embed credentials: their hashes are not recorded and they,
+like the raw log (which contains the LAN address), stay local.
+
+2026-11-01 15:19 UTC, devbox, `/dev/ttyUSB0` (MAC `80:45:6b:2a:45:08`,
+1,185,328 B image, gate passed), home 2.4 GHz network, one boot:
+
+| Stage | Result |
+|---|---|
+| Trusted UTC | one screened SNTP observation, `U0` 27.8 ms; heap peak 54,460 B |
+| TCP connect / TLS handshake | 40 ms / **1,761 ms**, TLS 1.2, chain and hostname verified |
+| Transfer | 8,691 B in 476 ms; HTTP 200, 8,446 B body |
+| Catalogue | 20 records, 20 accepted, 0 errors/invalid/conflicts; epochs 2026-10-31T09:58:37Z – 2026-11-01T06:40:35Z; ingest 79 ms |
+| Whole fetch | 2,445 ms; heap peak **113,704 B** of the 163,840 B heap |
+
+CelesTrak ended the connection with a TCP reset after the full response, not
+a TLS `close_notify` (`FETCH_READ_END error=Io(ConnectionReset)`); the exact
+`Content-Length` check is what establishes the body was complete. Crypto runs
+in software (no `EspAccel`). The heap peak exceeds the live-UTC radar image's
+96 KiB heap, so combining fetch with the display needs a memory decision. This
+is one boot on one network: not repeated-run, failure-path, long-run or
+date-check evidence.
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing

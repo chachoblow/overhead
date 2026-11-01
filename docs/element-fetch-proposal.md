@@ -1,6 +1,6 @@
 # M6 HTTPS element fetch — proposal
 
-Status: **accepted by the user 2026-11-01 as [0071](decisions/0071-https-element-fetch-first-slice.md)** (all four decisions below: yes). Slices 1–2 are done ([firmware README](../firmware/README.md#https-element-fetch-slice-2-build-only-tls-image-not-flashed)); the image is not flashed, and slice 2 found the MbedTLS wall clock needs a C toolchain. It plans the first slice of the M6 item "Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes" under [0002](decisions/0002-data-and-time-over-wifi.md) and [0003](decisions/0003-curated-catalogue.md).
+Status: **accepted by the user 2026-11-01 as [0071](decisions/0071-https-element-fetch-first-slice.md)** (all four decisions below: yes). Slices 1–3 are done; the on-board fetch ingested 20/20 records ([evidence](../firmware/README.md#https-element-fetch-on-the-board-flashed-one-boot-uart-capture)). Slice 2 found the MbedTLS wall clock needs a C toolchain, so the diagnostic runs without date checks under [0073](decisions/0073-diagnostic-fetch-without-certificate-dates.md). It plans the first slice of the M6 item "Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes" under [0002](decisions/0002-data-and-time-over-wifi.md) and [0003](decisions/0003-curated-catalogue.md).
 
 ## Why now
 

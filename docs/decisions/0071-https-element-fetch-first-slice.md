@@ -4,7 +4,9 @@ Date: 2026-11-01
 Status: accepted (user, 2026-11-01). Slice 1 (host parser, ingestion and
 fixture) and slice 2 (build-only `live-fetch` image) done 2026-11-01. Slice 2
 found that item 4's wall clock needs a C toolchain (see the firmware README);
-the open question is recorded in HANDOFF. Not flashed. Research, measurements
+[0073](0073-diagnostic-fetch-without-certificate-dates.md) lets the diagnostic
+run without date checks. Slice 3 done 2026-11-01: one on-board fetch, 20/20
+records ([evidence](../../firmware/README.md#https-element-fetch-on-the-board-flashed-one-boot-uart-capture)). Research, measurements
 and alternatives are in the [element-fetch proposal](../element-fetch-proposal.md).
 
 ## Decision

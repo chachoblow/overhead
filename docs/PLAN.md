@@ -302,7 +302,9 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
 - [ ] Add Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes
   per [0002](decisions/0002-data-and-time-over-wifi.md). First slice accepted as
   [0071](decisions/0071-https-element-fetch-first-slice.md): mbedtls-rs, STATIONS JSON,
-  one request per boot; host parser, fixture and build-only TLS image done; not flashed (certificate-date check open).
+  one request per boot; slices 1–3 done: one on-board fetch ingested 20/20 STATIONS records
+  ([evidence](../firmware/README.md#https-element-fetch-on-the-board-flashed-one-boot-uart-capture));
+  certificate dates unchecked for the diagnostic ([0073](decisions/0073-diagnostic-fetch-without-certificate-dates.md)).
 - [ ] Handle network failure, missing/invalid time or data, and stale elements.
 - [ ] Verify end-to-end performance and extended hardware operation, including
   the frame-timing work deferred by 0060.

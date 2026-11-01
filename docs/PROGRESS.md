@@ -630,3 +630,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Accepted [0072](decisions/0072-outcome-sized-work-items.md) at the user's request: work is taken on as independently verifiable work items, not session-sized slices; the agent keeps its plan and state in `docs/work/<slug>.md` and continues until verified or genuinely blocked.
 - Added `.pi/prompts/work.md` (execution, stop conditions, promotion on completion); adjusted AGENTS.md, next/handoff/docs-cleanup prompts and one PLAN line; 0030 annotated as extended. No roadmap, milestone or code change.
 - Docs-only: `git diff --check` and local link check clean; no Rust checks rerun.
+
+## 2026-11-01 UTC (on-board HTTPS element fetch, 0071 slices 1–3 complete)
+- User chose to run the fetch diagnostic without certificate date checks ([0073](decisions/0073-diagnostic-fetch-without-certificate-dates.md)); revisit before fetched data reaches the radar.
+- One `live-fetch` boot on `/dev/ttyUSB0`: TLS 1.2 verified, 1.76 s handshake, HTTP 200, 20/20 STATIONS records ingested, heap peak 113,704 B ([evidence](../firmware/README.md#https-element-fetch-on-the-board-flashed-one-boot-uart-capture)). CelesTrak closes with a TCP reset; Content-Length establishes completeness.
+- First work item run under 0072: decision, build, gate, flash, capture and recording in one pass. Firmware `element-fetch` host suite passed (32).
