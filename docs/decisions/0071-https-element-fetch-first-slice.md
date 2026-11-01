@@ -2,7 +2,9 @@
 
 Date: 2026-11-01
 Status: accepted (user, 2026-11-01). Slice 1 (host parser, ingestion and
-fixture) implemented 2026-11-01; slices 2–3 not started. Research, measurements
+fixture) and slice 2 (build-only `live-fetch` image) done 2026-11-01. Slice 2
+found that item 4's wall clock needs a C toolchain (see the firmware README);
+the open question is recorded in HANDOFF. Not flashed. Research, measurements
 and alternatives are in the [element-fetch proposal](../element-fetch-proposal.md).
 
 ## Decision

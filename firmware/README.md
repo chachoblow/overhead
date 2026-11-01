@@ -1217,6 +1217,57 @@ default or existing image changes. Tests use the pinned
 cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked --features element-fetch
 ```
 
+## HTTPS element fetch, slice 2 (build-only TLS image; not flashed)
+
+The opt-in `live-fetch` feature builds `overhead-s3-live-fetch`
+(`src/live_fetch_main.rs`): Wi-Fi, one screened SNTP observation within
+0065's 100 ms budget, then exactly one HTTPS GET of STATIONS through
+[`mbedtls-rs`](https://github.com/esp-rs/mbedtls-rs) 0.3.0, parsed and ingested
+by `element_fetch`. It prints `FETCH_*` lines (TLS result and version, TCP and
+handshake times, transfer bytes and time, HTTP status, catalogue summary,
+heap high-water from `esp-alloc`'s `internal-heap-stats`) and never retries.
+The Sharp panel is only held white with VCOM. Trust anchors are the two roots
+in `certs/celestrak-roots.pem` (Sectigo Public Server Authentication Root R46,
+USERTrust RSA Certification Authority, copied from devbox's system CA store);
+on 2026-11-01 each alone verified CelesTrak's served chain and hostname with
+`openssl s_client` (handshake only, no HTTP request).
+
+**Certificate dates are not checked.** `mbedtls-rs-sys` uses its prebuilt
+MbedTLS library only when the active features and hooks equal its default
+`tls` profile. The `hook-wall-clock` feature (needed for `notBefore`/`notAfter`
+checks) changes the hooks and forces an on-the-fly C build that needs `clang`,
+`cmake` and `ninja`, none of which are installed. That would be a toolchain
+change, so this build keeps the default profile: the chain, signatures and hostname
+are verified, validity dates are not. Hardware crypto (`EspAccel`, the crate's
+`esp32s3` feature) is also not enabled, so crypto runs in software.
+
+Build and gate with dummy credentials, from `firmware/` after sourcing
+`$HOME/export-esp.sh`:
+
+```sh
+SSID=BUILD_ONLY PASSWORD=BUILD_ONLY cargo build --release --locked \
+  --bin overhead-s3-live-fetch --features live-fetch
+ELF=target/xtensa-esp32s3-none-elf/release/overhead-s3-live-fetch
+espflash save-image --chip esp32s3 --flash-size 8mb --flash-mode dio \
+  --flash-freq 40mhz --skip-update-check "$ELF" target/live-fetch-build-only.bin
+python3 image_gate.py "$ELF" target/live-fetch-build-only.bin
+```
+
+2026-11-01 UTC (devbox): it built against the existing esp-hal `=1.2.2`,
+esp-radio `=1.0.0-beta.1` and esp-rtos `=0.4.0` pins with no pin or toolchain
+change, and no existing locked version changed. The lockfile adds
+`mbedtls-rs`/`mbedtls-rs-sys` and host-only build-script crates (bindgen, cmake
+and similar, unused on the prebuilt path). No libc shim was needed: string
+functions resolve to ROM, `calloc`/`free` to esp-alloc, and `snprintf`/`printf`
+to an existing prebuilt object. Only the existing RWX linker warning appeared;
+clippy reported no new warnings. Image **1,185,328 B** (a same-day `live-sntp`
+build is 550,640 B), 14.2% of the app partition; static internal RAM 274,308 B
+including the 160 KiB heap and an 18 KiB response buffer. ELF SHA-256
+`dd8e3a61032167a0890dd58b7803025216cae69b0fd6471e90f09cd39c9038cf`, image
+`4b479ff4c213030af346e92112e4e5147ca6ad5a5c9c2157fa0dedc478e8592b`; the offline
+gate passed. The image was **not flashed or run**; handshake time, memory peak
+and the CelesTrak response are unmeasured.
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing
