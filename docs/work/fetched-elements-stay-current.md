@@ -1,5 +1,5 @@
 # Fetched elements stay current across a day
-Status: active
+Status: blocked: home coordinates in ignored firmware/.site.env
 Started: 2026-11-01. Scope: PLAN M6 "network failure, missing/invalid time or data, and stale elements" + refresh part of "HTTPS elements … refreshes"; decisions [0075](../decisions/0075-fetched-element-refresh-and-staleness.md), 0074, 0071, 0002, 0004.
 
 ## Outcome

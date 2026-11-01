@@ -1396,7 +1396,10 @@ metres), never printed. Banner `OVERHEAD_S3_LIVE_FETCH_RADAR_V2`; new lines
 loaded load= fetched_at= selected_before=` and `LIVE_FETCH stale=`.
 
 ```sh
-set -a; . ./.wifi.env; . ./.site.env; set +a
+export SSID="$(sed -n 's/^SSID=//p' .wifi.env)" PASSWORD="$(sed -n 's/^PASSWORD=//p' .wifi.env)"
+export SITE_LAT_DEG="$(sed -n 's/^SITE_LAT_DEG=//p' .site.env)" \
+  SITE_LON_DEG="$(sed -n 's/^SITE_LON_DEG=//p' .site.env)" \
+  SITE_ALT_M="$(sed -n 's/^SITE_ALT_M=//p' .site.env)"
 REFRESH_MINUTES=120 cargo build --release --locked \
   --bin overhead-s3-live-fetch-radar --features live-fetch-radar
 # save-image + image_gate.py as for live-fetch; flash and capture in one command
