@@ -15,6 +15,12 @@ use overhead_core::{
     sgp4::chrono::{NaiveDateTime, TimeDelta},
 };
 
+// Target-only 0070 interrupt capture; the latch logic is host-tested in button_input.
+#[cfg(all(
+    target_arch = "xtensa",
+    any(feature = "sharp-boot-capture", feature = "live-utc-boot")
+))]
+pub mod boot_capture;
 pub mod button_input;
 #[cfg(feature = "coast-measurement")]
 pub mod coast_measurement;

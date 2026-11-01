@@ -819,7 +819,10 @@ each drained press advances the selection once on a valid frame. The interrupt
 shares only the timer, pin and latch under a critical section and never
 touches the app, renderer or panel. It needs `esp-hal/unstable` (the timer
 module) and a direct `critical-section` dependency, which was already locked
-transitively. TIMG0 is free because this image has no esp-rtos or Wi-Fi.
+transitively. TIMG0 is free because this image has no esp-rtos or Wi-Fi. The
+interrupt, shared state and timer setup live in `src/boot_capture.rs`, which the
+[live-UTC BOOT image](#opt-in-boot-selection-on-the-live-utc-diagnostic-interrupt-capture-user-tap-session)
+also uses.
 
 UART lines: `BOOT_CAPTURE_READY …`, one `BOOT_CAPTURE drained=N applied=N
 selected=…` per non-empty drain, and every 10 s `BOOT_CAPTURE_STATS samples=N
@@ -854,22 +857,42 @@ timestamps, so this rules out obvious misses, not an exact one-to-one match.
 No drain held more than one press, so multi-press drains remain host-tested
 only. Press durations, latency and live-UTC behavior are not measured.
 
-## Opt-in BOOT selection on the live-UTC diagnostic (flashed; event capture)
+After the capture code moved into `src/boot_capture.rs` (same logic, now
+shared), a devbox rebuild passed the gate (ELF SHA-256
+`d9d0c1146f74177ad0a753f376e4681661335228ddc81e94d5e5ced6bc08fdab`, image
+`506c31ad234e3cf2fc311ce1d6676367bfdad3b465fc9ee1582dabb5f82dc8c9`) and was
+flashed to the MAC-confirmed board on `/dev/ttyUSB0`. A 26 s idle reset capture
+logged `visible=4 selected=Some(19548)`, `samples=2000 max_gap_us=5027` and
+`samples=2010 max_gap_us=5001`, matching the pre-refactor image. The board
+runs this build. No presses were made on it.
 
-The `live-utc-boot` feature adds active-low GPIO0 BOOT sampling to the existing
-`overhead-s3-live-utc-radar` display owner. A provisional 20 ms press **and**
-release qualification calls shared `select_next()` only with a valid app frame;
-invalid-frame presses are consumed, not queued, and a startup hold is ignored.
-Sampling occurs at the display loop boundary (nominal 5 ms wait), **not** during
-blocking render/SPI or executor stalls: short presses can be missed. Selection
-appears on the next scheduled UTC frame, not an immediate redraw. The current
+## Opt-in BOOT selection on the live-UTC diagnostic (interrupt capture; user tap session)
+
+The `live-utc-boot` feature adds active-low GPIO0 BOOT input to the existing
+`overhead-s3-live-utc-radar` display owner. Since 2026-11-01 it uses the
+[0070](../docs/decisions/0070-boot-input-capture-independent-of-render.md)
+capture in `src/boot_capture.rs`: a 5 ms **TIMG1** periodic interrupt samples
+GPIO0 into `PressLatch`, because esp-rtos owns TIMG0 timer0 and neither
+esp-rtos nor esp-radio uses TIMG1. The display task drains completed presses
+at its loop boundary and applies
+[0068](../docs/decisions/0068-boot-selection-gesture.md) via `apply_presses`.
+Each press calls shared `select_next()` once, only with a valid app frame.
+Presses without a valid frame are consumed, not queued, and a startup hold is
+ignored. The provisional 20 ms qualification is unchanged. Selection appears on
+the next scheduled UTC frame, not an immediate redraw. The current
 ISS diagnostic has only one marker, so this image cannot demonstrate multi-object
 cycling on the panel; the host tests cover it. Knob, physical input timing and
 whole-device latency remain unverified. GPIO0 is also a boot strap: holding
 BOOT across reset can enter the ROM downloader.
 
+UART lines: `BOOT_CAPTURE_READY live UTC sample_ms=5 timer=TIMG1` at startup,
+one `BOOT_CAPTURE drained=N applied=N uptime_us=… valid=… selected=…` per
+non-empty drain, and every 10 s `BOOT_CAPTURE_STATS samples=N max_gap_us=G`.
+Expect about 2000 samples per window. `max_gap_us` shows whether Wi-Fi,
+esp-rtos or UART critical sections delay the interrupt.
+
 Build and gate offline with dummy credentials, from `firmware/` after sourcing
-`$HOME/export-esp.sh`; this does **not** authorize flashing or board access:
+`$HOME/export-esp.sh`:
 
 ```sh
 SSID=BUILD_ONLY PASSWORD=BUILD_ONLY cargo build --release --locked \
@@ -880,7 +903,33 @@ espflash save-image --chip esp32s3 --flash-size 8mb --flash-mode dio \
 python3 image_gate.py "$ELF" target/live-utc-boot-build-only.bin
 ```
 
-The dummy-credential build and offline exact-image gate passed locally. After
+2026-11-01 UTC (devbox, interrupt capture): host suites, clippy (no new
+warnings), the dummy-credential release build and the offline gate passed
+(ELF SHA-256 `9f2cb931d84ea7b31597990950b3b94d96862f57fb29befc8a280d08bace8775`,
+image `bca8733179d2dec8279a3aecaf1aa072a240361c0b9e664b24c730b18f5adab1`).
+The plain `live-utc-radar` build is unchanged in source and still builds.
+
+Same day, the user created the ignored `firmware/.wifi.env`. A
+credential-bearing rebuild passed the gate and was flashed to the MAC-confirmed
+board on `/dev/ttyUSB0`. Its hashes are not recorded because the image embeds
+credentials; it and the raw UART logs are ignored local artifacts. In three
+reset captures (45 s idle, 90 s with no presses, 90 s tap session), time from
+Cloudflare was accepted at ~11.8–11.9 s and again at ~76 s. The first 10 s
+window, while Wi-Fi associated, always showed one gap of 33.8–34.7 ms.
+After that, sampling stayed at 2000–2008 per 10 s with `max_gap_us` 5.2–6.5 ms,
+rising once to 9.2 ms around a later SNTP exchange. In the tap session the user
+pressed deliberately, quick-tapped, double-tapped and tapped right after
+presses. UART logged **44** `drained=1 applied=1 valid=true` lines from
+~25.3 s to ~60.2 s, including bursts of up to six taps ~150 ms apart (closest
+134 ms). The user confirmed 44 matched their presses. `selected=None`
+throughout: the single ISS was not in view, so this is press-capture evidence,
+not visible cycling. No drain held more than one press. Press durations,
+latency and the startup association gap's effect on a real press are not
+measured.
+
+Earlier polling version: the BOOT input was sampled once per display loop,
+not during blocking render/SPI or executor stalls. Its dummy-credential build
+and offline exact-image gate passed locally. After
 separate physical approval, a credential-bearing rebuild passed the same gate,
 and was flashed to the MAC-confirmed DevKitC-1 on `/dev/cu.usbserial-21410`.
 A bounded 28-second UART capture logged the diagnostic boot, `NO FRAME`
