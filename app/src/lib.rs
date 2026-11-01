@@ -85,7 +85,8 @@ pub struct Counts {
 }
 
 pub struct RadarApp {
-    catalogue: Catalogue,
+    /// `None` until a catalogue is loaded; core catalogues are never empty.
+    catalogue: Option<Catalogue>,
     group_categories: Vec<Category>,
     observer: GeodeticPosition,
     camera: Camera,
@@ -103,21 +104,50 @@ impl RadarApp {
         observer: GeodeticPosition,
         view: View,
     ) -> Result<Self, CameraError> {
+        let mut app = Self::awaiting_catalogue(observer, view)?;
+        app.samples = Vec::with_capacity(catalogue.entries().len());
+        app.catalogue = Some(catalogue);
+        Ok(app)
+    }
+
+    /// An app with no catalogue yet (for example before a device fetch
+    /// completes, or after it failed). Frames are valid but hold no objects, so
+    /// counts report an empty load and no horizon claim is possible.
+    pub fn awaiting_catalogue(observer: GeodeticPosition, view: View) -> Result<Self, CameraError> {
         let camera = Camera::new(observer)?;
-        let samples = Vec::with_capacity(catalogue.entries().len());
         let label_zoom = LabelZoom::default();
         Ok(Self {
-            catalogue,
+            catalogue: None,
             group_categories: Vec::new(),
             observer,
             camera,
             view,
             time: None,
-            samples,
+            samples: Vec::new(),
             selected: None,
             label_zoom,
             label_visible: label_zoom.initially_visible(view),
         })
+    }
+
+    /// Replace the whole catalogue, keeping observer, view, roles and label
+    /// state. Selection restarts from first acquisition (0049 genuine loss),
+    /// and a current frame is recomputed at its own UTC so no sample from the
+    /// previous catalogue survives.
+    pub fn load_catalogue(&mut self, catalogue: Catalogue) {
+        self.catalogue = Some(catalogue);
+        self.selected = None;
+        match self.time {
+            // Already validated when the frame was made.
+            Some(time) => {
+                let _ = self.update(time);
+            }
+            None => self.samples.clear(),
+        }
+    }
+
+    fn entries(&self) -> &[CatalogueEntry] {
+        self.catalogue.as_ref().map_or(&[], Catalogue::entries)
     }
 
     /// Supply explicit roles indexed by the catalogue's source-group indices.
@@ -169,7 +199,9 @@ impl RadarApp {
             self.invalidate_frame();
             return Err(error);
         }
-        for entry in self.catalogue.entries() {
+        // Disjoint field borrows keep the samples allocation reused per frame.
+        let entries = self.catalogue.as_ref().map_or(&[][..], Catalogue::entries);
+        for entry in entries {
             self.samples
                 .push(sample(entry, time, self.observer, &self.camera));
         }
@@ -198,7 +230,7 @@ impl RadarApp {
     pub fn objects(
         &self,
     ) -> impl Iterator<Item = (&CatalogueEntry, &Result<Sample, TrackingError>)> {
-        self.catalogue.entries().iter().zip(&self.samples)
+        self.entries().iter().zip(&self.samples)
     }
 
     pub fn markers(&self) -> impl Iterator<Item = (&CatalogueEntry, &Sample, ViewPoint)> {
@@ -236,7 +268,7 @@ impl RadarApp {
 
     pub fn counts(&self) -> Counts {
         let mut counts = Counts {
-            catalogue: self.catalogue.entries().len(),
+            catalogue: self.entries().len(),
             ..Counts::default()
         };
         for (_, result) in self.objects() {
@@ -364,8 +396,8 @@ mod tests {
     fn selected_period_is_element_metadata_and_follows_frame_availability() {
         let mut app = app();
         assert_eq!(app.selected_period_minutes(), None);
-        let time = app.catalogue.entries()[0].satellite().epoch();
-        let expected = 1440.0 / app.catalogue.entries()[0].elements().mean_motion;
+        let time = app.entries()[0].satellite().epoch();
+        let expected = 1440.0 / app.entries()[0].elements().mean_motion;
         app.update(time).unwrap();
         assert_eq!(app.selected_period_minutes(), Some(expected));
         app.update(time + Duration::seconds(30)).unwrap();
@@ -385,7 +417,7 @@ mod tests {
     #[test]
     fn category_follows_selection_not_frame_motion_zoom_or_label_visibility() {
         let mut app = app().with_group_categories(alloc::vec![Category::Station]);
-        let time = app.catalogue.entries()[0].satellite().epoch();
+        let time = app.entries()[0].satellite().epoch();
         assert_eq!(app.selected_category(), None);
         app.update(time).unwrap();
         assert_eq!(app.selected_category(), Some(Category::Station));
@@ -450,7 +482,7 @@ mod tests {
         let mut app = app();
         assert_eq!(app.time(), None);
         assert_eq!(app.markers().count(), 0);
-        let entry = &app.catalogue.entries()[0];
+        let entry = &app.entries()[0];
         let time = entry.satellite().epoch();
         let state = entry.satellite().state_at(time).unwrap();
         let ecef = state.to_ecef().unwrap();
@@ -484,7 +516,7 @@ mod tests {
         assert_ne!(app.markers().next().unwrap().2, old_marker);
         assert_ne!(app.samples[0].as_ref().unwrap().physical.ecef, ecef);
         let speed = app.samples[0].as_ref().unwrap().physical.teme_speed_km_s;
-        let later = app.catalogue.entries()[0]
+        let later = app.entries()[0]
             .satellite()
             .state_at(time + Duration::seconds(30))
             .unwrap();
@@ -497,7 +529,7 @@ mod tests {
     #[test]
     fn horizon_is_strict_and_independent_of_zoom() {
         let mut app = app();
-        let time = app.catalogue.entries()[0].satellite().epoch();
+        let time = app.entries()[0].satellite().epoch();
         app.update(time).unwrap();
         let mut s = *app.samples[0].as_ref().unwrap();
         s.camera = CameraPoint {
@@ -533,7 +565,7 @@ mod tests {
     #[test]
     fn explicit_time_loss_clears_tracking_and_recovers_without_changing_configuration() {
         let mut app = app().with_group_categories(alloc::vec![Category::Station]);
-        let time = app.catalogue.entries()[0].satellite().epoch();
+        let time = app.entries()[0].satellite().epoch();
         app.update(time).unwrap();
         let observer = app.observer();
         let view = app.view();
@@ -559,7 +591,7 @@ mod tests {
     #[test]
     fn failed_samples_and_invalid_time_never_leave_old_markers() {
         let mut app = app();
-        let time = app.catalogue.entries()[0].satellite().epoch();
+        let time = app.entries()[0].satellite().epoch();
         app.update(time).unwrap();
         assert_eq!(app.markers().count(), 1);
         // Force a real coordinate-stage error for the next sampling pass.
@@ -723,7 +755,7 @@ mod tests {
     fn square_corners_update_counts_and_selection_without_changing_truth() {
         use projection::Viewport;
         let mut app = app();
-        let time = app.catalogue.entries()[0].satellite().epoch();
+        let time = app.entries()[0].satellite().epoch();
         app.update(time).unwrap();
         // Synthetic camera placement isolates shape from propagation.
         let span = libm::tan(20.0_f64.to_radians() / 2.0);
@@ -761,10 +793,10 @@ mod tests {
     #[test]
     fn wide_selection_survives_zoom_and_replay_motion_but_not_horizon_or_failure() {
         let mut square = app();
-        let time = square.catalogue.entries()[0].satellite().epoch();
+        let time = square.entries()[0].satellite().epoch();
         square.update(time).unwrap();
         let mut wide = RadarApp::new(
-            app().catalogue,
+            app().catalogue.unwrap(),
             square.observer,
             View::rectangular(20.0, 173.0 / 117.0).unwrap(),
         )
@@ -856,7 +888,6 @@ mod tests {
             .unwrap();
         app.update(time).unwrap();
         let ids: Vec<_> = app
-            .catalogue
             .entries()
             .iter()
             .map(|e| e.elements().norad_id)
@@ -945,7 +976,7 @@ mod tests {
         app.samples[3].as_mut().unwrap().camera.east_km = 0.0;
         let original = app.samples.clone();
         app.reconcile_selection();
-        let selected = app.catalogue.entries()[3].elements().norad_id;
+        let selected = app.entries()[3].elements().norad_id;
         assert_eq!(app.selected_id(), Some(selected));
         assert_eq!(
             app.counts(),
@@ -987,7 +1018,7 @@ mod tests {
     #[test]
     fn label_zoom_history_survives_frames_selection_and_missing_data() {
         let mut app = app();
-        let time = app.catalogue.entries()[0].satellite().epoch();
+        let time = app.entries()[0].satellite().epoch();
         app.update(time).unwrap();
         let samples = app.samples.clone();
         let counts = app.counts();
@@ -1027,7 +1058,7 @@ mod tests {
     #[test]
     fn selection_wraps_and_clears_when_zoom_clips_everything() {
         let mut app = app();
-        let time = app.catalogue.entries()[0].satellite().epoch();
+        let time = app.entries()[0].satellite().epoch();
         app.update(time).unwrap();
         app.select_next();
         assert_eq!(app.selected_id(), Some(25544));
@@ -1042,5 +1073,43 @@ mod tests {
         assert_eq!(app.selected_id(), None);
         app.zoom(-64);
         assert_eq!(app.selected_id(), Some(25544));
+    }
+
+    #[test]
+    fn awaiting_catalogue_frames_are_valid_but_empty_until_loaded() {
+        let loaded = app();
+        let time = loaded.entries()[0].satellite().epoch();
+        let mut empty =
+            RadarApp::awaiting_catalogue(loaded.observer, View::new(20.0).unwrap()).unwrap();
+        assert_eq!(empty.time(), None);
+        empty.update(time).unwrap();
+        assert_eq!(empty.time(), Some(time));
+        assert_eq!(empty.counts(), Counts::default());
+        assert_eq!(empty.objects().count(), 0);
+        assert_eq!(empty.selected_id(), None);
+        assert!(empty.selected().is_none());
+
+        // Loading mid-frame resamples at the frame's own UTC and acquires.
+        empty.load_catalogue(app().catalogue.unwrap());
+        assert_eq!(empty.time(), Some(time));
+        let mut reference = app();
+        reference.update(time).unwrap();
+        assert_eq!(empty.samples, reference.samples);
+        assert_eq!(empty.counts(), reference.counts());
+        assert_eq!(empty.selected_id(), Some(25544));
+    }
+
+    #[test]
+    fn loading_without_a_frame_keeps_no_frame_and_replaces_old_samples() {
+        let mut loaded = app();
+        let time = loaded.entries()[0].satellite().epoch();
+        loaded.update(time).unwrap();
+        loaded.invalidate_frame();
+        loaded.load_catalogue(app().catalogue.unwrap());
+        assert_eq!(loaded.time(), None);
+        assert_eq!(loaded.objects().count(), 0);
+        assert_eq!(loaded.selected_id(), None);
+        loaded.update(time).unwrap();
+        assert_eq!(loaded.selected_id(), Some(25544));
     }
 }

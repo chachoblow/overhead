@@ -46,6 +46,8 @@ pub mod sharp_profile;
 pub mod sharp_test;
 #[cfg(any(feature = "sharp-radar", feature = "live-sntp"))]
 pub mod sntp_screen;
+#[cfg(feature = "element-fetch")]
+pub mod tls_dates;
 #[cfg(feature = "sharp-radar")]
 pub mod utc_trust;
 // Host-only live-UTC composition preflight; no target loop or network tasks.

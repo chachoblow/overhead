@@ -475,6 +475,8 @@ where
             "{}",
             if app.time().is_none() {
                 "AWAITING DATA"
+            } else if counts.catalogue == 0 {
+                "NO DATA"
             } else if counts.failed > 0 {
                 "NO MARKERS / ERRORS"
             } else if counts.above_horizon > 0 {
@@ -721,6 +723,10 @@ fn wide_empty_status(
 ) -> Option<&'static str> {
     if !has_frame {
         Some("NO FRAME")
+    } else if counts.catalogue == 0 {
+        // No elements loaded (e.g. a device fetch pending or failed): an empty
+        // sky claim would be unfounded, and no objects means no markers.
+        Some("NO DATA")
     } else if counts.visible > 0 {
         None
     } else if has_indicator {
@@ -2492,8 +2498,13 @@ mod tests {
             wide_empty_status(true, clean, false, false),
             Some("NONE ABOVE HORIZON")
         );
+        for warning in [false, true] {
+            assert_eq!(
+                wide_empty_status(true, Counts::default(), false, warning),
+                Some("NO DATA")
+            );
+        }
         for (counts, warning) in [
-            (Counts::default(), false),
             (
                 Counts {
                     above_horizon: 1,
@@ -2675,6 +2686,30 @@ mod tests {
         assert_eq!(app.selected().unwrap().1.physical, physical);
         draw(&mut warned, &app, layout, false).unwrap();
         assert_eq!(warned.pixels, clean.pixels);
+    }
+
+    #[test]
+    fn awaiting_catalogue_shows_no_data_then_clears_when_elements_load() {
+        let loaded = app_with_viewport(Viewport::Rectangle);
+        let time = loaded.time().unwrap();
+        let mut app = RadarApp::awaiting_catalogue(loaded.observer(), loaded.view()).unwrap();
+        assert_wide_notice(&app, false, &["NO FRAME"]);
+        app.update(time).unwrap();
+        assert_wide_notice(&app, false, &["NO DATA"]);
+        assert_wide_notice(&app, true, &["NO DATA", "INGEST WARN"]);
+        let mut builder = CatalogueBuilder::new();
+        let elements: Vec<OmmElements> =
+            serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
+        builder.push(
+            RecordOrigin {
+                group: 0,
+                record: 0,
+            },
+            elements.into_iter().next().unwrap(),
+        );
+        app.load_catalogue(builder.finish().unwrap());
+        assert_eq!(app.counts(), loaded.counts());
+        assert_wide_notice(&app, false, &[]);
     }
 
     #[test]
