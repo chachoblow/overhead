@@ -484,7 +484,9 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
 - [ ] Run shared engine/renderer on S3 + Sharp. Intended controls under 0060:
   button cycles satellites, knob zooms continuously (presets as fallback).
 - [ ] Add Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes
-  per [0002](decisions/0002-data-and-time-over-wifi.md).
+  per [0002](decisions/0002-data-and-time-over-wifi.md). First slice accepted as
+  [0071](decisions/0071-https-element-fetch-first-slice.md): mbedtls-rs, STATIONS JSON,
+  one request per boot; not yet implemented.
 - [ ] Handle network failure, missing/invalid time or data, and stale elements.
 - [ ] Verify end-to-end performance and extended hardware operation, including
   the frame-timing work deferred by 0060.
