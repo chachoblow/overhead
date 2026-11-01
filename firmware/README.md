@@ -1381,6 +1381,31 @@ failure-path (certificate, HTTP or parse), long-run or physical COM-edge
 evidence. Handshake time varied 0.8–2.2 s across these runs. Raw logs and
 credential-bearing images stay local.
 
+### Refresh, staleness and home site (0075)
+
+[0075](../docs/decisions/0075-fetched-element-refresh-and-staleness.md) changes
+this image: it refreshes STATIONS 8 h after each success (build-time
+`REFRESH_MINUTES`, at least 120, for diagnostics), retries only failures before
+the GET is sent (5/15/30/60 min backoff; everything after the GET and every
+verification failure waits one interval), keeps tracking old elements with an
+`OLD DATA` notice after 24 h and unloads them once the newest epoch is 7 days
+old. The observer is the home site from the ignored `firmware/.site.env`
+(`SITE_LAT_DEG=`, `SITE_LON_DEG=`, optional `SITE_ALT_M=`; decimal degrees,
+metres), never printed. Banner `OVERHEAD_S3_LIVE_FETCH_RADAR_V2`; new lines
+`FETCH_START`, `FETCH_SCHEDULE attempt= outcome= next_in_s=`, `LIVE_FETCH
+loaded load= fetched_at= selected_before=` and `LIVE_FETCH stale=`.
+
+```sh
+set -a; . ./.wifi.env; . ./.site.env; set +a
+REFRESH_MINUTES=120 cargo build --release --locked \
+  --bin overhead-s3-live-fetch-radar --features live-fetch-radar
+# save-image + image_gate.py as for live-fetch; flash and capture in one command
+```
+
+Dummy build (`SITE_LAT_DEG=0 SITE_LON_DEG=0`, dummy credentials): image
+1,338,608 B (16.08%), only the RWX warning, clippy no new warnings, gate passed.
+Site- and credential-bearing images and raw logs stay local.
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing

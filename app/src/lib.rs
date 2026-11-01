@@ -10,7 +10,7 @@ use overhead_core::{
     TimeError,
     catalogue::{Catalogue, CatalogueEntry},
     ecef_to_geodetic, ecef_to_look_angles,
-    sgp4::chrono::NaiveDateTime,
+    sgp4::chrono::{NaiveDateTime, TimeDelta},
     validate_utc_time,
 };
 pub mod category;
@@ -76,6 +76,27 @@ impl Sample {
     }
 }
 
+/// Element freshness policy for fetched catalogues (0075). An explicit tuning
+/// input; apps without one never call their data old or expire it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Freshness {
+    /// A fetched catalogue whose fetch time is more than this before the frame
+    /// UTC is stale: still tracked, but flagged (`OLD DATA`).
+    pub stale_after: TimeDelta,
+    /// A catalogue whose newest element epoch is more than this before the
+    /// frame UTC is unloaded, so the radar reports `NO DATA` until a new load.
+    pub expire_after: TimeDelta,
+}
+
+impl Freshness {
+    /// 0075: stale after 24 h without a successful fetch (three missed 8-hour
+    /// refreshes); expired once the newest epoch is more than 7 days old.
+    pub const DEVICE: Self = Self {
+        stale_after: TimeDelta::hours(24),
+        expire_after: TimeDelta::days(7),
+    };
+}
+
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Counts {
     pub catalogue: usize,
@@ -96,6 +117,11 @@ pub struct RadarApp {
     selected: Option<u64>,
     label_zoom: LabelZoom,
     label_visible: bool,
+    freshness: Option<Freshness>,
+    /// UTC at which the loaded catalogue was fetched, if it was.
+    fetched_at: Option<NaiveDateTime>,
+    /// Newest element epoch of the loaded catalogue, for expiry.
+    newest_epoch: Option<NaiveDateTime>,
 }
 
 impl RadarApp {
@@ -106,6 +132,7 @@ impl RadarApp {
     ) -> Result<Self, CameraError> {
         let mut app = Self::awaiting_catalogue(observer, view)?;
         app.samples = Vec::with_capacity(catalogue.entries().len());
+        app.newest_epoch = newest_epoch(&catalogue);
         app.catalogue = Some(catalogue);
         Ok(app)
     }
@@ -127,22 +154,64 @@ impl RadarApp {
             selected: None,
             label_zoom,
             label_visible: label_zoom.initially_visible(view),
+            freshness: None,
+            fetched_at: None,
+            newest_epoch: None,
         })
     }
 
     /// Replace the whole catalogue, keeping observer, view, roles and label
-    /// state. Selection restarts from first acquisition (0049 genuine loss),
-    /// and a current frame is recomputed at its own UTC so no sample from the
-    /// previous catalogue survives.
+    /// state. A current frame is recomputed at its own UTC so no sample from
+    /// the previous catalogue survives. The selected ID is kept only if the new
+    /// catalogue still tracks it under the usual rules (0049); otherwise
+    /// selection falls back to first acquisition. A plain load has no fetch
+    /// time, so it is never called stale.
     pub fn load_catalogue(&mut self, catalogue: Catalogue) {
+        self.load(catalogue, None);
+    }
+
+    /// As [`Self::load_catalogue`], recording the UTC the elements were fetched
+    /// at so the freshness policy can flag them as stale (0075).
+    pub fn load_fetched_catalogue(&mut self, catalogue: Catalogue, fetched_at: NaiveDateTime) {
+        self.load(catalogue, Some(fetched_at));
+    }
+
+    fn load(&mut self, catalogue: Catalogue, fetched_at: Option<NaiveDateTime>) {
+        self.newest_epoch = newest_epoch(&catalogue);
         self.catalogue = Some(catalogue);
-        self.selected = None;
+        self.fetched_at = fetched_at;
         match self.time {
             // Already validated when the frame was made.
             Some(time) => {
                 let _ = self.update(time);
             }
-            None => self.samples.clear(),
+            None => {
+                self.samples.clear();
+                self.selected = None;
+            }
+        }
+    }
+
+    /// Configure the freshness policy. Intended for construction.
+    pub fn with_freshness(mut self, freshness: Freshness) -> Self {
+        self.freshness = Some(freshness);
+        self
+    }
+
+    /// The loaded catalogue's fetch time, if it was fetched.
+    pub fn fetched_at(&self) -> Option<NaiveDateTime> {
+        self.fetched_at
+    }
+
+    /// True when a frame exists and its UTC is more than the policy's
+    /// `stale_after` past the catalogue's fetch time. Tracking is unchanged;
+    /// this only drives the `OLD DATA` notice and clears on the next load.
+    pub fn data_stale(&self) -> bool {
+        match (self.freshness, self.time, self.fetched_at) {
+            (Some(f), Some(time), Some(fetched)) => {
+                self.catalogue.is_some() && time - fetched > f.stale_after
+            }
+            _ => false,
         }
     }
 
@@ -198,6 +267,16 @@ impl RadarApp {
         if let Err(error) = validate_utc_time(time) {
             self.invalidate_frame();
             return Err(error);
+        }
+        if let (Some(f), Some(newest)) = (self.freshness, self.newest_epoch)
+            && time - newest > f.expire_after
+        {
+            // Expired elements are unloaded rather than shown as current; only
+            // a new load brings markers back.
+            self.catalogue = None;
+            self.fetched_at = None;
+            self.newest_epoch = None;
+            self.selected = None;
         }
         // Disjoint field borrows keep the samples allocation reused per frame.
         let entries = self.catalogue.as_ref().map_or(&[][..], Catalogue::entries);
@@ -322,6 +401,14 @@ impl RadarApp {
             self.selected = next;
         }
     }
+}
+
+fn newest_epoch(catalogue: &Catalogue) -> Option<NaiveDateTime> {
+    catalogue
+        .entries()
+        .iter()
+        .map(|e| e.satellite().epoch())
+        .max()
 }
 
 fn nominal_period_minutes(mean_motion_rev_day: f64) -> Option<f64> {
@@ -1111,5 +1198,101 @@ mod tests {
         assert_eq!(loaded.selected_id(), None);
         loaded.update(time).unwrap();
         assert_eq!(loaded.selected_id(), Some(25544));
+    }
+    fn renumbered(id: u64) -> Catalogue {
+        let json = include_str!("../../core/tests/fixtures/iss-25544.json");
+        let renumbered = json.replace("25544", &alloc::format!("{id}"));
+        let mut elements: Vec<OmmElements> = serde_json::from_str(&renumbered).unwrap();
+        let mut builder = CatalogueBuilder::new();
+        builder.push(
+            RecordOrigin {
+                group: 0,
+                record: 0,
+            },
+            elements.remove(0),
+        );
+        builder.finish().unwrap()
+    }
+
+    #[test]
+    fn refresh_keeps_a_still_tracked_selection_and_falls_back_otherwise() {
+        let mut app = app();
+        let time = app.entries()[0].satellite().epoch();
+        app.update(time).unwrap();
+        assert_eq!(app.selected_id(), Some(25544));
+        app.load_fetched_catalogue(app_catalogue(), time);
+        assert_eq!(app.selected_id(), Some(25544));
+        // The selected ID is gone: first acquisition of the new load.
+        app.load_fetched_catalogue(renumbered(90_000), time);
+        assert_eq!(app.selected_id(), Some(90_000));
+        let mut reference = RadarApp::new(renumbered(90_000), app.observer, app.view).unwrap();
+        reference.update(time).unwrap();
+        assert_eq!(app.samples, reference.samples);
+    }
+
+    fn app_catalogue() -> Catalogue {
+        app().catalogue.unwrap()
+    }
+
+    #[test]
+    fn fetched_data_turns_stale_after_the_policy_and_clears_on_a_new_fetch() {
+        let policy = Freshness {
+            stale_after: Duration::hours(24),
+            expire_after: Duration::days(7),
+        };
+        let base = app();
+        let epoch = base.entries()[0].satellite().epoch();
+        let mut app = RadarApp::awaiting_catalogue(base.observer, base.view)
+            .unwrap()
+            .with_freshness(policy);
+        app.update(epoch).unwrap();
+        assert!(!app.data_stale()); // nothing loaded
+        app.load_fetched_catalogue(app_catalogue(), epoch);
+        assert_eq!(app.fetched_at(), Some(epoch));
+        app.update(epoch + Duration::hours(24)).unwrap();
+        assert!(!app.data_stale()); // exactly at the threshold
+        app.update(epoch + Duration::hours(24) + Duration::seconds(1))
+            .unwrap();
+        assert!(app.data_stale());
+        assert_eq!(app.counts().catalogue, 1); // still tracked
+        app.invalidate_frame();
+        assert!(!app.data_stale()); // no frame, no claim
+        app.update(epoch + Duration::hours(30)).unwrap();
+        app.load_fetched_catalogue(app_catalogue(), epoch + Duration::hours(30));
+        assert!(!app.data_stale());
+        // A plain load has no fetch time and is never stale.
+        app.load_catalogue(app_catalogue());
+        app.update(epoch + Duration::days(6)).unwrap();
+        assert_eq!(app.fetched_at(), None);
+        assert!(!app.data_stale());
+        // Without a policy fetched data is never called stale or expired.
+        let mut plain = base;
+        plain.load_fetched_catalogue(app_catalogue(), epoch);
+        plain.update(epoch + Duration::days(30)).unwrap();
+        assert!(!plain.data_stale());
+        assert_eq!(plain.counts().catalogue, 1);
+    }
+
+    #[test]
+    fn expired_elements_unload_until_the_next_load() {
+        let base = app();
+        let epoch = base.entries()[0].satellite().epoch();
+        let mut app = RadarApp::new(app_catalogue(), base.observer, base.view)
+            .unwrap()
+            .with_freshness(Freshness::DEVICE);
+        app.update(epoch + Duration::days(7)).unwrap();
+        assert_eq!(app.counts().catalogue, 1); // exactly at the threshold
+        app.update(epoch + Duration::days(7) + Duration::seconds(1))
+            .unwrap();
+        assert_eq!(app.counts(), Counts::default());
+        assert_eq!(app.selected_id(), None);
+        assert_eq!(app.fetched_at(), None);
+        assert!(!app.data_stale());
+        // Going back in time does not resurrect them; a new load does.
+        app.update(epoch).unwrap();
+        assert_eq!(app.counts().catalogue, 0);
+        app.load_fetched_catalogue(app_catalogue(), epoch);
+        assert_eq!(app.counts().catalogue, 1);
+        assert_eq!(app.selected_id(), Some(25544));
     }
 }

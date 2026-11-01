@@ -491,6 +491,10 @@ where
         "{}",
         if ingestion_warning {
             "INGEST WARN: SEE LOG"
+        } else if app.data_stale() {
+            "OLD DATA"
+        } else if app.fetched_at().is_some() {
+            "FETCHED DATA"
         } else {
             "LOCAL DATA / NO FETCH"
         }
@@ -705,6 +709,9 @@ fn draw_wide_status<D: DrawTarget<Color = BinaryColor>>(
         display,
         &[
             status,
+            // 0075: fetched elements past the stale threshold are still
+            // tracked; the notice clears only when a new fetch loads.
+            app.data_stale().then_some("OLD DATA"),
             (counts.failed > 0).then_some("TRACK ERROR"),
             ingestion_warning.then_some("INGEST WARN"),
             coast_error.then_some("COAST ERROR"),
@@ -2710,6 +2717,59 @@ mod tests {
         app.load_catalogue(builder.finish().unwrap());
         assert_eq!(app.counts(), loaded.counts());
         assert_wide_notice(&app, false, &[]);
+    }
+
+    #[test]
+    fn old_data_notice_follows_fetch_age_and_clears_on_a_new_fetch() {
+        let loaded = app_with_viewport(Viewport::Rectangle);
+        let time = loaded.time().unwrap();
+        let catalogue = || {
+            let mut builder = CatalogueBuilder::new();
+            let elements: Vec<OmmElements> =
+                serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json"))
+                    .unwrap();
+            builder.push(
+                RecordOrigin {
+                    group: 0,
+                    record: 0,
+                },
+                elements.into_iter().next().unwrap(),
+            );
+            builder.finish().unwrap()
+        };
+        let mut app = RadarApp::awaiting_catalogue(loaded.observer(), loaded.view())
+            .unwrap()
+            .with_freshness(overhead_app::Freshness::DEVICE);
+        app.update(time).unwrap();
+        let fetched = time - overhead_core::sgp4::chrono::TimeDelta::hours(25);
+        app.load_fetched_catalogue(catalogue(), fetched);
+        assert_eq!(app.counts(), loaded.counts()); // still tracked
+        assert_wide_notice(&app, false, &["OLD DATA"]);
+        assert_wide_notice(&app, true, &["OLD DATA", "INGEST WARN"]);
+        // Same scene apart from the notice corner.
+        let mut stale = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        let mut fresh = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw(&mut stale, &app, Layout::wide(), false).unwrap();
+        app.load_fetched_catalogue(catalogue(), time);
+        assert_wide_notice(&app, false, &[]);
+        draw(&mut fresh, &app, Layout::wide(), false).unwrap();
+        let mut reference = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw(&mut reference, &loaded, Layout::wide(), false).unwrap();
+        assert_eq!(fresh.pixels, reference.pixels);
+        assert_ne!(stale.pixels, fresh.pixels);
+        for (y, (a, b)) in stale.pixels.iter().zip(&fresh.pixels).enumerate() {
+            for (x, (p, q)) in a.iter().zip(b).enumerate() {
+                if p != q {
+                    assert!(x < 70 && y > 200, "difference outside notice at {x},{y}");
+                }
+            }
+        }
     }
 
     #[test]

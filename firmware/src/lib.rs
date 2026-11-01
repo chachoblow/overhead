@@ -28,6 +28,8 @@ pub mod coast_measurement;
 pub mod device_timing;
 #[cfg(feature = "element-fetch")]
 pub mod element_fetch;
+#[cfg(feature = "element-fetch")]
+pub mod element_refresh;
 #[cfg(feature = "sharp-radar")]
 pub mod live_utc;
 #[cfg(feature = "sharp-natural-audit")]
@@ -44,6 +46,8 @@ pub mod sharp_lines;
 pub mod sharp_profile;
 #[cfg(feature = "sharp-test")]
 pub mod sharp_test;
+#[cfg(feature = "element-fetch")]
+pub mod site;
 #[cfg(any(feature = "sharp-radar", feature = "live-sntp"))]
 pub mod sntp_screen;
 #[cfg(feature = "element-fetch")]
