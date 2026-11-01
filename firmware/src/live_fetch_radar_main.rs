@@ -1,0 +1,682 @@
+#![no_std]
+#![no_main]
+//! Opt-in live-UTC radar on freshly fetched STATIONS elements (0074), NOT the
+//! standalone device application. One display task owns app, UTC gate, BOOT
+//! selection and SPI; the network side screens SNTP replies, makes exactly one
+//! HTTPS STATIONS request per boot after the first in-budget observation, and
+//! hands over a finished catalogue. No fixture elements are ever shown: until
+//! (or unless) elements arrive the radar reports `NO DATA`. Any fetch failure
+//! is final for the boot (0071: no retry). No persistence or refresh.
+//!
+//! Trust: MbedTLS verifies chain and hostname against the two bundled roots;
+//! every served certificate's validity dates are checked against the screened
+//! UTC in `tls_dates` before the request is sent (0074).
+extern crate alloc;
+
+use core::{
+    mem::MaybeUninit,
+    panic::PanicInfo,
+    sync::atomic::{AtomicBool, Ordering},
+};
+use embassy_executor::Spawner;
+use embassy_net::{
+    IpEndpoint, Runner, Stack, StackResources,
+    dns::DnsQueryType,
+    tcp::TcpSocket,
+    udp::{PacketMetadata, UdpSocket},
+};
+use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channel};
+use embassy_time::{Duration as Wait, Timer, with_timeout};
+use esp_hal::{
+    clock::CpuClock,
+    gpio::{Input, InputConfig, Level, Output, OutputConfig, Pull},
+    rng::{Trng, TrngSource},
+    spi::{
+        BitOrder, Mode,
+        master::{Config as SpiConfig, Spi},
+    },
+    time::{Instant, Rate},
+    timer::{PeriodicTimer, timg::TimerGroup},
+};
+use esp_println::println;
+use esp_radio::wifi::{
+    AuthenticationMethodConfig, Config, ControllerConfig, Interface, WifiController,
+    sta::StationConfig,
+};
+use mbedtls_rs::{
+    Certificate, ClientSessionConfig, Session, SessionConfig, Tls, TlsVersion, X509, io,
+    io::Write as _,
+};
+use overhead_app::{RadarApp, category::Category, projection::View};
+use overhead_core::{catalogue::Catalogue, sgp4::chrono::DateTime};
+use overhead_render::{CoastLayer, Layout, PeriodCache};
+use overhead_s3_benchmark::{
+    boot_capture,
+    button_input::apply_presses,
+    coast_measurement::{LIVE_UTC_ISS_OBSERVER, Screen},
+    device_timing::{DiagnosticAction, LifecycleAction},
+    element_fetch::{self, HttpError},
+    live_utc,
+    sharp_lines::{Kind, LineSender},
+    sntp_screen::{self, ScreenedObservation, SntpOutcome, SntpRequest},
+    tls_dates,
+    utc_trust::{PROTOTYPE_DRIFT_PPM, UtcTrustPreflight},
+};
+use static_cell::StaticCell;
+
+esp_bootloader_esp_idf::esp_app_desc!();
+
+const SSID: &str = env!("SSID");
+const PASSWORD: &str = env!("PASSWORD");
+const SERVERS: [&str; 2] = ["time.cloudflare.com", "time.nist.gov"];
+const POLL_S: u64 = 64;
+const REPLY_TIMEOUT: Wait = Wait::from_secs(5);
+const FETCH_TIMEOUT: Wait = Wait::from_secs(60);
+/// 0065's total-error budget, required of the observation that dates the fetch.
+const UTC_BUDGET_US: u64 = 100_000;
+/// Vertical FOV of the wide view: wider than the ISS image's 5° so several
+/// STATIONS objects can share the view for BOOT cycling (0035 labels stay on).
+const FOV_DEG: f64 = 60.0;
+/// The fetch image measured a 113,704 B peak in a 160 KiB heap (0071 slice 3).
+const HEAP_SIZE: usize = 160 * 1024;
+/// Sectigo Public Server Authentication Root R46 and USERTrust RSA
+/// Certification Authority (0071), NUL-terminated for MbedTLS PEM parsing.
+const ROOTS: &str = concat!(include_str!("../certs/celestrak-roots.pem"), "\0");
+const SERVER_NAME: &core::ffi::CStr = c"celestrak.org";
+
+// A successful send is never dropped; if full, network yields until the
+// display owner drains it. Processing time, not packet time, is used for age.
+static EVENTS: Channel<CriticalSectionRawMutex, SntpOutcome, 4> = Channel::new();
+// At most one catalogue per boot.
+static DATA: Channel<CriticalSectionRawMutex, Catalogue, 1> = Channel::new();
+// Set by the network task around the whole fetch so the display owner can
+// report its longest loop gap while TLS work shares the executor.
+static FETCHING: AtomicBool = AtomicBool::new(false);
+static RESOURCES: StaticCell<StackResources<4>> = StaticCell::new();
+static RX_META: StaticCell<[PacketMetadata; 4]> = StaticCell::new();
+static TX_META: StaticCell<[PacketMetadata; 4]> = StaticCell::new();
+static RX_BUF: StaticCell<[u8; 512]> = StaticCell::new();
+static TX_BUF: StaticCell<[u8; 512]> = StaticCell::new();
+static TCP_RX: StaticCell<[u8; 4096]> = StaticCell::new();
+static TCP_TX: StaticCell<[u8; 1024]> = StaticCell::new();
+static RESPONSE: StaticCell<[u8; element_fetch::MAX_RESPONSE]> = StaticCell::new();
+static CAPTURE: StaticCell<[u8; tls_dates::CAPTURE]> = StaticCell::new();
+static TRNG: StaticCell<Trng> = StaticCell::new();
+// MbedTLS keeps its RNG for the program's lifetime; a second TRNG handle on the
+// same live source avoids sharing the network task's nonce generator.
+static TLS_TRNG: StaticCell<Trng> = StaticCell::new();
+// Display task is the sole owner; avoid putting large buffers/layer in its
+// async future or on the small S3 stack.
+static mut SCREEN: Screen = Screen::new();
+static mut SENDER: LineSender = LineSender::new();
+static mut LAYER: MaybeUninit<CoastLayer> = MaybeUninit::uninit();
+static mut PERIOD: PeriodCache = PeriodCache::new();
+
+fn uptime_us() -> u64 {
+    Instant::now().duration_since_epoch().as_micros()
+}
+
+fn heap_peak() -> usize {
+    esp_alloc::HEAP.stats().max_usage
+}
+
+#[esp_hal::main]
+async fn main(spawner: Spawner) -> ! {
+    let p = esp_hal::init(esp_hal::Config::default().with_cpu_clock(CpuClock::_240MHz));
+    esp_alloc::heap_allocator!(size: HEAP_SIZE);
+    let timg0 = TimerGroup::new(p.TIMG0);
+    esp_rtos::start(timg0.timer0, p.FROM_CPU_INTR0);
+    println!(
+        "OVERHEAD_S3_LIVE_FETCH_RADAR_V1 fetched STATIONS; one request per boot; not production"
+    );
+
+    let cs = Output::new(p.GPIO10, Level::Low, OutputConfig::default());
+    let spi = Spi::new(
+        p.SPI2,
+        SpiConfig::default()
+            .with_frequency(Rate::from_mhz(2))
+            .with_mode(Mode::_0)
+            .with_write_bit_order(BitOrder::LsbFirst),
+    )
+    .expect("SPI configuration")
+    .with_sck(p.GPIO13)
+    .with_mosi(p.GPIO11);
+    // 0070: GPIO0 (DevKitC-1 BOOT strap) is sampled by a 5 ms TIMG1
+    // interrupt, independent of render/SPI and the executor.
+    let boot = Input::new(p.GPIO0, InputConfig::default().with_pull(Pull::Up));
+    let timg1 = TimerGroup::new(p.TIMG1);
+    boot_capture::start(PeriodicTimer::new(timg1.timer0), boot, 20_000);
+    println!("BOOT_CAPTURE_READY live fetch sample_ms=5 timer=TIMG1");
+    spawner.spawn(display(spi, cs).unwrap());
+
+    // Entropy for TLS, DHCP and SNTP nonces: keep the TRNG source alive.
+    let _trng_source = TrngSource::new(p.RNG, p.ADC1);
+    let trng = TRNG.init(Trng::try_new().expect("TRNG"));
+    let seed = (u64::from(trng.random()) << 32) | u64::from(trng.random());
+
+    let station = Config::Station(
+        StationConfig::default()
+            .with_ssid(SSID.try_into().expect("SSID"))
+            .with_authentication(AuthenticationMethodConfig::Wpa2Personal(
+                PASSWORD.try_into().expect("PASSWORD"),
+            )),
+    );
+    let controller = WifiController::new(
+        p.WIFI,
+        ControllerConfig::default().with_initial_config(station),
+    )
+    .expect("Wi-Fi controller");
+    let (stack, runner) = embassy_net::new(
+        Interface::station(),
+        embassy_net::Config::dhcpv4(Default::default()),
+        RESOURCES.init(StackResources::new()),
+        seed,
+    );
+    spawner.spawn(net(runner).unwrap());
+    spawner.spawn(connection(controller).unwrap());
+    stack.wait_config_up().await;
+    let mut socket = UdpSocket::new(
+        stack,
+        RX_META.init([PacketMetadata::EMPTY; 4]),
+        RX_BUF.init([0; 512]),
+        TX_META.init([PacketMetadata::EMPTY; 4]),
+        TX_BUF.init([0; 512]),
+    );
+    socket.bind(0).expect("SNTP UDP bind");
+    let mut fetched = false;
+    let mut seq: u32 = 0;
+    loop {
+        stack.wait_config_up().await;
+        seq = seq.wrapping_add(1);
+        for server in SERVERS {
+            match query(stack, &mut socket, trng, server, seq).await {
+                QueryResult::NoReply => continue, // fallback only after no reply
+                QueryResult::Reply(observation) => {
+                    if let Some(o) = observation.filter(|o| o.uncertainty_us < UTC_BUDGET_US)
+                        && !fetched
+                    {
+                        fetched = true; // one attempt per boot, whatever happens
+                        fetch_once(stack, o).await;
+                    }
+                    break;
+                }
+                QueryResult::KissOfDeath => {
+                    // Conservative diagnostic handling: stop querying either
+                    // server after any KoD; do not bypass RATE/DENY via fallback.
+                    println!("SNTP KoD: stop queries until reboot; holdover expires normally");
+                    loop {
+                        Timer::after(Wait::from_secs(3600)).await;
+                    }
+                }
+            }
+        }
+        Timer::after(Wait::from_secs(POLL_S)).await;
+    }
+}
+
+/// The boot's single fetch. Success hands a catalogue to the display owner;
+/// every failure is reported and leaves the radar at `NO DATA`.
+async fn fetch_once(stack: Stack<'static>, utc: ScreenedObservation) {
+    FETCHING.store(true, Ordering::Relaxed);
+    let tls = Tls::new(TLS_TRNG.init(Trng::try_new().expect("TLS TRNG"))).expect("TLS context");
+    let response = RESPONSE.init([0; element_fetch::MAX_RESPONSE]);
+    let capture = CAPTURE.init([0; tls_dates::CAPTURE]);
+    let started = uptime_us();
+    let result = with_timeout(FETCH_TIMEOUT, fetch(stack, &tls, response, capture, utc)).await;
+    drop(tls);
+    match result {
+        Ok(Ok(len)) => {
+            if let Some(catalogue) = ingest(&response[..len]) {
+                DATA.send(catalogue).await;
+            }
+        }
+        Ok(Err(stage)) => println!("FETCH_FAILED {stage}"),
+        Err(_) => println!("FETCH_FAILED timeout_s={}", FETCH_TIMEOUT.as_secs()),
+    }
+    println!(
+        "FETCH_DONE total_ms={} heap_peak={} heap_size={HEAP_SIZE}",
+        (uptime_us() - started) / 1000,
+        heap_peak()
+    );
+    FETCHING.store(false, Ordering::Relaxed);
+}
+
+/// Records the server's first bytes so the clear-text TLS 1.2 Certificate
+/// message can be date-checked after MbedTLS verifies the handshake.
+struct Recording<'a, T> {
+    inner: T,
+    buf: &'a mut [u8],
+    len: usize,
+}
+
+impl<T: io::ErrorType> io::ErrorType for Recording<'_, T> {
+    type Error = T::Error;
+}
+
+impl<T: io::Read> io::Read for Recording<'_, T> {
+    async fn read(&mut self, out: &mut [u8]) -> Result<usize, Self::Error> {
+        let n = self.inner.read(out).await?;
+        let k = n.min(self.buf.len() - self.len);
+        self.buf[self.len..self.len + k].copy_from_slice(&out[..k]);
+        self.len += k;
+        Ok(n)
+    }
+}
+
+impl<T: io::Write> io::Write for Recording<'_, T> {
+    async fn write(&mut self, data: &[u8]) -> Result<usize, Self::Error> {
+        self.inner.write(data).await
+    }
+    async fn flush(&mut self) -> Result<(), Self::Error> {
+        self.inner.flush().await
+    }
+}
+
+/// DNS, TCP, TLS handshake, certificate dates, one GET and read to close.
+/// Returns the number of response bytes; the caller parses them.
+async fn fetch(
+    stack: Stack<'static>,
+    tls: &Tls<'_>,
+    response: &mut [u8],
+    capture: &mut [u8],
+    utc: ScreenedObservation,
+) -> Result<usize, &'static str> {
+    let addrs = stack
+        .dns_query(element_fetch::HOST, DnsQueryType::A)
+        .await
+        .map_err(|_| "stage=dns")?;
+    let addr = *addrs.first().ok_or("stage=dns_empty")?;
+    let mut socket = TcpSocket::new(stack, TCP_RX.init([0; 4096]), TCP_TX.init([0; 1024]));
+    socket.set_timeout(Some(Wait::from_secs(20)));
+    let t0 = uptime_us();
+    socket
+        .connect((addr, element_fetch::PORT))
+        .await
+        .map_err(|_| "stage=tcp_connect")?;
+    let t1 = uptime_us();
+
+    let config = ClientSessionConfig {
+        ca_chain: Some(Certificate::new(X509::PEM(c_str(ROOTS))).map_err(|_| "stage=roots")?),
+        server_name: Some(SERVER_NAME),
+        min_version: TlsVersion::Tls1_2,
+        ..ClientSessionConfig::new()
+    };
+    let stream = Recording {
+        inner: socket,
+        buf: capture,
+        len: 0,
+    };
+    let mut session = Session::new(tls.reference(), stream, &SessionConfig::Client(config))
+        .map_err(|_| "stage=tls_session")?;
+    if let Err(e) = session.connect().await {
+        println!(
+            "FETCH_TLS ok=false error={e:?} verify=0x{:x} heap_peak={}",
+            session.tls_verification_details(),
+            heap_peak()
+        );
+        return Err("stage=tls_handshake");
+    }
+    let t2 = uptime_us();
+    println!(
+        "FETCH_TLS ok=true version={:?} tcp_ms={} handshake_ms={} heap_peak={}",
+        session.tls_version(),
+        (t1 - t0) / 1000,
+        (t2 - t1) / 1000,
+        heap_peak()
+    );
+
+    // Dates before any request: an invalid certificate costs no GP download.
+    let now = trusted_now_unix_s(utc);
+    let recorded = session.stream().len;
+    match tls_dates::check(&mut session.stream().buf[..recorded], now) {
+        Ok(c) => println!(
+            "FETCH_CERT_DATES ok=true certificates={} now={now} leaf_not_before={} \
+             leaf_not_after={} earliest_not_after={} recorded={recorded}",
+            c.certificates, c.leaf.not_before, c.leaf.not_after, c.earliest_not_after
+        ),
+        Err(e) => {
+            println!("FETCH_CERT_DATES ok=false error={e:?} now={now} recorded={recorded}");
+            let _ = session.close().await;
+            return Err("stage=certificate_dates");
+        }
+    }
+
+    session
+        .write_all(element_fetch::REQUEST.as_bytes())
+        .await
+        .map_err(|_| "stage=write")?;
+    session.flush().await.map_err(|_| "stage=flush")?;
+    let mut len = 0;
+    loop {
+        if len == response.len() {
+            println!("FETCH_HTTP error=response_buffer_full bytes={len}");
+            return Err("stage=read_overflow");
+        }
+        match session.read(&mut response[len..]).await {
+            Ok(0) => break,
+            Ok(n) => len += n,
+            // Truncation is caught by the exact Content-Length check.
+            Err(e) => {
+                println!("FETCH_READ_END error={e:?} bytes={len}");
+                break;
+            }
+        }
+        // Stop early on a non-200 or oversized head; never read more.
+        if let Err(e) = element_fetch::parse_head(&response[..len]) {
+            print_http_error(e);
+            return Err("stage=http_head");
+        }
+    }
+    let _ = session.close().await;
+    println!(
+        "FETCH_TRANSFER bytes={len} transfer_ms={}",
+        (uptime_us() - t2) / 1000
+    );
+    Ok(len)
+}
+
+/// Screened UTC carried forward by monotonic uptime (seconds resolution is
+/// ample for certificate dates; uncertainty is under 100 ms).
+fn trusted_now_unix_s(utc: ScreenedObservation) -> i64 {
+    let elapsed = uptime_us().saturating_sub(utc.midpoint_uptime_us);
+    utc.utc_at_midpoint.and_utc().timestamp() + (elapsed / 1_000_000) as i64
+}
+
+fn ingest(bytes: &[u8]) -> Option<Catalogue> {
+    let body = match element_fetch::parse_response(bytes) {
+        Ok(body) => body,
+        Err(e) => {
+            print_http_error(e);
+            return None;
+        }
+    };
+    println!("FETCH_HTTP status=200 body_bytes={}", body.len());
+    let t = uptime_us();
+    match element_fetch::ingest(body) {
+        Ok(ingested) => {
+            let s = ingested.summary();
+            println!(
+                "FETCH_CATALOGUE records={} accepted={} record_errors={} invalid={} \
+                 conflicts={} oldest={:?}Z newest={:?}Z ingest_ms={} heap_peak={}",
+                s.records,
+                s.accepted,
+                s.record_errors,
+                s.invalid,
+                s.conflicts,
+                s.oldest_epoch,
+                s.newest_epoch,
+                (uptime_us() - t) / 1000,
+                heap_peak()
+            );
+            for e in &ingested.record_errors {
+                println!("FETCH_RECORD_ERROR record={} {}", e.record, e.message);
+            }
+            Some(ingested.catalogue)
+        }
+        Err(e) => {
+            println!("FETCH_CATALOGUE failed {e:?}");
+            None
+        }
+    }
+}
+
+fn print_http_error(e: HttpError) {
+    println!("FETCH_HTTP error={e:?}");
+}
+
+fn c_str(s: &'static str) -> &'static core::ffi::CStr {
+    core::ffi::CStr::from_bytes_with_nul(s.as_bytes()).expect("NUL-terminated roots")
+}
+
+#[embassy_executor::task]
+async fn display(mut spi: Spi<'static, esp_hal::Blocking>, mut cs: Output<'static>) {
+    // No elements until the fetch delivers them: NO FRAME, then NO DATA.
+    // STATIONS is an explicit station group (0045), so its role is Station.
+    let view = View::rectangular(FOV_DEG, Layout::wide().aspect_ratio()).expect("view");
+    let mut app = RadarApp::awaiting_catalogue(LIVE_UTC_ISS_OBSERVER, view)
+        .expect("observer camera")
+        .with_group_categories(alloc::vec![Category::Station]);
+    let screen = unsafe { &mut *(&raw mut SCREEN) };
+    let sender = unsafe { &mut *(&raw mut SENDER) };
+    let period = unsafe { &mut *(&raw mut PERIOD) };
+    let coast = unsafe { (*(&raw mut LAYER)).write(CoastLayer::new()) };
+    // SAFETY: this task alone owns these statics and SPI; the network side
+    // sends events/catalogue over channels and never touches render/app/panel.
+    coast.prepare_for(app.observer());
+    assert!(coast.error().is_none(), "coast preparation failed");
+    let mut gate = UtcTrustPreflight::prototype();
+    let mut retained = false;
+    let mut frames = 0u64;
+    let mut last_stats = uptime_us();
+    let mut last_loop = uptime_us();
+    let (mut loop_max_us, mut fetch_max_us, mut was_fetching) = (0u64, 0u64, false);
+    loop {
+        let gap = uptime_us() - last_loop;
+        loop_max_us = loop_max_us.max(gap);
+        let fetching = FETCHING.load(Ordering::Relaxed);
+        if fetching || was_fetching {
+            fetch_max_us = fetch_max_us.max(gap);
+        }
+        if was_fetching && !fetching {
+            println!("DISPLAY_FETCH_GAP max_loop_gap_us={fetch_max_us}");
+        }
+        was_fetching = fetching;
+        while let Ok(event) = EVENTS.try_receive() {
+            let now = uptime_us();
+            let decision = live_utc::apply(&mut gate, &mut app, now, event);
+            println!("LIVE_UTC source={decision:?} uptime_us={now}");
+        }
+        if let Ok(catalogue) = DATA.try_receive() {
+            app.load_catalogue(catalogue);
+            let c = app.counts();
+            println!(
+                "LIVE_FETCH loaded catalogue={} valid={} sky={} view={} selected={:?}",
+                c.catalogue,
+                app.time().is_some(),
+                c.above_horizon,
+                c.visible,
+                app.selected_id()
+            );
+        }
+        let now = uptime_us();
+        let presses = boot_capture::take_presses();
+        if presses > 0 {
+            let applied = apply_presses(presses, &mut app);
+            println!(
+                "BOOT_CAPTURE drained={presses} applied={applied} uptime_us={now} valid={} selected={:?}",
+                app.time().is_some(),
+                app.selected_id()
+            );
+        }
+        if now.saturating_sub(last_stats) >= 10_000_000 {
+            let stats = boot_capture::take_stats();
+            let c = app.counts();
+            println!(
+                "BOOT_CAPTURE_STATS samples={} max_gap_us={} loop_max_us={loop_max_us} \
+                 catalogue={} sky={} view={} selected={:?}",
+                stats.samples,
+                stats.max_gap_us,
+                c.catalogue,
+                c.above_horizon,
+                c.visible,
+                app.selected_id()
+            );
+            loop_max_us = 0;
+            last_stats = now;
+        }
+        match gate.next(&mut app, now, retained) {
+            LifecycleAction::RenderNoFrame => {
+                overhead_render::draw_cached(screen, &app, Layout::wide(), false, coast, period)
+                    .expect("NO FRAME render");
+                let phase = gate.next_phase();
+                cs.set_high();
+                let result = sender.send(phase, &screen.pixels, true, |part| spi.write(part));
+                cs.set_low();
+                if result.is_err() {
+                    gate.transfer_failed();
+                    panic!("NO FRAME SPI failed; panel state unknown");
+                }
+                let done = uptime_us();
+                gate.no_frame_succeeded(done, phase);
+                retained = true;
+                println!("LIVE_UTC no_frame_sent uptime_us={done}");
+            }
+            LifecycleAction::Scheduled(DiagnosticAction::Frame { sample, full }) => {
+                let utc = DateTime::from_timestamp_micros(sample.utc_unix_us)
+                    .expect("gate checked UTC")
+                    .naive_utc();
+                app.update(utc).expect("checked UTC sample");
+                overhead_render::draw_cached(screen, &app, Layout::wide(), false, coast, period)
+                    .expect("radar render");
+                let phase = gate.next_phase();
+                cs.set_high();
+                let result = sender.send(phase, &screen.pixels, full, |part| spi.write(part));
+                cs.set_low();
+                let transfer = match result {
+                    Ok(transfer) => transfer,
+                    Err(_) => {
+                        gate.transfer_failed();
+                        panic!("radar SPI failed; panel state unknown");
+                    }
+                };
+                let done = uptime_us();
+                gate.transfer_succeeded(done, phase, transfer.kind == Kind::Full);
+                retained = true;
+                frames += 1;
+                if frames.is_multiple_of(200) || sample.skipped > 0 || transfer.kind == Kind::Full {
+                    println!(
+                        "LIVE_UTC frame={frames} utc_us={} skipped={} kind={:?} rows={} total_us={}",
+                        sample.utc_unix_us,
+                        sample.skipped,
+                        transfer.kind,
+                        transfer.rows,
+                        done - now
+                    );
+                }
+            }
+            LifecycleAction::Scheduled(DiagnosticAction::RefreshRetained) => {
+                let phase = gate.next_phase();
+                cs.set_high();
+                let result = sender.send(phase, &screen.pixels, true, |part| spi.write(part));
+                cs.set_low();
+                if result.is_err() {
+                    gate.transfer_failed();
+                    panic!("retained SPI failed; panel state unknown");
+                }
+                let done = uptime_us();
+                gate.transfer_succeeded(done, phase, true);
+            }
+            LifecycleAction::Scheduled(DiagnosticAction::IdleVcom) => {
+                let phase = gate.next_phase();
+                cs.set_high();
+                let result = sender.idle(phase, |part| spi.write(part));
+                cs.set_low();
+                if result.is_err() {
+                    gate.transfer_failed();
+                    panic!("idle SPI failed; panel state unknown");
+                }
+                gate.transfer_succeeded(uptime_us(), phase, false);
+            }
+            LifecycleAction::Scheduled(DiagnosticAction::Wait) => {}
+        }
+        last_loop = uptime_us();
+        // Independent of DNS, association, UDP and TLS awaits; CPU-bound TLS
+        // steps in the network task still delay this loop (measured above).
+        Timer::after(Wait::from_millis(5)).await;
+    }
+}
+
+enum QueryResult {
+    NoReply,
+    /// A matched reply; the observation if it was one.
+    Reply(Option<ScreenedObservation>),
+    KissOfDeath,
+}
+
+async fn query(
+    stack: Stack<'static>,
+    socket: &mut UdpSocket<'_>,
+    trng: &mut Trng,
+    server: &str,
+    seq: u32,
+) -> QueryResult {
+    let Ok(addrs) = stack.dns_query(server, DnsQueryType::A).await else {
+        println!("SNTP seq={seq} server={server} outcome=DnsFailed");
+        return QueryResult::NoReply;
+    };
+    let Some(addr) = addrs.first().copied() else {
+        return QueryResult::NoReply;
+    };
+    let peer = IpEndpoint::new(addr, 123);
+    let nonce = (u64::from(trng.random()) << 32) | u64::from(trng.random()) | 1;
+    let sent = uptime_us(); // before handing the request to the stack
+    let mut pending = Some(SntpRequest {
+        transmit: nonce,
+        sent_uptime_us: sent,
+    });
+    if socket
+        .send_to(&sntp_screen::request(nonce), peer)
+        .await
+        .is_err()
+    {
+        return QueryResult::NoReply;
+    }
+    let deadline = embassy_time::Instant::now() + REPLY_TIMEOUT;
+    let mut buffer = [0u8; 96];
+    loop {
+        let remaining = deadline.saturating_duration_since(embassy_time::Instant::now());
+        let Ok(Ok((len, meta))) = with_timeout(remaining, socket.recv_from(&mut buffer)).await
+        else {
+            println!("SNTP seq={seq} server={server} outcome=Timeout");
+            return QueryResult::NoReply;
+        };
+        let received = uptime_us(); // after the stack hands back the reply
+        if meta.endpoint != peer {
+            continue; // wrong peer: never forward to trust gate
+        }
+        let Some(rtt) = received.checked_sub(sent) else {
+            continue;
+        };
+        let capture =
+            sntp_screen::bracketing_capture_bound_us(rtt, PROTOTYPE_DRIFT_PPM).unwrap_or(u64::MAX);
+        let outcome = sntp_screen::screen(&mut pending, &buffer[..len], received, capture);
+        if pending.is_some() {
+            continue; // unmatched/short: still waiting for the correct reply
+        }
+        println!("SNTP seq={seq} server={server} outcome={outcome:?}");
+        EVENTS.send(outcome).await;
+        return match outcome {
+            SntpOutcome::KissOfDeath(_) => QueryResult::KissOfDeath,
+            SntpOutcome::Observation(o) => QueryResult::Reply(Some(o)),
+            _ => QueryResult::Reply(None),
+        };
+    }
+}
+
+#[embassy_executor::task]
+async fn connection(mut controller: WifiController<'static>) {
+    loop {
+        match controller.connect_async().await {
+            Ok(_) => {
+                println!("SNTP_WIFI connected");
+                let _ = controller.wait_for_disconnect_async().await;
+                println!("SNTP_WIFI disconnected");
+            }
+            Err(e) => println!("SNTP_WIFI connect_failed {e:?}"),
+        }
+        Timer::after(Wait::from_secs(5)).await;
+    }
+}
+
+#[embassy_executor::task]
+async fn net(mut runner: Runner<'static, Interface>) {
+    runner.run().await
+}
+
+#[panic_handler]
+fn panic(info: &PanicInfo<'_>) -> ! {
+    println!("OVERHEAD_S3_LIVE_FETCH_RADAR_FAILED: {info}");
+    loop {
+        core::hint::spin_loop();
+    }
+}

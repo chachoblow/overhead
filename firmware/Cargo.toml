@@ -53,6 +53,9 @@ element-fetch = ["overhead-core/catalogue", "dep:serde_json"]
 # 0071 slice 2+: display-free one-request STATIONS fetch over TLS (mbedtls-rs,
 # prebuilt MbedTLS) after one screened SNTP observation. Never the device app.
 live-fetch = ["live-sntp", "element-fetch", "embassy-net/tcp", "esp-alloc/internal-heap-stats", "dep:mbedtls-rs"]
+# 0074: live-UTC radar with BOOT capture on freshly fetched STATIONS elements
+# (one request per boot, certificate dates checked). Not the device app.
+live-fetch-radar = ["live-utc-boot", "live-fetch"]
 # Separately named pinned-OMM visibility diagnostic; original source path retained.
 live-utc-fresh-iss = ["live-utc-radar"]
 
@@ -219,6 +222,13 @@ bench = false
 name = "overhead-s3-live-fetch"
 path = "src/live_fetch_main.rs"
 required-features = ["live-fetch"]
+test = false
+bench = false
+
+[[bin]]
+name = "overhead-s3-live-fetch-radar"
+path = "src/live_fetch_radar_main.rs"
+required-features = ["live-fetch-radar"]
 test = false
 bench = false
 

@@ -34,10 +34,10 @@ boot, no retry, a few boots per 2 h. No toolchain/machine change. Existing image
 - Panel observation: at the end.
 
 ## Plan
-- [ ] app: `RadarApp::awaiting_catalogue` + `load_catalogue` (empty state); tests
-- [ ] render: `NO DATA` for an empty catalogue (wide notice, square panel); tests
-- [ ] firmware `tls_dates`: TLS 1.2 handshake capture parser + DER validity; chain fixtures; tests
-- [ ] firmware image `live-fetch-radar` (feature, bin): network task SNTP→fetch→ingest→channel;
+- [x] app: `RadarApp::awaiting_catalogue` + `load_catalogue` (empty state); tests
+- [x] render: `NO DATA` for an empty catalogue (wide notice, square panel); tests
+- [x] firmware `tls_dates`: TLS 1.2 handshake capture parser + DER validity; chain fixtures; tests
+- [x] firmware image `live-fetch-radar` (feature, bin): network task SNTP→fetch→ingest→channel;
       recording stream adapter; display loop gap metric; BOOT capture
 - [ ] build, clippy, gate; flash; one-boot capture
 - [ ] predict pass windows; user observation
@@ -57,6 +57,11 @@ boot, no retry, a few boots per 2 h. No toolchain/machine change. Existing image
 - Fetch UTC comes from the network task's own screened observation (as `live-fetch`).
 
 ## Verification
+- 1efaba8: `cargo check --workspace`, `cargo test --workspace` (321 passed), fmt; firmware host
+  `--features element-fetch` 38 passed.
+- Dummy-credential `live-fetch-radar` release build: image 1,333,392 B (16.0% of app partition),
+  .bss 250,208 B incl. 160 KiB heap; only the existing RWX warning; clippy: only lib warnings and
+  the `deref_addrof` pattern shared with the live-UTC images; offline gate passed.
 
 ## Open questions
 - Observer site: keep the historical equatorial-Pacific site, or a user location later?
