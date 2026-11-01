@@ -79,11 +79,89 @@ impl CompletedPress {
         app: &mut overhead_app::RadarApp,
     ) -> bool {
         let completed = self.sample(now_us, pressed);
-        if completed && app.time().is_some() {
-            app.select_next();
-        }
+        apply_presses(u16::from(completed), app);
         completed
     }
+}
+
+/// Interrupt-side half of [0070]: periodic samples feed [`CompletedPress`] and
+/// completed presses accumulate until the display loop takes them. It owns no
+/// GPIO, timer, app or panel; the caller shares it under a critical section.
+///
+/// [0070]: ../../docs/decisions/0070-boot-input-capture-independent-of-render.md
+#[derive(Clone, Copy, Debug)]
+pub struct PressLatch {
+    filter: CompletedPress,
+    pending: u16,
+    stats: SampleStats,
+    last_us: Option<u64>,
+}
+
+/// Sampling evidence since the last [`PressLatch::take_stats`]; diagnostics only.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct SampleStats {
+    pub samples: u32,
+    /// Largest spacing between consecutive samples (0 before two samples).
+    pub max_gap_us: u64,
+}
+
+impl PressLatch {
+    pub const fn new(debounce_us: u64) -> Option<Self> {
+        match CompletedPress::new(debounce_us) {
+            Some(filter) => Some(Self {
+                filter,
+                pending: 0,
+                stats: SampleStats {
+                    samples: 0,
+                    max_gap_us: 0,
+                },
+                last_us: None,
+            }),
+            None => None,
+        }
+    }
+
+    /// Feed one sample. Completed presses saturate rather than wrap; the
+    /// drain runs every loop iteration, so saturation is not expected.
+    pub fn sample(&mut self, now_us: u64, pressed: bool) {
+        if let Some(last) = self.last_us {
+            let gap = now_us.saturating_sub(last);
+            self.stats.max_gap_us = self.stats.max_gap_us.max(gap);
+        }
+        self.last_us = Some(now_us);
+        self.stats.samples = self.stats.samples.saturating_add(1);
+        if self.filter.sample(now_us, pressed) {
+            self.pending = self.pending.saturating_add(1);
+        }
+    }
+
+    /// Completed presses since the last take; resets the count.
+    pub fn take_presses(&mut self) -> u16 {
+        core::mem::take(&mut self.pending)
+    }
+
+    /// Sample count and largest gap since the last take; resets both. The gap
+    /// spanning the take is still measured in the next window.
+    pub fn take_stats(&mut self) -> SampleStats {
+        core::mem::take(&mut self.stats)
+    }
+}
+
+/// Display-side half of 0070, applying [0068] to drained presses: each one
+/// advances the selection once when a valid frame exists; otherwise all are
+/// consumed, not queued. Validity is judged at drain time. Returns the number
+/// of selections applied.
+///
+/// [0068]: ../../docs/decisions/0068-boot-selection-gesture.md
+#[cfg(feature = "sharp-radar")]
+pub fn apply_presses(presses: u16, app: &mut overhead_app::RadarApp) -> u16 {
+    if app.time().is_none() {
+        return 0;
+    }
+    for _ in 0..presses {
+        app.select_next();
+    }
+    presses
 }
 
 #[cfg(test)]
@@ -435,6 +513,119 @@ mod tests {
             missed_60 |= p60 == 0;
         }
         assert!(missed_60, "a 60 ms press must be missable in this model");
+    }
+
+    // 0070 capture: a 5 ms periodic sampler feeds PressLatch regardless of
+    // render/SPI; the display loop drains it at its own (sparse) boundaries.
+    fn latch_counts(drain_at: &[u64], end: u64, pressed: impl Fn(u64) -> bool) -> u16 {
+        let mut latch = PressLatch::new(D).unwrap();
+        let mut drains = drain_at.iter().copied().peekable();
+        let mut total = 0;
+        for t in regular(5_000, end) {
+            while drains.next_if(|&d| d <= t).is_some() {
+                total += latch.take_presses();
+            }
+            latch.sample(t, pressed(t));
+        }
+        total + latch.take_presses()
+    }
+
+    #[test]
+    fn latch_keeps_taps_the_polling_loop_misses_or_merges() {
+        // Same press shapes as the polling-gap tests, but sampled every 5 ms
+        // and drained only around a 52.4 ms blocking transfer.
+        let (gap_at, gap) = (1_000_000, 52_400);
+        let drains = [gap_at, gap_at + gap, 2_000_000];
+        let a = gap_at + 1;
+        let hidden = |t: u64| (a..a + 30_000).contains(&t);
+        assert_eq!(events(with_gap(gap_at, gap, 2_000_000), hidden), 0);
+        assert_eq!(latch_counts(&drains, 2_000_000, hidden), 1);
+        let taps = |t: u64| {
+            (gap_at - 30_000..gap_at + 10_000).contains(&t)
+                || (gap_at + 40_000..gap_at + gap + 40_000).contains(&t)
+        };
+        assert_eq!(events(with_gap(gap_at, gap, 2_000_000), taps), 1);
+        assert_eq!(latch_counts(&drains, 2_000_000, taps), 2);
+    }
+
+    #[test]
+    fn latch_25_ms_guarantee_holds_with_sparse_or_absent_drains() {
+        // Drains every 190 ms (uncached redraw + transfer) or only at the end.
+        let sparse: [u64; 20] = core::array::from_fn(|k| k as u64 * 190_000);
+        for drains in [&sparse[..], &[]] {
+            for phase in (0..5_000).step_by(250) {
+                let a = 1_000_000 + phase;
+                let end = a + 400_000;
+                let press = |t: u64| (a..a + 25_000).contains(&t);
+                assert_eq!(latch_counts(drains, end, press), 1, "phase={phase}");
+                // Three 25 ms taps, 25 ms apart, all land in one drain window.
+                let three =
+                    |t: u64| (0..3).any(|k| (a + k * 50_000..a + k * 50_000 + 25_000).contains(&t));
+                assert_eq!(latch_counts(drains, end, three), 3, "phase={phase}");
+            }
+        }
+        // Worst alignment for a 24.999 ms press stays missable, never doubled.
+        let a = 1_000_001;
+        assert_eq!(
+            latch_counts(&[], 1_400_000, |t| (a..a + 24_999).contains(&t)),
+            0
+        );
+    }
+
+    #[test]
+    fn latch_take_resets_and_saturates_without_wrapping() {
+        let mut latch = PressLatch::new(10).unwrap();
+        assert!(PressLatch::new(0).is_none());
+        assert_eq!(latch.take_stats(), SampleStats::default());
+        latch.sample(0, false);
+        latch.sample(5, true);
+        latch.sample(15, true);
+        latch.sample(40, false);
+        latch.sample(50, false);
+        assert_eq!(latch.take_presses(), 1);
+        assert_eq!(latch.take_presses(), 0);
+        assert_eq!(
+            latch.take_stats(),
+            SampleStats {
+                samples: 5,
+                max_gap_us: 25
+            }
+        );
+        latch.sample(53, false);
+        assert_eq!(latch.take_stats().max_gap_us, 3, "gap spanning a take");
+        latch.pending = u16::MAX;
+        latch.sample(54, true);
+        latch.sample(64, true);
+        latch.sample(65, false);
+        latch.sample(75, false);
+        assert_eq!(latch.take_presses(), u16::MAX);
+    }
+
+    #[cfg(feature = "sharp-boot-cycle")]
+    #[test]
+    fn drained_presses_each_advance_and_invalid_frame_consumes_all() {
+        let mut app = crate::coast_measurement::boot_cycle_app();
+        let ids: alloc::vec::Vec<_> = app
+            .markers()
+            .map(|(entry, _, _)| entry.elements().norad_id)
+            .collect();
+        assert!(ids.len() > 2, "historical scene must exercise cycling");
+        assert_eq!(app.selected_id(), Some(ids[0]));
+        assert_eq!(apply_presses(0, &mut app), 0);
+        assert_eq!(app.selected_id(), Some(ids[0]));
+        assert_eq!(apply_presses(2, &mut app), 2);
+        assert_eq!(app.selected_id(), Some(ids[2]));
+        let time = app.time().unwrap();
+        app.invalidate_frame();
+        assert_eq!(apply_presses(3, &mut app), 0);
+        app.update(time).unwrap();
+        // Not queued: recovery matches a twin that never saw the 3 presses.
+        let mut twin = crate::coast_measurement::boot_cycle_app();
+        apply_presses(2, &mut twin);
+        twin.invalidate_frame();
+        twin.update(time).unwrap();
+        assert_eq!(app.selected_id(), twin.selected_id());
+        assert!(app.selected_id().is_some());
     }
 
     #[test]

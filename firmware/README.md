@@ -806,6 +806,54 @@ production cadence or live UTC. Raw UART is an ignored local artifact. The
 board now runs this historical diagnostic, not the live-UTC image. Further
 board access/reset/flash requires separate authorization.
 
+## Interrupt-sampled BOOT capture diagnostic (flashed; user tap session)
+
+`overhead-s3-sharp-boot-capture` (`--features sharp-boot-capture`) implements
+[0070](../docs/decisions/0070-boot-input-capture-independent-of-render.md) on
+the same fixed historical scene as the polling image above, which stays
+unchanged for comparison. A 5 ms TIMG0 periodic interrupt samples GPIO0 into
+`button_input::PressLatch` (the same `CompletedPress` filter, provisional
+20 ms). The display loop drains completed presses at its boundary and applies
+[0068](../docs/decisions/0068-boot-selection-gesture.md) via `apply_presses`:
+each drained press advances the selection once on a valid frame. The interrupt
+shares only the timer, pin and latch under a critical section and never
+touches the app, renderer or panel. It needs `esp-hal/unstable` (the timer
+module) and a direct `critical-section` dependency, which was already locked
+transitively. TIMG0 is free because this image has no esp-rtos or Wi-Fi.
+
+UART lines: `BOOT_CAPTURE_READY …`, one `BOOT_CAPTURE drained=N applied=N
+selected=…` per non-empty drain, and every 10 s `BOOT_CAPTURE_STATS samples=N
+max_gap_us=G` (expect about 2000 samples; a UART `println` holds a critical
+section and can delay one sample).
+
+```sh
+cargo build --release --locked --bin overhead-s3-sharp-boot-capture \
+  --features sharp-boot-capture
+ELF=target/xtensa-esp32s3-none-elf/release/overhead-s3-sharp-boot-capture
+espflash save-image --chip esp32s3 --flash-size 8mb --flash-mode dio \
+  --flash-freq 40mhz --skip-update-check "$ELF" target/sharp-boot-capture.bin
+python3 image_gate.py "$ELF" target/sharp-boot-capture.bin
+```
+
+2026-11-01 UTC (devbox build, not byte-identical to any Mac build): host
+tests, release build and the offline gate passed (ELF SHA-256
+`f23982a6f97831361976b7c680ff920dc27fc44acd7a732516c69f798ad3eff7`, image
+`ca1bb5f1ce1312db01a5af95767012b10ee4cbb16b4863de70ba7a7aaeaa0bf6`). Flashed to
+the MAC-confirmed board on `/dev/ttyUSB0`. A 25 s reset capture with no presses
+logged `visible=4 selected=Some(19548)`, then `samples=2000 max_gap_us=5045` and
+`samples=2010 max_gap_us=5001`. Each window spanned about twenty 500 ms VCOM
+transfers, so the interrupt kept sampling during blocking SPI. Same day, a 90 s
+reset capture while the user pressed deliberately, quick-tapped, double-tapped
+and tapped right after each visible change (plus some extra presses) logged
+23 `drained=1 applied=1` lines. The selection advanced in order around the 4
+visible IDs with no skip or repeat. Sampling stayed at 2000–2026 per 10 s with
+`max_gap_us` ≤ 5050 during the press-triggered redraws. The user reported
+**every press moved the selection**, and the 23 events were reasonable for the
+presses made. The press total was not counted exactly and the log has no
+timestamps, so this rules out obvious misses, not an exact one-to-one match.
+No drain held more than one press, so multi-press drains remain host-tested
+only. Press durations, latency and live-UTC behavior are not measured.
+
 ## Opt-in BOOT selection on the live-UTC diagnostic (flashed; event capture)
 
 The `live-utc-boot` feature adds active-low GPIO0 BOOT sampling to the existing

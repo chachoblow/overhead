@@ -22,6 +22,9 @@ sharp-test = []
 sharp-radar = ["sharp-test", "coast-prepared"]
 # Distinct fixed-historical multi-OMM BOOT cycling diagnostic; not the live app.
 sharp-boot-cycle = ["sharp-radar"]
+# Same historical BOOT scene, but GPIO0 is sampled by a 5 ms TIMG0 interrupt
+# independent of render/SPI (0070). Separate ELF; the polling image is unchanged.
+sharp-boot-capture = ["sharp-boot-cycle", "esp-hal/unstable", "dep:critical-section"]
 # Separate deterministic short-loop radar replay; does not replace the static image.
 sharp-replay = ["sharp-radar"]
 # Separate display-cost diagnostic; shares the accepted replay, never frozen images.
@@ -75,6 +78,9 @@ embassy-executor = { version = "0.10.0", optional = true }
 embassy-net = { version = "0.9", features = ["dhcpv4", "medium-ethernet", "udp", "dns", "proto-ipv4"], optional = true }
 embassy-time = { version = "0.5.0", optional = true }
 static_cell = { version = "2.1.0", optional = true }
+# sharp-boot-capture only: share the timer/pin/latch with the sampling
+# interrupt. Already locked via esp-hal/esp-println; esp-hal provides the impl.
+critical-section = { version = "=1.2.0", optional = true }
 # Reuses embassy-net's already-locked version; bounded cross-task SNTP events.
 embassy-sync = { version = "=0.8.0", optional = true }
 
@@ -135,6 +141,13 @@ bench = false
 name = "overhead-s3-sharp-boot-cycle"
 path = "src/sharp_boot_cycle_main.rs"
 required-features = ["sharp-boot-cycle"]
+test = false
+bench = false
+
+[[bin]]
+name = "overhead-s3-sharp-boot-capture"
+path = "src/sharp_boot_capture_main.rs"
+required-features = ["sharp-boot-capture"]
 test = false
 bench = false
 

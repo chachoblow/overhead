@@ -1,7 +1,10 @@
 # 0070 — Capture BOOT input independently of render/SPI
 
 Date: 2026-11-01
-Status: accepted direction (user, 2026-11-01); implementation not yet authorized
+Status: accepted (user, 2026-11-01); implemented as the opt-in
+`sharp-boot-capture` diagnostic; physical tap session passed 2026-11-01
+([capture](../../firmware/README.md#interrupt-sampled-boot-capture-diagnostic-flashed-user-tap-session)).
+Not yet adopted in the live-UTC image.
 
 ## Problem
 
