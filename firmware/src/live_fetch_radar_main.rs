@@ -584,6 +584,7 @@ async fn display(
         }
         if was_fetching && !fetching {
             println!("DISPLAY_FETCH_GAP max_loop_gap_us={fetch_max_us}");
+            fetch_max_us = 0; // per fetch, not since boot
         }
         was_fetching = fetching;
         while let Ok(event) = EVENTS.try_receive() {
