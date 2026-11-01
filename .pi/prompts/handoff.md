@@ -18,7 +18,8 @@ there is ambiguity or a concern. Do not start a new implementation slice.
    why Rust checks were not rerun. Never pass off prior verification as new.
    Fix in-scope failures and rerun; stop before commit/push for unresolved
    failures, unavailable required checks, suspected secrets, or other concerns.
-   Never flash hardware or change toolchains without explicit approval. Keep
+   Never change toolchains without explicit approval (flashing is allowed per
+   docs/decisions/0069). Keep
    frozen M2 evidence isolated per AGENTS.md; don't refresh it to hide drift.
 
 ## Preserve resumable context

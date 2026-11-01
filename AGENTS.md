@@ -31,16 +31,22 @@ past context.
 ## Commands
 - Check: `cargo check --workspace`
 - Test: `cargo test --workspace`
-- Simulator: `cargo run -p overhead-sim -- --demo` (historical replay; opens an SDL2 window; needs Homebrew
-  SDL2, linker path set in .cargo/config.toml)
+- Simulator: `cargo run -p overhead-sim -- --demo` (historical replay; opens an SDL2 window; needs SDL2: Homebrew
+  on macOS with the linker path in .cargo/config.toml, `libsdl2-dev` on Linux).
+  The devbox host is headless: use `--snapshot` there, not the window.
 - Firmware build: `cd firmware && . "$HOME/export-esp.sh" && cargo build --release --locked`
+- UART port: `/dev/cu.usbserial-*` on macOS, `/dev/ttyUSB*` or `/dev/ttyACM*` on Linux.
+  Commands in docs that name a macOS port are historical; substitute the verified port.
 - Firmware host tests (from repo root): `cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked`
 
 Frozen M2 evidence gates require the pinned source revision, not the evolving
 workspace lockfile: follow docs/evaluations/s3-m2/README.md. Current simulator
 verification is separate; never refresh the historical freeze to hide drift.
 
-Never flash hardware or change the toolchain without asking first.
+Flashing, resetting and capturing from the S3 need no approval
+([0069](docs/decisions/0069-flash-without-per-flash-approval.md)); still
+confirm the port and run the image's offline gate. Never change the toolchain
+without asking first.
 
 ## Rules
 - Rendering and orbit logic live in platform-agnostic crates; the simulator

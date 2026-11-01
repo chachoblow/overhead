@@ -51,7 +51,8 @@ verification provenance in the [fixture README](../core/tests/fixtures/README.md
   booted on the S3 and the user confirmed the alternating pattern on the physical
   #4694 panel. This is not radar integration or whole-device cadence evidence.
 
-Ask before flashing or changing toolchains. Simulator work need not wait for
+Flashing needs no approval ([0069](decisions/0069-flash-without-per-flash-approval.md));
+ask before changing toolchains. Simulator work need not wait for
 hardware; the first S3 kernel baseline alone does not justify capacity or cadence.
 
 ## M2 — Catalogue, pass prediction, and operating budget

@@ -2,7 +2,8 @@
 
 400×240, 1-bit real-data radar replay. The SDL window uses the LcdWhite theme
 at 2×; rendering and clockless application state live in `overhead-render` and
-`overhead-app`, not in SDL. Requires the existing Homebrew SDL2/linker setup.
+`overhead-app`, not in SDL. Requires SDL2: the existing Homebrew/linker setup on macOS, or `libsdl2-dev`
+on Linux. On a headless host, use `--snapshot`; the window needs a display.
 
 ## Run
 
