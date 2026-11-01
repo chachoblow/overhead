@@ -67,3 +67,15 @@ parser and ingestion. Public data; not a radar input or any image's catalogue.
 
 Do not refresh it: tests assert its length, records and epoch range. A new
 download is a new, separately named fixture.
+
+## `celestrak-chain-20261101/`
+
+The three DER certificates `celestrak.org` served on 2026-11-01 UTC, captured
+from devbox with one handshake-only `openssl s_client -connect celestrak.org:443
+-servername celestrak.org -tls1_2 -showcerts` (no HTTP request), converted with
+`openssl x509 -outform der`: `leaf.der` (CN=celestrak.org, 2026-05-27 to
+2026-12-11), `dv-r36.der` (Sectigo Public Server Authentication CA DV R36,
+2021-03-22 to 2036-03-21) and `r46-by-usertrust.der` (Sectigo Public Server
+Authentication Root R46 cross-signed by USERTrust, 2021-03-22 to 2038-01-18).
+Public certificates; used only by the `tls_dates` host tests (0074). The leaf
+rotates by 2026-12-11; the tests pin explicit times, so they do not expire.

@@ -1,5 +1,5 @@
 # Live-UTC radar tracking freshly fetched STATIONS elements
-Status: active
+Status: blocked: user panel observation 2026-11-01 16:57:30–17:07:30 UTC (background UART capture 16:50–17:12 resets the board once)
 Started: 2026-11-01. Scope: PLAN M6 "Wi-Fi credentials, HTTPS elements…" (proposal slice 4);
 decisions [0071](../decisions/0071-https-element-fetch-first-slice.md),
 [0073](../decisions/0073-diagnostic-fetch-without-certificate-dates.md), 0067, 0068, 0070.
@@ -39,8 +39,9 @@ boot, no retry, a few boots per 2 h. No toolchain/machine change. Existing image
 - [x] firmware `tls_dates`: TLS 1.2 handshake capture parser + DER validity; chain fixtures; tests
 - [x] firmware image `live-fetch-radar` (feature, bin): network task SNTP→fetch→ingest→channel;
       recording stream adapter; display loop gap metric; BOOT capture
-- [ ] build, clippy, gate; flash; one-boot capture
-- [ ] predict pass windows; user observation
+- [x] build, clippy, gate; flash; one-boot capture (run2 15:44 UTC; README section)
+- [x] predict pass windows (scratch host predictor, pinned STATIONS fixture)
+- [ ] user observation + pass capture
 - [ ] decision 0074, README evidence, PLAN/HANDOFF/PROGRESS; delete this file
 
 ## Discoveries and assumptions
@@ -62,6 +63,11 @@ boot, no retry, a few boots per 2 h. No toolchain/machine change. Existing image
 - Dummy-credential `live-fetch-radar` release build: image 1,333,392 B (16.0% of app partition),
   .bss 250,208 B incl. 160 KiB heap; only the existing RWX warning; clippy: only lib warnings and
   the `deref_addrof` pattern shared with the live-UTC images; offline gate passed.
+
+- Board run1 15:40 UTC: stack-guard panic before DNS (StaticCell::init on stack); no request.
+- Board run2 15:44 UTC: full success (see firmware README section); request #2 of the window.
+- Predicted windows (60° FOV, fixed site): 16:57:30–17:07:30 UTC, CSS complex 48274, 53239,
+  54216, 69049, 69180 all in view; 18:38:30–18:40; 01:02–01:14 (9); 02:30–02:47 (10).
 
 ## Open questions
 - Observer site: keep the historical equatorial-Pacific site, or a user location later?

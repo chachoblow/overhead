@@ -1316,6 +1316,55 @@ in software (no `EspAccel`). The heap peak exceeds the live-UTC radar image's
 is one boot on one network: not repeated-run, failure-path, long-run or
 date-check evidence.
 
+## Live-UTC radar on fetched STATIONS (flashed; UART captures)
+
+The opt-in `live-fetch-radar` feature builds `overhead-s3-live-fetch-radar`
+(`src/live_fetch_radar_main.rs`) under
+[0074](../docs/decisions/0074-live-utc-radar-on-fetched-elements.md): the
+live-UTC wide radar with BOOT interrupt capture (0068/0070), starting with **no
+elements** (`NO FRAME`, then `NO DATA`). After the first SNTP observation
+within 100 ms it makes **one** STATIONS request, checks every served
+certificate's validity dates against that UTC (`tls_dates`) before sending the
+GET, and hands the catalogue to the display owner. Fixed site
+`LIVE_UTC_ISS_OBSERVER`, 60° vertical FOV, 160 KiB heap. No retry,
+persistence or refresh; each boot is one CelesTrak request. It prints the
+`FETCH_*` lines of `live-fetch` plus `FETCH_CERT_DATES`, `STACK_WATERMARK`
+(CPU0 stack written depth through the fetch), `DISPLAY_FETCH_GAP` (longest
+display-loop gap while the fetch ran), `LIVE_FETCH loaded` and periodic
+`BOOT_CAPTURE_STATS` with catalogue/sky/view counts and the selection.
+
+Build, gate, flash and capture exactly as for `live-fetch` (one command, so
+one boot), with `--bin overhead-s3-live-fetch-radar --features live-fetch-radar`.
+A dummy-credential build was 1,333,392 B (16.0% of the app partition), `.bss`
+250,208 B including the heap; only the existing RWX warning; the gate passed.
+That leaves **~21.7 KiB of CPU0 stack** (the fetch-only image has ~65 KiB).
+The first board run overflowed it (stack guard panic after the first SNTP
+observation, before DNS, so no request) because `StaticCell::init([0; N])`
+built the 18 KiB response buffer on the stack; the buffers are now
+`ConstStaticCell` statics.
+
+2026-11-01 15:44 UTC, devbox, `/dev/ttyUSB0` (MAC `80:45:6b:2a:45:08`, gate
+passed), one boot:
+
+| Stage | Result |
+|---|---|
+| Trusted UTC | first Cloudflare observation accepted, `U0` 29.1 ms, ~11.9 s after boot |
+| TLS | 1.2, chain and hostname verified; TCP 46 ms, handshake **803 ms** (240 MHz CPU) |
+| Certificate dates | 3 served certificates, all valid at 2026-11-01T15:44:24Z; 5,435 B recorded; leaf `notAfter` 2026-12-11T23:59:59Z |
+| Transfer / catalogue | 8,691 B, HTTP 200, 20/20 accepted, 0 errors; epochs 2026-10-31T09:58:37Z – 2026-11-01T06:40:35Z |
+| Whole fetch | 1,387 ms; heap peak **111,116 B** of 163,840 B; stack written **6,880 B** of 21,696 B |
+| Display owner | longest loop gap during the fetch **452 ms** (8 frames skipped once), then 6–7 ms per 10 s window; BOOT sampling max gap 12.3 ms in the fetch window, ~5.2 ms after |
+| Radar | `catalogue=20 valid=true`; no object above the horizon at that time (`NONE ABOVE HORIZON`) |
+
+Steady-state frames at 60° take ~47–49 ms, so the 50 ms grid skips about one
+deadline per logged frame (cadence is deferred under 0060). The 452 ms stall
+is CPU-bound TLS work in the same executor: it stayed under the 500 ms idle
+VCOM interval in this run but is not a bound. Before trusted UTC the loop also
+stalls ~0.6 s at startup (coast preparation and Wi-Fi start), as in the other
+live-UTC images. This is one boot on one network, not repeated-run, failure-path
+(certificate, HTTP or parse), long-run or physical COM-edge evidence. Raw logs
+and credential-bearing images stay local.
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing

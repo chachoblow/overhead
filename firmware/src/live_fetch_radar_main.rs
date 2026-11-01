@@ -59,10 +59,10 @@ use overhead_s3_benchmark::{
     live_utc,
     sharp_lines::{Kind, LineSender},
     sntp_screen::{self, ScreenedObservation, SntpOutcome, SntpRequest},
-    tls_dates,
+    stack_watermark, tls_dates,
     utc_trust::{PROTOTYPE_DRIFT_PPM, UtcTrustPreflight},
 };
-use static_cell::StaticCell;
+use static_cell::{ConstStaticCell, StaticCell};
 
 esp_bootloader_esp_idf::esp_app_desc!();
 
@@ -97,10 +97,14 @@ static RX_META: StaticCell<[PacketMetadata; 4]> = StaticCell::new();
 static TX_META: StaticCell<[PacketMetadata; 4]> = StaticCell::new();
 static RX_BUF: StaticCell<[u8; 512]> = StaticCell::new();
 static TX_BUF: StaticCell<[u8; 512]> = StaticCell::new();
-static TCP_RX: StaticCell<[u8; 4096]> = StaticCell::new();
-static TCP_TX: StaticCell<[u8; 1024]> = StaticCell::new();
-static RESPONSE: StaticCell<[u8; element_fetch::MAX_RESPONSE]> = StaticCell::new();
-static CAPTURE: StaticCell<[u8; tls_dates::CAPTURE]> = StaticCell::new();
+// Const-initialized in .bss: `StaticCell::init([0; N])` would first build the
+// array on the stack, which overflowed the guard on the first board run.
+static TCP_RX: ConstStaticCell<[u8; 4096]> = ConstStaticCell::new([0; 4096]);
+static TCP_TX: ConstStaticCell<[u8; 1024]> = ConstStaticCell::new([0; 1024]);
+static RESPONSE: ConstStaticCell<[u8; element_fetch::MAX_RESPONSE]> =
+    ConstStaticCell::new([0; element_fetch::MAX_RESPONSE]);
+static CAPTURE: ConstStaticCell<[u8; tls_dates::CAPTURE]> =
+    ConstStaticCell::new([0; tls_dates::CAPTURE]);
 static TRNG: StaticCell<Trng> = StaticCell::new();
 // MbedTLS keeps its RNG for the program's lifetime; a second TRNG handle on the
 // same live source avoids sharing the network task's nonce generator.
@@ -124,6 +128,11 @@ fn heap_peak() -> usize {
 async fn main(spawner: Spawner) -> ! {
     let p = esp_hal::init(esp_hal::Config::default().with_cpu_clock(CpuClock::_240MHz));
     esp_alloc::heap_allocator!(size: HEAP_SIZE);
+    // This image's .bss leaves ~21 KiB of CPU0 stack (the fetch-only image
+    // had ~65 KiB), so record the written depth through the fetch.
+    // SAFETY: CPU0 linker stack, painted before the scheduler starts; esp-rtos
+    // threads (Wi-Fi) run on their own heap stacks. Scanned once, below.
+    let painted = unsafe { stack_watermark::paint() };
     let timg0 = TimerGroup::new(p.TIMG0);
     esp_rtos::start(timg0.timer0, p.FROM_CPU_INTR0);
     println!(
@@ -184,6 +193,7 @@ async fn main(spawner: Spawner) -> ! {
     );
     socket.bind(0).expect("SNTP UDP bind");
     let mut fetched = false;
+    let mut painted = Some(painted);
     let mut seq: u32 = 0;
     loop {
         stack.wait_config_up().await;
@@ -197,6 +207,15 @@ async fn main(spawner: Spawner) -> ! {
                     {
                         fetched = true; // one attempt per boot, whatever happens
                         fetch_once(stack, o).await;
+                        if let Some(painted) = painted.take() {
+                            // SAFETY: same CPU0 stack and boot as the paint.
+                            let w = unsafe { painted.scan() };
+                            println!(
+                                "STACK_WATERMARK observed_bytes={} stack_bytes={}",
+                                w.observed_bytes,
+                                w.stack_top - w.stack_low
+                            );
+                        }
                     }
                     break;
                 }
@@ -219,8 +238,8 @@ async fn main(spawner: Spawner) -> ! {
 async fn fetch_once(stack: Stack<'static>, utc: ScreenedObservation) {
     FETCHING.store(true, Ordering::Relaxed);
     let tls = Tls::new(TLS_TRNG.init(Trng::try_new().expect("TLS TRNG"))).expect("TLS context");
-    let response = RESPONSE.init([0; element_fetch::MAX_RESPONSE]);
-    let capture = CAPTURE.init([0; tls_dates::CAPTURE]);
+    let response = RESPONSE.take();
+    let capture = CAPTURE.take();
     let started = uptime_us();
     let result = with_timeout(FETCH_TIMEOUT, fetch(stack, &tls, response, capture, utc)).await;
     drop(tls);
@@ -286,7 +305,7 @@ async fn fetch(
         .await
         .map_err(|_| "stage=dns")?;
     let addr = *addrs.first().ok_or("stage=dns_empty")?;
-    let mut socket = TcpSocket::new(stack, TCP_RX.init([0; 4096]), TCP_TX.init([0; 1024]));
+    let mut socket = TcpSocket::new(stack, TCP_RX.take(), TCP_TX.take());
     socket.set_timeout(Some(Wait::from_secs(20)));
     let t0 = uptime_us();
     socket
