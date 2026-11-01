@@ -28,6 +28,7 @@ new implementation slice or an automatic session wrap-up.
    Follow AGENTS.md's document roles. Keep HANDOFF focused on resuming work,
    PLAN on scope/status, DESIGN on intent, decisions on rationale/contracts,
    and usage/provenance instructions near their owners. Code/tests own API detail.
+   Leave an active `docs/work/` file alone; it is the in-flight item's state.
 5. Preserve rationale, constraints, unresolved questions, rejected/unapproved
    directions that guard against accidental implementation, and verification
    limitations. Remove redundant wording, not unique meaning. Don't add a new

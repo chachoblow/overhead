@@ -4,6 +4,8 @@ Rust workspace for a handheld satellite radar. Hardware and interface intent
 live in docs/DESIGN.md.
 
 ## Start here
+0. docs/work/ — if it holds a file, that work item is in flight: read it
+   first and resume it (also after context compaction).
 1. docs/HANDOFF.md — where the last session left off
 2. docs/PLAN.md — the current milestone; stay inside it
 3. docs/DESIGN.md — product and interface intent
@@ -11,6 +13,14 @@ live in docs/DESIGN.md.
 docs/decisions/ holds settled choices. Don't reverse one silently; propose a
 new decision instead. docs/PROGRESS.md is history; read it only when you need
 past context.
+
+## Work items
+Work is taken on as outcome-sized work items, not implementation steps
+([0072](docs/decisions/0072-outcome-sized-work-items.md)). The implementing
+agent writes and keeps its own plan in `docs/work/<slug>.md` and continues
+through all steps until the outcome is verified or genuinely blocked; the stop
+conditions are in .pi/prompts/work.md. Don't pause for routine confirmation or
+progress reports. Handoffs normally happen when a work item completes.
 
 ## Workspace
 - `core/` → `overhead-core`: ingestion, propagation, coordinates, observer geometry,
@@ -59,8 +69,10 @@ without asking first.
   and related crates change quickly.
 - Keep each doc focused: HANDOFF = next-session context, PLAN = scope/status,
   DESIGN = product intent, decisions = rationale/contracts, fixture README =
-  provenance/regeneration. Link rather than repeat; code/tests own API details.
+  provenance/regeneration, docs/work = one in-flight item's plan and state
+  (deleted on completion). Link rather than repeat; code/tests own API details.
 - When asked what's next: follow .pi/prompts/next.md (recommend, don't implement).
+- When asked to do, start or continue a work item: follow .pi/prompts/work.md.
 - When asked to audit, clean up or consolidate documentation: follow
   .pi/prompts/docs-cleanup.md; preserve history and ask about substantive ambiguity.
 - When asked to wrap up or prepare a fresh-session handoff: follow

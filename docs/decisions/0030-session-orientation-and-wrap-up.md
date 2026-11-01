@@ -1,7 +1,7 @@
 # 0030 — Session orientation and wrap-up
 
 Date: 2026-10-13
-Status: accepted
+Status: accepted; execution workflow extended by [0072](0072-outcome-sized-work-items.md)
 
 ## Decision
 Use `.pi/prompts/next.md` for next-task recommendations and

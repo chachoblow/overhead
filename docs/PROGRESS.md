@@ -625,3 +625,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Shortened the default reading path (HANDOFF+PLAN+DESIGN 1,122 → ~590 lines): PLAN status/M3/M4 coastline/M6 narratives condensed with links; DESIGN's repeated acceptance history trimmed.
 - Moved DESIGN's mock provenance verbatim to [mockups/glyph-and-notice-references.md](mockups/glyph-and-notice-references.md), keeping DESIGN anchors so decision links resolve; moved devbox flash hashes from HANDOFF to the firmware README.
 - User clarified knob hardware is in roadmap scope (PLAN Boundaries updated, matching 0060). Docs-only: link/anchor script and `git diff --check` clean; no Rust checks rerun.
+
+## 2026-11-01 UTC (outcome-sized work items)
+- Accepted [0072](decisions/0072-outcome-sized-work-items.md) at the user's request: work is taken on as independently verifiable work items, not session-sized slices; the agent keeps its plan and state in `docs/work/<slug>.md` and continues until verified or genuinely blocked.
+- Added `.pi/prompts/work.md` (execution, stop conditions, promotion on completion); adjusted AGENTS.md, next/handoff/docs-cleanup prompts and one PLAN line; 0030 annotated as extended. No roadmap, milestone or code change.
+- Docs-only: `git diff --check` and local link check clean; no Rust checks rerun.

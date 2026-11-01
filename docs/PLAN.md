@@ -6,7 +6,8 @@ slice is M6 HTTPS element fetch under [0071](decisions/0071-https-element-fetch-
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
-Refine each slice before starting; later checkboxes are scope, not session-sized tasks.
+Checkboxes are scope; work is taken on as outcome-sized work items under
+[0072](decisions/0072-outcome-sized-work-items.md), tracked in `docs/work/` while active.
 Unless noted, each interface slice below was contract-approved, separately
 authorized, implemented, and then accepted by the user on fresh executable
 output, separately from mocks and host checks.

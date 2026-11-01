@@ -3,7 +3,9 @@ description: Verify, prepare a fresh-session handoff, then commit and push
 ---
 The session is ending. Make the repository ready for a fresh session, then
 commit and push the session's changes. Proceed without another approval unless
-there is ambiguity or a concern. Do not start a new implementation slice.
+there is ambiguity or a concern. Do not start a new work item. Handoffs
+normally follow a completed work item (`.pi/prompts/work.md`); a session may
+also end mid-item, in which case its work file carries the detail.
 
 ## Review and verify
 1. Read AGENTS.md and the current HANDOFF/PLAN/DESIGN. Inspect Git status,
@@ -24,11 +26,18 @@ there is ambiguity or a concern. Do not start a new implementation slice.
 
 ## Preserve resumable context
 3. Update docs/HANDOFF.md (aim for ≤40 lines): current state, brief session
-   changes with file paths, one concrete next step, unresolved decisions/risks,
+   changes with file paths, the active work item (link its docs/work file and
+   status) or else the recommended next work item, unresolved decisions/risks,
    and exact verification status/limitations. Preserve still-relevant context
    from earlier sessions. Distinguish implemented, agreed, and unapproved work.
    Link to contracts/usage; a new session must not need this chat or /tmp files.
-4. Append a dated 3–5 line entry to docs/PROGRESS.md. Check off genuinely
+   Don't copy a work file's plan or log into HANDOFF.
+   - Item completed: confirm work.md step 9's promotion is done and the work
+     file is deleted.
+   - Item unfinished: make sure its work file is current (status, next step,
+     open gates) and included in the commit.
+4. Append a dated 3–5 line entry to docs/PROGRESS.md: outcomes and
+   verification, not step history. Check off genuinely
    finished items in docs/PLAN.md; leave it unchanged if milestone status did
    not change. Record settled choices in docs/decisions/NNNN-<slug>.md using
    the template. Update other docs only when their contracts/usage changed.
