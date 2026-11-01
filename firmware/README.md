@@ -1361,9 +1361,25 @@ deadline per logged frame (cadence is deferred under 0060). The 452 ms stall
 is CPU-bound TLS work in the same executor: it stayed under the 500 ms idle
 VCOM interval in this run but is not a bound. Before trusted UTC the loop also
 stalls ~0.6 s at startup (coast preparation and Wi-Fi start), as in the other
-live-UTC images. This is one boot on one network, not repeated-run, failure-path
-(certificate, HTTP or parse), long-run or physical COM-edge evidence. Raw logs
-and credential-bearing images stay local.
+live-UTC images.
+
+**User-observed pass, 2026-11-01.** A host predictor (pinned STATIONS fixture,
+same site and FOV) put the CSS complex (48274, 53239, 54216, 69049, 69180) in
+view 16:57:30–17:07:30 UTC. A fresh boot at 16:50 UTC (CelesTrak request 3 of
+that 2-hour window) fetched again: TLS 1.2, handshake **2,171 ms**, certificate
+dates OK (3 certificates), HTTP 200, 20/20 accepted, whole fetch 5,431 ms, heap
+peak 111,068 B, stack written 6,880 B, longest display-loop gap during the fetch
+**450 ms**. The 10 s stats reported `sky=5 view=5` from about 16:57 to 17:07 UTC
+(within their 10 s resolution), `sky=0` otherwise. The user saw the markers
+appear and move across the view and then `NONE ABOVE HORIZON` return. Ten BOOT
+presses (two full cycles) each changed the selected ID
+(`48274 → 53239 → 54216 → 69049 → 69180 → 48274`, all `applied=1 valid=true`;
+BOOT max sampling gap ~5.2–5.9 ms after the fetch). The user saw nothing odd.
+This is the first **live-UTC visible cycling** and the first fetched elements on
+the panel. It is not location accuracy (fixed historical site), repeated-run,
+failure-path (certificate, HTTP or parse), long-run or physical COM-edge
+evidence. Handshake time varied 0.8–2.2 s across these runs. Raw logs and
+credential-bearing images stay local.
 
 ## Hardware and permission
 

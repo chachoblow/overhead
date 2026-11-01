@@ -3,6 +3,8 @@
 Date: 2026-11-01
 Status: accepted (user, 2026-11-01). Amends item 4 of
 [0071](0071-https-element-fetch-first-slice.md) for the diagnostic only.
+Its condition for fetched data reaching the radar is resolved by
+[0074](0074-live-utc-radar-on-fetched-elements.md) (dates checked in Rust).
 
 ## Decision
 The display-free `live-fetch` diagnostic may run on the board with MbedTLS's

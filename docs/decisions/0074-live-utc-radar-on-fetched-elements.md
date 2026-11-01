@@ -6,6 +6,8 @@ internal heap, no markers plus `NO DATA` on failure, persistence/refresh/stale
 handling out of scope). Resolves [0073](0073-diagnostic-fetch-without-certificate-dates.md)'s
 condition for fetched data reaching the radar. Builds on
 [0071](0071-https-element-fetch-first-slice.md) and [0067](0067-opt-in-live-utc-iss-radar-scope.md).
+Done 2026-11-01: two on-board fetches with dates checked and a user-observed
+pass with visible BOOT cycling ([evidence](../../firmware/README.md#live-utc-radar-on-fetched-stations-flashed-uart-captures)).
 
 ## Decision
 1. **Image.** A separate opt-in `live-fetch-radar` image composes 0071's one

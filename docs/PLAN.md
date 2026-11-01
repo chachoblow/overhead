@@ -2,7 +2,8 @@
 
 **Current: M0, M1 and M3 complete; M4 done for now (user, 2026-10-24). M2
 operating budget/scheduling and M6 standalone device remain open; the active
-slice is M6 HTTPS element fetch under [0071](decisions/0071-https-element-fetch-first-slice.md).**
+slice is M6 HTTPS element fetch under [0071](decisions/0071-https-element-fetch-first-slice.md)
+and [0074](decisions/0074-live-utc-radar-on-fetched-elements.md).**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -304,7 +305,11 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   [0071](decisions/0071-https-element-fetch-first-slice.md): mbedtls-rs, STATIONS JSON,
   one request per boot; slices 1–3 done: one on-board fetch ingested 20/20 STATIONS records
   ([evidence](../firmware/README.md#https-element-fetch-on-the-board-flashed-one-boot-uart-capture));
-  certificate dates unchecked for the diagnostic ([0073](decisions/0073-diagnostic-fetch-without-certificate-dates.md)).
+  slice 4 done under [0074](decisions/0074-live-utc-radar-on-fetched-elements.md): the
+  `live-fetch-radar` diagnostic checks certificate dates against screened UTC and tracks
+  the fetched STATIONS on the live-UTC radar (user-observed pass with BOOT cycling,
+  [evidence](../firmware/README.md#live-utc-radar-on-fetched-stations-flashed-uart-captures)).
+  Persistence, refreshes and a user location remain open.
 - [ ] Handle network failure, missing/invalid time or data, and stale elements.
 - [ ] Verify end-to-end performance and extended hardware operation, including
   the frame-timing work deferred by 0060.

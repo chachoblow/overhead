@@ -8,6 +8,8 @@ found that item 4's wall clock needs a C toolchain (see the firmware README);
 run without date checks. Slice 3 done 2026-11-01: one on-board fetch, 20/20
 records ([evidence](../../firmware/README.md#https-element-fetch-on-the-board-flashed-one-boot-uart-capture)). Research, measurements
 and alternatives are in the [element-fetch proposal](../element-fetch-proposal.md).
+Slice 4 done 2026-11-01 under [0074](0074-live-utc-radar-on-fetched-elements.md):
+fetched STATIONS on the live-UTC radar with certificate dates checked.
 
 ## Decision
 

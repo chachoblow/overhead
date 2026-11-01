@@ -635,3 +635,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - User chose to run the fetch diagnostic without certificate date checks ([0073](decisions/0073-diagnostic-fetch-without-certificate-dates.md)); revisit before fetched data reaches the radar.
 - One `live-fetch` boot on `/dev/ttyUSB0`: TLS 1.2 verified, 1.76 s handshake, HTTP 200, 20/20 STATIONS records ingested, heap peak 113,704 B ([evidence](../firmware/README.md#https-element-fetch-on-the-board-flashed-one-boot-uart-capture)). CelesTrak closes with a TCP reset; Content-Length establishes completeness.
 - First work item run under 0072: decision, build, gate, flash, capture and recording in one pass. Firmware `element-fetch` host suite passed (32).
+
+## 2026-11-01 UTC (live-UTC radar on fetched elements)
+- Completed the 0071 slice 4 work item under [0074](decisions/0074-live-utc-radar-on-fetched-elements.md): app awaiting-catalogue state, `NO DATA` notice, Rust TLS 1.2 certificate-date check (`firmware/src/tls_dates.rs`) and the opt-in `live-fetch-radar` image.
+- Board: two boots fetched STATIONS with all served certificates in date (heap peak ~111 KiB of 160 KiB, display stall ~450 ms during TLS); the user saw the CSS complex move through the predicted 16:57–17:07 UTC window and cycled all five IDs twice with BOOT.
+- Verified: workspace check/tests (321), fmt, firmware host `element-fetch` (38), image build, clippy and offline gate. Not covered: failure paths, refresh, repeated runs, real location.
