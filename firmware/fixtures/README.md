@@ -49,3 +49,21 @@ records host, build and bounded UART evidence; recheck input age and an upcoming
 window before any proposed physical capture. Never refresh this file silently
 or treat a newly fetched response as the same image. No production data-age,
 fetch, persistence or display policy follows.
+
+## `celestrak-stations-20261101.json`
+
+The exact body of one CelesTrak STATIONS download, pinned as host test data for
+[0071](../../docs/decisions/0071-https-element-fetch-first-slice.md)'s response
+parser and ingestion. Public data; not a radar input or any image's catalogue.
+
+- Source: `https://celestrak.org/NORAD/elements/gp.php?GROUP=STATIONS&FORMAT=JSON`,
+  fetched once from devbox on 2026-11-01 UTC; response `Date: Sun, 01 Nov 2026 05:04:12 GMT`,
+  `HTTP/1.1 200`, `Content-Length: 8441`. The endpoint is mutable.
+- 8,441 bytes, one JSON array ending in CRLF (kept by `.gitattributes`).
+  SHA-256: `b35feede140b5556fff0b25ab6a8420ea11fa7fd5300e122a386577da4e28406`.
+  Unlike the ISS fixture, these are the HTTP body bytes as received.
+- 20 records, 20 unique NORAD IDs (ISS 25544 first); epochs
+  `2026-10-31T06:35:49.011648` to `2026-10-31T22:51:14.800896` UTC.
+
+Do not refresh it: tests assert its length, records and epoch range. A new
+download is a new, separately named fixture.

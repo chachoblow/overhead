@@ -26,6 +26,8 @@ pub mod button_input;
 pub mod coast_measurement;
 #[cfg(feature = "sharp-radar")]
 pub mod device_timing;
+#[cfg(feature = "element-fetch")]
+pub mod element_fetch;
 #[cfg(feature = "sharp-radar")]
 pub mod live_utc;
 #[cfg(feature = "sharp-natural-audit")]
@@ -57,7 +59,11 @@ pub mod suites;
 #[cfg(feature = "numerical-reference")]
 pub mod numerical;
 
-#[cfg(any(feature = "catalogue-memory", feature = "coast-measurement"))]
+#[cfg(any(
+    feature = "catalogue-memory",
+    feature = "coast-measurement",
+    feature = "element-fetch"
+))]
 extern crate alloc;
 #[cfg(feature = "catalogue-memory")]
 pub mod catalogue_memory;

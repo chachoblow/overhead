@@ -1,7 +1,8 @@
 # 0071 — First HTTPS element fetch: mbedtls-rs, STATIONS, one request per boot
 
 Date: 2026-11-01
-Status: accepted (user, 2026-11-01); not yet implemented. Research, measurements
+Status: accepted (user, 2026-11-01). Slice 1 (host parser, ingestion and
+fixture) implemented 2026-11-01; slices 2–3 not started. Research, measurements
 and alternatives are in the [element-fetch proposal](../element-fetch-proposal.md).
 
 ## Decision

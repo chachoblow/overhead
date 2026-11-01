@@ -1202,6 +1202,21 @@ for a later capture. First agree a time when the user is ready to look; recheck
 an upcoming window against appropriately reviewed input, then seek fresh
 approval before any further board access or flash.
 
+## HTTPS element fetch, slice 1 (host-only; no image)
+
+[0071](../docs/decisions/0071-https-element-fetch-first-slice.md) slice 1 adds
+the opt-in `element-fetch` feature and `src/element_fetch.rs`: the fixed
+CelesTrak STATIONS `HTTP/1.0` GET, a bounded response parser (2 KiB head,
+16 KiB body, one required `Content-Length`; any non-200 status, chunked coding,
+truncation or overrun is a typed failure) and ingestion through the
+`overhead-core` catalogue. It has no TLS, socket or target binary yet, and no
+default or existing image changes. Tests use the pinned
+[STATIONS fixture](fixtures/README.md#celestrak-stations-20261101json):
+
+```sh
+cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked --features element-fetch
+```
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing

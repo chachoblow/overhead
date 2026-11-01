@@ -1,6 +1,6 @@
 # M6 HTTPS element fetch — proposal
 
-Status: **accepted by the user 2026-11-01 as [0071](decisions/0071-https-element-fetch-first-slice.md)** (all four decisions below: yes). Nothing is implemented yet. It plans the first slice of the M6 item "Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes" under [0002](decisions/0002-data-and-time-over-wifi.md) and [0003](decisions/0003-curated-catalogue.md).
+Status: **accepted by the user 2026-11-01 as [0071](decisions/0071-https-element-fetch-first-slice.md)** (all four decisions below: yes). Slice 1 is implemented ([firmware README](../firmware/README.md#https-element-fetch-slice-1-host-only-no-image)); slices 2–3 are not. It plans the first slice of the M6 item "Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes" under [0002](decisions/0002-data-and-time-over-wifi.md) and [0003](decisions/0003-curated-catalogue.md).
 
 ## Why now
 

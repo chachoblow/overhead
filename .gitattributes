@@ -9,3 +9,6 @@ docs/evaluations/m2-pool-suitability.json -text
 
 # Original published verification data: preserve CRLF/trailing whitespace for hashes.
 tools/fixtures/m2-numerical/vallado/* -text whitespace=-blank-at-eol
+
+# Exact CelesTrak response body (CRLF-terminated); host tests check its length and hash.
+firmware/fixtures/celestrak-stations-*.json -text whitespace=cr-at-eol

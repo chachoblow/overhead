@@ -47,6 +47,9 @@ live-utc-radar = ["live-sntp", "sharp-natural", "dep:embassy-sync"]
 # Opt-in BOOT input experiment in the live-UTC display owner; GPIO0 is sampled
 # by a 5 ms TIMG1 interrupt (0070). Ordinary live-UTC image unchanged.
 live-utc-boot = ["live-utc-radar", "dep:critical-section"]
+# 0071 HTTPS element fetch: request, bounded HTTP/1.0 response parser and
+# STATIONS ingestion. Host-tested only in slice 1; no TLS or socket yet.
+element-fetch = ["overhead-core/catalogue", "dep:serde_json"]
 # Separately named pinned-OMM visibility diagnostic; original source path retained.
 live-utc-fresh-iss = ["live-utc-radar"]
 

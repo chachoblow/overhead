@@ -55,6 +55,7 @@ fn main() {
             e.norad_id, datetime(e.datetime), e.element_set_number, e.revolution_number, e.ephemeris_type).unwrap();
         if env::var_os("CARGO_FEATURE_CATALOGUE_MEMORY").is_some()
             || env::var_os("CARGO_FEATURE_COAST_MEASUREMENT").is_some()
+            || env::var_os("CARGO_FEATURE_ELEMENT_FETCH").is_some()
         {
             // Alloc metadata fields exist with serde; old workloads still do
             // not allocate names or alter their original numeric elements.
