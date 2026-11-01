@@ -1,5 +1,5 @@
 # Fetched elements stay current across a day
-Status: blocked: home coordinates in ignored firmware/.site.env
+Status: verifying (capture running)
 Started: 2026-11-01. Scope: PLAN M6 "network failure, missing/invalid time or data, and stale elements" + refresh part of "HTTPS elements … refreshes"; decisions [0075](../decisions/0075-fetched-element-refresh-and-staleness.md), 0074, 0071, 0002, 0004.
 
 ## Outcome
@@ -15,7 +15,7 @@ STATIONS only; no flash persistence; no location UI; no cadence work. CelesTrak:
 
 ## Human gates
 - 0075 decisions: answered 2026-11-01 (all recommendations accepted, home coordinates).
-- Home coordinates in ignored `firmware/.site.env`: needed (user writes `SITE_LAT_DEG=`, `SITE_LON_DEG=`, optional `SITE_ALT_M=`).
+- Home coordinates in ignored `firmware/.site.env`: answered 2026-11-01 (file present, values numeric; never printed).
 - Board left powered on `/dev/ttyUSB0` for ~4.5 h capture: needed.
 - User panel observation after a refresh: needed.
 
@@ -25,7 +25,7 @@ STATIONS only; no flash persistence; no location UI; no cadence work. CelesTrak:
 - [x] Firmware `element_refresh` schedule + `site` parsing; host tests.
 - [x] Image: reusable TLS/buffers, schedule, outcome classes, fetch UTC, home site; dummy build, clippy (no new warnings), offline gate.
 - [x] Decision 0075, `.gitignore`, README build recipe.
-- [ ] Build with real `.wifi.env` + `.site.env`, `REFRESH_MINUTES=120`; gate; flash and capture ~4.5 h in one command (boot + 2 refreshes).
+- [ ] Build with real `.wifi.env` + `.site.env`, `REFRESH_MINUTES=120`; gate; flash and capture 16,800 s in one command (boot + 2 refreshes). Built, gate passed, MAC `80:45:6b:2a:45:08` on `/dev/ttyUSB0` confirmed; capture started 2026-11-01 ~21:57 UTC to local `firmware/target/live-fetch-radar-v2-run1.log`.
 - [ ] User observation after a refresh.
 - [ ] Record evidence (firmware README), PLAN/HANDOFF/PROGRESS; delete this file.
 
@@ -35,6 +35,8 @@ STATIONS only; no flash persistence; no location UI; no cadence work. CelesTrak:
 - Dummy build: image 1,338,608 B (16.08%), only the RWX warning; gate passed.
 
 ## Verification
+- Boot fetch 2026-11-01 21:57:37 UTC: TLS 1.2, handshake 803 ms, 3 certificates dated OK, HTTP 200 (8,410 B body; read ended by ConnectionReset after full Content-Length), 20/20 accepted, total 2,172 ms, heap peak 111,116 B, stack written 7,184 of 21,384 B, display gap 455 ms; `FETCH_SCHEDULE outcome=Success next_in_s=7200`.
+- Host prediction (pinned 2026-11-01 STATIONS fixture, home site, 60°): CSS complex in view 01:00–01:10 and 02:37–02:47 UTC 2026-11-02 (after refreshes at ~23:57 and ~01:57).
 - `cargo check --workspace`, `cargo test --workspace` (325 passed), app/render `--no-default-features` check, fmt; firmware host `--lib --locked`: default 19, `element-fetch` 47, `live-utc-boot` 70, `sharp-boot-capture` 60 — all pass (uncommitted tree, 2026-11-01).
 
 ## Open questions
