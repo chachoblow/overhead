@@ -806,6 +806,17 @@ production cadence or live UTC. Raw UART is an ignored local artifact. The
 board now runs this historical diagnostic, not the live-UTC image. Further
 board access/reset/flash requires separate authorization.
 
+2026-11-01 UTC (devbox flash check, moved here from HANDOFF): the board is on
+`/dev/ttyUSB0` (CP2102N, MAC confirmed). A devbox-built image of this
+diagnostic (ELF SHA-256
+`efc0ed40fa053e8243fdaada9c2a8aea449491bef3f13abfac9c95cf408222b6`, image
+`8551a20800a080451405b57ee49fd9cad45a1aaec6cb0f9f79f24728860fd0d8`; not
+byte-identical to the Mac build above) passed the offline gate, flashed, and a
+15 s UART capture showed a clean boot to
+`BOOT_CYCLE_READY … visible=4 selected=Some(19548)`. BOOT presses were not
+exercised on this build. Flashing no longer needs per-flash approval under
+[0069](../docs/decisions/0069-flash-without-per-flash-approval.md).
+
 ## Interrupt-sampled BOOT capture diagnostic (flashed; user tap session)
 
 `overhead-s3-sharp-boot-capture` (`--features sharp-boot-capture`) implements

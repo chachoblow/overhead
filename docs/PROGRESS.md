@@ -614,3 +614,14 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Measured CelesTrak (TLS 1.2 only, RSA-2048, Sectigo chain; STATIONS 20 records) and the user accepted [0071](decisions/0071-https-element-fetch-first-slice.md): mbedtls-rs, STATIONS JSON, one request per boot, no retry.
 - Slice 1: host-tested `firmware/src/element_fetch.rs` (request, bounded HTTP/1.0 parser, catalogue ingestion) with a pinned STATIONS fixture. Slice 2: build-only `live-fetch` TLS image; it builds on current pins with the prebuilt MbedTLS and passes the offline gate, and was not flashed ([firmware README](../firmware/README.md#https-element-fetch-slice-2-build-only-tls-image-not-flashed)).
 - Found that certificate date checks need MbedTLS's wall-clock hook, which forces a clang/cmake/ninja build (toolchain change). The user's decision is pending; see [HANDOFF](HANDOFF.md).
+
+## 2026-10-31 PDT (catch-up, appended 2026-11-01: devbox move and BOOT interrupt capture)
+- Development moved to devbox (Linux); [0069](decisions/0069-flash-without-per-flash-approval.md) drops per-flash approval while keeping port/MAC checks, offline image gates and frozen M2 isolation. Devbox builds are not byte-identical to recorded Mac hashes; a devbox `sharp-boot-cycle` flash on `/dev/ttyUSB0` booted cleanly ([evidence](../firmware/README.md#historical-multi-marker-boot-cycle-diagnostic-flashed-short-uart-capture)).
+- A [sampling-gap review](evaluations/boot-sampling-gaps.md) showed blocking render/SPI sets the minimum registered press; [0070](decisions/0070-boot-input-capture-independent-of-render.md) accepts a 5 ms timer-interrupt capture, implemented in `firmware/src/boot_capture.rs` for `sharp-boot-capture` (TIMG0) and `live-utc-boot` (TIMG1).
+- User tap sessions: 23 presses each advanced selection on the historical image (user saw every change); 44 presses logged on live UTC with no ISS in view (capture evidence only), with one ~34 ms gap during Wi-Fi association.
+- Recorded here late because those sessions committed without a PROGRESS entry; per-commit verification lives in the commits and firmware README, not rerun.
+
+## 2026-11-01 UTC (documentation cleanup)
+- Shortened the default reading path (HANDOFF+PLAN+DESIGN 1,122 → ~590 lines): PLAN status/M3/M4 coastline/M6 narratives condensed with links; DESIGN's repeated acceptance history trimmed.
+- Moved DESIGN's mock provenance verbatim to [mockups/glyph-and-notice-references.md](mockups/glyph-and-notice-references.md), keeping DESIGN anchors so decision links resolve; moved devbox flash hashes from HANDOFF to the firmware README.
+- User clarified knob hardware is in roadmap scope (PLAN Boundaries updated, matching 0060). Docs-only: link/anchor script and `git diff --check` clean; no Rust checks rerun.

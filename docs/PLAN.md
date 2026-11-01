@@ -1,36 +1,15 @@
 # Overhead — Plan
 
-**Current: M3 complete after exit verification on 2026-10-18 UTC;
-M4 empty-view notices implemented under 0048; the user accepted fresh
-executable output separately from contract mocks and host checks. Opt-in wide radar and per-satellite off-screen arrows are implemented and visually approved under 0033; square/diagnostic default retained. Selected-marker
-identification is implemented under 0034, refined by 0035's configurable 70°/60°
-hide/show hysteresis after review of crowding; the user has now accepted that behavior.
-0037's visually accepted elevation-only capsule is now replaced by 0041's
-static circular cutout, bitmap `Elev` label and padded separator. This is the
-first bounded implementation of 0038's labelled borderless direction, not the
-full glyph stack. The user reviewed and accepted 0041's executable output.
-0039's bottom-left condition-driven notices remain implemented under 0040's
-white-backed overlay and visually accepted. 0042's static altitude addition is
-now implemented after separate authorization; the user accepted its fresh
-executable output separately from the approved contract/illustrative comparison.
-0043's static TEME speed arc is implemented after approval of its contract,
-illustrations and implementation. The user subsequently reviewed and accepted
-fresh executable speed output. 0044's static nominal-period spiral is implemented
-after approval of meaning, fixed logarithmic scale, 2½-turn appearance and
-lifecycle, plus authorization to record exact raster rules and implement.
-The user subsequently reviewed and accepted fresh executable period output;
-0045 now implements static category after approval of icons, explicit group-role
-assignment, Station > Navigation > Weather > Unknown priority and immediate
-five-field lifecycle, followed by implementation authorization. The user subsequently
-reviewed and accepted fresh executable category output; 0046's bounded animated
-transitions are implemented and user visually accepted. 0047's text-first,
-radar-free debug access and reviewed layout/overflow treatment are implemented
-after separate authorization; the user subsequently accepted fresh executable output.
-M2 operating-budget and scheduling work remains open.**
+**Current: M0, M1 and M3 complete; M4 done for now (user, 2026-10-24). M2
+operating budget/scheduling and M6 standalone device remain open; the active
+slice is M6 HTTPS element fetch under [0071](decisions/0071-https-element-fetch-first-slice.md).**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
 Refine each slice before starting; later checkboxes are scope, not session-sized tasks.
+Unless noted, each interface slice below was contract-approved, separately
+authorized, implemented, and then accepted by the user on fresh executable
+output, separately from mocks and host checks.
 
 ## Complete
 - **M0 — Setup:** workspace, simulator window, project workflow.
@@ -116,114 +95,49 @@ with measured costs justifying supported size, cadence, and prediction accuracy.
   only; the diagnostic panel is unchanged.
 - [x] Agree [0032's wide-radar/glyph direction](decisions/0032-wide-radar-and-selected-satellite-glyphs.md):
   off-screen indicators, marker-adjacent ID and a right-hand category/data-glyph
-  strip. [Retained reference](DESIGN.md#selected-satellite-presentation) is a
-  starting point, not an implemented or fully specified UI.
-- [x] Agree and implement [0033's bounded wide-radar comparison](decisions/0033-wide-radar-comparison-contract.md):
+  strip; a starting point, not a fully specified UI.
+- [x] [0033's bounded wide-radar comparison](decisions/0033-wide-radar-comparison-contract.md):
   opt-in 352×240, vertical FOV preserving pixel scale, one arrow per eligible
-  off-screen satellite with overlaps allowed, no invalid-depth arrows, existing
-  visible-only selection, and minimal explicit warning notices. Default square
-  diagnostics retained; [usage/comparisons](../sim/README.md#wide-radar-comparison).
-- [x] User reviewed and approved the wide comparison, retaining the current
-  layout and overlaps-allowed arrows. No collision avoidance or default-mode
-  change follows from that approval.
-- [x] Agree and implement [0034's selected-marker identification](decisions/0034-selected-marker-identification.md)
-  in the opt-in wide view: bare NORAD ID / ISS, right-side placement with left-side
-  fallback, vertical clamping and transparent overlaps allowed. Baseline unchanged.
-- [x] Refine crowded overview identification under [0035](decisions/0035-label-zoom-visibility.md):
-  clean label hide at ≥70° / restore at ≤60° vertical FOV with hysteresis,
-  configurable launch thresholds, selected diamond retained. No dithering.
-- [x] User reviewed and accepted 0035's 70°/60° zoom-visibility behavior for now;
-  retain configurability and existing placement/selection rules.
-- [x] Agree [0036's shared glyph capsule](decisions/0036-shared-glyph-capsule.md):
-  1px rounded outline with one centered break per long side. Visual direction
-  only; [retained mock](DESIGN.md#glyph-capsule-reference), not implemented UI.
-- [x] Agree [0037's static elevation-only contract](decisions/0037-static-elevation-glyph-contract.md):
-  24×24 true-elevation fill, shortened shared capsule, no capsule/glyph without
-  selection, and a fixed warning area below. No animation or other glyphs.
-- [x] Implement 0037 in the opt-in wide view, preserving radar pixels, square
-  diagnostics, selection, labels and explicit warnings; pixel/lifecycle tests and
-  independent real-data glyph snapshots pass.
-- [x] User reviewed and accepted the static elevation/capsule snapshot output
-  under 0037, including the shorter capsule and separate warning area.
-- [x] Agree and retain [0038's revised glyph direction](decisions/0038-labelled-borderless-glyph-direction.md):
-  borderless labelled stack, padded vertical separator, outlined circular
-  elevation cutout, concentric altitude circles, speed arc and period spiral;
-  thin navigation cross and simple station body-and-wings icon. This amends the
-  earlier capsule/shapes/no-label direction; 0041 below implements one field.
-- [x] Select [0039's bottom-left condition-driven notices](decisions/0039-bottom-left-condition-driven-notices.md)
-  after reviewing top-left/bottom-left mocks; preserve existing notice meanings
-  and clear only resolved conditions, not on a timeout. Retained composites are
-  not executable warning-state snapshots.
-- [x] Agree and implement [0040's notice-only overlay](decisions/0040-white-backed-bottom-left-notice-contract.md):
-  bottom-left, complete notice lines, small borderless white backing drawn last,
-  explicit permission to visually cover crossing graphics without changing
-  eligibility/selection. Preserve the elevation capsule and square diagnostics;
-  pixel/lifecycle/real-marker-overlap and headless warning tests pass.
-- [x] User confirmed review and acceptance of 0040's executable notice snapshots.
-- [x] Agree [0041's circular elevation-only contract](decisions/0041-circular-elevation-only-contract.md):
-  one static cutout, bitmap `Elev` label and separator, with explicit endpoint,
-  raster and selection-loss rules, including retaining the separator without
-  selection. User approved the contract; implementation is a separate step.
-- [x] Implement 0041, preserving radar/notices and square diagnostics. Exact
-  raster/lifecycle/real-data snapshot tests pass; pre/post captures preserve all
-  radar pixels and square output. No other glyphs or animation were added.
-- [x] User reviewed and accepted 0041's fresh executable output, separately
-  from the earlier illustrative comparisons and contract approval.
-- [x] Agree [0042's static altitude contract](decisions/0042-static-altitude-glyph-contract.md):
-  fixed compressed WGS-84 altitude scale, concentric outlines, bitmap `Alt` label,
-  exact raster and static lifecycle. User approved the illustrative comparison
-  and behavior rules; recording the contract does not authorize implementation.
-- [x] Separately authorize and implement 0042 alongside elevation, preserving
-  radar, notices, square diagnostics and physical/app behavior. Exact-pixel,
-  mapping, lifecycle and independent real-data altitude tests pass; pre/post
-  captures preserve all pixels outside the new altitude slot and square bytes.
-- [x] User reviewed and accepted fresh executable altitude snapshots separately
-  from the contract mocks.
-- [x] Agree [0043's static speed contract](decisions/0043-static-speed-glyph-contract.md):
-  instantaneous TEME velocity magnitude, fixed linear 0–12 km/s clockwise arc,
-  bitmap `Spd`, zero/invalid distinction and immediate three-field lifecycle.
-  The user approved the illustrative comparison and remaining behavior rules.
-- [x] Authorize and implement 0043, retaining true speed in app state and adding
-  the wide-only arc. Mapping/raster/lifecycle and independent headless tests
-  cover the field; existing radar, notices, elevation/altitude and square output
-  are preserved. No new dependency or tracking/selection policy.
-- [x] User reviewed and accepted fresh executable speed output separately from
-  the mocks.
-- [x] Agree [0044's static period contract](decisions/0044-static-period-glyph-contract.md):
-  nominal element-set period, fixed logarithmic 90-minute/2½-turn to 24-hour/
-  one-turn mapping, bitmap `Per`, field-local invalid suppression and immediate
-  four-field lifecycle. The user selected 2½ turns after comparing against three.
-- [x] Authorize recording the exact raster and implementing 0044. The app reads
-  existing selected-element metadata without another propagation or retained
-  per-sample scalar; wide rendering adds only the period slot. Mapping, pixel,
-  lifecycle and independent real-data snapshot tests cover the new field.
-- [x] User reviewed and accepted fresh executable period output, separately from
-  the approved illustrative appearance and scale. No target-cost or physical-display
-  validation follows.
-- [x] Agree and implement [0045's static group-derived category](decisions/0045-static-group-category-contract.md):
-  explicit optional group roles, Station > Navigation > Weather > Unknown,
-  approved Cat/icons and immediate five-field lifecycle. No per-ID mapping,
-  inferred roles, operational-status claim or orbital-data change.
-- [x] User reviewed and accepted fresh executable category output, separately
-  from approved icons/assignment/lifecycle. [Review recipe](../sim/README.md#static-category-glyph).
-- [x] Agree and implement [0046's selected-data transitions](decisions/0046-selected-data-glyph-transition-contract.md):
+  off-screen satellite with overlaps allowed, no invalid-depth arrows, visible-only
+  selection and minimal explicit warnings. The user approved the layout and
+  overlaps-allowed arrows; no collision avoidance or default-mode change follows.
+  Default square diagnostics retained; [usage](../sim/README.md#wide-radar-comparison).
+- [x] [0034's selected-marker identification](decisions/0034-selected-marker-identification.md)
+  (bare NORAD ID / ISS, right-side with left fallback, vertical clamping,
+  overlaps allowed), refined by [0035](decisions/0035-label-zoom-visibility.md)'s
+  configurable hide at ≥70° / restore at ≤60° vertical FOV with the selected
+  diamond retained and no dithering. Accepted for now.
+- [x] Glyph direction history: [0036's capsule](decisions/0036-shared-glyph-capsule.md)
+  (direction only) and [0037's elevation-only capsule](decisions/0037-static-elevation-glyph-contract.md)
+  (implemented, accepted) were superseded by [0038's labelled borderless direction](decisions/0038-labelled-borderless-glyph-direction.md):
+  labelled stack, padded separator, circular elevation cutout, concentric
+  altitude circles, speed arc, period spiral, navigation cross and station
+  body-and-wings icon.
+- [x] [0039](decisions/0039-bottom-left-condition-driven-notices.md)/[0040](decisions/0040-white-backed-bottom-left-notice-contract.md)
+  bottom-left condition-driven notices with a small borderless white backing
+  drawn last; they clear only when conditions resolve, never on a timeout, and
+  may cover crossing graphics without changing eligibility or selection.
+- [x] Five static fields, each preserving existing radar pixels, notices and
+  square output, with exact raster/lifecycle and independent real-data snapshot
+  tests: [0041](decisions/0041-circular-elevation-only-contract.md) circular
+  elevation and separator; [0042](decisions/0042-static-altitude-glyph-contract.md)
+  fixed compressed WGS-84 altitude; [0043](decisions/0043-static-speed-glyph-contract.md)
+  TEME speed on a linear 0–12 km/s arc; [0044](decisions/0044-static-period-glyph-contract.md)
+  nominal period, logarithmic 90-minute/2½-turn to 24-hour/one-turn (the user
+  chose 2½ over three turns); [0045](decisions/0045-static-group-category-contract.md)
+  explicit group roles, Station > Navigation > Weather > Unknown, with no per-ID
+  mapping, inferred roles or operational-status claim. [Review recipes](../sim/README.md#static-category-glyph).
+- [x] [0046's selected-data transitions](decisions/0046-selected-data-glyph-transition-contract.md):
   four animated glyphs on selected-ID changes, immediate Cat, 250 ms smoothstep,
   explicit presentation time and bounded retarget/loss behavior. The user
-  separately accepted interactive output; headless snapshots stay static.
-- [x] Agree [0047's text-first debug access](decisions/0047-text-first-debug-access-contract.md):
-  radar-free tracking/data-health page, interactive wide-view `v` toggle and
-  explicit `--wide --debug` start. Default square baseline retained.
-- [x] User reviewed and approved the [debug layout/overflow treatment](mockups/0047-debug-layout-proposal.md),
-  closing 0047's preimplementation renderer-review gate. The six pages remain
-  illustrative references, not executable output or implementation authorization.
-- [x] Separately authorize and implement 0047, preserving current app truth,
-  wide normal-view notices and historical snapshot behavior. Tests cover access,
-  bounded text/values, state isolation and static return without queued motion.
-- [x] User reviewed and accepted fresh executable debug output under 0047,
-  separately from the approved illustrative pages and automated checks.
-  [Review recipe](../sim/README.md#debug-access). No scene displacement or collision
-  search is approved. Circular-radar/field/graph alternatives remain exploration;
-  neither mocks nor replay populations select production capacity.
+  accepted interactive output; headless snapshots stay static.
+- [x] [0047's text-first debug access](decisions/0047-text-first-debug-access-contract.md):
+  radar-free tracking/data-health page, wide-view `v` toggle and `--wide --debug`
+  start, after approval of the [layout/overflow treatment](mockups/0047-debug-layout-proposal.md)
+  (illustrative pages, not executable output). [Review recipe](../sim/README.md#debug-access).
+  No scene displacement or collision search is approved. Circular-radar/field/graph
+  alternatives remain exploration; neither mocks nor replay populations select
+  production capacity.
 
 No prediction integration, slowdown or live fetching is required for this slice.
 Simulator throughput is not target capacity evidence.
@@ -283,87 +197,43 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   Marked done for now (user, 2026-10-24): current empty-sky feel accepted.
 - [x] Prepare coastlines offline and render them legibly across zoom levels.
   Marked done for now (user, 2026-10-24); device feel and timing follow 0060.
-  [0051's reviewed angular appearance direction](decisions/0051-angular-coastline-appearance-direction.md)
-  and [native 1-bit comparisons](mockups/0054-coastline-overview-comparison.md)
-  cover 5°–100°. [0054](decisions/0054-first-executable-coastline-comparison.md)
-  now authorizes a bounded, executable **wide-only comparison** using the reviewed
-  40 km look and an explicit exceptional `COAST ERROR` notice; its host export,
-  renderer and tests exist. The user reviewed the fresh executable images and
-  simulator, accepting the appearance. A follow-up host suite now compares
-  coast/no-coast selected and empty/notice frames and probes dense visible samples
-  on the checked asset at SF, polar and dateline sites, plus synthetic limb,
-  viewport and run-boundary cases. A further host test isolates exported segments
-  in those scenes and at computed limb/viewport-edge observer positions; it found
-  no qualifying gaps. A [selected-segment bounded host study](evaluations/m4-coastline-bounded-segment-study.md)
-  tests segment 46 and four short viewport-edge runs (2–7 reference cells)
-  independently of the renderer's fixed sampling. A further finite-scene control
-  checks **each of the 1,734 segments** at seven scenes, conservatively covering
-  every unknown interval's possible screen cells with isolated ink within 3px.
-  No qualifying gap was found. Unknown visibility is not called invisible; not
-  all observers are covered and floating-point margins lack formal bounds.
-  [0055](decisions/0055-defer-all-view-coastline-proof-for-m4.md) stops the
-  all-view proof effort as a **gate for this M4 iteration**, retaining 0053's
-  no-known-ordinary-gap intent and a later completeness TODO; it does not
-  certify all observers or close device acceptance. A
-  [host-only cost preflight](evaluations/m4-coastline-host-cost-preflight.md)
-  now times coast/full-frame controls and counts raster writes on reviewed and
-  boundary scenes; it does not measure S3 cost, late-failure cost or compiled size.
-  A separate host regression injects a coastline-only failure after confirmed ink
-  and checks rollback, foreground and notice pixels in selected/empty warning
-  scenes. Natural late numeric failures and their target cost remain unmeasured.
-  Target resource measurement and physical-display acceptance remain open. An
-  [Stage A measurement harness and S3 capture](evaluations/m4-coastline-device-measurement-protocol.md)
-  now have separately authorized, exact-gated coast-on/off release images and a
-  1-bit RAM-target capture. The clean coast-off code/asset comparison is
-  65,020 B of `.rodata` + `.text` (516 B below the provisional 64 KiB screen),
-  but the maximum observed complete coast rebuild was **9,781,141 µs**, far
-  above the provisional **5 ms** gate. The current candidate therefore fails
-  target-time screening; no Sharp or whole-device validation follows. The
-  [M2-informed ceilings](evaluations/m4-coastline-budget-preflight.md) remain
-  **provisional measurement gates**, not proven capacity or shipping approval.
-  [0056](decisions/0056-bounded-coastline-architecture-trial.md) now limits further
-  investigation to one host representation trial and, if promising, at most one
-  separately authorized target feasibility check before choosing the architecture.
-  The [completed host trial](evaluations/m4-coastline-representation-spike.md) uses
-  a 32,211 B quadratic ECEF representation and screen-scale refinement; it improves
-  all eleven host scenes ~36–65×, with bidirectional isolated raster differences
-  within 1px in the tested controls. The user accepted its appearance and separately
-  authorized the [single target feasibility check](evaluations/m4-coastline-representation-target.md),
-  now complete: **22,489 µs** maximum coast rebuild (~435× faster than before, still
-  above 5 ms); **58,156 B** compiled increment fits, but candidate-specific nested
-  stack frames alone exceed 1 KiB. All 48 captured framebuffers match the host and
-  measured draws allocate no heap. **Not adopted for the device.** Stop general
-  renderer optimization under 0056 and scope set-location/preparation/reuse for
-  different users. [0057](decisions/0057-fixed-observer-coastline-preparation-scope.md)
-  accepts a fixed observer during use for this version, without excluding future
-  globe scrolling/panning. A [preparation/reuse proposal](evaluations/m4-coastline-location-preparation-scope.md)
-  records the user's acceptance of a visible one-time setup phase, observer-space
-  geometry as the first host feasibility path and a full loading screen (no old
-  coastline) during location preparation—not a cache implementation or format
-  contract. A [host-only uncompressed preparation trial](evaluations/m4-coastline-observer-preparation-host.md)
-  matches 55 candidate rasters but retains 37,000–73,864 B per observer; a
-  second host-only 16-bit trial retains 15,240–24,996 B but differs by up to 1px
-  on those masks. A further host-only heap probe found 51,984–98,604 B peak
-  logical requested heap while both forms coexist, with a conservative realloc
-  envelope up to 110,592 B; no new target or live-stack evidence follows. Screen details,
-  lifecycle, zoom and evidence details remain proposals; configuration, setup
-  duration, retained memory and revised
-  resource policy remain open. The first firmware prototype still follows 0004
-  until a successor contract is chosen. [0058](decisions/0058-prepared-wide-coastline-slice.md)
-  now implements the host/simulator slice: the wide view draws the accepted
-  quadratic coastline from a heap-free fixed-observer layer prepared once
-  behind a provisional full-screen loading frame, reused across satellite motion
-  and zoom, exactly matching the candidate rasters tested. Host draw savings are
-  modest; [0059](decisions/0059-current-view-coastline-raster-cache.md) therefore
-  caches the current view's 10,560 B coastline raster, re-rastering only on zoom
-  (layer 10,960 B). The approved [S3 measurement](evaluations/m4-coastline-prepared-target.md)
-  gives cached coast 386–1,153 µs (passes 5 ms), zoom-step rasters up to 21 ms,
-  ~5 ms preparation and zero heap, matching the candidate exactly.
-  [0060](decisions/0060-defer-timing-to-physical-prototype.md) accepts this for
-  now and defers timing work, including non-coast frame cost, to the physical
-  prototype.
-  Selected non-coast frame cost and Sharp/whole-device cadence remain separate
-  open blockers.
+  - Appearance: [0051's angular direction](decisions/0051-angular-coastline-appearance-direction.md)
+    and [native 1-bit comparisons](mockups/0054-coastline-overview-comparison.md)
+    cover 5°–100°; [0054](decisions/0054-first-executable-coastline-comparison.md)'s
+    wide-only executable comparison (40 km look, exceptional `COAST ERROR` notice)
+    was accepted by the user.
+  - Completeness: host suites and a [bounded segment study](evaluations/m4-coastline-bounded-segment-study.md)
+    (each of 1,734 segments at seven scenes) found no qualifying gap.
+    [0055](decisions/0055-defer-all-view-coastline-proof-for-m4.md) stops the
+    all-view proof as a gate for this M4 iteration, keeping 0053's
+    no-known-ordinary-gap intent and a later completeness TODO; not all observers
+    are covered, unknown visibility is not called invisible, and floating-point
+    margins lack formal bounds. A host regression covers coastline-only failure
+    rollback; natural late numeric failures and their target cost are unmeasured.
+  - Cost path: the first candidate failed the provisional 5 ms target gate
+    (9.78 s maximum rebuild; [protocol](evaluations/m4-coastline-device-measurement-protocol.md),
+    [provisional ceilings](evaluations/m4-coastline-budget-preflight.md)).
+    [0056](decisions/0056-bounded-coastline-architecture-trial.md)'s quadratic
+    ECEF [representation](evaluations/m4-coastline-representation-spike.md) was
+    accepted in appearance but [measured](evaluations/m4-coastline-representation-target.md)
+    at 22.5 ms and not adopted for the device.
+    [0057](decisions/0057-fixed-observer-coastline-preparation-scope.md) accepts a
+    fixed observer during use for this version (globe scrolling/panning stays open
+    for later), with a visible one-time setup phase and full loading screen
+    ([proposal](evaluations/m4-coastline-location-preparation-scope.md),
+    [host trials](evaluations/m4-coastline-observer-preparation-host.md)).
+  - Adopted for now: [0058](decisions/0058-prepared-wide-coastline-slice.md)'s
+    heap-free fixed-observer layer prepared once, plus
+    [0059](decisions/0059-current-view-coastline-raster-cache.md)'s 10,560 B
+    current-view raster cache. The [S3 measurement](evaluations/m4-coastline-prepared-target.md)
+    gives cached coast 386–1,153 µs, zoom-step rasters up to 21 ms, ~5 ms
+    preparation and zero heap. [0060](decisions/0060-defer-timing-to-physical-prototype.md)
+    accepts this and defers timing work, including non-coast frame cost, to the
+    physical prototype.
+  - Still open: location configuration, setup duration, retained memory and
+    revised resource policy; selected non-coast frame cost and Sharp/whole-device
+    cadence. The first firmware prototype still follows 0004 until a successor
+    contract is chosen.
 
 **Done when:** the view is useful and understandable during passes and empty sky.
 
@@ -376,113 +246,58 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
 **Done when:** fast passes are watchable without contaminating physical state.
 
 ## M6 — Standalone device
-- [x] First bounded physical integration: a fixed-time, single real-ISS
-  [radar frame](../firmware/README.md#fixed-fixture-radar-on-sharp-candidate)
-  from the shared app/renderer reached the Sharp panel; the user confirmed the
-  ISS marker and labelled strip. This does not establish motion, live inputs,
-  responsiveness or device cadence.
-- [x] A deliberately accelerated [deterministic ISS replay](../firmware/README.md#deterministic-radar-replay-v2-physically-accepted)
-  repaints the shared frame on the S3; the user confirmed visible movement and
-  the repeating reset on the physical panel. The first, too-short replay looked
-  static and was not accepted. This verifies motion output, not a live clock,
-  natural-speed orbit, 20 Hz cadence or sustained operation.
-  A separate [host-only timing preflight](../firmware/README.md#utcframe-scheduling-preflight-host-only)
-  now tests trusted-UTC gating, monotonic frame deadlines/overrun skips and idle
-  VCOM. It is not integrated on the board; the uncached replay's ~196 ms
-  update/render/transfer exceeded the 50 ms target frame interval. A separate [cost-profile diagnostic](../firmware/README.md#sharp-full-frame-cost-diagnostic-flashed-short-uart-capture)
-  was approved, gated, flashed and UART-captured on the S3; the user confirmed
-  that its moving replay remains visible on the panel. The ~141 ms full
-  render contrasts with offscreen controls of ~13.7 ms full clear, ~1.1 ms cached
-  coast (including fast RAM clear) and ~138 ms full coast-free frame; controls
-  are not additive. The [host-tested stage trace](../firmware/README.md#stage-trace-follow-up-flashed-short-uart-capture)
-  was approved, offline-gated, flashed and UART-captured. In the ~138 ms
-  offscreen coast-free draw, ~13.8 ms is clear, ~6.1 ms Earth and **~116.2 ms
-  data glyphs**. [Individual-glyph v3](../firmware/README.md#individual-glyph-trace-v3-flashed-short-uart-capture)
-  was host-tested, approved, offline-gated, flashed and UART-captured. The
-  offscreen strip's ~116.5 ms includes **~115.02 ms in the period field** (label,
-  4,097 samples and raster). An opt-in host-tested renderer period cache now
-  reuses exactly the same raster for an unchanged mapped turn count; ordinary
-  replay firmware and simulator still use the uncached entry points. A [separate cache
-  comparison image](../firmware/README.md#period-cache-comparison-v1-flashed-short-uart-capture)
-  was approved, gated, flashed and short-captured. It sends cached frames and
-  compares each to an uncached offscreen byte oracle; all captured buffers matched.
-  Warm cached render ~26 ms versus ~141 ms separate uncached draw; full-frame
-  2 MHz transfer still takes ~52.4 ms and update/render/transfer ~82 ms. The
-  user confirmed moving replay on v2 and v3 and that the cache comparison's
-  moving replay still looks correct on the panel. At the datasheet's 2 MHz maximum,
-  a full frame has a ~49.9 ms wire-time floor before overhead. A separate
-  [host-only line-transfer preflight](../firmware/README.md#sharp-line-transfer-feasibility-host-only)
-  reconstructs exact pixels across three fixture loops with 18–34 changed lines
-  per transition. A [separate selective-line diagnostic](../firmware/README.md#selective-line-target-diagnostic-flashed-short-uart-capture-user-visual-check)
-  now has host pixel-parity/error-resync tests, gated target image and approved
-  flash. Its short UART capture reports ~5.4–8.8 ms changed-line transfers and
-  ~52.4 ms periodic full transfers. Asked about movement, reset and stale rows,
-  the user reported the display looks good. Sustained service remains open;
-  the diagnostic ticks at 500 ms, not 20 Hz.
-  A separate [natural-speed historical fixture diagnostic](../firmware/README.md#natural-speed-historical-diagnostic-flashed-short-uart-capture)
-  now wires host-preflight frame/refresh policy to the cached renderer and
-  selective sender at a 50 ms target grid. Its offline-gated S3 image received
-  an approved flash and physical visual acceptance. A short capture found three
-  initial full-frame overrun skips; an 85-second UART-only follow-up logged ten
-  ~8-second retained full refreshes without reported panic or additional skips.
-  A separate 315-second UART-only run crossed the 300-second historical fixture
-  wrap and logged 38 full refresh completions with **four further skipped frame
-  deadlines immediately after full refreshes**; it reported no panic. This
-  remains fixture time, **not** trusted UTC, network/controls, per-frame timing
-  proof, sustained VCOM verification, or production 20 Hz capacity. A separately
-  [host-tested and offline-gated v2 command audit](../firmware/README.md#natural-speed-command-audit-v2-flashed-bounded-uart-capture)
-  was separately approved, flashed and captured for ~115 seconds. It reported
-  one over-50-ms frame (startup), four skipped deadlines (three startup, one
-  after retained refresh), 14 retained full transfers of ~51.7 ms, and
-  alternating issued VCOM bits across completed commands. This is not physical
-  COM-edge or production 20 Hz verification. The user separately confirmed v2
-  looks stable, with gradual motion and no visible flicker or stale rows.
-- [x] [0062's host-only no-trusted-time preflight](decisions/0062-no-trusted-time-display-preflight.md):
-  explicit app-frame invalidation and `NO FRAME` replacement on boot/time loss,
-  with tested full-send confirmation, idle COM/retained-refresh independence and
-  checked UTC representation, monotonic/overflow fault rejection and new-anchor
-  recovery. That 0062 preflight alone supplies no external time source or device loop.
-  [0063](decisions/0063-bounded-utc-holdover-direction.md) accepts bounded
-  holdover between connections, a desired ≤100 ms total UTC-error budget and
-  immediate fresh-frame reanchoring on a source-validated time jump, and
-  screened ordinary unicast SNTP for the first prototype (not authenticated).
-  A separately approved [host-only trust gate](../firmware/src/utc_trust.rs)
-  composes 0062's preflight with injected screened observations and explicit
-  test uncertainty/drift/holdover inputs; by itself it is not an SNTP client
-  or device policy. [0064](decisions/0064-prototype-sntp-screen-and-leap-boundary.md)
-  adds a pure host [SNTP reply screen](../firmware/src/sntp_screen.rs) (unique-era,
-  status, timing/uncertainty) and ends holdover before any UTC month end
-  (possible leap). Bracketing send/receive captures reduce `C` to resolution
-  plus drift. A 3-hour UART capture measured the S3 timer at ≈+1.2 ppm versus
-  UTC (one board, room temperature, host-reference-limited);
-  [0065](decisions/0065-prototype-drift-bound-and-holdover.md) sets prototype
-  `D = 20 ppm` and `H = 3,600 s`. [0066](decisions/0066-prototype-live-sntp-stack-and-source.md)
-  adds an opt-in Wi-Fi/UDP stack and Cloudflare/NIST source; a one-hour
-  [live run](../firmware/README.md#live-sntp-source-evidence-flashed-1-hour-uart-run)
-  accepted all 59 replies (`U0` median 28 ms) with every consistency check in
-  bound. The remaining device-loop validation was outlined in the
-  [proposal](utc-trust-loss-proposal.md#remaining-evidence-capture-bound-drift-and-stack-proposal).
-  Under [0067's bounded fixture-only integration scope](decisions/0067-opt-in-live-utc-iss-radar-scope.md),
-  a [host-only composition preflight](../firmware/README.md#live-utc-iss-composition-preflight-host-only)
-  now checks screened replies through trust, frame rendering and Sharp command
-  intent using the checked-in ISS elements. A separate
-  [live-UTC radar candidate](../firmware/README.md#live-utc-iss-radar-candidate-flashed-bounded-uart-capture)
-  has an independently polled display/SPI task and a bounded network-event
-  channel. Its separately approved, exact-gated local-credential image was
-  flashed; a bounded 90-second UART capture logged cold-boot `NO FRAME`, two
-  accepted live syncs, frame activity and retained transfers without a reported
-  panic. The user reported a visible empty-sky notice on the Sharp panel;
-  the board later switched to a [separate dated-OMM diagnostic](../firmware/README.md#pinned-omm-live-utc-marker-diagnostic-flashed-no-visual-observation).
-  That image has host marker-motion and bounded UART evidence; the user was
-  not watching during the original predicted window. On 2026-10-29 PDT, the
-  user separately observed ISS moving on the Sharp panel during a later modelled
-  fixed-observer window, then leaving as the empty-horizon notice returned.
-  This is visual evidence, not independently verified clock/image identity,
-  actual-location accuracy, physical COM edges or sustained cadence.
-  Wi-Fi/display contention, SPI failure service, aging elements and whole-device
-  timing remain open.
+- [x] Physical display diagnostics, each separately gated, flashed and captured;
+  details and limits live in the [firmware README](../firmware/README.md):
+  - First integration: a fixed-time, single real-ISS [radar frame](../firmware/README.md#fixed-fixture-radar-on-sharp-candidate)
+    from the shared app/renderer reached the Sharp panel; the user confirmed the
+    marker and labelled strip.
+  - Motion: an accelerated [deterministic ISS replay](../firmware/README.md#deterministic-radar-replay-v2-physically-accepted)
+    was visually accepted after a first, too-short replay looked static.
+  - Frame cost: the [cost profile](../firmware/README.md#sharp-full-frame-cost-diagnostic-flashed-short-uart-capture),
+    [stage trace](../firmware/README.md#stage-trace-follow-up-flashed-short-uart-capture)
+    and [individual-glyph v3](../firmware/README.md#individual-glyph-trace-v3-flashed-short-uart-capture)
+    traced ~115 ms of a ~141 ms render to the period glyph. An opt-in renderer
+    [period cache](../firmware/README.md#period-cache-comparison-v1-flashed-short-uart-capture)
+    gives ~26 ms warm renders, byte-identical to uncached output; ordinary replay
+    firmware and the simulator still use the uncached entry points.
+  - Transfer: a full 2 MHz frame takes ~52.4 ms (~49.9 ms wire floor). The
+    [selective-line diagnostic](../firmware/README.md#selective-line-target-diagnostic-flashed-short-uart-capture-user-visual-check)
+    sends changed lines in ~5.4–8.8 ms with host pixel parity; the user reported
+    the display looks good.
+  - Cadence: the [natural-speed historical diagnostic](../firmware/README.md#natural-speed-historical-diagnostic-flashed-short-uart-capture)
+    and [v2 command audit](../firmware/README.md#natural-speed-command-audit-v2-flashed-bounded-uart-capture)
+    run host-preflight frame/refresh policy on a 50 ms grid. Skipped deadlines
+    occur at startup and after retained full refreshes; the user saw stable,
+    gradual motion with no visible flicker or stale rows. This is fixture time,
+    not trusted UTC, physical COM-edge, sustained VCOM or production 20 Hz proof.
+- [x] Time trust and live UTC, host-first then bounded device diagnostics:
+  - [0062](decisions/0062-no-trusted-time-display-preflight.md): `NO FRAME` on
+    boot/time loss, full-send confirmation, idle COM independence, fault rejection
+    and new-anchor recovery (host preflight).
+  - [0063](decisions/0063-bounded-utc-holdover-direction.md)–[0066](decisions/0066-prototype-live-sntp-stack-and-source.md):
+    bounded holdover, ≤100 ms desired total UTC error, screened unauthenticated
+    unicast SNTP, a [host trust gate](../firmware/src/utc_trust.rs) and
+    [reply screen](../firmware/src/sntp_screen.rs), holdover ending before any UTC
+    month end, prototype `D = 20 ppm` / `H = 3,600 s` (measured ≈+1.2 ppm on one
+    board), and a Cloudflare/NIST source whose one-hour
+    [live run](../firmware/README.md#live-sntp-source-evidence-flashed-1-hour-uart-run)
+    accepted all 59 replies. Remaining device-loop evidence is outlined in the
+    [proposal](utc-trust-loss-proposal.md#remaining-evidence-capture-bound-drift-and-stack-proposal).
+  - [0067](decisions/0067-opt-in-live-utc-iss-radar-scope.md): the
+    [live-UTC radar candidate](../firmware/README.md#live-utc-iss-radar-candidate-flashed-bounded-uart-capture)
+    and the [dated-OMM diagnostic](../firmware/README.md#pinned-omm-live-utc-marker-diagnostic-flashed-no-visual-observation).
+    On 2026-10-29 PDT the user watched ISS move across the Sharp panel during a
+    modelled fixed-observer window, then saw the empty-horizon notice return.
+    This is visual evidence, not verified clock/image identity, actual-location
+    accuracy, physical COM edges or sustained cadence.
+  - Wi-Fi/display contention, SPI failure service, aging elements and
+    whole-device timing remain open.
 - [ ] Run shared engine/renderer on S3 + Sharp. Intended controls under 0060:
   button cycles satellites, knob zooms continuously (presets as fallback).
+  BOOT cycling under [0068](decisions/0068-boot-selection-gesture.md) with
+  [0070](decisions/0070-boot-input-capture-independent-of-render.md) interrupt
+  capture is implemented in diagnostics and passed user tap sessions;
+  [HANDOFF](HANDOFF.md) tracks open BOOT risks.
 - [ ] Add Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes
   per [0002](decisions/0002-data-and-time-over-wifi.md). First slice accepted as
   [0071](decisions/0071-https-element-fetch-first-slice.md): mbedtls-rs, STATIONS JSON,
@@ -496,6 +311,7 @@ connections. Cached elements alone do not enable accurate offline cold boot.
 
 ## Boundaries
 Keep tuning inputs explicit; they need not be device settings. Defer uncertain
-presentation policies rather than building a plugin system. Knob, enclosure,
-battery integration, RTC, real location source, and Starlink/full catalogue
-remain outside this roadmap.
+presentation policies rather than building a plugin system. Knob hardware and
+continuous zoom are in scope under M6 ([0060](decisions/0060-defer-timing-to-physical-prototype.md)).
+Enclosure, battery integration, RTC, real location source, and Starlink/full
+catalogue remain outside this roadmap.
