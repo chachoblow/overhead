@@ -17,7 +17,7 @@ STATIONS only; no flash persistence; no location UI; no cadence work. CelesTrak:
 - 0075 decisions: answered 2026-11-01 (all recommendations accepted, home coordinates).
 - Home coordinates in ignored `firmware/.site.env`: answered 2026-11-01 (file present, values numeric; never printed).
 - Board left powered on `/dev/ttyUSB0` for ~4.5 h capture: needed.
-- User panel observation after a refresh: needed.
+- User panel observation after a refresh: answered 2026-11-02 (pass looked good).
 
 ## Plan
 - [x] App `Freshness`, `load_fetched_catalogue`, selection kept across loads, expiry unload; tests.
@@ -26,7 +26,7 @@ STATIONS only; no flash persistence; no location UI; no cadence work. CelesTrak:
 - [x] Image: reusable TLS/buffers, schedule, outcome classes, fetch UTC, home site; dummy build, clippy (no new warnings), offline gate.
 - [x] Decision 0075, `.gitignore`, README build recipe.
 - [ ] Build with real `.wifi.env` + `.site.env`, `REFRESH_MINUTES=120`; gate; flash and capture 16,800 s in one command (boot + 2 refreshes). Built, gate passed, MAC `80:45:6b:2a:45:08` on `/dev/ttyUSB0` confirmed; capture started 2026-11-01 ~21:57 UTC to local `firmware/target/live-fetch-radar-v2-run1.log`.
-- [ ] User observation after a refresh.
+- [x] User observation after a refresh: 2026-11-02 ~01:00–01:10 UTC on the `load=2` catalogue, CSS complex (48274, 53239, 54216, 69049, 69180) in view at the home site, BOOT cycled it (all `applied=1 valid=true`, two full cycles); user: "Everything looked good". The five share one element set (same epoch), so identical glyphs across them are expected.
 - [ ] Record evidence (firmware README), PLAN/HANDOFF/PROGRESS; delete this file.
 
 ## Discoveries and assumptions
