@@ -56,6 +56,10 @@ live-fetch = ["live-sntp", "element-fetch", "embassy-net/tcp", "esp-alloc/intern
 # 0074: live-UTC radar with BOOT capture on freshly fetched STATIONS elements
 # (one request per boot, certificate dates checked). Not the device app.
 live-fetch-radar = ["live-utc-boot", "live-fetch"]
+# Same image with a build-time fault plan (`fault_plan`): injected DNS/TCP/TLS
+# failures, shortened freshness and a Wi-Fi drop, to show 0075's failure
+# handling on the board. Diagnostic only; the image above has none of it.
+live-fetch-faults = ["live-fetch-radar"]
 # Separately named pinned-OMM visibility diagnostic; original source path retained.
 live-utc-fresh-iss = ["live-utc-radar"]
 

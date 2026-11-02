@@ -15,6 +15,12 @@
 //! Trust: MbedTLS verifies chain and hostname against the two bundled roots;
 //! every served certificate's validity dates are checked against the screened
 //! UTC in `tls_dates` before the request is sent (0074).
+//!
+//! With `live-fetch-faults` the same image follows a build-time fault plan
+//! (`fault_plan`): chosen attempts fail at their real DNS, TCP or TLS stage,
+//! `OLD DATA` and expiry thresholds are shortened, and Wi-Fi is dropped once,
+//! so 0075's failure handling can be captured in one run. Without the feature
+//! every attempt is ordinary and the thresholds are 0075's.
 extern crate alloc;
 
 use core::{
@@ -52,6 +58,8 @@ use mbedtls_rs::{
     io::Write as _,
 };
 use overhead_app::{Freshness, RadarApp, category::Category, projection::View};
+#[cfg(feature = "live-fetch-faults")]
+use overhead_core::sgp4::chrono::TimeDelta;
 use overhead_core::{
     GeodeticPosition,
     catalogue::Catalogue,
@@ -65,6 +73,7 @@ use overhead_s3_benchmark::{
     device_timing::{DiagnosticAction, LifecycleAction},
     element_fetch::{self, HttpError},
     element_refresh::{self, Outcome, Schedule},
+    fault_plan::Fault,
     live_utc,
     sharp_lines::{Kind, LineSender},
     site,
@@ -93,6 +102,66 @@ const HEAP_SIZE: usize = 160 * 1024;
 /// Certification Authority (0071), NUL-terminated for MbedTLS PEM parsing.
 const ROOTS: &str = concat!(include_str!("../certs/celestrak-roots.pem"), "\0");
 const SERVER_NAME: &core::ffi::CStr = c"celestrak.org";
+
+/// Fault build only: a public root (ISRG Root X1) that is not in CelesTrak's
+/// chain, so the `verify` fault fails real chain verification.
+#[cfg(feature = "live-fetch-faults")]
+const WRONG_ROOT: &str = concat!(include_str!("../certs/fault-wrong-root.pem"), "\0");
+/// `.invalid` never resolves (RFC 2606): a real DNS failure, no CelesTrak query.
+#[cfg(feature = "live-fetch-faults")]
+const FAULT_DNS_HOST: &str = "overhead-fault.invalid";
+/// TEST-NET-1 (RFC 5737) is never routed: a real TCP connect timeout.
+#[cfg(feature = "live-fetch-faults")]
+const FAULT_TCP_ADDR: embassy_net::IpAddress = embassy_net::IpAddress::v4(192, 0, 2, 1);
+
+/// Fault build configuration, all build-time and checked at boot.
+#[cfg(feature = "live-fetch-faults")]
+struct Faults {
+    plan: overhead_s3_benchmark::fault_plan::Plan,
+    stale_s: Option<u64>,
+    expire_after_load_s: Option<u64>,
+    wifi_drop: Option<(u64, u64)>,
+}
+
+#[cfg(feature = "live-fetch-faults")]
+fn faults() -> Faults {
+    use overhead_s3_benchmark::fault_plan::{Plan, minutes};
+    let check = |r: Result<Option<u64>, &'static str>| match r {
+        Ok(v) => v,
+        Err(name) => panic!("fault configuration: {name} must be whole minutes > 0"),
+    };
+    let plan = match Plan::parse(option_env!("FAULT_PLAN")) {
+        Ok(plan) => plan,
+        Err(e) => panic!("fault configuration: {e}"),
+    };
+    let drop_at = check(minutes(
+        option_env!("FAULT_WIFI_DROP_AT_MIN"),
+        "FAULT_WIFI_DROP_AT_MIN",
+    ));
+    let drop_for = check(minutes(
+        option_env!("FAULT_WIFI_DROP_FOR_MIN"),
+        "FAULT_WIFI_DROP_FOR_MIN",
+    ));
+    Faults {
+        plan,
+        stale_s: check(minutes(option_env!("FAULT_STALE_MIN"), "FAULT_STALE_MIN")),
+        expire_after_load_s: check(minutes(
+            option_env!("FAULT_EXPIRE_AFTER_LOAD_MIN"),
+            "FAULT_EXPIRE_AFTER_LOAD_MIN",
+        )),
+        wifi_drop: drop_at.map(|at| (at, drop_for.unwrap_or(600))),
+    }
+}
+
+fn fault_for(attempt: u32) -> Fault {
+    #[cfg(feature = "live-fetch-faults")]
+    return faults().plan.for_attempt(attempt);
+    #[cfg(not(feature = "live-fetch-faults"))]
+    {
+        let _ = attempt;
+        Fault::None
+    }
+}
 
 // A successful send is never dropped; if full, network yields until the
 // display owner drains it. Processing time, not packet time, is used for age.
@@ -187,6 +256,21 @@ async fn main(spawner: Spawner) -> ! {
         "OVERHEAD_S3_LIVE_FETCH_RADAR_V2 fetched STATIONS; refresh_s={interval_s}; \
          home site; not production"
     );
+    #[cfg(feature = "live-fetch-faults")]
+    let wifi_drop = {
+        let f = faults();
+        println!(
+            "FAULT_CONFIG plan={:?} stale_s={:?} expire_after_load_s={:?} wifi_drop_at_for_s={:?}; \
+             diagnostic fault build",
+            f.plan.steps(),
+            f.stale_s,
+            f.expire_after_load_s,
+            f.wifi_drop
+        );
+        f.wifi_drop
+    };
+    #[cfg(not(feature = "live-fetch-faults"))]
+    let wifi_drop: Option<(u64, u64)> = None;
 
     let cs = Output::new(p.GPIO10, Level::Low, OutputConfig::default());
     let spi = Spi::new(
@@ -231,7 +315,7 @@ async fn main(spawner: Spawner) -> ! {
         seed,
     );
     spawner.spawn(net(runner).unwrap());
-    spawner.spawn(connection(controller).unwrap());
+    spawner.spawn(connection(controller, wifi_drop).unwrap());
     stack.wait_config_up().await;
     let mut socket = UdpSocket::new(
         stack,
@@ -308,9 +392,16 @@ async fn fetch_once(
 ) -> Outcome {
     FETCHING.store(true, Ordering::Relaxed);
     println!("FETCH_START attempt={attempt} uptime_s={}", uptime_s());
+    let fault = fault_for(attempt);
+    if fault != Fault::None {
+        println!(
+            "FAULT_INJECT attempt={attempt} fault={fault:?} expected={:?}",
+            fault.expected()
+        );
+    }
     let started = uptime_us();
     let mut sent = false;
-    let result = with_timeout(FETCH_TIMEOUT, fetch(stack, r, utc, &mut sent)).await;
+    let result = with_timeout(FETCH_TIMEOUT, fetch(stack, r, utc, &mut sent, fault)).await;
     let outcome = match result {
         Ok(Ok(len)) => match ingest(&r.response[..len]) {
             Some(catalogue) => {
@@ -344,6 +435,14 @@ async fn fetch_once(
         heap_peak(),
         heap_now()
     );
+    if fault != Fault::None {
+        println!(
+            "FAULT_RESULT attempt={attempt} fault={fault:?} expected={:?} outcome={outcome:?} \
+             match={}",
+            fault.expected(),
+            fault.expected() == outcome
+        );
+    }
     FETCHING.store(false, Ordering::Relaxed);
     outcome
 }
@@ -354,6 +453,9 @@ struct Recording<'a, T> {
     inner: T,
     buf: &'a mut [u8],
     len: usize,
+    /// `handshake` fault: report end of stream once the server has sent its
+    /// first byte, as if it closed the connection mid-handshake.
+    cut_after_first_byte: bool,
 }
 
 impl<T: io::ErrorType> io::ErrorType for Recording<'_, T> {
@@ -362,6 +464,9 @@ impl<T: io::ErrorType> io::ErrorType for Recording<'_, T> {
 
 impl<T: io::Read> io::Read for Recording<'_, T> {
     async fn read(&mut self, out: &mut [u8]) -> Result<usize, Self::Error> {
+        if self.cut_after_first_byte && self.len > 0 {
+            return Ok(0);
+        }
         let n = self.inner.read(out).await?;
         let k = n.min(self.buf.len() - self.len);
         self.buf[self.len..self.len + k].copy_from_slice(&out[..k]);
@@ -387,6 +492,7 @@ async fn fetch(
     r: &mut FetchResources,
     utc: ScreenedObservation,
     sent: &mut bool,
+    fault: Fault,
 ) -> Result<usize, (&'static str, Outcome)> {
     use Outcome::{Handshake, Rejected, Transport};
     let FetchResources {
@@ -396,11 +502,25 @@ async fn fetch(
         response,
         capture,
     } = r;
+    #[cfg(feature = "live-fetch-faults")]
+    let host = if fault == Fault::Dns {
+        FAULT_DNS_HOST
+    } else {
+        element_fetch::HOST
+    };
+    #[cfg(not(feature = "live-fetch-faults"))]
+    let host = element_fetch::HOST;
     let addrs = stack
-        .dns_query(element_fetch::HOST, DnsQueryType::A)
+        .dns_query(host, DnsQueryType::A)
         .await
         .map_err(|_| ("stage=dns", Transport))?;
     let addr = *addrs.first().ok_or(("stage=dns_empty", Transport))?;
+    #[cfg(feature = "live-fetch-faults")]
+    let addr = if fault == Fault::Tcp {
+        FAULT_TCP_ADDR
+    } else {
+        addr
+    };
     let mut socket = TcpSocket::new(stack, tcp_rx, tcp_tx);
     socket.set_timeout(Some(Wait::from_secs(20)));
     let t0 = uptime_us();
@@ -410,9 +530,17 @@ async fn fetch(
         .map_err(|_| ("stage=tcp_connect", Transport))?;
     let t1 = uptime_us();
 
+    #[cfg(feature = "live-fetch-faults")]
+    let roots = if fault == Fault::Verify {
+        WRONG_ROOT
+    } else {
+        ROOTS
+    };
+    #[cfg(not(feature = "live-fetch-faults"))]
+    let roots = ROOTS;
     let config = ClientSessionConfig {
         ca_chain: Some(
-            Certificate::new(X509::PEM(c_str(ROOTS))).map_err(|_| ("stage=roots", Rejected))?,
+            Certificate::new(X509::PEM(c_str(roots))).map_err(|_| ("stage=roots", Rejected))?,
         ),
         server_name: Some(SERVER_NAME),
         min_version: TlsVersion::Tls1_2,
@@ -422,6 +550,7 @@ async fn fetch(
         inner: socket,
         buf: capture,
         len: 0,
+        cut_after_first_byte: fault == Fault::Handshake,
     };
     let mut session = Session::new(tls.reference(), stream, &SessionConfig::Client(config))
         .map_err(|_| ("stage=tls_session", Transport))?;
@@ -567,6 +696,7 @@ async fn display(
         .with_freshness(Freshness::DEVICE);
     let mut loads = 0u32;
     let mut was_stale = false;
+    let mut had_catalogue = false;
     let screen = unsafe { &mut *(&raw mut SCREEN) };
     let sender = unsafe { &mut *(&raw mut SENDER) };
     let period = unsafe { &mut *(&raw mut PERIOD) };
@@ -599,6 +729,10 @@ async fn display(
             println!("LIVE_UTC source={decision:?} uptime_us={now}");
         }
         if let Ok((catalogue, fetched_at)) = DATA.try_receive() {
+            #[cfg(feature = "live-fetch-faults")]
+            if loads == 0 {
+                app = with_fault_freshness(app, &catalogue, fetched_at);
+            }
             let before = app.selected_id();
             app.load_fetched_catalogue(catalogue, fetched_at);
             loads += 1;
@@ -623,6 +757,15 @@ async fn display(
                 app.selected_id()
             );
         }
+        let has_catalogue = app.counts().catalogue > 0;
+        if had_catalogue && !has_catalogue {
+            println!(
+                "LIVE_FETCH expired frame_utc={:?}Z catalogue=0 heap_now={}",
+                app.time(),
+                heap_now()
+            );
+        }
+        had_catalogue = has_catalogue;
         if app.data_stale() != was_stale {
             was_stale = app.data_stale();
             println!("LIVE_FETCH stale={was_stale} frame_utc={:?}Z", app.time());
@@ -727,6 +870,43 @@ async fn display(
     }
 }
 
+/// Fault build: replace 0075's thresholds on the first load so `OLD DATA`
+/// and expiry happen within one capture. Expiry is relative to that load
+/// because the newest STATIONS epoch may already be hours old when fetched.
+#[cfg(feature = "live-fetch-faults")]
+fn with_fault_freshness(
+    app: RadarApp,
+    catalogue: &Catalogue,
+    fetched_at: NaiveDateTime,
+) -> RadarApp {
+    let f = faults();
+    let mut freshness = Freshness::DEVICE;
+    if let Some(stale_s) = f.stale_s {
+        freshness.stale_after = TimeDelta::seconds(stale_s as i64);
+    }
+    if let (Some(after_s), Some(newest)) = (
+        f.expire_after_load_s,
+        catalogue
+            .entries()
+            .iter()
+            .map(|e| e.satellite().epoch())
+            .max(),
+    ) {
+        let expire_s = overhead_s3_benchmark::fault_plan::expire_after_s(
+            fetched_at.and_utc().timestamp(),
+            newest.and_utc().timestamp(),
+            after_s,
+        );
+        freshness.expire_after = TimeDelta::seconds(expire_s);
+    }
+    println!(
+        "FAULT_FRESHNESS stale_after_s={} expire_after_s={} (newest epoch age + override)",
+        freshness.stale_after.num_seconds(),
+        freshness.expire_after.num_seconds()
+    );
+    app.with_freshness(freshness)
+}
+
 enum QueryResult {
     NoReply,
     /// A matched reply; the observation if it was one.
@@ -794,14 +974,32 @@ async fn query(
     }
 }
 
+/// `wifi_drop` (fault build only): once, at that uptime, disconnect and stay
+/// off for the given seconds, then reconnect as after any loss.
 #[embassy_executor::task]
-async fn connection(mut controller: WifiController<'static>) {
+async fn connection(mut controller: WifiController<'static>, mut wifi_drop: Option<(u64, u64)>) {
     loop {
         match controller.connect_async().await {
             Ok(_) => {
-                println!("SNTP_WIFI connected");
-                let _ = controller.wait_for_disconnect_async().await;
-                println!("SNTP_WIFI disconnected");
+                println!("SNTP_WIFI connected uptime_s={}", uptime_s());
+                if let Some((at_s, for_s)) = wifi_drop {
+                    let wait = Wait::from_secs(at_s.saturating_sub(uptime_s()));
+                    if with_timeout(wait, controller.wait_for_disconnect_async())
+                        .await
+                        .is_err()
+                    {
+                        wifi_drop = None;
+                        println!("FAULT_WIFI drop uptime_s={} off_s={for_s}", uptime_s());
+                        let r = controller.disconnect_async().await;
+                        println!("FAULT_WIFI disconnected ok={}", r.is_ok());
+                        Timer::after(Wait::from_secs(for_s)).await;
+                        println!("FAULT_WIFI reconnecting uptime_s={}", uptime_s());
+                        continue;
+                    }
+                } else {
+                    let _ = controller.wait_for_disconnect_async().await;
+                }
+                println!("SNTP_WIFI disconnected uptime_s={}", uptime_s());
             }
             Err(e) => println!("SNTP_WIFI connect_failed {e:?}"),
         }

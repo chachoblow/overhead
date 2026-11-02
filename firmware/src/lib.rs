@@ -30,6 +30,8 @@ pub mod device_timing;
 pub mod element_fetch;
 #[cfg(feature = "element-fetch")]
 pub mod element_refresh;
+#[cfg(feature = "element-fetch")]
+pub mod fault_plan;
 #[cfg(feature = "sharp-radar")]
 pub mod live_utc;
 #[cfg(feature = "sharp-natural-audit")]
