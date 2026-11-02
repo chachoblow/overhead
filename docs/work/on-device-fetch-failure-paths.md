@@ -53,8 +53,12 @@ a reboot.
   load relative to its newest epoch; extra log lines.
 - [x] Wrong-root PEM for the verify fault (public root not in CelesTrak's chain).
 - [x] Host checks; dummy builds of default and fault images; clippy; gate.
-- [ ] Commit checkpoint. Build with real env, gate, flash + capture in one
-  command (background), run ~4.5 h.
+- [x] Commit checkpoint (4b12d9c). Build with real env, gate, flash + capture in one
+  command (background), run ~4.5 h. Running since 2026-11-02 18:15 UTC:
+  `firmware/target/live-fetch-faults-run.log` (ignored, local), `timeout 17400`.
+- [x] Make the `LIVE_FETCH stale=` log check skip frames with no UTC (see
+  discoveries); clippy both features unchanged, fmt clean. The running board
+  has the pre-fix image (4b12d9c).
 - [ ] Read capture, check every done-when line; restore default 8 h build.
 - [ ] Promote evidence, delete this file, handoff.
 
@@ -71,7 +75,21 @@ OLD DATA ~1h35; 3 dns ~2h05 → +5 min; 4 handshake ~2h10 → +15 min;
   threshold would fire unpredictably; expiry override = first load's epoch
   age + 210 min.
 
+- Each accepted SNTP renewal invalidates the app frame (`utc_trust.rs`
+  observe, 0062), and the display loop checked `data_stale()` between that and
+  the next render, so the run logs a spurious `stale=false frame_utc=None` then
+  `stale=true` on each renewal. Render always follows `update`, so the panel
+  notice is unaffected; read staleness from frames with UTC.
+
 ## Verification
+- Run so far: MAC 80:45:6b:2a:45:08 on /dev/ttyUSB0. Attempt 1 tcp → Transport,
+  next 300 s; attempt 2 ok 20/20 loaded 18:21:41Z, next 7200 s; newest epoch
+  ~7.9 h old (expire_after_s=41180). Wi-Fi drop 3600 s, off 600 s, reconnected
+  at 4200 s without reboot; frames continued, heap ~72.9–73.4 KB.
+  `stale=true` at 19:51:41Z (= fetch + 90 min). Attempt 3 dns → Transport,
+  300 s; attempt 4 handshake → `Io(ConnectionReset)` verify=0x0 → Handshake,
+  900 s; attempt 5 verify → MbedTLS -0x2700 verify=0x8 (not trusted) →
+  Rejected, 7200 s, no GET. All `FAULT_RESULT match=true`.
 - 2026-11-02 (pre-flash, dummy env): `cargo check --workspace` ok; `cargo test
   --workspace` 325 passed; firmware host default 19, `element-fetch` 53 (+6
   `fault_plan`), `live-utc-boot` 70, `sharp-boot-capture` 60; fmt clean;

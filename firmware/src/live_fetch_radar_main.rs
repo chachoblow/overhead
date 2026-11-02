@@ -766,7 +766,10 @@ async fn display(
             );
         }
         had_catalogue = has_catalogue;
-        if app.data_stale() != was_stale {
+        // Each accepted SNTP renewal invalidates the frame until the next
+        // render (0062), when `data_stale()` is false for want of a frame UTC;
+        // only frames with UTC decide the transition.
+        if app.time().is_some() && app.data_stale() != was_stale {
             was_stale = app.data_stale();
             println!("LIVE_FETCH stale={was_stale} frame_utc={:?}Z", app.time());
         }
