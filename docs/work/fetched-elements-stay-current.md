@@ -1,5 +1,5 @@
 # Fetched elements stay current across a day
-Status: verifying (capture running)
+Status: verifying (run 2 leak-check capture running until ~13:10 UTC 2026-11-02)
 Started: 2026-11-01. Scope: PLAN M6 "network failure, missing/invalid time or data, and stale elements" + refresh part of "HTTPS elements … refreshes"; decisions [0075](../decisions/0075-fetched-element-refresh-and-staleness.md), 0074, 0071, 0002, 0004.
 
 ## Outcome
@@ -37,6 +37,8 @@ STATIONS only; no flash persistence; no location UI; no cadence work. CelesTrak:
 ## Verification
 - Boot fetch 2026-11-01 21:57:37 UTC: TLS 1.2, handshake 803 ms, 3 certificates dated OK, HTTP 200 (8,410 B body; read ended by ConnectionReset after full Content-Length), 20/20 accepted, total 2,172 ms, heap peak 111,116 B, stack written 7,184 of 21,384 B, display gap 455 ms; `FETCH_SCHEDULE outcome=Success next_in_s=7200`.
 - Refresh 1, 2026-11-01 23:58:39 UTC (uptime 7,273 s; attempt due at 7,214 s, ran on the next in-budget SNTP poll): TLS 1.2, handshake 937 ms, dates OK, HTTP 200, 20/20 accepted (same epochs as boot), total 2,184 ms, catalogue swapped (`load=2`), next in 7,200 s. Heap high-water **136,808 B** (boot 111,116 B): old catalogue + persistent TLS context + new ingest; refresh 2 must show it plateaus, not grows. Display loop gap 449 ms (10 s stats; `DISPLAY_FETCH_GAP` repeated the boot max, fixed in source after flashing — not reset per fetch).
+- Refresh 2, 2026-11-02 01:59:42 UTC: HTTP 200, 20/20, newer epochs (newest 2026-11-01T13:52:58Z), handshake 1,002 ms, display gap 464 ms. Heap high-water **139,452 B** (+2.6 KB over refresh 1): plateau vs. leak undecidable from max_usage alone. Run 1 ended 02:36 UTC: 4h40m, three successful fetches, no panic, no Wi-Fi drop.
+- Run 2 (leak check): image adds `heap_now` (esp-alloc `current_usage`) to `FETCH_DONE` and stats; same `REFRESH_MINUTES=120`; gate passed (1,338,768 B); flashed 2026-11-02 02:40 UTC, 37,800 s capture to local `firmware/target/live-fetch-radar-v2-run2.log` (~5 refreshes). Boot fetch HTTP 200, handshake 7,862 ms (slowest yet), total 16.5 s, heap_now 70,028 B after fetch. Done when heap_now in idle stats windows stays flat across refreshes (a rise per refresh = leak, stop and diagnose).
 - Host prediction (pinned 2026-11-01 STATIONS fixture, home site, 60°): CSS complex in view 01:00–01:10 and 02:37–02:47 UTC 2026-11-02 (after refreshes at ~23:57 and ~01:57).
 - `cargo check --workspace`, `cargo test --workspace` (325 passed), app/render `--no-default-features` check, fmt; firmware host `--lib --locked`: default 19, `element-fetch` 47, `live-utc-boot` 70, `sharp-boot-capture` 60 — all pass (uncommitted tree, 2026-11-01).
 
