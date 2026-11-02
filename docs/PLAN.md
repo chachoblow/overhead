@@ -1,9 +1,10 @@
 # Overhead — Plan
 
 **Current: M0, M1 and M3 complete; M4 done for now (user, 2026-10-24). M2
-operating budget/scheduling and M6 standalone device remain open; the active
-slice is M6 HTTPS element fetch under [0071](decisions/0071-https-element-fetch-first-slice.md)
-and [0074](decisions/0074-live-utc-radar-on-fetched-elements.md).**
+operating budget/scheduling and M6 standalone device remain open; M6 element
+fetch runs under [0071](decisions/0071-https-element-fetch-first-slice.md),
+[0074](decisions/0074-live-utc-radar-on-fetched-elements.md) and
+[0075](decisions/0075-fetched-element-refresh-and-staleness.md).**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -309,8 +310,14 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   `live-fetch-radar` diagnostic checks certificate dates against screened UTC and tracks
   the fetched STATIONS on the live-UTC radar (user-observed pass with BOOT cycling,
   [evidence](../firmware/README.md#live-utc-radar-on-fetched-stations-flashed-uart-captures)).
-  Persistence, refreshes and a user location remain open.
+  Refresh done under [0075](decisions/0075-fetched-element-refresh-and-staleness.md):
+  8-hour refresh with request-boundary backoff and a build-time home site;
+  seven on-board refreshes with no heap growth and a user-observed pass
+  ([evidence](../firmware/README.md#refresh-staleness-and-home-site-0075)).
+  Flash persistence and a real location source remain open.
 - [ ] Handle network failure, missing/invalid time or data, and stale elements.
+  Under 0075: failed refreshes keep the previous catalogue, `OLD DATA` after
+  24 h, unload after 7 days (host-tested; no on-device failure seen yet).
 - [ ] Verify end-to-end performance and extended hardware operation, including
   the frame-timing work deferred by 0060.
 

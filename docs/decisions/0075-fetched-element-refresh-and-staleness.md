@@ -7,6 +7,9 @@ Builds on [0002](0002-data-and-time-over-wifi.md), [0071](0071-https-element-fet
 and [0074](0074-live-utc-radar-on-fetched-elements.md); an interim site source
 under [0004](0004-hardcoded-location.md). Replaces 0071/0074's "one request per
 boot, any failure final" for the `live-fetch-radar` image only.
+Done 2026-11-02: seven on-board refreshes across two runs at the home site, no
+heap growth, and a user-observed pass on refreshed elements
+([evidence](../../firmware/README.md#refresh-staleness-and-home-site-0075)).
 
 ## Decision
 1. **Refresh.** The image fetches STATIONS on boot (after the first SNTP

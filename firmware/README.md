@@ -1327,7 +1327,8 @@ within 100 ms it makes **one** STATIONS request, checks every served
 certificate's validity dates against that UTC (`tls_dates`) before sending the
 GET, and hands the catalogue to the display owner. Fixed site
 `LIVE_UTC_ISS_OBSERVER`, 60° vertical FOV, 160 KiB heap. No retry,
-persistence or refresh; each boot is one CelesTrak request. It prints the
+persistence or refresh; each boot is one CelesTrak request. (Superseded for
+this image by 0075's refresh and home site, [below](#refresh-staleness-and-home-site-0075).) It prints the
 `FETCH_*` lines of `live-fetch` plus `FETCH_CERT_DATES`, `STACK_WATERMARK`
 (CPU0 stack written depth through the fetch), `DISPLAY_FETCH_GAP` (longest
 display-loop gap while the fetch ran), `LIVE_FETCH loaded` and periodic
@@ -1408,6 +1409,31 @@ REFRESH_MINUTES=120 cargo build --release --locked \
 Dummy build (`SITE_LAT_DEG=0 SITE_LON_DEG=0`, dummy credentials): image
 1,338,608 B (16.08%), only the RWX warning, clippy no new warnings, gate passed.
 Site- and credential-bearing images and raw logs stay local.
+
+**On-board evidence, 2026-11-01/02** (devbox, `/dev/ttyUSB0`, MAC
+`80:45:6b:2a:45:08`, gate passed each build, home site, `REFRESH_MINUTES=120`):
+
+| Run | Result |
+|---|---|
+| 1 (21:57–02:36 UTC, 4h40m) | boot fetch + 2 refreshes, all HTTP 200 and 20/20; the second brought newer epochs. Each refresh ran on the first in-budget SNTP poll after its due time (~60 s late). Heap high-water 111,116 → 136,808 → 139,452 B |
+| User pass (01:00–01:10 UTC, after refresh 1) | CSS complex (48274, 53239, 54216, 69049, 69180) in view on the refreshed catalogue; BOOT cycled it twice, all `applied=1 valid=true`; user: everything looked good. The five share one element set, so their glyphs are identical by design |
+| 2 (02:40–13:10 UTC, 10h30m; adds `heap_now`) | boot fetch + 5 refreshes, all HTTP 200 and 20/20; selection kept across loads (`selected_before=selected=49271`). Live heap in idle 10 s windows **73,612 B** after fetches 1–3 and **73,800 B** after 4–6 (one +188 B step within interval 4, not per refresh): no leak. High-water plateaued at 136,808–136,996 B (~27 KB free) |
+| Per fetch (both runs) | handshake 0.9–1.6 s, once 7.9 s; whole fetch 1.8–16.5 s; display-loop gap 449–464 ms per fetch; no panic, no Wi-Fi disconnect |
+
+BOOT sampling across run 2: 3,153 of ~3,760 windows under 6 ms, 530 at 6–10 ms,
+77 at 10–16 ms spread over all sky states and away from fetches, and one 41 ms
+gap at boot during Wi-Fi association (already known). All are under the 20 ms
+debounce, but longer than the short tap sessions showed.
+
+Not shown on the board: the `OLD DATA` notice (24 h), expiry (7 days) and the
+failure classes (no failure occurred); those are host-tested
+(`element_refresh`, app and render tests). Afterwards the board was left on the
+default 8-hour build (`refresh_s=28800`); its boot fetch loaded 20 records.
+
+To read a running board's UART **without resetting it** (an `espflash monitor`
+resets it and costs a request): `stty -F /dev/ttyUSB0 115200 raw -echo -hupcl
+&& timeout 25 cat /dev/ttyUSB0`. `espflash monitor --no-reset --before
+no-reset-no-sync` hung at "Connecting" on devbox.
 
 ## Hardware and permission
 

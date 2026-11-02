@@ -640,3 +640,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Completed the 0071 slice 4 work item under [0074](decisions/0074-live-utc-radar-on-fetched-elements.md): app awaiting-catalogue state, `NO DATA` notice, Rust TLS 1.2 certificate-date check (`firmware/src/tls_dates.rs`) and the opt-in `live-fetch-radar` image.
 - Board: two boots fetched STATIONS with all served certificates in date (heap peak ~111 KiB of 160 KiB, display stall ~450 ms during TLS); the user saw the CSS complex move through the predicted 16:57–17:07 UTC window and cycled all five IDs twice with BOOT.
 - Verified: workspace check/tests (321), fmt, firmware host `element-fetch` (38), image build, clippy and offline gate. Not covered: failure paths, refresh, repeated runs, real location.
+
+## 2026-11-02 UTC (fetched elements refresh and age out, 0075)
+- Decision 0075: 8-hour STATIONS refresh (≥2 h), retries only before the GET (5/15/30/60 min), interval wait after it or on verification failure; `OLD DATA` after 24 h, unload after 7 days; selection kept across loads; home site from ignored `firmware/.site.env`; no persistence yet.
+- App `Freshness`/`load_fetched_catalogue`, render `OLD DATA`, firmware `element_refresh` and `site` modules, and the reworked `live-fetch-radar` image (reused TLS/buffers, schedule, outcome classes, `heap_now`).
+- Verified: workspace check/tests (325), firmware host suites, gate per build; on board at 2-hour refresh, seven refreshes over two runs (15 h) all succeeded with flat live heap; the user saw the CSS pass and BOOT cycling on refreshed data. Board left on the 8-hour build.
