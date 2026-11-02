@@ -134,6 +134,11 @@ fn heap_peak() -> usize {
     esp_alloc::HEAP.stats().max_usage
 }
 
+/// Live allocation now; across refreshes it separates a leak from a peak.
+fn heap_now() -> usize {
+    esp_alloc::HEAP.stats().current_usage
+}
+
 fn uptime_s() -> u64 {
     uptime_us() / 1_000_000
 }
@@ -334,9 +339,10 @@ async fn fetch_once(
         }
     };
     println!(
-        "FETCH_DONE attempt={attempt} total_ms={} heap_peak={} heap_size={HEAP_SIZE}",
+        "FETCH_DONE attempt={attempt} total_ms={} heap_peak={} heap_now={} heap_size={HEAP_SIZE}",
         (uptime_us() - started) / 1000,
-        heap_peak()
+        heap_peak(),
+        heap_now()
     );
     FETCHING.store(false, Ordering::Relaxed);
     outcome
@@ -626,13 +632,14 @@ async fn display(
             let c = app.counts();
             println!(
                 "BOOT_CAPTURE_STATS samples={} max_gap_us={} loop_max_us={loop_max_us} \
-                 catalogue={} sky={} view={} stale={} selected={:?}",
+                 catalogue={} sky={} view={} stale={} heap_now={} selected={:?}",
                 stats.samples,
                 stats.max_gap_us,
                 c.catalogue,
                 c.above_horizon,
                 c.visible,
                 app.data_stale(),
+                heap_now(),
                 app.selected_id()
             );
             loop_max_us = 0;
