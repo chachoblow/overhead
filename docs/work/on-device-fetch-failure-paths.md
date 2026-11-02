@@ -1,5 +1,5 @@
 # Fetched-element failure paths behave as 0075 says on the board
-Status: active
+Status: blocked: user choice — second ~2h15 run (2 more GETs) to show a load clearing OLD DATA, or accept host-test coverage for it
 Started: 2026-11-02. Scope: PLAN M6 "Handle network failure, missing/invalid
 time or data, and stale elements"; decisions [0075](../decisions/0075-fetched-element-refresh-and-staleness.md),
 [0074](../decisions/0074-live-utc-radar-on-fetched-elements.md), [0069](../decisions/0069-flash-without-per-flash-approval.md).
@@ -90,6 +90,16 @@ OLD DATA ~1h35; 3 dns ~2h05 → +5 min; 4 handshake ~2h10 → +15 min;
   300 s; attempt 4 handshake → `Io(ConnectionReset)` verify=0x0 → Handshake,
   900 s; attempt 5 verify → MbedTLS -0x2700 verify=0x8 (not trusted) →
   Rejected, 7200 s, no GET. All `FAULT_RESULT match=true`.
+  Expired 21:51:41Z (= load + 210 min): catalogue=0, live heap 73,612 → 51,456 B.
+  Attempt 6 22:44:54Z: HTTP 200, 20/20, but newest epoch still
+  2026-11-02T10:25:21Z (unchanged since load 1), ~12.3 h old > 41,180 s
+  threshold → unloaded at once (`loaded load=2 catalogue=0`). Correct
+  epoch-based behaviour, but `OLD DATA` clearing on a load and reload after
+  expiry are NOT shown. Other: SNTP 243 Cloudflare + 1 NIST observation,
+  242 accepted, 1 NoRenewal; first accept after reconnect 11 s later; one
+  NO FRAME (boot); no panic; heap peak 135,320 B of 163,840; stack 6,112 of
+  21,144 B; display gap per fetch 452/18/112/243/451 ms; BOOT max gap 33 ms at
+  boot (known), ≤14 ms after.
 - 2026-11-02 (pre-flash, dummy env): `cargo check --workspace` ok; `cargo test
   --workspace` 325 passed; firmware host default 19, `element-fetch` 53 (+6
   `fault_plan`), `live-utc-boot` 70, `sharp-boot-capture` 60; fmt clean;
@@ -97,3 +107,8 @@ OLD DATA ~1h35; 3 dns ~2h05 → +5 min; 4 handshake ~2h10 → +15 min;
   fault image 1,350,768 B (16.23%), RWX warning only, offline gate exit 0.
 
 ## Open questions
+- Asked 2026-11-02 ~22:50 UTC: second run (fault build, no faults,
+  FAULT_STALE_MIN=30, no expiry override, REFRESH_MINUTES=120; flash no
+  earlier than 00:45Z so the boot GET is ≥2 h after 22:44Z; ~2h15; 2 GETs)
+  to show OLD DATA raised then cleared by a successful load, vs closing with
+  host-test coverage. Recommendation: close now.
