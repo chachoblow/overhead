@@ -37,7 +37,7 @@ justify the limit and cadence, and M2 can close.
 
 ## Human gates
 - Intent (visual group, glyph, deferral, cadence, over-limit): answered 2026-11-03, all recommended options.
-- Visual acceptance of the visibility glyph: needed at the end (snapshot + panel).
+- Visual acceptance of the visibility glyph: answered 2026-11-03, enlarged/recentred icons accepted "for now" from simulator snapshots; user saw the board (first draft) and said it looks good.
 
 ## Plan
 - [x] core: `sun_ecef`, `in_earth_shadow`, `Catalogue::limit`; tests vs Meeus 25.a etc.

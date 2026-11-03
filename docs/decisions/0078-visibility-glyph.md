@@ -1,9 +1,10 @@
 # 0078 — Visibility glyph replaces the category icon
 
 Date: 2026-11-03
-Status: accepted direction (user, 2026-11-03: replace the category glyph with
-naked-eye visibility rather than a legend). Icon appearance awaits the user's
-review of executable output. Supersedes the display part of
+Status: accepted (user, 2026-11-03: replace the category glyph with
+naked-eye visibility rather than a legend; after reviewing executable
+simulator snapshots of all three states, the enlarged, recentred icons were
+accepted "for now"). Supersedes the display part of
 [0045](0045-static-group-category-contract.md); 0045's roles remain for
 [0077](0077-m2-operating-budget-visual-group.md)'s over-limit priority.
 
