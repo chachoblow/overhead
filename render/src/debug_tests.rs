@@ -518,3 +518,39 @@ fn fractional_replay_and_signed_epoch_offset_never_round_time_first() {
         "REPLAY UTC 2026-10-04T12:43:41.123456789Z"
     );
 }
+
+#[test]
+fn dropped_objects_appear_beside_fov_only_when_nonzero() {
+    let base = app(2, true);
+    let observer = base.observer();
+    let view = base.view();
+    let time = base.time().unwrap();
+    let catalogue = || {
+        let mut data: serde_json::Value =
+            serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
+        let mut builder = CatalogueBuilder::new();
+        for record in 0..3u64 {
+            data[0]["NORAD_CAT_ID"] = serde_json::json!(25544 + record);
+            let elements: Vec<OmmElements> = serde_json::from_value(data.clone()).unwrap();
+            builder.push(
+                RecordOrigin {
+                    group: 0,
+                    record: record as usize,
+                },
+                elements.into_iter().next().unwrap(),
+            );
+        }
+        builder.finish().unwrap()
+    };
+    let mut limited = RadarApp::awaiting_catalogue(observer, view)
+        .unwrap()
+        .with_object_limit(1);
+    limited.load_catalogue(catalogue());
+    limited.update(time).unwrap();
+    let page = Page::from_app(&limited, false);
+    assert_eq!(left(&page, 2), "VERTICAL FOV 20.00 DEG");
+    assert_eq!(right(&page, 2), "DROPPED 2");
+    assert_eq!(left(&page, 3), "CATALOGUE 1");
+    let page = Page::from_app(&base, false);
+    assert_eq!(row(&page, 2), "VERTICAL FOV 20.00 DEG");
+}

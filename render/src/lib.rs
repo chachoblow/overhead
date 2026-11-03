@@ -19,13 +19,13 @@ use overhead_app::{
 };
 use overhead_core::sgp4::chrono::Timelike;
 
-mod category;
 mod coast;
 pub mod debug;
 mod glyphs;
 #[cfg(feature = "measurement")]
 pub mod measurement;
 pub mod presentation;
+mod visibility;
 
 pub use coast::CoastLayer;
 pub use glyphs::PeriodCache;
@@ -395,7 +395,9 @@ where
             draw_selected_label(&mut display, id, marker, layout)?;
         }
         trace(FrameStage::Label);
-        category::draw(&mut display, app.selected_category())?;
+        // The former category slot now shows visibility (0078); the stage
+        // keeps its name so historical traces read the same.
+        visibility::draw(&mut display, app.selected_visibility())?;
         trace(FrameStage::Category);
         if let Some(values) = values {
             glyphs::draw_strip_params_traced(&mut display, values, glyph_trace, period_cache)?;
@@ -1508,7 +1510,7 @@ mod tests {
     }
 
     fn assert_selected_strip(screen: &Screen, app: &RadarApp) {
-        assert_category_pixels(screen, app.selected_category());
+        assert_visibility_pixels(screen, app.selected_visibility());
         let mut without_category = Screen {
             pixels: screen.pixels,
         };
@@ -1526,13 +1528,16 @@ mod tests {
         );
     }
 
-    fn assert_category_pixels(screen: &Screen, value: Option<overhead_app::category::Category>) {
+    fn assert_visibility_pixels(
+        screen: &Screen,
+        value: Option<overhead_app::visibility::Visibility>,
+    ) {
         let mut expected = Screen {
             pixels: [[false; 400]; 240],
         };
         if let Some(value) = value {
             Text::new(
-                "Cat",
+                "Vis",
                 Point::new(367, 17),
                 MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
             )
@@ -1541,7 +1546,7 @@ mod tests {
             for y in 0..24 {
                 for x in 0..24 {
                     expected.pixels[19 + y][364 + x] =
-                        category::reference_ink(value, x as i32, y as i32);
+                        visibility::reference_ink(value, x as i32, y as i32);
                 }
             }
         }
@@ -1549,26 +1554,20 @@ mod tests {
             assert_eq!(
                 screen.pixels[y][364..388],
                 expected.pixels[y][364..388],
-                "category {value:?} row {y}"
+                "visibility {value:?} row {y}"
             );
         }
     }
 
     #[test]
-    fn category_exact_rasters_and_slot_isolation() {
-        use overhead_app::category::Category::*;
-        for value in [
-            None,
-            Some(Unknown),
-            Some(Weather),
-            Some(Navigation),
-            Some(Station),
-        ] {
+    fn visibility_exact_rasters_and_slot_isolation() {
+        use overhead_app::visibility::Visibility::*;
+        for value in [None, Some(Visible), Some(Eclipsed), Some(Daylight)] {
             let mut screen = Screen {
                 pixels: [[false; 400]; 240],
             };
-            category::draw(&mut screen, value).unwrap();
-            assert_category_pixels(&screen, value);
+            visibility::draw(&mut screen, value).unwrap();
+            assert_visibility_pixels(&screen, value);
             for y in 0..240 {
                 for x in 0..400 {
                     if !(364..388).contains(&x) || !(10..43).contains(&y) {
@@ -1580,7 +1579,7 @@ mod tests {
     }
 
     #[test]
-    fn category_does_not_change_other_fields_radar_notices_or_square() {
+    fn roles_no_longer_change_any_pixel() {
         use overhead_app::category::Category::*;
         for viewport in [Viewport::Square, Viewport::Rectangle] {
             let mut app = app_with_orbits(viewport, false, &[25544], 2.0);
@@ -1594,29 +1593,14 @@ mod tests {
             };
             draw(&mut screen, &app, layout, true).unwrap();
             let baseline = screen.pixels;
-            let counts = app.counts();
-            let samples: Vec<_> = app.objects().map(|(_, s)| s.clone()).collect();
+            if viewport == Viewport::Rectangle {
+                assert!(app.selected_visibility().is_some());
+                assert_selected_strip(&screen, &app);
+            }
             for role in [Station, Navigation, Weather, Unknown] {
                 app = app.with_group_categories(std::vec![role]);
                 draw(&mut screen, &app, layout, true).unwrap();
-                if viewport == Viewport::Rectangle {
-                    assert_selected_strip(&screen, &app);
-                }
-                for (y, row) in baseline.iter().enumerate() {
-                    for (x, &pixel) in row.iter().enumerate() {
-                        if viewport != Viewport::Rectangle
-                            || !(364..388).contains(&x)
-                            || !(10..43).contains(&y)
-                        {
-                            assert_eq!(screen.pixels[y][x], pixel);
-                        }
-                    }
-                }
-                assert_eq!(app.counts(), counts);
-                assert_eq!(
-                    app.objects().map(|(_, s)| s.clone()).collect::<Vec<_>>(),
-                    samples
-                );
+                assert_eq!(screen.pixels, baseline);
             }
         }
     }

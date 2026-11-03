@@ -50,6 +50,10 @@ impl Page {
             2,
             format_args!("VERTICAL FOV {:.2} DEG", app.view().fov_deg()),
         );
+        // 0077: objects the operating limit dropped from the load, if any.
+        if app.dropped_objects() > 0 {
+            page.pair(2, 1, format_args!("DROPPED {}", app.dropped_objects()));
+        }
         let counts = app.counts();
         page.pair(3, 0, format_args!("CATALOGUE {}", counts.catalogue));
         if app.time().is_some() {

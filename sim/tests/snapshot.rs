@@ -1,5 +1,5 @@
 //! Real executable tests: no SDL window, network, wall clock, or hardware.
-use overhead_app::category::Category;
+use overhead_app::visibility::Visibility;
 use serde_json::{Value, json};
 use std::{
     fs,
@@ -300,17 +300,7 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                         ecef_to_geodetic(ecef).unwrap().altitude_km,
                         state.velocity().iter().map(|v| v * v).sum::<f64>().sqrt(),
                         1440.0 / entry.elements().mean_motion,
-                        // Explicit expected roles for these two local manifests,
-                        // not the app resolver or the loader's category table.
-                        if name == "weather-gps.json" {
-                            if entry.groups().contains(&1) {
-                                Category::Navigation
-                            } else {
-                                Category::Weather
-                            }
-                        } else {
-                            Category::Unknown
-                        },
+                        expected_visibility(ecef, observer, time),
                     )
                 })
                 .collect();
@@ -325,8 +315,8 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                 let mut selected_altitude = None;
                 let mut selected_speed = None;
                 let mut selected_period = None;
-                let mut selected_category = None;
-                for (look, altitude, speed, period, category) in &physical {
+                let mut selected_visibility = None;
+                for (look, altitude, speed, period, visibility) in &physical {
                     let up = look.range_km * look.elevation_rad.sin();
                     let depth = 75_000.0 - up;
                     if look.elevation_rad <= 0.0 || depth < 1.0 {
@@ -346,7 +336,7 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                         selected_altitude.get_or_insert(*altitude);
                         selected_speed.get_or_insert(*speed);
                         selected_period.get_or_insert(*period);
-                        selected_category.get_or_insert(*category);
+                        selected_visibility.get_or_insert(*visibility);
                     } else {
                         indicators += 1;
                     }
@@ -382,7 +372,7 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                     selected_altitude,
                     selected_speed,
                     selected_period,
-                    selected_category,
+                    selected_visibility,
                 );
                 if visible == 0 {
                     assert_snapshot_notices(
@@ -458,7 +448,7 @@ fn selected_fields_span_real_low_navigation_and_geo_orbits() {
             Some(altitude),
             Some(speed),
             Some(period),
-            Some(Category::Unknown),
+            Some(expected_visibility(ecef, observer, time)),
         );
     }
     assert_eq!(period_regimes, [true; 3]);
@@ -467,7 +457,7 @@ fn selected_fields_span_real_low_navigation_and_geo_orbits() {
 }
 
 #[test]
-fn configured_categories_reach_executable_with_hierarchy_and_no_other_pixel_changes() {
+fn configured_roles_no_longer_change_the_executable_and_slot_shows_visibility() {
     use embedded_graphics::{pixelcolor::Rgb888, prelude::*};
     use embedded_graphics_simulator::SimulatorDisplay;
     use overhead_core::{OmmElements, Satellite, ecef_to_geodetic, ecef_to_look_angles};
@@ -508,28 +498,23 @@ fn configured_categories_reach_executable_with_hierarchy_and_no_other_pixel_chan
     run(true);
     let baseline = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join("category.png")).unwrap();
     for (roles, expected) in [
-        (vec![None], Category::Unknown),
-        (vec![Some("weather")], Category::Weather),
-        (vec![Some("navigation")], Category::Navigation),
-        (vec![Some("station")], Category::Station),
-        (
-            vec![Some("weather"), None, Some("navigation")],
-            Category::Navigation,
-        ),
-        (
-            vec![Some("navigation"), Some("weather"), None],
-            Category::Navigation,
-        ),
+        (vec![None], ()),
+        (vec![Some("weather")], ()),
+        (vec![Some("navigation")], ()),
+        (vec![Some("station")], ()),
+        (vec![Some("weather"), None, Some("navigation")], ()),
+        (vec![Some("navigation"), Some("weather"), None], ()),
         (
             vec![Some("navigation"), Some("station"), Some("weather")],
-            Category::Station,
+            (),
         ),
         (
             vec![Some("weather"), Some("station"), Some("navigation")],
-            Category::Station,
+            (),
         ),
-        (vec![Some("weather"), Some("weather")], Category::Weather),
+        (vec![Some("weather"), Some("weather")], ()),
     ] {
+        let () = expected;
         let groups: Vec<_> = roles.iter().enumerate().map(|(i, role)| {
             json!({"name":format!("stations-{i}"), "path":"data.json", "category":role})
         }).collect();
@@ -547,15 +532,14 @@ fn configured_categories_reach_executable_with_hierarchy_and_no_other_pixel_chan
             Some(geodetic.altitude_km),
             Some(speed),
             Some(1440.0 / elements[0].elements().mean_motion),
-            Some(expected),
+            Some(expected_visibility(ecef, observer, time)),
         );
+        // 0078: roles no longer reach the screen; every pixel is unchanged.
         let image = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join("category.png")).unwrap();
         for y in 0..240 {
             for x in 0..400 {
-                if !(364..388).contains(&x) || !(10..43).contains(&y) {
-                    let point = Point::new(x, y);
-                    assert_eq!(image.get_pixel(point), baseline.get_pixel(point));
-                }
+                let point = Point::new(x, y);
+                assert_eq!(image.get_pixel(point), baseline.get_pixel(point));
             }
         }
         run(false);
@@ -570,7 +554,7 @@ fn assert_snapshot_fields(
     altitude: Option<f64>,
     speed: Option<f64>,
     period: Option<f64>,
-    category: Option<Category>,
+    visibility: Option<Visibility>,
 ) {
     use embedded_graphics::{
         mono_font::{MonoTextStyle, ascii::FONT_6X10},
@@ -592,9 +576,9 @@ fn assert_snapshot_fields(
     reference
         .draw_iter((12..=227).map(|y| Pixel(Point::new(352, y), BinaryColor::On)))
         .unwrap();
-    if let Some(category) = category {
+    if let Some(visibility) = visibility {
         Text::new(
-            "Cat",
+            "Vis",
             Point::new(367, 17),
             MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
         )
@@ -602,7 +586,7 @@ fn assert_snapshot_fields(
         .unwrap();
         for y in 0..24 {
             for x in 0..24 {
-                if category_reference_ink(category, x, y) {
+                if visibility_reference_ink(visibility, x, y) {
                     Pixel(Point::new(364 + x, 19 + y), BinaryColor::On)
                         .draw(&mut reference)
                         .unwrap();
@@ -786,42 +770,62 @@ fn assert_snapshot_fields(
     }
 }
 
+/// Expected 0078 visibility from engine positions: core's Sun, but the
+/// shadow cylinder and dark-sky threshold restated here, not the app's.
+fn expected_visibility(
+    ecef: overhead_core::EcefPosition,
+    observer: overhead_core::GeodeticPosition,
+    time: overhead_core::sgp4::chrono::NaiveDateTime,
+) -> Visibility {
+    let sun = overhead_core::sun_ecef(time).unwrap();
+    let elevation = overhead_core::ecef_to_look_angles(sun, observer)
+        .unwrap()
+        .elevation_rad
+        .to_degrees();
+    if elevation >= -6.0 {
+        return Visibility::Daylight;
+    }
+    let [sx, sy, sz] = sun.km();
+    let norm = (sx * sx + sy * sy + sz * sz).sqrt();
+    let u = [sx / norm, sy / norm, sz / norm];
+    let r = ecef.km();
+    let along: f64 = (0..3).map(|i| r[i] * u[i]).sum();
+    let off: f64 = (0..3).map(|i| (r[i] - along * u[i]).powi(2)).sum();
+    if along < 0.0 && off.sqrt() < 6378.137 {
+        Visibility::Eclipsed
+    } else {
+        Visibility::Visible
+    }
+}
+
 // Review glyphs expressed as local geometry, independent of packed renderer masks.
-fn category_reference_ink(category: Category, x: i32, y: i32) -> bool {
-    match category {
-        Category::Navigation => {
-            (x == 11 && (2..=21).contains(&y)) || (y == 11 && (2..=21).contains(&x))
+fn visibility_reference_ink(visibility: Visibility, x: i32, y: i32) -> bool {
+    let distance = f64::from(x - 11).hypot(f64::from(y - 11));
+    match visibility {
+        Visibility::Visible => {
+            let lid = |x: i32| (5.0 * (1.0 - (f64::from(x - 11) / 9.0).powi(2))).round() as i32;
+            if distance <= 2.5 {
+                return true;
+            }
+            if !(2..=20).contains(&x) {
+                return false;
+            }
+            let h = lid(x);
+            let low = if x == 2 || x == 20 {
+                0
+            } else {
+                lid(x - 1).min(lid(x + 1))
+            };
+            let dy = (y - 11).abs();
+            dy == h || (low + 1..=h).contains(&dy)
         }
-        Category::Station => {
-            ((y == 8 || y == 15) && (9..=14).contains(&x))
-                || ((x == 9 || x == 14) && (8..=15).contains(&y))
-                || (y == 11 && ((2..=9).contains(&x) || (14..=21).contains(&x)))
+        Visibility::Eclipsed => distance <= 6.5,
+        Visibility::Daylight => {
+            let (dx, dy) = (x - 11, y - 11);
+            (3.5..4.5).contains(&distance)
+                || ((dx == 0 || dy == 0) && (7..=9).contains(&(dx.abs() + dy.abs())))
+                || (dx.abs() == dy.abs() && (5..=6).contains(&dx.abs()))
         }
-        Category::Weather => match y {
-            5 => (8..=11).contains(&x),
-            6 => x == 7 || x == 12,
-            7 => x == 6 || x == 13,
-            8 => x == 6 || (13..=16).contains(&x),
-            9 => x == 5 || x == 6 || x == 17,
-            10 => x == 3 || x == 4 || x == 18,
-            11 => x == 3 || (18..=20).contains(&x),
-            12..=15 => x == 2 || x == 21,
-            16 => x == 3 || x == 20,
-            17 => (4..=19).contains(&x),
-            _ => false,
-        },
-        Category::Unknown => match y {
-            3 => (10..=13).contains(&x),
-            4 => x == 9 || x == 14,
-            5..=6 => x == 8 || x == 15,
-            7..=8 => x == 15,
-            9..=10 => x == 14,
-            11 => x == 13,
-            12 => x == 12,
-            13..=16 => x == 11,
-            19..=20 => x == 11 || x == 12,
-            _ => false,
-        },
     }
 }
 
@@ -1225,14 +1229,11 @@ fn wide_warning_snapshots_preserve_valid_markers_and_clear_after_clean_load() {
     );
     let state = satellite.state_at(time).unwrap();
     let ecef = state.to_ecef().unwrap();
-    let look = overhead_core::ecef_to_look_angles(
-        ecef,
-        overhead_core::GeodeticPosition {
-            altitude_km: 0.0,
-            ..observer
-        },
-    )
-    .unwrap();
+    let site = overhead_core::GeodeticPosition {
+        altitude_km: 0.0,
+        ..observer
+    };
+    let look = overhead_core::ecef_to_look_angles(ecef, site).unwrap();
     let altitude = overhead_core::ecef_to_geodetic(ecef).unwrap().altitude_km;
     let speed = state.velocity().iter().map(|v| v * v).sum::<f64>().sqrt();
     assert_snapshot_fields(
@@ -1242,7 +1243,7 @@ fn wide_warning_snapshots_preserve_valid_markers_and_clear_after_clean_load() {
         Some(altitude),
         Some(speed),
         Some(1440.0 / elements[0].elements().mean_motion),
-        Some(Category::Unknown),
+        Some(expected_visibility(ecef, site, time)),
     );
     let healthy_png = scratch.png("healthy.png");
     let healthy = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join("healthy.png")).unwrap();
@@ -1282,7 +1283,7 @@ fn wide_warning_snapshots_preserve_valid_markers_and_clear_after_clean_load() {
             Some(altitude),
             Some(speed),
             Some(1440.0 / elements[0].elements().mean_motion),
-            Some(Category::Unknown),
+            Some(expected_visibility(ecef, site, time)),
         );
         let warned = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join("warned.png")).unwrap();
         let top = 213 - (lines.len() as i32 - 1) * 13;
