@@ -54,6 +54,15 @@ measured group so normal growth never drops anything.
 - Diagnostic telemetry adds `update_max_us`, `update_boot_max_us`,
   `oldest_ms` and internal/PSRAM heap use. Banners: `OVERHEAD_DEVICE_V2`,
   `OVERHEAD_S3_LIVE_FETCH_RADAR_V4`, `OVERHEAD_S3_LIVE_FETCH_V2`.
+- Measured cost of staggering on the board: ~20–32 ms per frame for ~9
+  objects (catalogue in PSRAM, ~2.2 ms each), against ~0.8–1.5 ms per object
+  in internal RAM before. At the 256 limit a frame would update ~13 objects
+  (~29 ms), tight against 50 ms; only group growth reaches it.
+- 0062's trust rules discard all samples and the selection on every accepted
+  SNTP resync, so the next frame is complete: ~100–175 ms with 156 objects
+  (a few skipped frames per renewal), and BOOT selection returns to the first
+  object in view. Keeping samples across a small resync would change 0062 and
+  needs its own decision.
 - Not decided: scheduling for any future prediction, persistence, a real
   location source, physical COM edges or 20 Hz proof.
 

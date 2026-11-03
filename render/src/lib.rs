@@ -1514,7 +1514,7 @@ mod tests {
         let mut without_category = Screen {
             pixels: screen.pixels,
         };
-        for row in &mut without_category.pixels[10..43] {
+        for row in &mut without_category.pixels[10..45] {
             row[364..388].fill(false);
         }
         let selected = app.selected().map(|(_, s)| s.physical);
@@ -1545,12 +1545,12 @@ mod tests {
             .unwrap();
             for y in 0..24 {
                 for x in 0..24 {
-                    expected.pixels[19 + y][364 + x] =
+                    expected.pixels[21 + y][364 + x] =
                         visibility::reference_ink(value, x as i32, y as i32);
                 }
             }
         }
-        for y in 10..43 {
+        for y in 10..45 {
             assert_eq!(
                 screen.pixels[y][364..388],
                 expected.pixels[y][364..388],
@@ -1570,7 +1570,7 @@ mod tests {
             assert_visibility_pixels(&screen, value);
             for y in 0..240 {
                 for x in 0..400 {
-                    if !(364..388).contains(&x) || !(10..43).contains(&y) {
+                    if !(364..388).contains(&x) || !(10..45).contains(&y) {
                         assert!(!screen.pixels[y][x]);
                     }
                 }

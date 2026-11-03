@@ -587,7 +587,7 @@ fn assert_snapshot_fields(
         for y in 0..24 {
             for x in 0..24 {
                 if visibility_reference_ink(visibility, x, y) {
-                    Pixel(Point::new(364 + x, 19 + y), BinaryColor::On)
+                    Pixel(Point::new(364 + x, 21 + y), BinaryColor::On)
                         .draw(&mut reference)
                         .unwrap();
                 }
@@ -800,31 +800,31 @@ fn expected_visibility(
 
 // Review glyphs expressed as local geometry, independent of packed renderer masks.
 fn visibility_reference_ink(visibility: Visibility, x: i32, y: i32) -> bool {
-    let distance = f64::from(x - 11).hypot(f64::from(y - 11));
+    let distance = f64::from(x - 12).hypot(f64::from(y - 12));
     match visibility {
         Visibility::Visible => {
-            let lid = |x: i32| (5.0 * (1.0 - (f64::from(x - 11) / 9.0).powi(2))).round() as i32;
-            if distance <= 2.5 {
+            let lid = |x: i32| (7.0 * (1.0 - (f64::from(x - 12) / 11.0).powi(2))).round() as i32;
+            if distance <= 3.5 {
                 return true;
             }
-            if !(2..=20).contains(&x) {
+            if !(1..=23).contains(&x) {
                 return false;
             }
             let h = lid(x);
-            let low = if x == 2 || x == 20 {
+            let low = if x == 1 || x == 23 {
                 0
             } else {
                 lid(x - 1).min(lid(x + 1))
             };
-            let dy = (y - 11).abs();
+            let dy = (y - 12).abs();
             dy == h || (low + 1..=h).contains(&dy)
         }
-        Visibility::Eclipsed => distance <= 6.5,
+        Visibility::Eclipsed => distance <= 10.5,
         Visibility::Daylight => {
-            let (dx, dy) = (x - 11, y - 11);
-            (3.5..4.5).contains(&distance)
-                || ((dx == 0 || dy == 0) && (7..=9).contains(&(dx.abs() + dy.abs())))
-                || (dx.abs() == dy.abs() && (5..=6).contains(&dx.abs()))
+            let (dx, dy) = (x - 12, y - 12);
+            (4.5..5.5).contains(&distance)
+                || ((dx == 0 || dy == 0) && (8..=11).contains(&(dx.abs() + dy.abs())))
+                || (dx.abs() == dy.abs() && (6..=7).contains(&dx.abs()))
         }
     }
 }

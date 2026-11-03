@@ -8,16 +8,20 @@ review of executable output. Supersedes the display part of
 [0077](0077-m2-operating-budget-visual-group.md)'s over-limit priority.
 
 ## Decision
-The wide strip's top slot (24×24 at `(364,19)`, label at baseline
-`(367,17)`) shows `Vis` and one of three icons for the selected object:
+The wide strip's top slot shows `Vis` (baseline `(367,17)`) and one of three
+icons for the selected object, drawn from a 24×24 mask at `(364,21)` so they
+share the data glyphs' 23 px footprint and centre: `(376,33)`, 16 px below the
+label baseline as for `Elev`/`Alt`/`Spd`:
 
 | State | When | Icon |
 |---|---|---|
-| Visible | the Sun is below −6° at the observer and the object is outside Earth's shadow | eye: lids at `abs(y−11) = round(5(1−((x−11)/9)²))`, x 2..20, with pupil disc r ≤ 2.5 |
-| Eclipsed | dark sky, object inside Earth's shadow | filled disc r ≤ 6.5 |
-| Daylight | the Sun is at or above −6° at the observer | sun: ring 3.5 ≤ r < 4.5, axis rays 7..9, diagonal rays 5..6 |
+| Visible | the Sun is below −6° at the observer and the object is outside Earth's shadow | eye: lids at `abs(y−12) = round(7(1−((x−12)/11)²))`, x 1..23, with pupil disc r ≤ 3.5 |
+| Eclipsed | dark sky, object inside Earth's shadow | filled disc r ≤ 10.5 |
+| Daylight | the Sun is at or above −6° at the observer | sun: ring 4.5 ≤ r < 5.5, axis rays 8..11, diagonal rays 6..7 |
 
-Coordinates are local to the slot, centred on (11,11). Code
+Coordinates are local to the mask, centred on (12,12). The first draft
+(smaller, centred one pixel left and higher) was enlarged and recentred after
+the user's review on 2026-11-03. Code
 (`render/src/visibility.rs`) holds the packed masks and an independent
 reference; tests compare them pixel for pixel.
 
