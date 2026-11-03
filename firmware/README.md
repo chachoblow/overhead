@@ -1435,6 +1435,76 @@ resets it and costs a request): `stty -F /dev/ttyUSB0 115200 raw -echo -hupcl
 && timeout 25 cat /dev/ttyUSB0`. `espflash monitor --no-reset --before
 no-reset-no-sync` hung at "Connecting" on devbox.
 
+### Fetch failure paths on the board (`live-fetch-faults`, 0075)
+
+The opt-in `live-fetch-faults` feature builds the same binary with a
+build-time fault plan (`src/fault_plan.rs`, host-tested). Each fault happens at
+its real stage, so 0075's classification and schedule run unchanged:
+
+| `FAULT_PLAN` word | What the attempt does | 0075 class |
+|---|---|---|
+| `dns` | resolves `overhead-fault.invalid` (never resolves) | Transport (backoff) |
+| `tcp` | connects to TEST-NET-1 `192.0.2.1:443` (20 s timeout) | Transport (backoff) |
+| `handshake` | real handshake with CelesTrak, stream reports EOF after the server's first byte | Handshake (backoff once) |
+| `verify` | verifies against ISRG Root X1 (`certs/fault-wrong-root.pem`, not in CelesTrak's chain); no GET | Rejected (interval) |
+| `ok` | ordinary fetch | Success |
+
+Attempts past the plan are ordinary. `FAULT_STALE_MIN` replaces the 24 h
+`OLD DATA` threshold; `FAULT_EXPIRE_AFTER_LOAD_MIN` sets expiry to the first
+load's newest-epoch age plus that delay (a fixed threshold would fire at an
+unpredictable time, as the newest STATIONS epoch can be hours old when
+fetched); `FAULT_WIFI_DROP_AT_MIN`/`_FOR_MIN` disconnect Wi-Fi once. The image
+prints `FAULT_CONFIG`, `FAULT_INJECT`, `FAULT_RESULT ... match=`,
+`FAULT_FRESHNESS`, `FAULT_WIFI` and `LIVE_FETCH expired`. Without the feature
+none of the plan, overrides or wrong root is built in. Never a device image.
+
+```sh
+REFRESH_MINUTES=120 FAULT_PLAN=tcp,ok,dns,handshake,verify,ok FAULT_STALE_MIN=90 \
+  FAULT_EXPIRE_AFTER_LOAD_MIN=210 FAULT_WIFI_DROP_AT_MIN=60 FAULT_WIFI_DROP_FOR_MIN=10 \
+  cargo build --release --locked --bin overhead-s3-live-fetch-radar --features live-fetch-faults
+# plus the Wi-Fi/site exports above; save-image, gate, flash+capture in one command
+```
+
+Dummy build 1,350,768 B (16.23%), RWX warning only, clippy no new warnings,
+gate passed; every flashed build was gated.
+
+**Run 1, 2026-11-02 18:15–23:05 UTC** (devbox, `/dev/ttyUSB0`, MAC
+`80:45:6b:2a:45:08`, home site, plan as in the command above). Two CelesTrak
+GETs in total, both HTTP 200:
+
+| Attempt (UTC) | Fault → result | Next |
+|---|---|---|
+| 1 boot | tcp → `stage=tcp_connect`, Transport; radar stays `NO DATA` | 300 s |
+| 2 18:21:41 | ok → 20/20 loaded; newest epoch 10:25:21Z (~7.9 h old) | 7,200 s |
+| 3 20:22 | dns → `stage=dns`, Transport (streak restarted after the success) | 300 s |
+| 4 20:27 | handshake → `Io(ConnectionReset)`, `verify=0x0`, Handshake | 900 s |
+| 5 20:43 | verify → MbedTLS `-0x2700`, `verify=0x8` (not trusted), Rejected, no GET | 7,200 s |
+| 6 22:44:54 | ok → HTTP 200, 20/20, but newest epoch **still 10:25:21Z** | 7,200 s |
+
+Every `FAULT_RESULT` matched. Through all failures the radar kept the 18:21
+catalogue (`catalogue=20`). `OLD DATA` rose at 19:51:41Z (fetch + 90 min).
+Expiry unloaded the catalogue at 21:51:41Z (load + 210 min; live heap 73,612
+→ 51,456 B). Attempt 6's elements were as old as the expired set (~12.3 h, over
+the 41,180 s threshold), so they were unloaded on load: correct epoch-based
+behaviour, but no reload or `OLD DATA` clear could be shown in this run.
+Wi-Fi dropped at 3,600 s for 600 s and reconnected without a reboot; frames
+continued on holdover and the next SNTP observation was accepted 11 s after
+reconnecting (SNTP made no attempts while the link was down). Other: 242 of
+244 observations accepted, 1 NoRenewal, one NIST fallback; one `NO FRAME`
+(boot); no panic; heap high-water 135,320 of 163,840 B; CPU0 stack 6,112 of
+21,144 B; display-loop gap per attempt 22/452/19/112/243/451 ms; BOOT
+sampling gap 33 ms at boot (known), ≤14 ms afterwards.
+
+The run-1 image logged a spurious `stale=false frame_utc=None` / `stale=true`
+pair on every accepted SNTP renewal: the renewal invalidates the app frame
+until the next render (0062), and the stale check ran in between. The panel
+always renders after `update`, so the notice was not affected; the log check
+now only uses frames with UTC.
+
+Not shown on the board: post-GET failures (HTTP status, truncation, parse;
+each would cost a download and an interval) and the repeated-handshake rule;
+both stay host-tested in `element_refresh`.
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing

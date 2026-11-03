@@ -1,5 +1,5 @@
 # Fetched-element failure paths behave as 0075 says on the board
-Status: blocked: user choice — second ~2h15 run (2 more GETs) to show a load clearing OLD DATA, or accept host-test coverage for it
+Status: active (run 2 scheduled 00:42Z 2026-11-03)
 Started: 2026-11-02. Scope: PLAN M6 "Handle network failure, missing/invalid
 time or data, and stale elements"; decisions [0075](../decisions/0075-fetched-element-refresh-and-staleness.md),
 [0074](../decisions/0074-live-utc-radar-on-fetched-elements.md), [0069](../decisions/0069-flash-without-per-flash-approval.md).
@@ -111,4 +111,11 @@ OLD DATA ~1h35; 3 dns ~2h05 → +5 min; 4 handshake ~2h10 → +15 min;
   FAULT_STALE_MIN=30, no expiry override, REFRESH_MINUTES=120; flash no
   earlier than 00:45Z so the boot GET is ≥2 h after 22:44Z; ~2h15; 2 GETs)
   to show OLD DATA raised then cleared by a successful load, vs closing with
-  host-test coverage. Recommendation: close now.
+  host-test coverage. Recommendation: close now. **Answered: do the second
+  run.** User: knob session may move to tomorrow.
+- Run 2: image built at be9f080 (includes stale-log fix), FAULT_PLAN=dns so the
+  boot attempt makes no request and the first GET is ~00:47Z (≥2 h after
+  22:44:54Z); old image's next GET was due 00:44:56Z, flash at 00:42Z precedes
+  it. Log `firmware/target/live-fetch-faults-run2.log`, timeout 8400 s.
+- Restore the default 8 h build no earlier than ~04:50Z (≥2 h after run 2's
+  last GET, ~02:48Z) to avoid a 403 that would force an 8 h NO DATA wait.
