@@ -1,6 +1,6 @@
 #![no_std]
 #![no_main]
-//! Opt-in live-UTC radar diagnostic on fetched STATIONS elements (0074/0075):
+//! Opt-in live-UTC radar diagnostic on fetched elements (0074/0075/0077):
 //! the shared `live_radar` runtime with every telemetry line (0076). NOT the
 //! device application; that is `device_main.rs` on the same runtime.
 //!
@@ -24,7 +24,7 @@ async fn main(spawner: Spawner) -> ! {
         spawner,
         p,
         Log::Diagnostic,
-        "OVERHEAD_S3_LIVE_FETCH_RADAR_V3 fetched STATIONS; not production",
+        "OVERHEAD_S3_LIVE_FETCH_RADAR_V4 fetched visual group; not production",
     )
     .await
 }

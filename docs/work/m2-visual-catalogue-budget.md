@@ -40,13 +40,14 @@ justify the limit and cadence, and M2 can close.
 - Visual acceptance of the visibility glyph: needed at the end (snapshot + panel).
 
 ## Plan
-- [ ] core: low-precision sun position (ECEF) + Earth-shadow test; tests vs reference.
-- [ ] app: `Visibility` for the selected object; staggered update; catalogue limit
-      with priority (category, then NORAD ID) and dropped count.
-- [ ] render: visibility glyph in the Cat slot (`Vis` label); debug shows dropped count.
-- [ ] sim: pinned visual fixture + snapshot recipe for the three states.
-- [ ] firmware: visual group request, body cap, object limit, PSRAM heap,
-      staggered update in the display loop, update-cost telemetry; host tests.
+- [x] core: `sun_ecef`, `in_earth_shadow`, `Catalogue::limit`; tests vs Meeus 25.a etc.
+- [x] app: `visibility` module, `update_staggered`, `with_object_limit`/`dropped_objects`.
+- [x] render: `visibility.rs` replaces `category.rs` in the slot (`Vis`); debug
+      row 2 right shows `DROPPED n` when nonzero. Sim snapshot tests updated.
+- [x] firmware: visual request, MAX_BODY 128 KiB, OBJECT_LIMIT 256, PSRAM first
+      region (live_radar + live_fetch_main), STAGGER 1 s, update_max_us/oldest_ms/
+      internal/psram telemetry; banners DEVICE_V2, LIVE_FETCH_RADAR_V4, LIVE_FETCH_V2.
+- [ ] sim: review recipe for three visibility states on the visual fixture.
 - [ ] Board: diagnostic capture over ≥2 refreshes (REFRESH_MINUTES=120), then device app.
 - [ ] Docs: 0077, 0078, PLAN, DESIGN, READMEs, HANDOFF/PROGRESS at completion.
 
@@ -64,7 +65,10 @@ justify the limit and cadence, and M2 can close.
   Cylindrical Earth shadow (no penumbra/refraction).
 
 ## Verification
-(none yet)
+- 2026-11-03 (host): workspace check/tests pass (app 40, render 100, sim snapshot 12,
+  core catalogue 9); firmware host default 19, element-fetch 55, live-utc-boot 70,
+  sharp-boot-capture 60; dummy release builds of device, live-fetch-radar,
+  live-fetch-faults, live-fetch.
 
 ## Open questions
 - Object limit value: default 256 (body cap 128 KiB), to confirm against

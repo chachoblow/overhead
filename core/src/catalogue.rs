@@ -104,7 +104,7 @@ impl Catalogue {
             .enumerate()
             .map(|(i, e)| (priority(e), i))
             .collect();
-        ranked.sort_by(|a, b| b.0.cmp(&a.0));
+        ranked.sort_by_key(|&(priority, _)| core::cmp::Reverse(priority));
         let mut keep = vec![false; total];
         for &(_, i) in &ranked[..max] {
             keep[i] = true;

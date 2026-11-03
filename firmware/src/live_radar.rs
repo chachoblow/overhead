@@ -1,9 +1,9 @@
-//! Live-UTC radar runtime on fetched STATIONS elements (0074, refreshed under
-//! 0075), shared by the device application (`device`, 0076: event log only)
+//! Live-UTC radar runtime on fetched elements (0074, refreshed under 0075;
+//! CelesTrak's `visual` group under the 0077 operating budget), shared by the device application (`device`, 0076: event log only)
 //! and the `live-fetch-radar` diagnostic (`Log::Diagnostic`: every telemetry
 //! line). The two differ only in what they print. One display task owns app,
 //! UTC gate, BOOT selection and SPI; the network side screens SNTP replies,
-//! fetches STATIONS over HTTPS after the first in-budget observation, then
+//! fetches elements over HTTPS after the first in-budget observation, then
 //! again on 0075's schedule (`element_refresh`: one interval after a success
 //! or anything past the request, short backoff only before it), and hands
 //! each finished catalogue over with its fetch UTC. No fixture elements are
@@ -11,6 +11,12 @@
 //! refresh keeps tracking the previous catalogue, flagged `OLD DATA` after
 //! 24 h and unloaded once its newest epoch is 7 days old. No persistence.
 //! Observer: the build-time home site (`site`, ignored `.site.env`).
+//!
+//! Budget (0077): at most `OBJECT_LIMIT` objects per load (lowest NORAD IDs
+//! kept, dropped count logged); each frame recomputes the selected object and
+//! a round-robin share of the rest so every marker is under `STAGGER` old.
+//! Heap: PSRAM is the first region, so the catalogue, TLS and the response
+//! buffer live there; internal RAM serves the radio's internal-only requests.
 //!
 //! Trust: MbedTLS verifies chain and hostname against the two bundled roots;
 //! every served certificate's validity dates are checked against the screened
@@ -69,13 +75,11 @@ use mbedtls_rs::{
     Certificate, ClientSessionConfig, Session, SessionConfig, Tls, TlsVersion, X509, io,
     io::Write as _,
 };
-use overhead_app::{Freshness, RadarApp, category::Category, projection::View};
-#[cfg(feature = "live-fetch-faults")]
-use overhead_core::sgp4::chrono::TimeDelta;
+use overhead_app::{Freshness, RadarApp, projection::View};
 use overhead_core::{
     GeodeticPosition,
     catalogue::Catalogue,
-    sgp4::chrono::{DateTime, NaiveDateTime},
+    sgp4::chrono::{DateTime, NaiveDateTime, TimeDelta},
 };
 use overhead_render::{CoastLayer, Layout, PeriodCache};
 use static_cell::{ConstStaticCell, StaticCell};
@@ -112,10 +116,16 @@ const FETCH_TIMEOUT: Wait = Wait::from_secs(60);
 /// 0065's total-error budget, required of the observation that dates the fetch.
 const UTC_BUDGET_US: u64 = 100_000;
 /// Vertical FOV of the wide view: wider than the ISS image's 5° so several
-/// STATIONS objects can share the view for BOOT cycling (0035 labels stay on).
+/// objects can share the view for BOOT cycling (0035 labels stay on).
 const FOV_DEG: f64 = 60.0;
-/// The fetch image measured a 113,704 B peak in a 160 KiB heap (0071 slice 3).
+/// Internal-RAM heap. Before PSRAM (0077) one 160 KiB heap held everything
+/// and peaked at ~137 KB with 20 STATIONS objects.
 const HEAP_SIZE: usize = 160 * 1024;
+/// 0077: most objects tracked from one load; ~1.6× the 156-object `visual`
+/// group of 2026-11-03.
+const OBJECT_LIMIT: usize = 256;
+/// 0077: oldest an unselected object's marker may be.
+const STAGGER: TimeDelta = TimeDelta::seconds(1);
 /// Sectigo Public Server Authentication Root R46 and USERTrust RSA
 /// Certification Authority (0071), NUL-terminated for MbedTLS PEM parsing.
 const ROOTS: &str = concat!(include_str!("../certs/celestrak-roots.pem"), "\0");
@@ -198,8 +208,6 @@ static TX_BUF: StaticCell<[u8; 512]> = StaticCell::new();
 // array on the stack, which overflowed the guard on the first board run.
 static TCP_RX: ConstStaticCell<[u8; 4096]> = ConstStaticCell::new([0; 4096]);
 static TCP_TX: ConstStaticCell<[u8; 1024]> = ConstStaticCell::new([0; 1024]);
-static RESPONSE: ConstStaticCell<[u8; element_fetch::MAX_RESPONSE]> =
-    ConstStaticCell::new([0; element_fetch::MAX_RESPONSE]);
 static CAPTURE: ConstStaticCell<[u8; tls_dates::CAPTURE]> =
     ConstStaticCell::new([0; tls_dates::CAPTURE]);
 static TRNG: StaticCell<Trng> = StaticCell::new();
@@ -224,6 +232,24 @@ fn heap_peak() -> usize {
 /// Live allocation now; across refreshes it separates a leak from a peak.
 fn heap_now() -> usize {
     esp_alloc::HEAP.stats().current_usage
+}
+
+/// (internal used, internal free, PSRAM used) now, from the region stats.
+fn heap_regions() -> (usize, usize, usize) {
+    let stats = esp_alloc::HEAP.stats();
+    let (mut internal, mut free, mut external) = (0, 0, 0);
+    for region in stats.region_stats.iter().flatten() {
+        if region
+            .capabilities
+            .contains(esp_alloc::MemoryCapability::Internal)
+        {
+            internal += region.used;
+            free += region.free;
+        } else {
+            external += region.used;
+        }
+    }
+    (internal, free, external)
 }
 
 fn uptime_s() -> u64 {
@@ -257,6 +283,10 @@ struct FetchResources {
 /// names the image in the first UART line.
 pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! {
     DIAGNOSTIC.store(log == Log::Diagnostic, Ordering::Relaxed);
+    // 0077: PSRAM first, so ordinary allocations go there; esp-radio and
+    // esp-rtos ask for internal memory explicitly. Nothing here allocates
+    // atomics, which must not live in PSRAM on the S3.
+    esp_alloc::psram_allocator!(p.PSRAM, esp_hal::psram);
     esp_alloc::heap_allocator!(size: HEAP_SIZE);
     // This image's .bss leaves ~21 KiB of CPU0 stack (the fetch-only image
     // had ~65 KiB), so record the written depth through the fetch.
@@ -345,7 +375,8 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
         tls: Tls::new(TLS_TRNG.init(Trng::try_new().expect("TLS TRNG"))).expect("TLS context"),
         tcp_rx: TCP_RX.take(),
         tcp_tx: TCP_TX.take(),
-        response: RESPONSE.take(),
+        // In PSRAM: the 0077 body cap is too large for internal RAM.
+        response: alloc::vec![0u8; element_fetch::MAX_RESPONSE].leak(),
         capture: CAPTURE.take(),
     };
     let mut schedule = Schedule::new(interval_s);
@@ -445,8 +476,10 @@ async fn fetch_once(
             }
         }
     };
+    let (internal, internal_free, psram) = heap_regions();
     diag!(
-        "FETCH_DONE attempt={attempt} total_ms={} heap_peak={} heap_now={} heap_size={HEAP_SIZE}",
+        "FETCH_DONE attempt={attempt} total_ms={} heap_peak={} heap_now={} heap_size={HEAP_SIZE} \
+         internal_used={internal} internal_free={internal_free} psram_used={psram}",
         (uptime_us() - started) / 1000,
         heap_peak(),
         heap_now()
@@ -707,12 +740,14 @@ async fn display(
     observer: GeodeticPosition,
 ) {
     // No elements until the fetch delivers them: NO FRAME, then NO DATA.
-    // STATIONS is an explicit station group (0045), so its role is Station.
+    // The visual group has no display role (0045 roles only rank the limit).
     let view = View::rectangular(FOV_DEG, Layout::wide().aspect_ratio()).expect("view");
     let mut app = RadarApp::awaiting_catalogue(observer, view)
         .expect("observer camera")
-        .with_group_categories(alloc::vec![Category::Station])
+        .with_object_limit(OBJECT_LIMIT)
         .with_freshness(Freshness::DEVICE);
+    // Longest staggered update per stats window, and since boot (0077).
+    let (mut update_max_us, mut update_boot_max_us) = (0u64, 0u64);
     let mut loads = 0u32;
     let mut was_stale = false;
     let mut had_catalogue = false;
@@ -757,9 +792,10 @@ async fn display(
             loads += 1;
             let c = app.counts();
             println!(
-                "LIVE_FETCH loaded load={loads} fetched_at={fetched_at:?}Z catalogue={} valid={} \
-                 sky={} view={} selected_before={before:?} selected={:?}",
+                "LIVE_FETCH loaded load={loads} fetched_at={fetched_at:?}Z catalogue={} dropped={} \
+                 valid={} sky={} view={} selected_before={before:?} selected={:?}",
                 c.catalogue,
+                app.dropped_objects(),
                 app.time().is_some(),
                 c.above_horizon,
                 c.visible,
@@ -795,9 +831,17 @@ async fn display(
         if now.saturating_sub(last_stats) >= 10_000_000 {
             let stats = boot_capture::take_stats();
             let c = app.counts();
+            let (internal, internal_free, psram) = heap_regions();
+            let oldest_ms = match (app.time(), app.oldest_sample_utc()) {
+                (Some(t), Some(o)) => (t - o).num_milliseconds(),
+                _ => -1,
+            };
             diag!(
                 "BOOT_CAPTURE_STATS samples={} max_gap_us={} loop_max_us={loop_max_us} \
-                 catalogue={} sky={} view={} stale={} heap_now={} selected={:?}",
+                 update_max_us={update_max_us} update_boot_max_us={update_boot_max_us} \
+                 oldest_ms={oldest_ms} catalogue={} sky={} view={} stale={} heap_now={} \
+                 internal_used={internal} internal_free={internal_free} psram_used={psram} \
+                 selected={:?}",
                 stats.samples,
                 stats.max_gap_us,
                 c.catalogue,
@@ -808,6 +852,7 @@ async fn display(
                 app.selected_id()
             );
             loop_max_us = 0;
+            update_max_us = 0;
             last_stats = now;
         }
         match gate.next(&mut app, now, retained) {
@@ -831,7 +876,12 @@ async fn display(
                 let utc = DateTime::from_timestamp_micros(sample.utc_unix_us)
                     .expect("gate checked UTC")
                     .naive_utc();
-                app.update(utc).expect("checked UTC sample");
+                let started = uptime_us();
+                app.update_staggered(utc, STAGGER)
+                    .expect("checked UTC sample");
+                let took = uptime_us() - started;
+                update_max_us = update_max_us.max(took);
+                update_boot_max_us = update_boot_max_us.max(took);
                 overhead_render::draw_cached(screen, &app, Layout::wide(), false, coast, period)
                     .expect("radar render");
                 let phase = gate.next_phase();
@@ -899,7 +949,7 @@ async fn display(
 
 /// Fault build: replace 0075's thresholds on the first load so `OLD DATA`
 /// and expiry happen within one capture. Expiry is relative to that load
-/// because the newest STATIONS epoch may already be hours old when fetched.
+/// because the newest element epoch may already be hours old when fetched.
 #[cfg(feature = "live-fetch-faults")]
 fn with_fault_freshness(
     app: RadarApp,

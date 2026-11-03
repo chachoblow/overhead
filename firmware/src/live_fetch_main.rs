@@ -2,7 +2,8 @@
 #![no_main]
 //! 0071 `live-fetch` diagnostic, NOT the device application. Joins Wi-Fi,
 //! screens one SNTP observation (0064, 0065's 100 ms budget), then makes
-//! exactly one HTTPS GET of CelesTrak STATIONS through mbedtls-rs and reports
+//! exactly one HTTPS GET of CelesTrak elements (`visual` since 0077) through
+//! mbedtls-rs and reports
 //! TLS, HTTP and catalogue results, timings and the heap high-water mark.
 //! Any failure stops fetching until reboot: no retry. The Sharp panel is held
 //! white with VCOM alternating ~1 Hz. Credentials come from build-time
@@ -11,6 +12,8 @@
 //! Trust: chain and hostname are verified against the two bundled roots.
 //! Certificate validity dates are NOT checked: the prebuilt MbedTLS library
 //! has no wall-clock hook (see the firmware README).
+extern crate alloc;
+
 use core::panic::PanicInfo;
 use embassy_executor::Spawner;
 use embassy_net::{
@@ -67,7 +70,6 @@ static UDP_RX: StaticCell<[u8; 512]> = StaticCell::new();
 static UDP_TX: StaticCell<[u8; 512]> = StaticCell::new();
 static TCP_RX: StaticCell<[u8; 4096]> = StaticCell::new();
 static TCP_TX: StaticCell<[u8; 1024]> = StaticCell::new();
-static RESPONSE: StaticCell<[u8; element_fetch::MAX_RESPONSE]> = StaticCell::new();
 static TRNG: StaticCell<Trng> = StaticCell::new();
 
 fn uptime_us() -> u64 {
@@ -81,10 +83,13 @@ fn heap_peak() -> usize {
 #[esp_hal::main]
 async fn main(spawner: Spawner) -> ! {
     let p = esp_hal::init(esp_hal::Config::default());
+    // 0077: the response buffer outgrew internal RAM; PSRAM is the first
+    // region, as in the live radar runtime.
+    esp_alloc::psram_allocator!(p.PSRAM, esp_hal::psram);
     esp_alloc::heap_allocator!(size: HEAP_SIZE);
     let timg0 = TimerGroup::new(p.TIMG0);
     esp_rtos::start(timg0.timer0, p.FROM_CPU_INTR0);
-    println!("OVERHEAD_S3_LIVE_FETCH_V1 one STATIONS request per boot; no retry");
+    println!("OVERHEAD_S3_LIVE_FETCH_V2 one visual-group request per boot; no retry");
 
     let cs = Output::new(p.GPIO10, Level::Low, OutputConfig::default());
     let spi = Spi::new(
@@ -142,7 +147,7 @@ async fn main(spawner: Spawner) -> ! {
     );
 
     let tls = Tls::new(trng).expect("TLS context");
-    let response = RESPONSE.init([0; element_fetch::MAX_RESPONSE]);
+    let response = alloc::vec![0u8; element_fetch::MAX_RESPONSE].leak();
     let started = uptime_us();
     match with_timeout(FETCH_TIMEOUT, fetch(stack, &tls, response)).await {
         Ok(Ok(len)) => report(&response[..len]),

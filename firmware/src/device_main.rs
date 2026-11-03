@@ -1,7 +1,7 @@
 #![no_std]
 #![no_main]
 //! Overhead device application (0076): the live-UTC radar at the build-time
-//! home site on fetched STATIONS elements, refreshed under 0075, with BOOT
+//! home site on fetched `visual` elements (0077), refreshed under 0075, with BOOT
 //! cycling (0068/0070). Same runtime as the `live-fetch-radar` diagnostic,
 //! printing only the event log. On a panic it halts with the reason on UART;
 //! it never reboots itself, since every boot costs a CelesTrak request.
@@ -23,7 +23,7 @@ async fn main(spawner: Spawner) -> ! {
         spawner,
         p,
         Log::Events,
-        "OVERHEAD_DEVICE_V1 live radar on fetched STATIONS",
+        "OVERHEAD_DEVICE_V2 live radar on fetched visual group",
     )
     .await
 }

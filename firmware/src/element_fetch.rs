@@ -1,4 +1,5 @@
-//! 0071 slice 1: the fixed CelesTrak STATIONS request, a bounded HTTP/1.0
+//! 0071 slice 1: the fixed CelesTrak element request (since 0077 the `visual`
+//! group, previously STATIONS), a bounded HTTP/1.0
 //! response parser and catalogue ingestion of the body. Host-tested and
 //! transport-free: no socket, TLS, clock, retry or persistence lives here.
 //! Every error is final for the boot (0071: no automatic retry).
@@ -12,12 +13,12 @@ use serde_json::value::RawValue;
 
 pub const HOST: &str = "celestrak.org";
 pub const PORT: u16 = 443;
-pub const PATH: &str = "/NORAD/elements/gp.php?GROUP=STATIONS&FORMAT=JSON";
+pub const PATH: &str = "/NORAD/elements/gp.php?GROUP=visual&FORMAT=JSON";
 
 /// One GET per connection. HTTP/1.0 rules out chunked transfer coding, so a
 /// complete response is the head, `Content-Length` body bytes and a close.
 pub const REQUEST: &str = concat!(
-    "GET /NORAD/elements/gp.php?GROUP=STATIONS&FORMAT=JSON HTTP/1.0\r\n",
+    "GET /NORAD/elements/gp.php?GROUP=visual&FORMAT=JSON HTTP/1.0\r\n",
     "Host: celestrak.org\r\n",
     "User-Agent: overhead-s3/0.1 (+https://github.com/chachoblow/overhead)\r\n",
     "Accept: application/json\r\n",
@@ -28,8 +29,9 @@ pub const REQUEST: &str = concat!(
 /// Largest accepted status line plus headers, including the blank line.
 /// CelesTrak's measured head is about 230 bytes.
 pub const MAX_HEAD: usize = 2 * 1024;
-/// Largest accepted body: about twice the measured 8,441-byte STATIONS array.
-pub const MAX_BODY: usize = 16 * 1024;
+/// Largest accepted body (0077): about twice the measured 64,659-byte
+/// `visual` array of 156 records, room for ~310 records of ~415 bytes.
+pub const MAX_BODY: usize = 128 * 1024;
 /// Receive buffer that holds any acceptable complete response.
 pub const MAX_RESPONSE: usize = MAX_HEAD + MAX_BODY;
 
@@ -229,7 +231,7 @@ pub struct Summary {
     pub newest_epoch: NaiveDateTime,
 }
 
-/// Builds a catalogue from one STATIONS body through the checked
+/// Builds a catalogue from one element body through the checked
 /// `overhead-core` path, as group 0. A malformed array rejects the document;
 /// a malformed record is reported and skipped, as in the M2 loader.
 pub fn ingest(body: &[u8]) -> Result<Ingested, IngestError> {
@@ -325,6 +327,45 @@ mod tests {
         assert!(REQUEST.ends_with("\r\nConnection: close\r\n\r\n"));
         assert_eq!(REQUEST.matches("\r\n\r\n").count(), 1);
         assert!(REQUEST.is_ascii());
+    }
+
+    const VISUAL: &[u8] = include_bytes!("../fixtures/celestrak-visual-20261103.json");
+
+    #[test]
+    fn request_names_the_visual_group() {
+        assert!(PATH.contains("GROUP=visual&FORMAT=JSON"));
+        assert!(!REQUEST.contains("STATIONS"));
+    }
+
+    #[test]
+    fn visual_fixture_fits_and_ingests_completely() {
+        assert_eq!(VISUAL.len(), 64_659);
+        assert!(VISUAL.ends_with(b"}]\r\n"));
+        assert!(VISUAL.len() * 2 <= MAX_BODY + 2048);
+        let bytes = ok(VISUAL);
+        assert!(bytes.len() <= MAX_RESPONSE);
+        assert_eq!(parse_response(&bytes), Ok(VISUAL));
+        let ingested = ingest(VISUAL).unwrap();
+        assert!(ingested.record_errors.is_empty());
+        let ids: Vec<u64> = ingested
+            .catalogue
+            .entries()
+            .iter()
+            .map(|e| e.elements().norad_id)
+            .collect();
+        assert!(ids.contains(&25544) && ids.contains(&20580) && ids.contains(&48274));
+        assert_eq!(
+            ingested.summary(),
+            Summary {
+                records: 156,
+                accepted: 156,
+                record_errors: 0,
+                invalid: 0,
+                conflicts: 0,
+                oldest_epoch: epoch("2026-11-01T15:41:22.462944"),
+                newest_epoch: epoch("2026-11-02T22:18:20.337120"),
+            }
+        );
     }
 
     #[test]
@@ -435,10 +476,10 @@ mod tests {
         let cases: [(&str, Result<Option<usize>, HttpError>); 12] = [
             ("content-length: 2", Ok(Some(2))),
             ("CONTENT-LENGTH:2  ", Ok(Some(2))),
-            ("Content-Length: 16384", Ok(Some(MAX_BODY))),
+            ("Content-Length: 131072", Ok(Some(MAX_BODY))),
             (
-                "Content-Length: 16385",
-                Err(HttpError::BodyTooLarge { length: 16385 }),
+                "Content-Length: 131073",
+                Err(HttpError::BodyTooLarge { length: 131073 }),
             ),
             (
                 "Content-Length: 99999999999999999999999",
