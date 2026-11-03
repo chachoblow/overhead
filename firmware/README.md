@@ -1501,6 +1501,23 @@ until the next render (0062), and the stale check ran in between. The panel
 always renders after `update`, so the notice was not affected; the log check
 now only uses frames with UTC.
 
+**Run 2, 2026-11-03 00:42–03:02 UTC** (same board and port, image at
+`be9f080` with the log fix; `FAULT_PLAN=dns FAULT_STALE_MIN=30`, no expiry
+override, no Wi-Fi drop). The boot attempt failed at `stage=dns` (Transport,
+300 s) so the first GET came ≥2 h after run 1's last. Attempt 2 loaded 20/20
+at 00:49:07Z (newest epoch 2026-11-02T17:17:18Z); `stale=true` at 01:19:07Z
+(fetch + 30 min); attempt 3 at 02:50:01Z loaded 20/20 with a newer epoch
+(20:37:14Z), kept the selection (`67683`) and logged `stale=false` on the
+same frame. So a successful load clears `OLD DATA`. Two GETs, both HTTP 200;
+117 of 119 SNTP observations accepted, 2 NoRenewal; no `NO FRAME` after boot;
+no panic; steady live heap 73,612 B after each load (95,768 B briefly while
+the old and new catalogues coexist), heap high-water 139,696 of 163,840 B;
+display-loop gap per attempt 16/456/458 ms.
+
+A reload after expiry was still not shown (the run-1 reload happened, but
+its elements were already expired); it goes through the same load path, and
+the unload/expiry rule is host-tested in `overhead-app`.
+
 Not shown on the board: post-GET failures (HTTP status, truncation, parse;
 each would cost a download and an interval) and the repeated-handshake rule;
 both stay host-tested in `element_refresh`.

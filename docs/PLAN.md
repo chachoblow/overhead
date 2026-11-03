@@ -315,9 +315,15 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   seven on-board refreshes with no heap growth and a user-observed pass
   ([evidence](../firmware/README.md#refresh-staleness-and-home-site-0075)).
   Flash persistence and a real location source remain open.
-- [ ] Handle network failure, missing/invalid time or data, and stale elements.
+- [x] Handle network failure, missing/invalid time or data, and stale elements.
   Under 0075: failed refreshes keep the previous catalogue, `OLD DATA` after
-  24 h, unload after 7 days (host-tested; no on-device failure seen yet).
+  24 h, unload after 7 days. Shown on the board with the opt-in
+  `live-fetch-faults` build: DNS, TCP, handshake and verification failures
+  classified and scheduled as decided, `OLD DATA` raised and cleared by a load,
+  expiry to `NO DATA`, Wi-Fi drop recovered without reboot
+  ([evidence](../firmware/README.md#fetch-failure-paths-on-the-board-live-fetch-faults-0075)).
+  Post-GET failures, the repeated-handshake rule and reload after expiry
+  remain host-tested only.
 - [ ] Verify end-to-end performance and extended hardware operation, including
   the frame-timing work deferred by 0060.
 

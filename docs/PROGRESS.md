@@ -645,3 +645,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Decision 0075: 8-hour STATIONS refresh (≥2 h), retries only before the GET (5/15/30/60 min), interval wait after it or on verification failure; `OLD DATA` after 24 h, unload after 7 days; selection kept across loads; home site from ignored `firmware/.site.env`; no persistence yet.
 - App `Freshness`/`load_fetched_catalogue`, render `OLD DATA`, firmware `element_refresh` and `site` modules, and the reworked `live-fetch-radar` image (reused TLS/buffers, schedule, outcome classes, `heap_now`).
 - Verified: workspace check/tests (325), firmware host suites, gate per build; on board at 2-hour refresh, seven refreshes over two runs (15 h) all succeeded with flat live heap; the user saw the CSS pass and BOOT cycling on refreshed data. Board left on the 8-hour build.
+
+## 2026-11-03 UTC (0075 failure paths on the board)
+- Opt-in `live-fetch-faults` build (`firmware/src/fault_plan.rs`, 6 host tests): build-time per-attempt DNS/TCP/handshake/verification faults at their real stages, plus `OLD DATA`, expiry and Wi-Fi-drop overrides; the default image is unchanged.
+- Board, two runs (2026-11-02 18:15–23:05, 2026-11-03 00:42–03:02 UTC; four GETs, all 200): every injected fault produced its 0075 class and schedule; the catalogue kept tracking; `OLD DATA` rose and a load cleared it; expiry unloaded to `NO DATA`; a 10-min Wi-Fi drop recovered without reboot. Fixed a spurious `stale=` log on SNTP renewal (panel unaffected).
+- Not shown on the board: post-GET failures, repeated-handshake rule, reload after expiry (host-tested). Board restored to the 8-hour home-site build.

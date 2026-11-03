@@ -10,6 +10,11 @@ boot, any failure final" for the `live-fetch-radar` image only.
 Done 2026-11-02: seven on-board refreshes across two runs at the home site, no
 heap growth, and a user-observed pass on refreshed elements
 ([evidence](../../firmware/README.md#refresh-staleness-and-home-site-0075)).
+Failure paths shown on the board 2026-11-02/03 with the opt-in
+`live-fetch-faults` build: each pre-GET class backed off and verification
+failure waited the interval as decided; `OLD DATA` rose and a load cleared
+it; expiry unloaded the catalogue
+([evidence](../../firmware/README.md#fetch-failure-paths-on-the-board-live-fetch-faults-0075)).
 
 ## Decision
 1. **Refresh.** The image fetches STATIONS on boot (after the first SNTP
