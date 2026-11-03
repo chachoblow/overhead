@@ -3,8 +3,8 @@
 Date: 2026-11-03
 Status: accepted (user, 2026-11-03: the `visual` group, recompute the selected
 object every frame and the rest within ~1 s, keep by priority with a debug-only
-dropped count, defer pass prediction). Board evidence pending; see
-[the work item](../work/m2-visual-catalogue-budget.md) while it is active.
+dropped count, defer pass prediction). Board evidence recorded 2026-11-03 (see
+Verification).
 Changes the group fetched under [0071](0071-https-element-fetch-first-slice.md)
 and [0074](0074-live-utc-radar-on-fetched-elements.md); refresh, staleness and
 backoff stay [0075](0075-fetched-element-refresh-and-staleness.md)'s. The
@@ -54,8 +54,8 @@ measured group so normal growth never drops anything.
 - Diagnostic telemetry adds `update_max_us`, `update_boot_max_us`,
   `oldest_ms` and internal/PSRAM heap use. Banners: `OVERHEAD_DEVICE_V2`,
   `OVERHEAD_S3_LIVE_FETCH_RADAR_V4`, `OVERHEAD_S3_LIVE_FETCH_V2`.
-- Measured cost of staggering on the board: ~20–32 ms per frame for ~9
-  objects (catalogue in PSRAM, ~2.2 ms each), against ~0.8–1.5 ms per object
+- Measured cost of staggering on the board: median ~20 ms, p99 ~32 ms per
+  frame for ~9 objects (catalogue in PSRAM, ~2.2 ms each), against ~0.8–1.5 ms per object
   in internal RAM before. At the 256 limit a frame would update ~13 objects
   (~29 ms), tight against 50 ms; only group growth reaches it.
 - The UTC trust gate (`firmware/src/utc_trust.rs`) discards all samples and

@@ -1,8 +1,8 @@
 # Overhead — Plan
 
-**Current: M0, M1 and M3 complete; M4 done for now (user, 2026-10-24). M2's
-operating budget is set under [0077](decisions/0077-m2-operating-budget-visual-group.md)
-pending board evidence; M6 standalone device remains open; M6 element
+**Current: M0, M1, M2 and M3 complete (M2 closed under
+[0077](decisions/0077-m2-operating-budget-visual-group.md) on 2026-11-03); M4
+done for now (user, 2026-10-24); M6 standalone device remains open; M6 element
 fetch runs under [0071](decisions/0071-https-element-fetch-first-slice.md),
 [0074](decisions/0074-live-utc-radar-on-fetched-elements.md) and
 [0075](decisions/0075-fetched-element-refresh-and-staleness.md); the device
@@ -39,7 +39,7 @@ Flashing needs no approval ([0069](decisions/0069-flash-without-per-flash-approv
 ask before changing toolchains. Simulator work need not wait for
 hardware; the first S3 kernel baseline alone does not justify capacity or cadence.
 
-## M2 — Catalogue, pass prediction, and operating budget
+## M2 — Catalogue, pass prediction, and operating budget (complete)
 - [x] Checked local group configuration, catalogue merge/provenance and headless
   reporting under [0011](decisions/0011-catalogue-ingestion-and-provenance.md).
   [Tool usage](../tools/README.md#overhead-catalogue); live fetching/refresh remain M6.
@@ -79,7 +79,7 @@ hardware; the first S3 kernel baseline alone does not justify capacity or cadenc
   group, 128 KiB bodies in PSRAM, at most 256 objects (role then NORAD ID, dropped
   count on debug only), the selected object every frame and the rest within 1 s.
   Device pass prediction (lookahead, prediction cadence) is deferred, not set.
-- [ ] Verify the staggered schedule's bounded update cost and heap on the board
+- [x] Verify the staggered schedule's bounded update cost and heap on the board
   ([evidence](../firmware/README.md#visual-group-under-the-m2-budget-0077)).
 
 **Done when:** a curated catalogue is testable headlessly, with measured costs

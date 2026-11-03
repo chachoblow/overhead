@@ -1529,8 +1529,10 @@ both stay host-tested in `element_refresh`.
 
 `--features device` builds `overhead-s3-device` (`src/device_main.rs`), the
 Overhead device app under [0076](../docs/decisions/0076-device-app-build.md):
-the live-UTC wide radar at the home site on fetched STATIONS, refreshed and
-aged under 0075, with BOOT cycling. It runs the same runtime
+the live-UTC wide radar at the home site on fetched elements (the `visual`
+group since [0077](../docs/decisions/0077-m2-operating-budget-visual-group.md),
+banner `OVERHEAD_DEVICE_V2`; STATIONS before), refreshed and aged under 0075,
+with BOOT cycling. It runs the same runtime
 (`src/live_radar.rs`) as the `live-fetch-radar` diagnostic and its fault build;
 the app prints only the event log (banner, `SNTP_WIFI`, `FETCH_FAILED`,
 `FETCH_SCHEDULE`, `LIVE_FETCH` load/stale/expired, `RADAR first_frame`,
@@ -1570,6 +1572,45 @@ Afterwards the board was left on the default 8-hour app build (gate passed,
 this run: heap/stack figures (the app does not print them; use the diagnostic),
 BOOT cycling among several in-view objects on this build (shown on the
 diagnostic, same runtime).
+
+## Visual group under the M2 budget (0077)
+
+[0077](../docs/decisions/0077-m2-operating-budget-visual-group.md) changes the
+shared runtime (`src/live_radar.rs`) for both the app and the diagnostic: one
+`GROUP=visual` GET per refresh, bodies up to 128 KiB, PSRAM as the first heap
+region (response buffer, catalogue, TLS; internal RAM keeps the radio's
+internal-only allocations), at most 256 objects (`dropped=` on `LIVE_FETCH
+loaded`, `DROPPED n` on the debug page), and staggered tracking: the selected
+object every frame, the rest within 1 s. The selected object's slot shows the
+[0078](../docs/decisions/0078-visibility-glyph.md) visibility icon.
+`live-fetch-radar` (banner `OVERHEAD_S3_LIVE_FETCH_RADAR_V4`) adds
+`update_max_us` (largest app update in the 10 s window), `update_boot_max_us`,
+`oldest_ms` (age of the oldest unselected sample), `internal_used`,
+`internal_free` and `psram_used` to `BOOT_CAPTURE_STATS`, and the region
+figures to `FETCH_DONE`. Build, gate and flash as in the sections above.
+
+**On-board evidence, 2026-11-03** (devbox, `/dev/ttyUSB0`, MAC
+`80:45:6b:2a:45:08`, rev `69e8a28`, home site, `REFRESH_MINUTES=120`; image
+1,358,080 B, gate passed; one capture 14:45–18:48 UTC, stopped after the second refresh):
+
+| Measure | Result |
+|---|---|
+| Fetches | boot + 2 refreshes, all HTTP 200, 64.6 KB, 156/156 accepted, `dropped=0`; ingest 291 ms; whole fetch 2.8–10.6 s (transfers 1.5, 7.4 and 9.0 s); handshake 0.77–1.09 s; display-loop gap 438, 463 and **484 ms** per fetch (close to the 500 ms VCOM interval) |
+| Heap | internal 44,700 B used of 160 KiB throughout (119,140 B free); live heap in idle windows **389,708 B** (PSRAM 345,008 B) after every load, identical after all three loads: no leak. Peak 490,284 B at boot, 699,008 B during a refresh (old and new catalogue plus TLS, in PSRAM) |
+| Update cost | complete update of 156 objects ~97 ms after a load; largest staggered update per 10 s window (1,223 windows): median 20.3 ms, p99 32.3 ms, max 42 ms (~9 objects at ~2.2 ms each from PSRAM) |
+| Resyncs | every accepted SNTP renewal (~2 min) forces a complete update (229 of 1,452 windows; 173–181 ms, ~3 skipped frames) and returns selection to the first object in view; see 0077's consequences |
+| Staleness | `oldest_ms` at most 932 ms: every object recomputed within the 1 s window |
+| Stack | 7,296 of 39,552 B |
+
+Selection was kept across both refresh loads (17590, then 16719). No panic,
+Wi-Fi drop or `FETCH_FAILED`. Not measured: the 256-object limit on the board
+(only host-tested; it would update ~13 objects per frame, ~29 ms) and
+`DROPPED` on the panel.
+
+Afterwards the board was left on the default 8-hour app build (rev `a750a06`,
+image 1,357,920 B, gate passed, `refresh_s=28800`): banner
+`OVERHEAD_DEVICE_V2`, Wi-Fi at 1 s, first frame, fetch `Success` at 14 s, 156
+records loaded, 9 in view.
 
 ## Hardware and permission
 

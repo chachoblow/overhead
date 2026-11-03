@@ -655,3 +655,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Decision 0076: `--features device` (`overhead-s3-device`) is the device app; its runtime moved from `live_fetch_radar_main.rs` to the shared target-only `firmware/src/live_radar.rs`, so the app and the `live-fetch-radar`/`live-fetch-faults` diagnostics differ only in log level (app: event log only). Halts on panic, never self-reboots; the fault plan cannot reach it.
 - Verified: workspace check/tests (325), firmware host suites (19/53/70/60), fmt, clippy unchanged (6), dummy builds of all three images, gate per flashed build. On board (home site, 2-hour test refresh): boot to tracking in 14 s, a refresh at 2 h, 20/20 records each time, only event lines; the user saw the radar, 67688 and the glyph strip (one object in view, so BOOT had nothing to cycle).
 - Board left on the 8-hour app build.
+
+## 2026-11-03 (M2 operating budget: visual group, staggered tracking, visibility glyph)
+- Device fetches CelesTrak `visual` (156 objects) into PSRAM with ≤128 KiB bodies and a 256-object limit; the selected object updates every frame, the rest within 1 s; device pass prediction deferred (0077). M2 closed.
+- The category slot now shows naked-eye visibility (eye / Earth's shadow / daylight) from a new Sun model and cylindrical shadow (0078); user accepted the enlarged icons "for now".
+- Board: three fetches 156/156, live heap identical after each load, staggered updates median 20 ms / p99 32 ms, all objects within 932 ms; board left on the 8-hour app. SNTP renewals still force a complete ~175 ms update (follow-up agreed).
+- Workspace check/tests (337), fmt, firmware host tests per feature, dummy builds of four images, gate on flashed builds.
