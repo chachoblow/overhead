@@ -58,11 +58,15 @@ measured group so normal growth never drops anything.
   objects (catalogue in PSRAM, ~2.2 ms each), against ~0.8–1.5 ms per object
   in internal RAM before. At the 256 limit a frame would update ~13 objects
   (~29 ms), tight against 50 ms; only group growth reaches it.
-- 0062's trust rules discard all samples and the selection on every accepted
-  SNTP resync, so the next frame is complete: ~100–175 ms with 156 objects
-  (a few skipped frames per renewal), and BOOT selection returns to the first
-  object in view. Keeping samples across a small resync would change 0062 and
-  needs its own decision.
+- The UTC trust gate (`firmware/src/utc_trust.rs`) discards all samples and
+  the selection on every accepted SNTP resync, so the next frame is complete:
+  ~100–175 ms with 156 objects (a few skipped frames per renewal), and BOOT
+  selection returns to the first object in view. That is stricter than
+  [0063](0063-bounded-utc-holdover-direction.md), which requires a fresh start
+  only when the new time differs by more than 100 ms. Agreed follow-up (user,
+  2026-11-03): keep samples and selection across resyncs within 100 ms, as a
+  separate work item with a note on 0063; jumps and time loss still clear
+  everything (0062/0063).
 - Not decided: scheduling for any future prediction, persistence, a real
   location source, physical COM edges or 20 Hz proof.
 

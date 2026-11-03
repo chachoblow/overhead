@@ -84,5 +84,7 @@ justify the limit and cadence, and M2 can close.
 - Object limit 256: memory is ample, but at 256 objects each frame would update
   ~13 objects (~29 ms), tight against 50 ms. Keep 256 (only growth reaches it) or
   lower to ~200? Default: keep, record the measured risk.
-- SNTP renewals invalidate the frame (0062), so the next update is complete
-  (~97 ms) — watch how often in the long capture.
+- SNTP renewals: the trust gate clears samples/selection on every accepted
+  resync (stricter than 0063's >100 ms rule), costing a ~100–175 ms complete
+  update and a selection reset. User agreed (2026-11-03) to fix it as a separate
+  work item: keep state across resyncs within 100 ms. Record in HANDOFF.
