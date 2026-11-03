@@ -1,7 +1,7 @@
 # 0063 — Prototype UTC trust, bounded holdover and validated resync
 
 Date: 2026-10-26
-Status: accepted prototype directions and UTC-error target; source checks, drift/holdover and source refined by 0064–0066
+Status: accepted prototype directions and UTC-error target; source checks, drift/holdover and source refined by 0064–0066; small-resync note 2026-11-03
 
 ## Decision
 
@@ -45,6 +45,22 @@ leap. This does not handle an outage spanning a leap without a matched
 announcement; that case remains open. LI=0 does not prove a non-smearing source.
 Source checks and error estimation must be selected and tested before any
 implementation claims the desired ≤100 ms budget.
+
+## Note — 2026-11-03: small resyncs keep tracking
+
+Agreed with the user under [0077](0077-m2-operating-budget-visual-group.md)'s
+follow-up. The trust gate compares an accepted observation's UTC with the
+still-trusted old anchor's projected UTC at the same uptime midpoint. If they
+differ by **≤100 ms** (inclusive, either direction), it adopts the new anchor
+but keeps app samples and selection (`ObservationOutcome::Resynced { step_us }`);
+the next frame still uses the new time and no retained pixels are resent.
+A first anchor, a larger difference, or a renewal after the old anchor expired
+or was revoked still discards everything as above and in 0062. The threshold is
+the fixed 100 ms target, not the old anchor's remaining uncertainty budget
+(rejected as a second threshold for no observed benefit). The app's staggered
+update (0077) treats a backward step smaller than its window like a forward
+one, so neither direction forces a complete recompute. Board evidence:
+[firmware README](../../firmware/README.md#small-sntp-resyncs-keep-tracking-0063-note).
 
 ## Why
 

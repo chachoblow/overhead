@@ -1,6 +1,6 @@
 # Overhead — Handoff
 
-_Last updated: 2026-11-03 UTC (M2 operating budget under 0077/0078; work item completed). M2 and M3 complete; M4 done for now. M6 standalone device remains open._
+_Last updated: 2026-11-03 UTC (small SNTP resyncs keep tracking, 0063 note; work item completed). M2 and M3 complete; M4 done for now. M6 standalone device remains open._
 
 ## Current state
 - Shared `app/`, 1-bit `render/` and simulator provide the accepted wide radar; [PLAN](PLAN.md) owns scope and [DESIGN](DESIGN.md) intent. Time/source contracts are [0062–0067](decisions/0062-no-trusted-time-display-preflight.md); the **device app** is `--features device` (`overhead-s3-device`, [0076](decisions/0076-device-app-build.md)); other images are diagnostics. Knob, element persistence and pass prediction on the device remain open.
@@ -26,21 +26,24 @@ _Last updated: 2026-11-03 UTC (M2 operating budget under 0077/0078; work item co
 - Flash note: a backgrounded shell may ignore `cd`; use absolute ELF/log paths. `espflash board-info --after no-reset` checks the MAC without booting the old image.
 - The app prints no heap/stack/BOOT telemetry: diagnose with `live-fetch-radar` (same runtime).
 
-## M2 operating budget ([0077](decisions/0077-m2-operating-budget-visual-group.md), [0078](decisions/0078-visibility-glyph.md)) — done this session
+## M2 operating budget ([0077](decisions/0077-m2-operating-budget-visual-group.md), [0078](decisions/0078-visibility-glyph.md))
 - Device fetches CelesTrak `visual` (156 objects) into PSRAM (first heap region; `esp_alloc::psram_allocator!` in `firmware/src/live_radar.rs`, `live_fetch_main.rs`); bodies ≤128 KiB, ≤256 objects (`Catalogue::limit`, `RadarApp::with_object_limit`, debug `DROPPED n`); `RadarApp::update_staggered` recomputes the selected object every frame and the rest within 1 s. Pass prediction on the device is deferred.
 - Wide-strip top slot shows the selected object's visibility (eye / shadow disc / sun; `core/src/sun.rs`, `app/src/visibility.rs`, `render/src/visibility.rs`); user accepted the icons "for now". Simulator recipe: [sim/README](../sim/README.md#visibility-glyph).
 - Board ([evidence](../firmware/README.md#visual-group-under-the-m2-budget-0077)): 3 fetches 156/156, live heap identical after each load (389,708 B; internal 44.7 KB of 160 KiB), staggered updates median 20 ms / p99 32 ms, every object within 932 ms.
-- Risks: each accepted SNTP renewal (~2 min) clears samples and selection in `firmware/src/utc_trust.rs` → a 173–181 ms complete update (~3 skipped frames) and BOOT selection reset; fetch display gap reached 484 ms (VCOM interval 500 ms); at the 256 limit a frame would update ~13 objects (~29 ms, unmeasured).
+- Risks: fetch display gap reached 484 ms (VCOM interval 500 ms); at the 256 limit a frame would update ~13 objects (~29 ms, unmeasured).
+
+## Small SNTP resyncs ([0063 note](decisions/0063-bounded-utc-holdover-direction.md#note--2026-11-03-small-resyncs-keep-tracking)) — done this session
+- `firmware/src/utc_trust.rs`: a renewal within 100 ms of the old anchor's projected UTC returns `ObservationOutcome::Resynced { step_us }` and keeps samples and selection; first anchors, larger jumps and renewals after expiry still clear. `RadarApp::update_staggered` (`app/src/lib.rs`) staggers backward steps smaller than the window too.
+- Board ([evidence](../firmware/README.md#small-sntp-resyncs-keep-tracking-0063-note)): 40 min, 35 renewals all `Resynced` (steps −25.5…+14.2 ms), no update window over 31 ms after the first load (was 173–181 ms per renewal). Board left on the 8-hour app.
+- Not on the board: a >100 ms jump (host-tested), BOOT presses across a renewal.
 
 ## Next work item (recommended)
-- **Keep tracking state across small SNTP resyncs** (agreed with the user 2026-11-03): when a renewal moves the clock by ≤100 ms, adopt the new time but keep samples and selection; jumps and loss of trusted time still clear everything (0062/0063). Code in `utc_trust.rs` plus a note on [0063](decisions/0063-bounded-utc-holdover-direction.md).
-- Then **knob continuous zoom (0060)**, deferred by the user until the encoders are found: recommended Bourns PEC11R-4215F-S0024 (24 detents, switch) or Adafruit #377; A→GPIO4, B→GPIO5, switch→GPIO6, PCNT peripheral, ~1.095× zoom per detent. No `docs/work/` item is active.
+- **Knob continuous zoom (0060)**, deferred by the user until the encoders are found: recommended Bourns PEC11R-4215F-S0024 (24 detents, switch) or Adafruit #377; A→GPIO4, B→GPIO5, switch→GPIO6, PCNT peripheral, ~1.095× zoom per detent. If the encoders are still missing, ask the user which open M6 item to take next (end-to-end performance/extended operation, persistence, or BOOT risks). No `docs/work/` item is active.
 
 ## Verification and remaining risks
 <a id="verification"></a>
-- This session (0077/0078): `cargo check --workspace`, `cargo test --workspace` (337), fmt; firmware host default 19, `element-fetch` 55, `live-utc-boot` 70, `sharp-boot-capture` 60, firmware fmt; dummy release builds of `device`, `live-fetch-radar`, `live-fetch-faults`, `live-fetch`; gate on both flashed builds; one 4-hour diagnostic capture (boot + 2 refreshes) and an 8-hour-app boot capture (156 loaded, 9 in view); user review of simulator icon snapshots and the board.
-- Previous session (device app): `cargo check --workspace`, `cargo test --workspace` (325), fmt; firmware host default 19, `element-fetch` 53, `live-utc-boot` 70, `sharp-boot-capture` 60; dummy release builds of `device`, `live-fetch-radar`, `live-fetch-faults`; clippy unchanged (6 warnings, 4 moved bin→lib); gate on both flashed builds; one 2h40m capture and an 8-hour-build boot capture; user panel check.
-- Previous session (failure paths): `cargo check --workspace`, `cargo test --workspace` (325 passed), fmt; firmware host default 19, `element-fetch` 53, `live-utc-boot` 70, `sharp-boot-capture` 60; clippy default and fault builds unchanged (6 warnings); gate on every flashed build; two board captures, every `FAULT_RESULT` matched, no panic, heap high-water 139,696 of 163,840 B.
+- This session (small resyncs): `cargo check --workspace`, `cargo test --workspace` (338), fmt; firmware host default 19, `element-fetch` 55, `live-utc-boot` 71, `sharp-boot-capture` 61; release builds of `live-fetch-radar` and `device` with the image gate passing on both; one 40-minute board capture and the device app's boot capture. No clippy run.
+- Previous session (0077/0078): `cargo check --workspace`, `cargo test --workspace` (337), fmt; firmware host default 19, `element-fetch` 55, `live-utc-boot` 70, `sharp-boot-capture` 60, firmware fmt; dummy release builds of `device`, `live-fetch-radar`, `live-fetch-faults`, `live-fetch`; gate on both flashed builds; one 4-hour diagnostic capture (boot + 2 refreshes) and an 8-hour-app boot capture (156 loaded, 9 in view); user review of simulator icon snapshots and the board.
 - Earlier: per-session verification for 0071–0075 is in [PROGRESS](PROGRESS.md) and the firmware README. Session (0075): `cargo check --workspace`, `cargo test --workspace` (325 passed), app/render `--no-default-features` check, fmt; firmware host `--lib --locked` default 19, `element-fetch` 47, `live-utc-boot` 70, `sharp-boot-capture` 60; `live-fetch-radar` dummy release build, clippy (same warnings as before), offline gate on every flashed build; two captures (4h40m, 10h30m) and the user-observed pass above.
 - Remaining: blocked-loop press capture and latency, physical COM edges, long-duration service, heap/stack peaks, orbital accuracy at real location, SPI panic recovery (the app halts), knob zoom, 20 Hz, post-GET fetch failures on the board, and repeated runs (handshake 0.8–2.2 s, heap peak ~111 KiB so far). Accepted BOOT behavior is narrower than those claims.
 

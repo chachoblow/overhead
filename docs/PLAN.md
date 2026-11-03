@@ -291,7 +291,10 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
     month end, prototype `D = 20 ppm` / `H = 3,600 s` (measured ≈+1.2 ppm on one
     board), and a Cloudflare/NIST source whose one-hour
     [live run](../firmware/README.md#live-sntp-source-evidence-flashed-1-hour-uart-run)
-    accepted all 59 replies. Remaining device-loop evidence is outlined in the
+    accepted all 59 replies. Renewals within 100 ms keep tracking state
+    ([0063 note](decisions/0063-bounded-utc-holdover-direction.md#note--2026-11-03-small-resyncs-keep-tracking),
+    [evidence](../firmware/README.md#small-sntp-resyncs-keep-tracking-0063-note)).
+    Remaining device-loop evidence is outlined in the
     [proposal](utc-trust-loss-proposal.md#remaining-evidence-capture-bound-drift-and-stack-proposal).
   - [0067](decisions/0067-opt-in-live-utc-iss-radar-scope.md): the
     [live-UTC radar candidate](../firmware/README.md#live-utc-iss-radar-candidate-flashed-bounded-uart-capture)

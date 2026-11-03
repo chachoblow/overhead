@@ -661,3 +661,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - The category slot now shows naked-eye visibility (eye / Earth's shadow / daylight) from a new Sun model and cylindrical shadow (0078); user accepted the enlarged icons "for now".
 - Board: three fetches 156/156, live heap identical after each load, staggered updates median 20 ms / p99 32 ms, all objects within 932 ms; board left on the 8-hour app. SNTP renewals still force a complete ~175 ms update (follow-up agreed).
 - Workspace check/tests (337), fmt, firmware host tests per feature, dummy builds of four images, gate on flashed builds.
+
+## 2026-11-03 (small SNTP resyncs keep tracking, 0063 note)
+- A renewal within 100 ms of the old anchor's projected UTC now keeps samples and selection (`Resynced { step_us }`); first anchors, larger jumps and renewals after expiry still clear. Staggered updates accept small backward steps.
+- Board (`live-fetch-radar`, 40 min): 35 renewals all `Resynced` (−25.5…+14.2 ms); no update window over 31 ms after the first load, where each renewal used to cost 173–181 ms. Board left on the 8-hour app.
+- Workspace check/tests (338), fmt, firmware host tests per feature, gate on both flashed builds.

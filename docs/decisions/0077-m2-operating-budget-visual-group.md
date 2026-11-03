@@ -66,7 +66,7 @@ measured group so normal growth never drops anything.
   only when the new time differs by more than 100 ms. Agreed follow-up (user,
   2026-11-03): keep samples and selection across resyncs within 100 ms, as a
   separate work item with a note on 0063; jumps and time loss still clear
-  everything (0062/0063).
+  everything (0062/0063). Done 2026-11-03 ([0063 note](0063-bounded-utc-holdover-direction.md#note--2026-11-03-small-resyncs-keep-tracking)).
 - Not decided: scheduling for any future prediction, persistence, a real
   location source, physical COM edges or 20 Hz proof.
 

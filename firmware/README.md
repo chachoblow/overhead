@@ -1598,7 +1598,7 @@ figures to `FETCH_DONE`. Build, gate and flash as in the sections above.
 | Fetches | boot + 2 refreshes, all HTTP 200, 64.6 KB, 156/156 accepted, `dropped=0`; ingest 291 ms; whole fetch 2.8–10.6 s (transfers 1.5, 7.4 and 9.0 s); handshake 0.77–1.09 s; display-loop gap 438, 463 and **484 ms** per fetch (close to the 500 ms VCOM interval) |
 | Heap | internal 44,700 B used of 160 KiB throughout (119,140 B free); live heap in idle windows **389,708 B** (PSRAM 345,008 B) after every load, identical after all three loads: no leak. Peak 490,284 B at boot, 699,008 B during a refresh (old and new catalogue plus TLS, in PSRAM) |
 | Update cost | complete update of 156 objects ~97 ms after a load; largest staggered update per 10 s window (1,223 windows): median 20.3 ms, p99 32.3 ms, max 42 ms (~9 objects at ~2.2 ms each from PSRAM) |
-| Resyncs | every accepted SNTP renewal (~2 min) forces a complete update (229 of 1,452 windows; 173–181 ms, ~3 skipped frames) and returns selection to the first object in view; see 0077's consequences |
+| Resyncs | every accepted SNTP renewal (~2 min) forces a complete update (229 of 1,452 windows; 173–181 ms, ~3 skipped frames) and returns selection to the first object in view; see 0077's consequences. Fixed below |
 | Staleness | `oldest_ms` at most 932 ms: every object recomputed within the 1 s window |
 | Stack | 7,296 of 39,552 B |
 
@@ -1611,6 +1611,32 @@ Afterwards the board was left on the default 8-hour app build (rev `a750a06`,
 image 1,357,920 B, gate passed, `refresh_s=28800`): banner
 `OVERHEAD_DEVICE_V2`, Wi-Fi at 1 s, first frame, fetch `Success` at 14 s, 156
 records loaded, 9 in view.
+
+## Small SNTP resyncs keep tracking (0063 note)
+
+Under the [0063 note](../docs/decisions/0063-bounded-utc-holdover-direction.md#note--2026-11-03-small-resyncs-keep-tracking),
+a renewal within 100 ms of the old anchor's projected UTC keeps samples and
+selection, and logs `LIVE_UTC source=Some(Resynced { step_us: n })` on the
+diagnostic; a first anchor or larger jump still logs `Accepted` and clears.
+No banner change; build, gate and flash as above.
+
+**On-board evidence, 2026-11-03** (devbox, `/dev/ttyUSB0`, MAC
+`80:45:6b:2a:45:08`, `live-fetch-radar` at rev `27e8fea`, home site, default
+8-hour refresh; image 1,358,992 B, gate passed; one capture 20:10–20:50 UTC):
+
+| Measure | Result |
+|---|---|
+| Renewals | 1 `Accepted` at boot, then 35 `Resynced` (~every 64 s), none cleared; steps −25.5 to +14.2 ms, median \|step\| 4.2 ms |
+| Update cost | after the boot load's complete update (87 ms), largest staggered update per 10 s window (229 windows): median 19.3 ms, p99 30.8 ms, max 31.0 ms; **no window over 60 ms** (0077 run: 229 of 1,452 over 100 ms) |
+| Skipped frames | 2+ deadlines skipped only at boot/first load and once at each of four selection changes; all other skips single idle deadlines, as before |
+| Selection | four changes, none in a window with a renewal (selected object left the sky, 0049) |
+| Other | `oldest_ms` ≤ 916; live heap 389,708 B (as under 0077); stack 7,312 of 39,568 B; one fetch, 156/156; no panic, Wi-Fi drop or `FETCH_FAILED` |
+
+Not shown on the board: a renewal beyond 100 ms or after expiry (host-tested
+in `utc_trust`), and BOOT presses across a renewal (no presses in this run;
+the selection itself survived every renewal). Afterwards the board was left
+on the default 8-hour app (image 1,358,208 B, gate passed): 156 loaded, 11 in
+view.
 
 ## Hardware and permission
 
