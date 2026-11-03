@@ -1563,7 +1563,13 @@ To check the MAC without booting the old image (and spending a request):
 |---|---|
 | Boot (05:17 UTC) | only event lines: banner, `NO FRAME`, Wi-Fi at 1 s, first radar frame, fetch 1 `Success` at 14 s, 20 records loaded, one object in view (67688) |
 | User check | radar, 67688 marker and ID, glyph strip; three BOOT presses with no visible change, as expected with one object in view (multi-object cycling was shown on the diagnostic, same runtime) |
-| Refresh | REFRESH_RESULT |
+| Refresh (to 07:55 UTC, 2h40m) | fetch 2 `Success` at uptime 7,268 s, 20 records, nothing above the horizon then (selection cleared as designed); no `FETCH_FAILED`, Wi-Fi drop or panic; nothing but event lines |
+
+Afterwards the board was left on the default 8-hour app build (gate passed,
+`refresh_s=28800`); its 07:57 UTC boot fetch loaded 20 records. Not covered by
+this run: heap/stack figures (the app does not print them; use the diagnostic),
+BOOT cycling among several in-view objects on this build (shown on the
+diagnostic, same runtime).
 
 ## Hardware and permission
 

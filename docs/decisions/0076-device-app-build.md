@@ -6,6 +6,11 @@ refresh run on the new build, board left on the app afterwards).
 Builds on [0074](0074-live-utc-radar-on-fetched-elements.md) and
 [0075](0075-fetched-element-refresh-and-staleness.md); input under
 [0068](0068-boot-selection-gesture.md)/[0070](0070-boot-input-capture-independent-of-render.md).
+Done 2026-11-03: the app booted to tracking on 20 fetched records, refreshed
+once at the 2-hour test setting with only event lines printed, and the user
+saw the radar on the panel
+([evidence](../../firmware/README.md#device-application-0076)). The board runs
+the 8-hour app build.
 
 ## Decision
 1. **A named app build.** `--features device`, binary `overhead-s3-device`

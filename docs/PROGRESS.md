@@ -650,3 +650,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Opt-in `live-fetch-faults` build (`firmware/src/fault_plan.rs`, 6 host tests): build-time per-attempt DNS/TCP/handshake/verification faults at their real stages, plus `OLD DATA`, expiry and Wi-Fi-drop overrides; the default image is unchanged.
 - Board, two runs (2026-11-02 18:15–23:05, 2026-11-03 00:42–03:02 UTC; four GETs, all 200): every injected fault produced its 0075 class and schedule; the catalogue kept tracking; `OLD DATA` rose and a load cleared it; expiry unloaded to `NO DATA`; a 10-min Wi-Fi drop recovered without reboot. Fixed a spurious `stale=` log on SNTP renewal (panel unaffected).
 - Not shown on the board: post-GET failures, repeated-handshake rule, reload after expiry (host-tested). Board restored to the 8-hour home-site build.
+
+## 2026-11-03 UTC (device application build, 0076)
+- Decision 0076: `--features device` (`overhead-s3-device`) is the device app; its runtime moved from `live_fetch_radar_main.rs` to the shared target-only `firmware/src/live_radar.rs`, so the app and the `live-fetch-radar`/`live-fetch-faults` diagnostics differ only in log level (app: event log only). Halts on panic, never self-reboots; the fault plan cannot reach it.
+- Verified: workspace check/tests (325), firmware host suites (19/53/70/60), fmt, clippy unchanged (6), dummy builds of all three images, gate per flashed build. On board (home site, 2-hour test refresh): boot to tracking in 14 s, a refresh at 2 h, 20/20 records each time, only event lines; the user saw the radar, 67688 and the glyph strip (one object in view, so BOOT had nothing to cycle).
+- Board left on the 8-hour app build.
