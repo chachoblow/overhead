@@ -1,6 +1,8 @@
 # ESP32-S3 kernel benchmark
 
-Early M2 measurement firmware, **not the device application**. The default kernel
+Early M2 measurement firmware plus device diagnostics. The **device
+application** is the opt-in `device` build ([below](#device-application-0076));
+the crate name and default binary are historical. The default kernel
 binary has no display, Wi-Fi, allocator, PSRAM, catalogue ingestion/aggregation,
 or scheduling. A separate opt-in [catalogue memory experiment](CATALOGUE_MEMORY.md)
 now has first target captures; its feature/build commands are distinct.
@@ -1319,7 +1321,8 @@ date-check evidence.
 ## Live-UTC radar on fetched STATIONS (flashed; UART captures)
 
 The opt-in `live-fetch-radar` feature builds `overhead-s3-live-fetch-radar`
-(`src/live_fetch_radar_main.rs`) under
+(`src/live_fetch_radar_main.rs`; since 0076 a thin entry to the shared
+`src/live_radar.rs` with every telemetry line, banner `…_V3`) under
 [0074](../docs/decisions/0074-live-utc-radar-on-fetched-elements.md): the
 live-UTC wide radar with BOOT interrupt capture (0068/0070), starting with **no
 elements** (`NO FRAME`, then `NO DATA`). After the first SNTP observation
@@ -1521,6 +1524,46 @@ the unload/expiry rule is host-tested in `overhead-app`.
 Not shown on the board: post-GET failures (HTTP status, truncation, parse;
 each would cost a download and an interval) and the repeated-handshake rule;
 both stay host-tested in `element_refresh`.
+
+## Device application (0076)
+
+`--features device` builds `overhead-s3-device` (`src/device_main.rs`), the
+Overhead device app under [0076](../docs/decisions/0076-device-app-build.md):
+the live-UTC wide radar at the home site on fetched STATIONS, refreshed and
+aged under 0075, with BOOT cycling. It runs the same runtime
+(`src/live_radar.rs`) as the `live-fetch-radar` diagnostic and its fault build;
+the app prints only the event log (banner, `SNTP_WIFI`, `FETCH_FAILED`,
+`FETCH_SCHEDULE`, `LIVE_FETCH` load/stale/expired, `RADAR first_frame`,
+`LIVE_UTC no_frame_sent`, SNTP KoD, `OVERHEAD_DEVICE_FAILED` on panic). It halts
+on panic and never reboots itself. `device` with `live-fetch-faults` does not
+compile.
+
+```sh
+# from firmware/, after . "$HOME/export-esp.sh" and the Wi-Fi/site exports above
+cargo build --release --locked --bin overhead-s3-device --features device
+ELF="$PWD/target/xtensa-esp32s3-none-elf/release/overhead-s3-device"
+espflash save-image --chip esp32s3 --flash-size 8mb --flash-mode dio \
+  --flash-freq 40mhz --skip-update-check "$ELF" target/device.bin
+python3 image_gate.py "$ELF" target/device.bin
+# flash and capture in one command (absolute paths: a backgrounded shell may
+# not keep the cd); each boot costs one CelesTrak request
+timeout 600 espflash flash --port /dev/ttyUSB0 --chip esp32s3 --flash-size 8mb \
+  --flash-mode dio --flash-freq 40mhz --non-interactive --skip-update-check \
+  --monitor "$ELF" > "$PWD/target/device.log" 2>&1
+```
+
+To check the MAC without booting the old image (and spending a request):
+`espflash board-info --port /dev/ttyUSB0 --chip esp32s3 --after no-reset`.
+
+**On-board evidence, 2026-11-03** (devbox, `/dev/ttyUSB0`, MAC
+`80:45:6b:2a:45:08`, rev `2904edf`, home site, `REFRESH_MINUTES=120`; image
+1,346,208 B, 16.17%, gate passed):
+
+| Run | Result |
+|---|---|
+| Boot (05:17 UTC) | only event lines: banner, `NO FRAME`, Wi-Fi at 1 s, first radar frame, fetch 1 `Success` at 14 s, 20 records loaded, one object in view (67688) |
+| User check | radar, 67688 marker and ID, glyph strip; three BOOT presses with no visible change, as expected with one object in view (multi-object cycling was shown on the diagnostic, same runtime) |
+| Refresh | REFRESH_RESULT |
 
 ## Hardware and permission
 

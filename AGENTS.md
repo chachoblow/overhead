@@ -34,8 +34,9 @@ progress reports. Handoffs normally happen when a work item completes.
   explicit inputs and headless PNG snapshots. Usage in sim/README.md.
 - `tools/` → `overhead-tools`: headless tracking/catalogue tools and offline fixture generators;
   usage in tools/README.md. Default binary is still a placeholder.
-- `firmware/` → `overhead-s3-benchmark`: isolated no_std S3 kernel benchmark,
-  not the device app; excluded from host workspace. Own lockfile and local
+- `firmware/` → `overhead-s3-benchmark`: no_std S3 kernel benchmark and device
+  diagnostics, plus the device app (`--features device`, `overhead-s3-device`,
+  [0076](docs/decisions/0076-device-app-build.md)); excluded from host workspace. Own lockfile and local
   Espressif toolchain; build/capture instructions in firmware/README.md.
 
 ## Commands

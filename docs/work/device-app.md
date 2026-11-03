@@ -1,5 +1,5 @@
 # Device app: the live radar as the standalone firmware build
-Status: active
+Status: verifying (refresh run; capture ends ~07:57 UTC)
 Started: 2026-11-02. Scope: PLAN M6 "Run shared engine/renderer on S3 + Sharp"
 (app part; knob is a later item); decisions 0074, 0075, 0068/0070, 0062–0067.
 
@@ -44,7 +44,9 @@ runtime code, so the app is not a fork.
 - [x] Host tests/checks, dummy builds of all three, clippy.
 - [x] Draft 0076; checkpoint commit.
 - [ ] Real build, gate, flash, capture (confirm `/dev/ttyUSB0` + MAC).
-- [ ] User panel check; optional refresh run.
+- [x] User panel check (2026-11-03): radar, 67688 marker + ID, glyph strip;
+      3 BOOT presses, no visible change (one object in view: expected).
+- [ ] Refresh run: second `FETCH_SCHEDULE` ~07:17 UTC.
 - [ ] Promote docs (README section, PLAN, HANDOFF, PROGRESS), delete this file.
 
 ## Discoveries and assumptions
@@ -59,5 +61,20 @@ runtime code, so the app is not a fork.
   `live-fetch-radar`, `live-fetch-faults` ok (RWX warning only);
   `device,live-fetch-faults` fails with the intended compile_error. Clippy: same
   6 warnings as before (the 4 static-deref ones moved from bin to lib).
+
+- Run 1 build (home site, real Wi-Fi, `REFRESH_MINUTES=120`, rev 2904edf):
+  image 1,346,208 B (16.17%), gate exit 0 (`target/device-v1-r120.gate.json`,
+  local). Port `/dev/ttyUSB0`, MAC `80:45:6b:2a:45:08` confirmed via
+  `board-info --after no-reset` (no extra boot). Flash+capture started
+  2026-11-03 ~05:17 UTC (first attempt ran from the repo root and failed to
+  find the ELF before flashing; rerun with absolute paths) into `firmware/target/device-run1.log` (local, ignored),
+  `timeout 9600`. If resuming after it ends: check the log for banner, first
+  fetch 20/20, `RADAR first_frame`, a second `FETCH_SCHEDULE` ~2 h later, no
+  `FAILED`.
+
+- Run 1 boot (05:17 UTC): event lines only — banner (refresh_s=7200), NO FRAME,
+  Wi-Fi up at 1 s, first frame, fetch 1 Success at 14 s, load 20 records,
+  sky=1 view=1 selected 67688. No other output. Monitor attach reset cut the
+  first boot inside the bootloader (no app run, no request).
 
 ## Open questions

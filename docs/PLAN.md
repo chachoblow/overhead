@@ -4,7 +4,8 @@
 operating budget/scheduling and M6 standalone device remain open; M6 element
 fetch runs under [0071](decisions/0071-https-element-fetch-first-slice.md),
 [0074](decisions/0074-live-utc-radar-on-fetched-elements.md) and
-[0075](decisions/0075-fetched-element-refresh-and-staleness.md).**
+[0075](decisions/0075-fetched-element-refresh-and-staleness.md); the device
+app build is [0076](decisions/0076-device-app-build.md).**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -300,7 +301,10 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   BOOT cycling under [0068](decisions/0068-boot-selection-gesture.md) with
   [0070](decisions/0070-boot-input-capture-independent-of-render.md) interrupt
   capture is implemented in diagnostics and passed user tap sessions;
-  [HANDOFF](HANDOFF.md) tracks open BOOT risks.
+  [HANDOFF](HANDOFF.md) tracks open BOOT risks. The device app build exists
+  under [0076](decisions/0076-device-app-build.md) (`--features device`,
+  shared runtime with the `live-fetch-radar` diagnostic, event log only;
+  [evidence](../firmware/README.md#device-application-0076)); knob zoom remains.
 - [ ] Add Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes
   per [0002](decisions/0002-data-and-time-over-wifi.md). First slice accepted as
   [0071](decisions/0071-https-element-fetch-first-slice.md): mbedtls-rs, STATIONS JSON,
