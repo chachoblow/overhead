@@ -12,6 +12,7 @@ tools/fixtures/m2-numerical/vallado/* -text whitespace=-blank-at-eol
 
 # Exact CelesTrak response body (CRLF-terminated); host tests check its length and hash.
 firmware/fixtures/celestrak-stations-*.json -text whitespace=cr-at-eol
+firmware/fixtures/celestrak-visual-*.json -text whitespace=cr-at-eol
 
 # Public CelesTrak certificate chain (DER) for host date-check tests.
 firmware/fixtures/celestrak-chain-*/*.der binary

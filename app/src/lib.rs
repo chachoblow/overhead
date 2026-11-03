@@ -17,10 +17,12 @@ pub mod category;
 use category::Category;
 pub mod identification;
 pub mod projection;
+pub mod visibility;
 use identification::LabelZoom;
 use projection::{
     Camera, CameraError, CameraPoint, EarthLimb, EdgeIndicator, View, ViewPoint, Viewport,
 };
+use visibility::Visibility;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TrackingError {
@@ -114,6 +116,15 @@ pub struct RadarApp {
     view: View,
     time: Option<NaiveDateTime>,
     samples: Vec<Result<Sample, TrackingError>>,
+    /// UTC each sample was computed at: the frame UTC after a full update,
+    /// up to the staggered window older for objects not yet revisited.
+    sampled_at: Vec<NaiveDateTime>,
+    /// Next entry the staggered update recomputes (round-robin).
+    cursor: usize,
+    /// Operating limit applied to each load (0077); `None` keeps everything.
+    object_limit: Option<usize>,
+    /// Entries the limit dropped from the current catalogue.
+    dropped: usize,
     selected: Option<u64>,
     label_zoom: LabelZoom,
     label_visible: bool,
@@ -151,6 +162,10 @@ impl RadarApp {
             view,
             time: None,
             samples: Vec::new(),
+            sampled_at: Vec::new(),
+            cursor: 0,
+            object_limit: None,
+            dropped: 0,
             selected: None,
             label_zoom,
             label_visible: label_zoom.initially_visible(view),
@@ -176,7 +191,14 @@ impl RadarApp {
         self.load(catalogue, Some(fetched_at));
     }
 
-    fn load(&mut self, catalogue: Catalogue, fetched_at: Option<NaiveDateTime>) {
+    fn load(&mut self, mut catalogue: Catalogue, fetched_at: Option<NaiveDateTime>) {
+        self.dropped = match self.object_limit {
+            Some(max) => {
+                let roles = &self.group_categories;
+                catalogue.limit(max, |e| Category::from_groups(e.groups(), roles).priority())
+            }
+            None => 0,
+        };
         self.newest_epoch = newest_epoch(&catalogue);
         self.catalogue = Some(catalogue);
         self.fetched_at = fetched_at;
@@ -187,9 +209,23 @@ impl RadarApp {
             }
             None => {
                 self.samples.clear();
+                self.sampled_at.clear();
                 self.selected = None;
             }
         }
+    }
+
+    /// Configure the operating object limit (0077), applied to each later
+    /// load: higher category role first, then lower NORAD ID. Intended for
+    /// construction, before the first load.
+    pub fn with_object_limit(mut self, max: usize) -> Self {
+        self.object_limit = Some(max);
+        self
+    }
+
+    /// Entries the object limit dropped from the loaded catalogue.
+    pub fn dropped_objects(&self) -> usize {
+        self.dropped
     }
 
     /// Configure the freshness policy. Intended for construction.
@@ -255,15 +291,12 @@ impl RadarApp {
     pub fn invalidate_frame(&mut self) {
         self.time = None;
         self.samples.clear();
+        self.sampled_at.clear();
         self.selected = None;
     }
 
-    /// Compute a complete synchronous frame at caller-supplied UTC. Each entry
-    /// gets a new result; a failed update cannot retain an old successful marker.
-    /// Invalid UTC invalidates the entire previous frame before returning Err.
-    pub fn update(&mut self, time: NaiveDateTime) -> Result<(), TimeError> {
-        self.time = None;
-        self.samples.clear();
+    /// Validate UTC and apply expiry before any sample is computed.
+    fn check_frame_time(&mut self, time: NaiveDateTime) -> Result<(), TimeError> {
         if let Err(error) = validate_utc_time(time) {
             self.invalidate_frame();
             return Err(error);
@@ -276,14 +309,109 @@ impl RadarApp {
             self.catalogue = None;
             self.fetched_at = None;
             self.newest_epoch = None;
+            self.dropped = 0;
             self.selected = None;
+            self.samples.clear();
+            self.sampled_at.clear();
         }
+        Ok(())
+    }
+
+    fn resample(&mut self, index: usize, time: NaiveDateTime) {
+        let entries = self.catalogue.as_ref().map_or(&[][..], Catalogue::entries);
+        self.samples[index] = sample(&entries[index], time, self.observer, &self.camera);
+        self.sampled_at[index] = time;
+    }
+
+    fn selected_index(&self) -> Option<usize> {
+        let id = self.selected?;
+        self.entries()
+            .binary_search_by_key(&id, |e| e.elements().norad_id)
+            .ok()
+    }
+
+    /// Staggered frame (0077): the selected object is recomputed at `time`,
+    /// and the others round-robin so each is at most `window` old. A first
+    /// frame, a new catalogue, time running backwards or a gap of `window` or
+    /// more falls back to a complete [`Self::update`]. Markers of objects not
+    /// revisited this frame stay where they were up to `window` ago; readouts
+    /// use only the selected object, which is always current.
+    pub fn update_staggered(
+        &mut self,
+        time: NaiveDateTime,
+        window: TimeDelta,
+    ) -> Result<(), TimeError> {
+        let previous = self.time;
+        self.check_frame_time(time)?;
+        let n = self.entries().len();
+        let Some(previous) = previous else {
+            return self.update(time);
+        };
+        let elapsed = time - previous;
+        if self.samples.len() != n
+            || elapsed < TimeDelta::zero()
+            || elapsed >= window
+            || window <= TimeDelta::zero()
+        {
+            return self.update(time);
+        }
+        let (elapsed_us, window_us) = (
+            elapsed.num_microseconds().unwrap_or(i64::MAX),
+            window.num_microseconds().unwrap_or(i64::MAX),
+        );
+        // ceil(n * elapsed / window), so a full cycle completes within the window.
+        let count = ((n as i128 * elapsed_us as i128 + window_us as i128 - 1) / window_us as i128)
+            .clamp(0, n as i128) as usize;
+        for k in 0..count {
+            self.resample((self.cursor + k) % n, time);
+        }
+        if n > 0 {
+            self.cursor = (self.cursor + count) % n;
+        }
+        if let Some(index) = self.selected_index() {
+            self.resample(index, time);
+        }
+        self.time = Some(time);
+        let before = self.selected;
+        self.reconcile_selection();
+        if self.selected != before
+            && let Some(index) = self.selected_index()
+        {
+            self.resample(index, time);
+            // The fresh sample can change eligibility; settle once more.
+            self.reconcile_selection();
+        }
+        Ok(())
+    }
+
+    /// Oldest sample UTC in the current frame, if any (telemetry/tests).
+    pub fn oldest_sample_utc(&self) -> Option<NaiveDateTime> {
+        self.sampled_at.iter().min().copied()
+    }
+
+    /// Visibility of the selected object at its own sample UTC (0078).
+    pub fn selected_visibility(&self) -> Option<Visibility> {
+        let index = self.selected_index()?;
+        let sample = self.samples.get(index)?.as_ref().ok()?;
+        visibility::classify(sample.physical.ecef, self.observer, self.sampled_at[index])
+    }
+
+    /// Compute a complete synchronous frame at caller-supplied UTC. Each entry
+    /// gets a new result; a failed update cannot retain an old successful marker.
+    /// Invalid UTC invalidates the entire previous frame before returning Err.
+    pub fn update(&mut self, time: NaiveDateTime) -> Result<(), TimeError> {
+        self.time = None;
+        self.samples.clear();
+        self.sampled_at.clear();
+        self.check_frame_time(time)?;
         // Disjoint field borrows keep the samples allocation reused per frame.
         let entries = self.catalogue.as_ref().map_or(&[][..], Catalogue::entries);
         for entry in entries {
             self.samples
                 .push(sample(entry, time, self.observer, &self.camera));
+            self.sampled_at.push(time);
         }
+        self.cursor = 0;
         self.time = Some(time);
         self.reconcile_selection();
         Ok(())
@@ -529,6 +657,162 @@ mod tests {
         assert_eq!(app.selected_category(), Some(Category::Navigation));
         app = app.with_group_categories(Vec::new());
         assert_eq!(app.selected_category(), Some(Category::Unknown));
+    }
+
+    fn visual() -> Catalogue {
+        let elements: Vec<OmmElements> = serde_json::from_str(include_str!(
+            "../../firmware/fixtures/celestrak-visual-20261103.json"
+        ))
+        .unwrap();
+        let mut builder = CatalogueBuilder::new();
+        for (record, e) in elements.into_iter().enumerate() {
+            builder.push(RecordOrigin { group: 0, record }, e);
+        }
+        builder.finish().unwrap()
+    }
+
+    fn visual_app() -> RadarApp {
+        // Mid-latitude site; the fixture's epochs end 2026-11-02T22:18Z.
+        let observer = GeodeticPosition {
+            latitude_rad: 40f64.to_radians(),
+            longitude_rad: (-105f64).to_radians(),
+            altitude_km: 1.6,
+        };
+        let view = View::rectangular(100.0, 400.0 / 240.0).unwrap();
+        let mut app = RadarApp::awaiting_catalogue(observer, view).unwrap();
+        app.load_catalogue(visual());
+        app
+    }
+
+    fn visual_time() -> NaiveDateTime {
+        NaiveDate::from_ymd_opt(2026, 11, 3)
+            .unwrap()
+            .and_hms_opt(2, 0, 0)
+            .unwrap()
+    }
+
+    #[test]
+    fn staggered_update_keeps_selected_current_and_all_within_window() {
+        let mut app = visual_app();
+        let window = TimeDelta::seconds(1);
+        let start = visual_time();
+        // First frame is complete.
+        app.update_staggered(start, window).unwrap();
+        assert_eq!(app.oldest_sample_utc(), Some(start));
+        assert_eq!(app.counts().catalogue, 156);
+        let mut full = visual_app();
+        let step = TimeDelta::milliseconds(50);
+        let mut time = start;
+        for frame in 1..=100 {
+            time += step;
+            app.update_staggered(time, window).unwrap();
+            full.update(time).unwrap();
+            // Every sample is within the window and the selected one is exact.
+            assert!(
+                time - app.oldest_sample_utc().unwrap() < window,
+                "frame {frame}"
+            );
+            let index = app.selected_index().unwrap();
+            assert_eq!(app.sampled_at[index], time);
+            let fresh = sample(&app.entries()[index], time, app.observer, &app.camera);
+            assert_eq!(app.samples[index], fresh);
+            // Counts can differ from a complete frame only through lag.
+            assert_eq!(app.counts().catalogue, full.counts().catalogue);
+        }
+        // 20 frames per window: ceil(156 / 20) = 8 objects per frame.
+        assert_eq!(app.cursor, (100 * 8) % 156);
+    }
+
+    #[test]
+    fn staggered_update_falls_back_to_complete_frames() {
+        let mut app = visual_app();
+        let window = TimeDelta::seconds(1);
+        let t = visual_time();
+        app.update_staggered(t, window).unwrap();
+        app.update_staggered(t + TimeDelta::milliseconds(50), window)
+            .unwrap();
+        assert_eq!(app.oldest_sample_utc(), Some(t));
+        // Backwards, a full window gap and a zero window are complete frames.
+        for (time, window) in [
+            (t, window),
+            (t + TimeDelta::seconds(1), window),
+            (t + TimeDelta::milliseconds(1050), TimeDelta::zero()),
+        ] {
+            app.update_staggered(time, window).unwrap();
+            assert_eq!(app.oldest_sample_utc(), Some(time));
+        }
+        // Same UTC again recomputes nothing but the selected object.
+        let again = t + TimeDelta::milliseconds(1050);
+        let cursor = app.cursor;
+        app.update_staggered(again, window).unwrap();
+        assert_eq!(app.cursor, cursor);
+        // Loading a catalogue recomputes the whole frame at its own UTC.
+        app.update_staggered(again + TimeDelta::milliseconds(50), window)
+            .unwrap();
+        app.load_catalogue(visual());
+        assert_eq!(
+            app.oldest_sample_utc(),
+            Some(again + TimeDelta::milliseconds(50))
+        );
+        // Invalid UTC invalidates the frame like `update`.
+        let invalid = NaiveDate::from_ymd_opt(2101, 1, 1)
+            .unwrap()
+            .and_hms_opt(0, 0, 0)
+            .unwrap();
+        assert!(app.update_staggered(invalid, window).is_err());
+        assert_eq!(app.time(), None);
+        assert_eq!(app.oldest_sample_utc(), None);
+        assert_eq!(app.selected_id(), None);
+    }
+
+    #[test]
+    fn object_limit_applies_to_loads_with_roles_first() {
+        let observer = visual_app().observer;
+        let view = visual_app().view;
+        // Group 0 has no role: lowest NORAD IDs are kept.
+        let mut app = RadarApp::awaiting_catalogue(observer, view)
+            .unwrap()
+            .with_object_limit(100);
+        app.load_catalogue(visual());
+        assert_eq!(app.counts().catalogue, 100);
+        assert_eq!(app.dropped_objects(), 56);
+        let ids: Vec<u64> = app
+            .entries()
+            .iter()
+            .map(|e| e.elements().norad_id)
+            .collect();
+        let mut all: Vec<u64> = visual()
+            .entries()
+            .iter()
+            .map(|e| e.elements().norad_id)
+            .collect();
+        all.truncate(100);
+        assert_eq!(ids, all);
+        // A Station role on the only group changes nothing: all equal.
+        let mut app = RadarApp::awaiting_catalogue(observer, view)
+            .unwrap()
+            .with_group_categories(alloc::vec![Category::Station])
+            .with_object_limit(156);
+        app.load_catalogue(visual());
+        assert_eq!((app.counts().catalogue, app.dropped_objects()), (156, 0));
+    }
+
+    #[test]
+    fn selected_visibility_follows_selection_and_frame() {
+        let mut app = visual_app();
+        assert_eq!(app.selected_visibility(), None);
+        // 2026-11-03 02:00Z is 19:00 MST at the site: dark sky.
+        app.update(visual_time()).unwrap();
+        let v = app.selected_visibility().unwrap();
+        assert!(matches!(v, Visibility::Visible | Visibility::Eclipsed));
+        // 19:00Z is local noon: daylight for any selection.
+        let noon = visual_time() + TimeDelta::hours(17);
+        app.update(noon).unwrap();
+        if app.selected_id().is_some() {
+            assert_eq!(app.selected_visibility(), Some(Visibility::Daylight));
+        }
+        app.invalidate_frame();
+        assert_eq!(app.selected_visibility(), None);
     }
 
     #[test]

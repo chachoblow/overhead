@@ -68,6 +68,26 @@ parser and ingestion. Public data; not a radar input or any image's catalogue.
 Do not refresh it: tests assert its length, records and epoch range. A new
 download is a new, separately named fixture.
 
+## `celestrak-visual-20261103.json`
+
+The exact body of one CelesTrak `visual` download, pinned as host test data for
+[0077](../../docs/decisions/0077-m2-operating-budget-visual-group.md)'s fetch
+caps, object limit and staggered tracking, and as the simulator's visual-group
+review input. Public data; not any image's catalogue.
+
+- Source: `https://celestrak.org/NORAD/elements/gp.php?GROUP=visual&FORMAT=JSON`,
+  fetched once from devbox with curl on 2026-11-03 UTC; response
+  `Date: Tue, 03 Nov 2026 14:32:35 GMT`, `HTTP/2 200`, `Content-Length: 64659`.
+  The endpoint is mutable.
+- 64,659 bytes, one JSON array ending in CRLF (kept by `.gitattributes`).
+  SHA-256: `d6481f08b3d7f9489f6bc4c0ca147364c6ff8f1ee7e223fbdda6e3110028bccf`.
+- 156 records, 156 unique NORAD IDs in ascending order (includes ISS 25544,
+  HST 20580 and CSS 48274); mean motion 11.30–16.00 rev/day (all low Earth
+  orbit); epochs `2026-11-01T15:41:22.462944` to `2026-11-02T22:18:20.337120` UTC.
+
+Do not refresh it: tests assert its length, records and epoch range. A new
+download is a new, separately named fixture.
+
 ## `celestrak-chain-20261101/`
 
 The three DER certificates `celestrak.org` served on 2026-11-01 UTC, captured

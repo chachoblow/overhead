@@ -24,6 +24,7 @@ mod omm;
 pub mod passes;
 mod position;
 mod propagate;
+mod sun;
 mod time;
 
 pub use coordinates::{CoordinateError, GeodeticPosition, ecef_to_geodetic, teme_to_ecef};
@@ -33,4 +34,5 @@ pub use observer::{LookAngles, ObservationError, ecef_to_look_angles};
 pub use omm::OmmElements;
 pub use position::{EcefPosition, TemePosition};
 pub use propagate::{PropagateError, TemeState};
+pub use sun::{in_earth_shadow, sun_ecef};
 pub use time::{TimeError, validate_utc_time};

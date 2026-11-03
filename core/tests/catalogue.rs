@@ -239,3 +239,47 @@ fn all_invalid_fails_with_diagnostics_and_entries_sort_by_norad_id() {
         .collect();
     assert_eq!(ids, [42, 25544, 100_000]);
 }
+
+#[test]
+fn limit_keeps_priority_then_lowest_ids_in_norad_order() {
+    let build = || {
+        let mut builder = CatalogueBuilder::new();
+        for (record, id) in [50u64, 10, 40, 20, 30].into_iter().enumerate() {
+            let mut value = object();
+            value["NORAD_CAT_ID"] = json!(id);
+            // Group 1 marks the high-priority objects (40 and 20).
+            let group = usize::from(id == 40 || id == 20);
+            push(&mut builder, origin(group, record), value);
+        }
+        builder.finish().unwrap()
+    };
+    let ids = |c: &overhead_core::catalogue::Catalogue| {
+        c.entries()
+            .iter()
+            .map(|e| e.satellite().norad_id())
+            .collect::<Vec<_>>()
+    };
+    let by_group = |e: &overhead_core::catalogue::CatalogueEntry| e.groups()[0] as u8;
+
+    let mut c = build();
+    assert_eq!(c.limit(5, by_group), 0);
+    assert_eq!(c.limit(9, by_group), 0);
+    assert_eq!(ids(&c), [10, 20, 30, 40, 50]);
+
+    let mut c = build();
+    assert_eq!(c.limit(3, by_group), 2);
+    assert_eq!(ids(&c), [10, 20, 40]);
+
+    let mut c = build();
+    assert_eq!(c.limit(1, by_group), 4);
+    assert_eq!(ids(&c), [20]);
+
+    // Equal priority: lowest IDs; a zero limit still keeps one entry.
+    let mut c = build();
+    assert_eq!(c.limit(2, |_| 0), 3);
+    assert_eq!(ids(&c), [10, 20]);
+    let mut c = build();
+    assert_eq!(c.limit(0, |_| 0), 4);
+    assert_eq!(ids(&c), [10]);
+    assert!(c.diagnostics().is_empty());
+}

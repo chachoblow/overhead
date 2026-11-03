@@ -84,6 +84,39 @@ impl Catalogue {
     pub fn diagnostics(&self) -> &[CatalogueDiagnostic] {
         &self.diagnostics
     }
+
+    /// Keep at most `max` entries (at least one), choosing higher `priority`
+    /// first and lower NORAD IDs among equals; the kept entries stay sorted by
+    /// NORAD ID. Returns how many were dropped. An operating limit applied
+    /// after a complete build (0077), not an ingestion or validity rule:
+    /// diagnostics are unchanged and dropped entries are not reported in them.
+    pub fn limit(&mut self, max: usize, priority: impl Fn(&CatalogueEntry) -> u8) -> usize {
+        let max = max.max(1);
+        let total = self.entries.len();
+        if total <= max {
+            return 0;
+        }
+        // Rank once; `entries` is NORAD-sorted, so a stable sort by descending
+        // priority keeps ascending IDs within each priority.
+        let mut ranked: Vec<(u8, usize)> = self
+            .entries
+            .iter()
+            .enumerate()
+            .map(|(i, e)| (priority(e), i))
+            .collect();
+        ranked.sort_by(|a, b| b.0.cmp(&a.0));
+        let mut keep = vec![false; total];
+        for &(_, i) in &ranked[..max] {
+            keep[i] = true;
+        }
+        let mut index = 0;
+        self.entries.retain(|_| {
+            let kept = keep[index];
+            index += 1;
+            kept
+        });
+        total - max
+    }
 }
 
 /// No usable satellite remained; diagnostics survive the failed build.

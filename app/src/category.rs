@@ -11,7 +11,7 @@ pub enum Category {
 }
 
 impl Category {
-    fn priority(self) -> u8 {
+    pub(crate) fn priority(self) -> u8 {
         match self {
             Self::Unknown => 0,
             Self::Weather => 1,
