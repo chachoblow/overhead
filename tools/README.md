@@ -112,6 +112,10 @@ They are not inferred from file metadata or used to select elements.
 
 ### Display categories
 
+Since [0078](../docs/decisions/0078-visibility-glyph.md) roles no longer appear on
+screen (the slot shows visibility); they still load as below and rank
+[0077](../docs/decisions/0077-m2-operating-budget-visual-group.md)'s object limit.
+
 A group may optionally declare `"category": "station"`, `"navigation"` or
 `"weather"` under [0045](../docs/decisions/0045-static-group-category-contract.md).
 Missing/null contributes no classification; other values (including `"unknown"`),

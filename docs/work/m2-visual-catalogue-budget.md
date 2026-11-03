@@ -47,9 +47,13 @@ justify the limit and cadence, and M2 can close.
 - [x] firmware: visual request, MAX_BODY 128 KiB, OBJECT_LIMIT 256, PSRAM first
       region (live_radar + live_fetch_main), STAGGER 1 s, update_max_us/oldest_ms/
       internal/psram telemetry; banners DEVICE_V2, LIVE_FETCH_RADAR_V4, LIVE_FETCH_V2.
-- [ ] sim: review recipe for three visibility states on the visual fixture.
-- [ ] Board: diagnostic capture over ≥2 refreshes (REFRESH_MINUTES=120), then device app.
-- [ ] Docs: 0077, 0078, PLAN, DESIGN, READMEs, HANDOFF/PROGRESS at completion.
+- [x] sim: README `#visibility-glyph` recipe (ISS-only from the visual fixture, three subpoint scenes); ran it.
+- [ ] Board: diagnostic capture running since 14:45 UTC, `timeout 15600`, log
+      `firmware/target/visual-run1.log` (ignored); ELF sha256 dea5dae6…, image
+      58785a80…, 1,358,080 B, gate exit 0, rev 69e8a28. Then the 8-hour device app.
+- [x] Docs drafted: 0077, 0078, PLAN M2, DESIGN, sim/tools READMEs, fixture README.
+- [ ] Firmware README `#visual-group-under-the-m2-budget-0077` with board evidence;
+      HANDOFF/PROGRESS at completion.
 
 ## Discoveries and assumptions
 - `visual` on 2026-11-03T14:32Z: 156 records, 64,659 B, sorted by NORAD ID,
@@ -65,11 +69,20 @@ justify the limit and cadence, and M2 can close.
   Cylindrical Earth shadow (no penumbra/refraction).
 
 ## Verification
+- 2026-11-03 board boot (diagnostic V4, home site): fetch 1 HTTP 200, 64,659 B,
+  156/156 accepted, ingest 291 ms, total 2.76 s, handshake 766 ms, display gap
+  438 ms; heap peak 490,284 B; internal used 44.7 KB of 160 KiB; PSRAM 313–345 KB;
+  stack 7,296 of 39,552 B. Update cost: 97 ms on the complete frame after load,
+  then 20–32 ms per frame (≈9 objects × ~2.2 ms, PSRAM-resident); idle frames
+  ~36 ms total, single skips only around full refreshes as before.
 - 2026-11-03 (host): workspace check/tests pass (app 40, render 100, sim snapshot 12,
   core catalogue 9); firmware host default 19, element-fetch 55, live-utc-boot 70,
   sharp-boot-capture 60; dummy release builds of device, live-fetch-radar,
   live-fetch-faults, live-fetch.
 
 ## Open questions
-- Object limit value: default 256 (body cap 128 KiB), to confirm against
-  measured memory/cost.
+- Object limit 256: memory is ample, but at 256 objects each frame would update
+  ~13 objects (~29 ms), tight against 50 ms. Keep 256 (only growth reaches it) or
+  lower to ~200? Default: keep, record the measured risk.
+- SNTP renewals invalidate the frame (0062), so the next update is complete
+  (~97 ms) — watch how often in the long capture.

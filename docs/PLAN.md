@@ -1,7 +1,8 @@
 # Overhead — Plan
 
-**Current: M0, M1 and M3 complete; M4 done for now (user, 2026-10-24). M2
-operating budget/scheduling and M6 standalone device remain open; M6 element
+**Current: M0, M1 and M3 complete; M4 done for now (user, 2026-10-24). M2's
+operating budget is set under [0077](decisions/0077-m2-operating-budget-visual-group.md)
+pending board evidence; M6 standalone device remains open; M6 element
 fetch runs under [0071](decisions/0071-https-element-fetch-first-slice.md),
 [0074](decisions/0074-live-utc-radar-on-fetched-elements.md) and
 [0075](decisions/0075-fetched-element-refresh-and-staleness.md); the device
@@ -73,13 +74,18 @@ hardware; the first S3 kernel baseline alone does not justify capacity or cadenc
   stack observations and limitations live in the [results](evaluations/s3-m2.md).
   Reproduce only at the [pinned revision](evaluations/s3-m2/README.md#offline-validation-and-table-regeneration),
   not the evolving workspace. No new matrix or production policy is implied.
-- [ ] Use the visual workload and measured target costs to set catalogue/input/result
-  limits, lookahead, calculation/prediction cadences and explicit over-budget behavior.
-- [ ] Select scheduling and verify bounded latency separately. Production prediction
-  scheduling does not block the initial M3 slice; M2 is not closed by starting it.
+- [x] Set catalogue/input limits, cadence and over-budget behavior under
+  [0077](decisions/0077-m2-operating-budget-visual-group.md): CelesTrak's `visual`
+  group, 128 KiB bodies in PSRAM, at most 256 objects (role then NORAD ID, dropped
+  count on debug only), the selected object every frame and the rest within 1 s.
+  Device pass prediction (lookahead, prediction cadence) is deferred, not set.
+- [ ] Verify the staggered schedule's bounded update cost and heap on the board
+  ([evidence](../firmware/README.md#visual-group-under-the-m2-budget-0077)).
 
-**Done when:** a curated catalogue and upcoming passes are testable headlessly,
-with measured costs justifying supported size, cadence, and prediction accuracy.
+**Done when:** a curated catalogue is testable headlessly, with measured costs
+justifying supported size and cadence. Amended by 0077: device pass prediction is
+deferred, so upcoming passes remain host-tested (0012–0016) rather than a device
+budget.
 
 ## M3 — Minimal real-data radar (complete)
 [DESIGN](DESIGN.md#interface-intent) owns the visual brief and open panel questions;

@@ -670,6 +670,11 @@ on the physical display. No 20 Hz target-budget claim follows from host output.
 
 ### Static category glyph
 
+> **Superseded on screen by [0078](../docs/decisions/0078-visibility-glyph.md):**
+> the slot now shows the [visibility glyph](#visibility-glyph). Roles still load
+> and rank 0077's object limit, but no longer change any pixel; the recipe below
+> is history.
+
 [0045](../docs/decisions/0045-static-group-category-contract.md) adds a static
 `Cat` label and Station body-and-wings, Navigation cross, Weather cloud or Unknown
 question mark. The user approved the icons and behavior and authorized
@@ -754,6 +759,34 @@ notices. Renderer tests cover same-app selection/frame loss and recovery; loader
 and executable tests cover hierarchy, duplicate/reordered groups and valid versus
 invalid membership. Exact pixel tests use independent geometric references, not
 production packed masks. No target/display validation follows from host images.
+
+### Visibility glyph
+
+Under [0078](../docs/decisions/0078-visibility-glyph.md) the strip's top slot
+shows `Vis` and, for the selected object: an **eye** when it is sunlit while the
+observer's Sun is below −6°, a **filled disc** when it is in Earth's shadow, and a
+**sun** when the observer's sky is too bright (Sun at or above −6°). It follows
+selection immediately and clears with no selection, like 0045's icon did.
+
+Review recipe: the ISS from the pinned `visual` fixture, observed from its own
+subpoint at three moments of 2026-11-03 (single-object review group; the sites
+are review inputs, not device settings):
+
+```sh
+review_dir=$(mktemp -d)
+python3 -c "import json,sys; d=json.load(open('firmware/fixtures/celestrak-visual-20261103.json')); json.dump([r for r in d if r['NORAD_CAT_ID']==25544], open(sys.argv[1],'w'))" "$review_dir/iss.json"
+printf '{"groups":[{"name":"iss","path":"%s"}]}' "$review_dir/iss.json" > "$review_dir/catalogue.json"
+for case in "daylight 2026-11-03T00:05:00Z -44.7576 -121.6808" \
+            "visible 2026-11-03T00:16:00Z -16.3560 -86.5176" \
+            "eclipsed 2026-11-03T00:21:00Z -1.2043 -75.3781"; do
+  set -- $case
+  cargo run -q -p overhead-sim -- "$review_dir/catalogue.json" "$2" "$3" "$4" 0 \
+    --wide --fov-deg 20 --snapshot "$review_dir/visibility-$1.png"
+done
+```
+
+Each report reads `catalogue=1 sky=1 visible=1`. Shadow edges use a cylinder
+(no penumbra), so a state can change a few seconds early or late at the edge.
 
 ### Label zoom visibility
 

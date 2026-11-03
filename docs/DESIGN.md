@@ -24,7 +24,8 @@ separator. The wide view now implements all five static fields
 [0042](decisions/0042-static-altitude-glyph-contract.md) altitude,
 [0043](decisions/0043-static-speed-glyph-contract.md) speed,
 [0044](decisions/0044-static-period-glyph-contract.md) period,
-[0045](decisions/0045-static-group-category-contract.md) category),
+[0045](decisions/0045-static-group-category-contract.md) category, shown since
+[0078](decisions/0078-visibility-glyph.md) as naked-eye visibility),
 [0046's selected-data transitions](decisions/0046-selected-data-glyph-transition-contract.md),
 [0040's white-backed bottom-left notices](decisions/0040-white-backed-bottom-left-notice-contract.md)
 and [0047's text-first debug access](decisions/0047-text-first-debug-access-contract.md).
@@ -131,7 +132,9 @@ the implemented contracts own exact geometry.
   thresholds remain configurable comparison defaults. The zoom gate retains the
   selected diamond; 0040's notice overlay may locally cover it. No fade or
   dithering. Full names remain diagnostic information.
-- **Glyph strip, top to bottom:** category pictogram, elevation, altitude,
+- **Glyph strip, top to bottom:** visibility pictogram (0078: eye when sunlit
+  against a dark sky, filled disc in Earth's shadow, sun in daylight; it replaced
+  the category pictogram described next), elevation, altitude,
   orbital speed, orbital period. Keep it near the right edge, without enclosing
   borders; one padded vertical line separates it from the radar. Center short
   labels above each glyph. No routine numeric values. Navigation uses a thin
@@ -156,7 +159,7 @@ the implemented contracts own exact geometry.
   to 24 hours/one turn.
 - **Transitions:** glyphs animate toward the new selected satellite's values.
   Intermediate shapes are presentation only, never new physical samples. 0046
-  animates `Elev`, `Alt`, `Spd`, `Per` (250 ms) with `Cat` switching immediately;
+  animates `Elev`, `Alt`, `Spd`, `Per` (250 ms) with `Cat` (now `Vis`) switching immediately;
   headless snapshots remain static.
 
 ### Retained mock references
