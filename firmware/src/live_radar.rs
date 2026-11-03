@@ -821,8 +821,8 @@ async fn display(
             );
         }
         had_catalogue = has_catalogue;
-        // Each accepted SNTP renewal invalidates the frame until the next
-        // render (0062), when `data_stale()` is false for want of a frame UTC;
+        // A new anchor or a renewal beyond the 100 ms budget invalidates the
+        // frame until the next render (0062/0063), when `data_stale()` is false for want of a frame UTC;
         // only frames with UTC decide the transition.
         if app.time().is_some() && app.data_stale() != was_stale {
             was_stale = app.data_stale();

@@ -331,11 +331,13 @@ impl RadarApp {
     }
 
     /// Staggered frame (0077): the selected object is recomputed at `time`,
-    /// and the others round-robin so each is at most `window` old. A first
-    /// frame, a new catalogue, time running backwards or a gap of `window` or
-    /// more falls back to a complete [`Self::update`]. Markers of objects not
-    /// revisited this frame stay where they were up to `window` ago; readouts
-    /// use only the selected object, which is always current.
+    /// and the others round-robin so each is within `window` of the frame
+    /// time. A first frame, a new catalogue or a step of `window` or more in
+    /// either direction falls back to a complete [`Self::update`]. A smaller
+    /// backward step (a small clock resync, 0063 note) is staggered like a
+    /// forward one by its magnitude. Markers of objects not revisited this
+    /// frame stay where they were up to `window` away; readouts use only the
+    /// selected object, which is always current.
     pub fn update_staggered(
         &mut self,
         time: NaiveDateTime,
@@ -347,12 +349,8 @@ impl RadarApp {
         let Some(previous) = previous else {
             return self.update(time);
         };
-        let elapsed = time - previous;
-        if self.samples.len() != n
-            || elapsed < TimeDelta::zero()
-            || elapsed >= window
-            || window <= TimeDelta::zero()
-        {
+        let elapsed = (time - previous).abs();
+        if self.samples.len() != n || elapsed >= window || window <= TimeDelta::zero() {
             return self.update(time);
         }
         let (elapsed_us, window_us) = (
@@ -732,9 +730,9 @@ mod tests {
         app.update_staggered(t + TimeDelta::milliseconds(50), window)
             .unwrap();
         assert_eq!(app.oldest_sample_utc(), Some(t));
-        // Backwards, a full window gap and a zero window are complete frames.
+        // A full window either way and a zero window are complete frames.
         for (time, window) in [
-            (t, window),
+            (t - TimeDelta::milliseconds(950), window),
             (t + TimeDelta::seconds(1), window),
             (t + TimeDelta::milliseconds(1050), TimeDelta::zero()),
         ] {
@@ -763,6 +761,38 @@ mod tests {
         assert_eq!(app.time(), None);
         assert_eq!(app.oldest_sample_utc(), None);
         assert_eq!(app.selected_id(), None);
+    }
+
+    #[test]
+    fn small_backward_step_is_staggered_and_stays_within_window() {
+        let mut app = visual_app();
+        let window = TimeDelta::seconds(1);
+        let step = TimeDelta::milliseconds(50);
+        let mut time = visual_time();
+        app.update_staggered(time, window).unwrap();
+        for _ in 0..30 {
+            time += step;
+            app.update_staggered(time, window).unwrap();
+        }
+        let selected = app.selected_id();
+        assert!(selected.is_some());
+        // A −100 ms resync: ceil(156 × 0.1) = 16 objects, not all 156.
+        let cursor = app.cursor;
+        time -= TimeDelta::milliseconds(100);
+        app.update_staggered(time, window).unwrap();
+        assert_eq!(app.cursor, (cursor + 16) % 156);
+        assert_eq!(app.selected_id(), selected);
+        assert_ne!(app.oldest_sample_utc(), Some(time));
+        for frame in 0..=40 {
+            let index = app.selected_index().unwrap();
+            assert_eq!(app.sampled_at[index], time);
+            assert!(
+                app.sampled_at.iter().all(|&s| (time - s).abs() < window),
+                "frame {frame}"
+            );
+            time += step;
+            app.update_staggered(time, window).unwrap();
+        }
     }
 
     #[test]

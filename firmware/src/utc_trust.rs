@@ -22,7 +22,14 @@ const PPM_DENOMINATOR: u128 = 1_000_000;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ObservationOutcome {
+    /// New anchor with no usable previous one, or a jump beyond the budget:
+    /// app samples and selection were discarded (0062/0063).
     Accepted,
+    /// New anchor within the 100 ms budget of the old anchor's projected UTC
+    /// (signed `new − old` in µs): samples and selection kept (0063 note).
+    Resynced {
+        step_us: i64,
+    },
     NoRenewal,
     Revoked,
 }
@@ -166,7 +173,8 @@ impl UtcTrustPreflight {
 
     /// `now_us` is when the screened response is processed, not its midpoint.
     /// A late in-flight response only renews if its actual age and uncertainty
-    /// still fit. Any accepted resync discards old app samples immediately.
+    /// still fit. An accepted resync discards old app samples unless it is
+    /// within the error budget of the still-trusted old anchor.
     pub fn observe(
         &mut self,
         app: &mut RadarApp,
@@ -202,7 +210,19 @@ impl UtcTrustPreflight {
         {
             return ObservationOutcome::NoRenewal;
         }
-        app.invalidate_frame(); // no old selection/sample, even on a small resync
+        // A step within the error budget is indistinguishable from the old
+        // anchor's own allowed error: keep samples and selection. A larger
+        // jump, or no anchor still trusted, discards them (0063).
+        let step_us = self.anchor.and_then(|(midpoint, _, old_utc, _)| {
+            let old_age = observation.midpoint_uptime_us.checked_sub(midpoint)?;
+            let old_projected = old_utc.checked_add(i64::try_from(old_age).ok()?)?;
+            anchor_utc
+                .checked_sub(old_projected)
+                .filter(|step| step.unsigned_abs() <= TARGET_ERROR_US)
+        });
+        if step_us.is_none() {
+            app.invalidate_frame();
+        }
         if self
             .lifecycle
             .sync_trusted_utc(
@@ -223,7 +243,10 @@ impl UtcTrustPreflight {
         ));
         self.fresh_frame_pending = true;
         self.frame_requested = false;
-        ObservationOutcome::Accepted
+        match step_us {
+            Some(step_us) => ObservationOutcome::Resynced { step_us },
+            None => ObservationOutcome::Accepted,
+        }
     }
 
     /// Evaluate expiry *before* frame, retained refresh or idle-COM selection.
@@ -632,7 +655,7 @@ mod tests {
     }
 
     #[test]
-    fn in_flight_midpoint_uses_actual_age_and_reanchor_clears_samples() {
+    fn in_flight_midpoint_uses_actual_age_and_small_reanchor_keeps_samples() {
         let mut app = app();
         let mut gate = UtcTrustPreflight::new(100_000, 0).unwrap();
         assert_eq!(
@@ -650,11 +673,12 @@ mod tests {
         );
         app.update(epoch()).unwrap();
         gate.transfer_succeeded(20_000, gate.next_phase(), true);
+        // Old anchor projects epoch + 49 ms at the new midpoint: a −49 ms step.
         assert_eq!(
             gate.observe(&mut app, 50_000, observation(49_000, 20_000)),
-            ObservationOutcome::Accepted
+            ObservationOutcome::Resynced { step_us: -49_000 }
         );
-        assert_eq!(app.time(), None);
+        assert_eq!(app.time(), Some(epoch()));
         assert_eq!(
             gate.observe(&mut app, 51_000, observation(50_000, 100_001)),
             ObservationOutcome::NoRenewal
@@ -662,6 +686,75 @@ mod tests {
         assert_eq!(
             gate.next(&mut app, 149_000, true),
             LifecycleAction::RenderNoFrame
+        );
+    }
+
+    /// 0063 note: a renewal within 100 ms of the old anchor's projected UTC
+    /// keeps samples and selection; a larger jump, or one after the old
+    /// anchor expired, clears them. Either way a fresh frame follows.
+    #[test]
+    fn small_resync_keeps_tracking_and_jump_or_expired_anchor_clears() {
+        let mut app = app();
+        let mut gate = UtcTrustPreflight::new(10_000_000, 0).unwrap();
+        let at = |uptime: u64, offset_us: i64| ScreenedObservation {
+            midpoint_uptime_us: uptime,
+            utc_at_midpoint: epoch() + TimeDelta::microseconds(uptime as i64 + offset_us),
+            uncertainty_us: 1,
+        };
+        let frame = |gate: &mut UtcTrustPreflight, app: &mut RadarApp, now: u64| {
+            let LifecycleAction::Scheduled(DiagnosticAction::Frame { sample, .. }) =
+                gate.next(app, now, true)
+            else {
+                panic!("fresh frame after renewal");
+            };
+            let utc = DateTime::from_timestamp_micros(sample.utc_unix_us)
+                .unwrap()
+                .naive_utc();
+            app.update(utc).unwrap();
+            gate.transfer_succeeded(now + 1, gate.next_phase(), true);
+            utc
+        };
+        assert_eq!(
+            gate.observe(&mut app, 0, at(0, 0)),
+            ObservationOutcome::Accepted
+        );
+        let mut last = frame(&mut gate, &mut app, 0);
+        let (samples, selected) = (app.objects().count(), app.selected_id());
+        assert!(samples > 0);
+
+        for (uptime, offset, step) in [
+            (1_000_000, 100_000, 100_000), // forward, inclusive limit
+            (2_000_000, 0, -100_000),      // backward, inclusive limit
+            (3_000_000, 30_000, 30_000),
+        ] {
+            assert_eq!(
+                gate.observe(&mut app, uptime, at(uptime, offset)),
+                ObservationOutcome::Resynced { step_us: step }
+            );
+            assert_eq!(app.time(), Some(last), "frame kept until the next update");
+            assert_eq!(app.objects().count(), samples);
+            assert_eq!(app.selected_id(), selected);
+            last = frame(&mut gate, &mut app, uptime);
+        }
+
+        // One microsecond beyond the budget is a jump.
+        assert_eq!(
+            gate.observe(&mut app, 4_000_000, at(4_000_000, 130_001)),
+            ObservationOutcome::Accepted
+        );
+        assert_eq!(app.time(), None);
+        assert_eq!(app.selected_id(), None);
+        frame(&mut gate, &mut app, 4_000_000);
+
+        // After the old anchor expires, a renewal is a new anchor even at
+        // the same offset.
+        assert_eq!(
+            gate.next(&mut app, 14_000_001, true),
+            LifecycleAction::RenderNoFrame
+        );
+        assert_eq!(
+            gate.observe(&mut app, 14_000_002, at(14_000_002, 130_001)),
+            ObservationOutcome::Accepted
         );
     }
 }
