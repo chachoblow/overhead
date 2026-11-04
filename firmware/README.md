@@ -1638,6 +1638,20 @@ the selection itself survived every renewal). Afterwards the board was left
 on the default 8-hour app (image 1,358,208 B, gate passed): 156 loaded, 11 in
 view.
 
+## Rotary encoder wiring check (knob-test)
+
+`overhead-s3-knob-test` (`--features knob-test`) is an isolated, UART-only
+encoder check, not the device app. Wiring (direct, internal pull-ups, no
+caps): A→IO4, C (middle)→G, B→IO5, switch→IO6 and G. PCNT unit 0 decodes
+quadrature with the maximum (1023-cycle) glitch filter and logs `KNOB_COUNT`,
+`KNOB_SWITCH` and periodic `KNOB_LEVELS`. Build/flash as for the Sharp test,
+with `--bin overhead-s3-knob-test --features knob-test`.
+
+2026-11-03 on the board (`/dev/ttyUSB0`, gate passed): 4 counts per detent,
+detent rest at A=B=1, clockwise counts negative; 10 clicks each way returned
+to 0, three presses registered once each, and a fast spin ended on a detent
+with no lost counts. The part number is unknown (24-detent PEC11-style).
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing

@@ -62,6 +62,8 @@ live-fetch-radar = ["live-utc-boot", "live-fetch"]
 live-fetch-faults = ["live-fetch-radar"]
 # 0076: the device application. Same runtime as live-fetch-radar, event log only.
 device = ["live-fetch-radar"]
+# Isolated rotary-encoder wiring check (PCNT on IO4/IO5, switch IO6); UART only.
+knob-test = ["esp-hal/unstable"]
 # Separately named pinned-OMM visibility diagnostic; original source path retained.
 live-utc-fresh-iss = ["live-utc-radar"]
 
@@ -249,6 +251,13 @@ bench = false
 name = "overhead-s3-live-utc-fresh-iss"
 path = "src/live_utc_fresh_main.rs"
 required-features = ["live-utc-fresh-iss"]
+test = false
+bench = false
+
+[[bin]]
+name = "overhead-s3-knob-test"
+path = "src/knob_test_main.rs"
+required-features = ["knob-test"]
 test = false
 bench = false
 
