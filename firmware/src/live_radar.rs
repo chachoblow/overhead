@@ -35,6 +35,7 @@ use crate::{
     element_fetch::{self, HttpError},
     element_refresh::{self, Outcome, Schedule},
     fault_plan::Fault,
+    frame_stats::{CAUSES, Cause, FrameStats},
     knob::{self, Detents},
     live_utc,
     sharp_lines::{Kind, LineSender},
@@ -99,12 +100,16 @@ pub enum Log {
 }
 
 static DIAGNOSTIC: AtomicBool = AtomicBool::new(false);
+/// Set by every diagnostic print, so frame accounting can tell when blocking
+/// UART output (absent from the device app) delayed the display loop.
+static LOGGED: AtomicBool = AtomicBool::new(false);
 
 /// Prints only in `Log::Diagnostic`; event lines use `println!` directly.
 macro_rules! diag {
     ($($arg:tt)*) => {
         if DIAGNOSTIC.load(Ordering::Relaxed) {
             println!($($arg)*);
+            LOGGED.store(true, Ordering::Relaxed);
         }
     };
 }
@@ -222,6 +227,10 @@ static mut SCREEN: Screen = Screen::new();
 static mut SENDER: LineSender = LineSender::new();
 static mut LAYER: MaybeUninit<CoastLayer> = MaybeUninit::uninit();
 static mut PERIOD: PeriodCache = PeriodCache::new();
+// ~8 KiB of histograms; static so it never sits on the CPU0 stack.
+static mut FRAME_STATS: FrameStats = FrameStats::new();
+/// `FRAME_BOOT` (since-boot per-cause totals) every this many 10 s windows.
+const FRAME_BOOT_WINDOWS: u32 = 60;
 
 fn uptime_us() -> u64 {
     Instant::now().duration_since_epoch().as_micros()
@@ -803,6 +812,9 @@ async fn display(
     let screen = unsafe { &mut *(&raw mut SCREEN) };
     let sender = unsafe { &mut *(&raw mut SENDER) };
     let period = unsafe { &mut *(&raw mut PERIOD) };
+    let cadence = unsafe { &mut *(&raw mut FRAME_STATS) };
+    let (mut windows, mut window_started) = (0u32, uptime_us());
+    let mut last_selected = None;
     let coast = unsafe { (*(&raw mut LAYER)).write(CoastLayer::new()) };
     // SAFETY: this task alone owns these statics and SPI; the network side
     // sends events/catalogue over channels and never touches render/app/panel.
@@ -820,6 +832,7 @@ async fn display(
         let fetching = FETCHING.load(Ordering::Relaxed);
         if fetching || was_fetching {
             fetch_max_us = fetch_max_us.max(gap);
+            cadence.note(Cause::Fetch);
         }
         if was_fetching && !fetching {
             diag!("DISPLAY_FETCH_GAP max_loop_gap_us={fetch_max_us}");
@@ -829,6 +842,7 @@ async fn display(
         while let Ok(event) = EVENTS.try_receive() {
             let now = uptime_us();
             let decision = live_utc::apply(&mut gate, &mut app, now, event);
+            cadence.note(Cause::Sntp);
             diag!("LIVE_UTC source={decision:?} uptime_us={now}");
         }
         if let Ok((catalogue, fetched_at)) = DATA.try_receive() {
@@ -838,6 +852,7 @@ async fn display(
             }
             let before = app.selected_id();
             app.load_fetched_catalogue(catalogue, fetched_at);
+            cadence.note(Cause::Load);
             loads += 1;
             let c = app.counts();
             println!(
@@ -864,6 +879,7 @@ async fn display(
         let turned = detents.update(knob_input.unit.value());
         if turned != 0 {
             app.zoom_detents(turned);
+            cadence.note(Cause::Knob);
             diag!(
                 "KNOB detents={turned} fov_deg={:.3} uptime_us={now} selected={:?}",
                 app.view().fov_deg(),
@@ -912,6 +928,12 @@ async fn display(
             loop_max_us = 0;
             update_max_us = 0;
             last_stats = now;
+            print_frame_window(cadence, now - window_started);
+            window_started = now;
+            windows += 1;
+            if windows.is_multiple_of(FRAME_BOOT_WINDOWS) {
+                print_frame_boot(cadence);
+            }
         }
         match gate.next(&mut app, now, retained) {
             LifecycleAction::RenderNoFrame => {
@@ -957,6 +979,19 @@ async fn display(
                 gate.transfer_succeeded(done, phase, transfer.kind == Kind::Full);
                 retained = true;
                 frames += 1;
+                if app.selected_id() != last_selected {
+                    last_selected = app.selected_id();
+                    cadence.note(Cause::Selection);
+                }
+                if LOGGED.swap(false, Ordering::Relaxed) {
+                    cadence.note(Cause::Log);
+                }
+                let own = if transfer.kind == Kind::Full {
+                    Cause::Full
+                } else {
+                    Cause::Idle
+                };
+                cadence.frame(sample.skipped, done - started, own);
                 if frames == 1 {
                     // Event: the first radar frame after boot (not repeated
                     // after a time-loss NO FRAME; that has its own line).
@@ -984,6 +1019,7 @@ async fn display(
                 }
                 let done = uptime_us();
                 gate.transfer_succeeded(done, phase, true);
+                cadence.note(Cause::Full);
             }
             LifecycleAction::Scheduled(DiagnosticAction::IdleVcom) => {
                 let phase = gate.next_phase();
@@ -1003,6 +1039,61 @@ async fn display(
         // steps in the network task still delay this loop (measured above).
         Timer::after(Wait::from_millis(5)).await;
     }
+}
+
+/// `FRAME_WINDOW`: the 10 s window's frames and charged skips per cause, as
+/// `cause=frames/skipped/max_work_ms`; causes with neither are left out.
+fn print_frame_window(stats: &mut FrameStats, span_us: u64) {
+    let window = stats.take_window();
+    if !DIAGNOSTIC.load(Ordering::Relaxed) {
+        return;
+    }
+    let frames: u64 = window.iter().map(|w| w.frames).sum();
+    let skipped: u64 = window.iter().map(|w| w.skipped).sum();
+    esp_println::print!(
+        "FRAME_WINDOW span_ms={} frames={frames} skipped={skipped}",
+        span_us / 1000
+    );
+    for (cause, w) in CAUSES.iter().zip(window) {
+        if w.frames > 0 || w.skipped > 0 {
+            esp_println::print!(
+                " {}={}/{}/{}",
+                cause.name(),
+                w.frames,
+                w.skipped,
+                w.max_work_us.div_ceil(1000)
+            );
+        }
+    }
+    println!();
+    LOGGED.store(true, Ordering::Relaxed);
+}
+
+/// `FRAME_BOOT`: since-boot frames, charged skips and work-time percentiles
+/// (whole-ms bounds; 256 means at least that) per cause with any activity.
+fn print_frame_boot(stats: &FrameStats) {
+    if !DIAGNOSTIC.load(Ordering::Relaxed) {
+        return;
+    }
+    for cause in CAUSES {
+        let t = stats.boot(cause);
+        if t.window.frames == 0 && t.window.skipped == 0 {
+            continue;
+        }
+        let p = |m| t.percentile_ms(m).unwrap_or(0);
+        println!(
+            "FRAME_BOOT cause={} frames={} skipped={} p50_ms={} p90_ms={} p99_ms={} p999_ms={} max_us={}",
+            cause.name(),
+            t.window.frames,
+            t.window.skipped,
+            p(500),
+            p(900),
+            p(990),
+            p(999),
+            t.window.max_work_us
+        );
+    }
+    LOGGED.store(true, Ordering::Relaxed);
 }
 
 /// Fault build: replace 0075's thresholds on the first load so `OLD DATA`

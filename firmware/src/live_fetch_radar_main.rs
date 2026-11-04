@@ -24,7 +24,7 @@ async fn main(spawner: Spawner) -> ! {
         spawner,
         p,
         Log::Diagnostic,
-        "OVERHEAD_S3_LIVE_FETCH_RADAR_V4 fetched visual group; not production",
+        "OVERHEAD_S3_LIVE_FETCH_RADAR_V5 fetched visual group; not production",
     )
     .await
 }
