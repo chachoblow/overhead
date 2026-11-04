@@ -666,3 +666,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - A renewal within 100 ms of the old anchor's projected UTC now keeps samples and selection (`Resynced { step_us }`); first anchors, larger jumps and renewals after expiry still clear. Staggered updates accept small backward steps.
 - Board (`live-fetch-radar`, 40 min): 35 renewals all `Resynced` (−25.5…+14.2 ms); no update window over 31 ms after the first load, where each renewal used to cost 173–181 ms. Board left on the 8-hour app.
 - Workspace check/tests (338), fmt, firmware host tests per feature, gate on both flashed builds.
+
+## 2026-11-03 (knob zoom on the device, 0060 note)
+- Wired a 24-detent encoder directly (A→IO4, C→GND, B→IO5, switch→IO6; internal pull-ups, no caps); a `knob-test` PCNT image measured 4 counts per detent with no lost counts.
+- Device runtime decodes the knob in hardware (PCNT) and zooms √1.2 per detent, clockwise in (`firmware/src/knob.rs`, `RadarApp::zoom_detents`); BOOT cycling unchanged. User judged the feel good on the board; board left on the device app with the knob.
+- Workspace check/tests (338), fmt, firmware host tests per feature, gate on all three flashed builds.

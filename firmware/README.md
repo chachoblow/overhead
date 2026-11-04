@@ -1652,6 +1652,17 @@ detent rest at A=B=1, clockwise counts negative; 10 clicks each way returned
 to 0, three presses registered once each, and a fast spin ended on a detent
 with no lost counts. The part number is unknown (24-detent PEC11-style).
 
+**Knob zoom in the device runtime** (`src/live_radar.rs`, so both the device
+app and `live-fetch-radar`): PCNT unit 0 as above with ±20,000 limits;
+`src/knob.rs` (host-tested) unwraps the counter and rounds to detents, and the
+display loop applies `RadarApp::zoom_detents` once per loop (clockwise zooms
+in, √1.2 per detent). The diagnostic prints `KNOB_READY` and `KNOB detents=
+fov_deg= selected=`; the app prints nothing for it. 2026-11-03 on the board
+(`live-fetch-radar`, gate passed, 156 loaded, 8 in view): ~180 `KNOB` lines,
+fast spins arriving as multi-detent steps (up to 9), three BOOT presses still
+applied, no panic; the user judged the zoom feel good. The board was then left
+on the device app with the knob (gate passed, 156 loaded).
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing

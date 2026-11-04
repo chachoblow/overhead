@@ -32,6 +32,7 @@ pub mod element_fetch;
 pub mod element_refresh;
 #[cfg(feature = "element-fetch")]
 pub mod fault_plan;
+pub mod knob;
 #[cfg(feature = "sharp-radar")]
 pub mod live_utc;
 // Target-only runtime shared by the device app and the live-fetch-radar

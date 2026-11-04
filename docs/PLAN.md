@@ -313,7 +313,8 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   [HANDOFF](HANDOFF.md) tracks open BOOT risks. The device app build exists
   under [0076](decisions/0076-device-app-build.md) (`--features device`,
   shared runtime with the `live-fetch-radar` diagnostic, event log only;
-  [evidence](../firmware/README.md#device-application-0076)); knob zoom remains.
+  [evidence](../firmware/README.md#device-application-0076)). Knob zoom done
+  ([0060 note](decisions/0060-defer-timing-to-physical-prototype.md#note--2026-11-03-knob-implemented-and-accepted)).
 - [ ] Add Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes
   per [0002](decisions/0002-data-and-time-over-wifi.md). First slice accepted as
   [0071](decisions/0071-https-element-fetch-first-slice.md): mbedtls-rs, STATIONS JSON,

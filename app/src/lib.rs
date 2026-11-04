@@ -490,6 +490,19 @@ impl RadarApp {
 
     pub fn zoom(&mut self, steps: i32) {
         self.view.zoom(steps);
+        self.after_zoom();
+    }
+
+    /// Knob input: one detent is half a [`zoom`](Self::zoom) step.
+    pub fn zoom_detents(&mut self, detents: i32) {
+        if detents == 0 {
+            return;
+        }
+        self.view.zoom_detents(detents);
+        self.after_zoom();
+    }
+
+    fn after_zoom(&mut self) {
         self.label_visible = self.label_zoom.after_zoom(self.view, self.label_visible);
         self.reconcile_selection();
     }

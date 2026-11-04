@@ -11,6 +11,8 @@ pub const NEAR_PLANE_KM: f64 = 1.0;
 pub const DEFAULT_FOV_DEG: f64 = 20.0;
 pub const MIN_FOV_DEG: f64 = 0.1;
 pub const MAX_FOV_DEG: f64 = 100.0;
+/// Magnification of one wheel/key zoom step.
+pub const ZOOM_STEP: f64 = 1.2;
 // Same WGS-84 ellipsoid as core. Deliberately no change to the verified engine.
 const EARTH_A_KM: f64 = 6378.137;
 const EARTH_B_KM: f64 = EARTH_A_KM * (1.0 - 1.0 / 298.257_223_563);
@@ -300,7 +302,17 @@ impl View {
     /// Positive steps magnify 1.2x, without translating the camera. Clamp input
     /// before exponentiation so even an extreme wheel event stays finite.
     pub fn zoom(&mut self, steps: i32) {
-        let factor = libm::pow(1.2, f64::from(steps.clamp(-64, 64)));
+        self.magnify(libm::pow(ZOOM_STEP, f64::from(steps.clamp(-64, 64))));
+    }
+    /// One knob detent is half a zoom step (√1.2 ≈ 1.095×), so two detents
+    /// match one wheel/key step. Positive detents magnify; same clamping.
+    pub fn zoom_detents(&mut self, detents: i32) {
+        self.magnify(libm::pow(
+            ZOOM_STEP,
+            f64::from(detents.clamp(-128, 128)) / 2.0,
+        ));
+    }
+    fn magnify(&mut self, factor: f64) {
         self.half_span = (self.half_span / factor).clamp(
             libm::tan(MIN_FOV_DEG.to_radians() / 2.0),
             libm::tan(MAX_FOV_DEG.to_radians() / 2.0),
@@ -468,6 +480,20 @@ mod tests {
         );
         view.zoom(-1);
         near(view.fov_deg(), DEFAULT_FOV_DEG);
+        view.zoom_detents(2);
+        near(view.locate(point).unwrap().east, before.east * 1.2);
+        view.zoom_detents(1);
+        near(
+            view.locate(point).unwrap().east,
+            before.east * 1.2 * libm::sqrt(1.2),
+        );
+        view.zoom_detents(-3);
+        near(view.fov_deg(), DEFAULT_FOV_DEG);
+        view.zoom_detents(i32::MAX);
+        near(view.fov_deg(), MIN_FOV_DEG);
+        view.zoom_detents(i32::MIN);
+        near(view.fov_deg(), MAX_FOV_DEG);
+        view = View::new(DEFAULT_FOV_DEG).unwrap();
         view.zoom(i32::MAX);
         near(view.fov_deg(), MIN_FOV_DEG);
         view.zoom(i32::MIN);

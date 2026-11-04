@@ -35,6 +35,7 @@ use crate::{
     element_fetch::{self, HttpError},
     element_refresh::{self, Outcome, Schedule},
     fault_plan::Fault,
+    knob::{self, Detents},
     live_utc,
     sharp_lines::{Kind, LineSender},
     site,
@@ -57,6 +58,7 @@ use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channe
 use embassy_time::{Duration as Wait, Timer, with_timeout};
 use esp_hal::{
     gpio::{Input, InputConfig, Level, Output, OutputConfig, Pull},
+    pcnt::{Pcnt, channel, unit::Unit},
     peripherals::Peripherals,
     rng::{Trng, TrngSource},
     spi::{
@@ -335,7 +337,43 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
     let timg1 = TimerGroup::new(p.TIMG1);
     boot_capture::start(PeriodicTimer::new(timg1.timer0), boot, 20_000);
     diag!("BOOT_CAPTURE_READY live fetch sample_ms=5 timer=TIMG1");
-    spawner.spawn(display(spi, cs, observer).unwrap());
+    // Knob zoom (0060): PCNT unit 0 decodes A=IO4/B=IO5 quadrature in
+    // hardware, so render/SPI stalls cannot drop steps; the display task
+    // reads the count once per loop. Wiring and polarity: firmware README.
+    let pull_up = InputConfig::default().with_pull(Pull::Up);
+    let knob_a = Input::new(p.GPIO4, pull_up);
+    let knob_b = Input::new(p.GPIO5, pull_up);
+    let pcnt = Pcnt::new(p.PCNT);
+    let knob_unit = pcnt.unit0;
+    knob_unit.set_filter(Some(1023)).expect("PCNT filter");
+    knob_unit
+        .set_high_limit(Some(knob::LIMIT))
+        .expect("PCNT high limit");
+    knob_unit
+        .set_low_limit(Some(-knob::LIMIT))
+        .expect("PCNT low limit");
+    knob_unit.clear();
+    let ch0 = &knob_unit.channel0;
+    ch0.set_ctrl_signal(knob_a.peripheral_input());
+    ch0.set_edge_signal(knob_b.peripheral_input());
+    ch0.set_ctrl_mode(channel::CtrlMode::Reverse, channel::CtrlMode::Keep);
+    ch0.set_input_mode(channel::EdgeMode::Increment, channel::EdgeMode::Decrement);
+    let ch1 = &knob_unit.channel1;
+    ch1.set_ctrl_signal(knob_b.peripheral_input());
+    ch1.set_edge_signal(knob_a.peripheral_input());
+    ch1.set_ctrl_mode(channel::CtrlMode::Reverse, channel::CtrlMode::Keep);
+    ch1.set_input_mode(channel::EdgeMode::Decrement, channel::EdgeMode::Increment);
+    knob_unit.resume();
+    diag!(
+        "KNOB_READY pcnt=unit0 a=IO4 b=IO5 counts_per_detent={}",
+        knob::COUNTS_PER_DETENT
+    );
+    let knob = KnobInput {
+        unit: knob_unit,
+        _a: knob_a,
+        _b: knob_b,
+    };
+    spawner.spawn(display(spi, cs, observer, knob).unwrap());
 
     // Entropy for TLS, DHCP and SNTP nonces: keep the TRNG source alive.
     let _trng_source = TrngSource::new(p.RNG, p.ADC1);
@@ -733,12 +771,23 @@ fn c_str(s: &'static str) -> &'static core::ffi::CStr {
     core::ffi::CStr::from_bytes_with_nul(s.as_bytes()).expect("NUL-terminated roots")
 }
 
+/// The PCNT unit plus the pins it reads; the pins stay owned so their
+/// pull-ups and input routing are never released.
+struct KnobInput {
+    unit: Unit<'static, 0>,
+    _a: Input<'static>,
+    _b: Input<'static>,
+}
+
 #[embassy_executor::task]
 async fn display(
     mut spi: Spi<'static, esp_hal::Blocking>,
     mut cs: Output<'static>,
     observer: GeodeticPosition,
+    knob_input: KnobInput,
 ) {
+    // Clockwise counts negative on this encoder; clockwise zooms in.
+    let mut detents = Detents::new(knob_input.unit.value(), true);
     // No elements until the fetch delivers them: NO FRAME, then NO DATA.
     // The visual group has no display role (0045 roles only rank the limit).
     let view = View::rectangular(FOV_DEG, Layout::wide().aspect_ratio()).expect("view");
@@ -809,6 +858,15 @@ async fn display(
             diag!(
                 "BOOT_CAPTURE drained={presses} applied={applied} uptime_us={now} valid={} selected={:?}",
                 app.time().is_some(),
+                app.selected_id()
+            );
+        }
+        let turned = detents.update(knob_input.unit.value());
+        if turned != 0 {
+            app.zoom_detents(turned);
+            diag!(
+                "KNOB detents={turned} fov_deg={:.3} uptime_us={now} selected={:?}",
+                app.view().fov_deg(),
                 app.selected_id()
             );
         }

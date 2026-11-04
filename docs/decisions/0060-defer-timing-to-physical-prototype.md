@@ -33,3 +33,13 @@ feedback.
   is unchanged.
 - No performance ceiling is relaxed or adopted; the provisional screens remain
   measurement references, not shipping gates.
+
+## Note — 2026-11-03: knob implemented and accepted
+
+The knob is feasible; presets are not needed. A 24-detent PEC11-style encoder
+(part number unknown) is wired directly with internal pull-ups and no
+capacitors: A→IO4, C→GND, B→IO5, switch→IO6 (unused). The PCNT peripheral
+decodes quadrature in hardware (4 counts per detent, max glitch filter), so
+render/SPI stalls cannot drop steps. One detent is half a 1.2× zoom step
+(√1.2 ≈ 1.095×, `RadarApp::zoom_detents`); clockwise zooms in. The user judged
+the feel good on the board. [Evidence](../../firmware/README.md#rotary-encoder-wiring-check-knob-test).
