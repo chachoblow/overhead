@@ -2138,6 +2138,7 @@ dependencies = [
  "esp-println",
  "esp-radio",
  "esp-rtos",
+ "esp-storage",
  "mbedtls-rs",
  "overhead-app",
  "overhead-core",

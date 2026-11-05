@@ -55,7 +55,7 @@ element-fetch = ["overhead-core/catalogue", "dep:serde_json"]
 live-fetch = ["live-sntp", "element-fetch", "embassy-net/tcp", "esp-alloc/internal-heap-stats", "dep:mbedtls-rs"]
 # 0074: live-UTC radar with BOOT capture on freshly fetched STATIONS elements
 # (one request per boot, certificate dates checked). Not the device app.
-live-fetch-radar = ["live-utc-boot", "live-fetch"]
+live-fetch-radar = ["live-utc-boot", "live-fetch", "dep:esp-storage"]
 # Same image with a build-time fault plan (`fault_plan`): injected DNS/TCP/TLS
 # failures, shortened freshness and a Wi-Fi drop, to show 0075's failure
 # handling on the board. Diagnostic only; the image above has none of it.
@@ -104,6 +104,10 @@ critical-section = { version = "=1.2.0", optional = true }
 mbedtls-rs = { version = "=0.3.0", optional = true }
 # Reuses embassy-net's already-locked version; bounded cross-task SNTP events.
 embassy-sync = { version = "=0.8.0", optional = true }
+# 0079: flash read/erase/program for the fetched-element partition. Already
+# locked through esp-bootloader-esp-idf (whose `partitions` reader takes its
+# FlashStorage); default `critical-section` keeps interrupts off during ROM calls.
+esp-storage = { version = "=0.10.0", features = ["esp32s3"], optional = true }
 
 [build-dependencies]
 # Convert original fixtures on the host; the default target remains allocation-free.

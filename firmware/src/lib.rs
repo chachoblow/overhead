@@ -31,6 +31,8 @@ pub mod element_fetch;
 #[cfg(feature = "element-fetch")]
 pub mod element_refresh;
 #[cfg(feature = "element-fetch")]
+pub mod element_store;
+#[cfg(feature = "element-fetch")]
 pub mod fault_plan;
 pub mod frame_stats;
 pub mod knob;

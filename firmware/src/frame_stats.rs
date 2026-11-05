@@ -29,9 +29,12 @@ pub enum Cause {
     Load,
     /// An element fetch was in flight (TLS runs on the same core).
     Fetch,
+    /// Fetched elements were being saved to flash (0079): each sector erase
+    /// or program holds interrupts off on this core.
+    Store,
 }
 
-pub const CAUSES: [Cause; 8] = [
+pub const CAUSES: [Cause; 9] = [
     Cause::Idle,
     Cause::Log,
     Cause::Knob,
@@ -40,6 +43,7 @@ pub const CAUSES: [Cause; 8] = [
     Cause::Sntp,
     Cause::Load,
     Cause::Fetch,
+    Cause::Store,
 ];
 
 impl Cause {
@@ -53,6 +57,7 @@ impl Cause {
             Cause::Sntp => "sntp",
             Cause::Load => "load",
             Cause::Fetch => "fetch",
+            Cause::Store => "store",
         }
     }
 }

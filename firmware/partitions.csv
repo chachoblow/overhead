@@ -1,0 +1,10 @@
+# 0079 layout for the live-fetch-radar runtime (device app and diagnostic).
+# Pass with `--partition-table partitions.csv`; other images keep espflash's
+# default (nvs, phy_init, factory to the end of the 8 MB flash).
+# `elements` holds two 160 KiB slots of the last fetched element body
+# (firmware/src/element_store.rs). espflash rejects numeric custom subtypes.
+# Name,   Type, SubType,   Offset,   Size
+nvs,      data, nvs,       0x9000,   0x6000,
+phy_init, data, phy,       0xf000,   0x1000,
+factory,  app,  factory,   0x10000,  0x7a0000,
+elements, data, undefined, 0x7b0000, 0x50000,

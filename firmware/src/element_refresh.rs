@@ -96,6 +96,23 @@ impl Schedule {
         self.next_due_s = now_s.saturating_add(delay);
         self.next_due_s
     }
+
+    /// 0079: at the first trusted UTC after a boot that loaded a stored
+    /// catalogue fetched at `fetched_unix_s`. A copy younger than the interval
+    /// moves the next fetch to the end of its interval (as if the device had
+    /// kept running) and returns that delay from `now_s`; a copy that old, or
+    /// dated after `now_unix_s`, leaves the fetch due now (`None`).
+    pub fn resume_stored(
+        &mut self,
+        now_s: u64,
+        fetched_unix_s: i64,
+        now_unix_s: i64,
+    ) -> Option<u64> {
+        let age = u64::try_from(now_unix_s.checked_sub(fetched_unix_s)?).ok()?;
+        let remaining = self.interval_s.checked_sub(age).filter(|&r| r > 0)?;
+        self.next_due_s = now_s.saturating_add(remaining);
+        Some(remaining)
+    }
 }
 
 /// Parses an optional build-time interval in minutes (`REFRESH_MINUTES`).
@@ -187,6 +204,39 @@ mod tests {
             now = due;
         }
         assert_eq!(http, 12);
+    }
+
+    #[test]
+    fn a_young_stored_copy_defers_the_boot_fetch_to_its_interval() {
+        let fetched = 1_793_000_000;
+        let mut s = Schedule::new(8 * H);
+        assert_eq!(
+            s.resume_stored(20, fetched, fetched + 3 * H as i64),
+            Some(5 * H)
+        );
+        assert!(!s.due(20 + 5 * H - 1));
+        assert!(s.due(20 + 5 * H));
+        // A just-fetched copy waits the whole interval.
+        let mut s = Schedule::new(8 * H);
+        assert_eq!(s.resume_stored(0, fetched, fetched), Some(8 * H));
+    }
+
+    #[test]
+    fn an_old_or_future_stored_copy_leaves_the_fetch_due() {
+        let fetched = 1_793_000_000;
+        for now_unix in [
+            fetched + 8 * H as i64,
+            fetched + 30 * 24 * H as i64,
+            fetched - 1,
+        ] {
+            let mut s = Schedule::new(8 * H);
+            assert_eq!(s.resume_stored(20, fetched, now_unix), None, "{now_unix}");
+            assert!(s.due(20));
+        }
+        // Extreme values do not overflow.
+        let mut s = Schedule::new(8 * H);
+        assert_eq!(s.resume_stored(20, i64::MIN, i64::MAX), None);
+        assert_eq!(s.resume_stored(20, i64::MAX, i64::MIN), None);
     }
 
     #[test]

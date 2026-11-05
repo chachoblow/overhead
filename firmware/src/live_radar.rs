@@ -9,8 +9,16 @@
 //! each finished catalogue over with its fetch UTC. No fixture elements are
 //! ever shown: until elements arrive the radar reports `NO DATA`; a failed
 //! refresh keeps tracking the previous catalogue, flagged `OLD DATA` after
-//! 24 h and unloaded once its newest epoch is 7 days old. No persistence.
+//! 24 h and unloaded once its newest epoch is 7 days old.
 //! Observer: the build-time home site (`site`, ignored `.site.env`).
+//!
+//! Persistence (0079): each successful fetch's body and fetch UTC are saved,
+//! one flash sector per step, to the `elements` partition (`element_store`,
+//! `partitions.csv`). At boot the newest valid copy is loaded before Wi-Fi is
+//! up (still `NO FRAME` until SNTP); at the first in-budget observation a copy
+//! younger than the refresh interval defers the boot fetch to the end of its
+//! interval, otherwise the fetch is due as before. Without the partition the
+//! runtime fetches on every boot as before. Off in the fault build.
 //!
 //! Budget (0077): at most `OBJECT_LIMIT` objects per load (lowest NORAD IDs
 //! kept, dropped count logged); each frame recomputes the selected object and
@@ -34,6 +42,7 @@ use crate::{
     device_timing::{DiagnosticAction, LifecycleAction},
     element_fetch::{self, HttpError},
     element_refresh::{self, Outcome, Schedule},
+    element_store::{self, Did, Layout as Slots, Target, Writer},
     fault_plan::Fault,
     frame_stats::{CAUSES, Cause, FrameStats},
     knob::{self, Detents},
@@ -46,6 +55,7 @@ use crate::{
 };
 use core::{
     mem::MaybeUninit,
+    ops::Range,
     sync::atomic::{AtomicBool, Ordering},
 };
 use embassy_executor::Spawner;
@@ -74,6 +84,7 @@ use esp_radio::wifi::{
     AuthenticationMethodConfig, Config, ControllerConfig, Interface, WifiController,
     sta::StationConfig,
 };
+use esp_storage::{FlashStorage, FlashStorageError};
 use mbedtls_rs::{
     Certificate, ClientSessionConfig, Session, SessionConfig, Tls, TlsVersion, X509, io,
     io::Write as _,
@@ -137,6 +148,13 @@ const STAGGER: TimeDelta = TimeDelta::seconds(1);
 /// Certification Authority (0071), NUL-terminated for MbedTLS PEM parsing.
 const ROOTS: &str = concat!(include_str!("../certs/celestrak-roots.pem"), "\0");
 const SERVER_NAME: &core::ffi::CStr = c"celestrak.org";
+/// 0079: the fetched-element partition's label in `partitions.csv`.
+const STORE_LABEL: &str = "elements";
+/// The fault build keeps its per-attempt plan: no stored catalogue at boot.
+const PERSIST: bool = !cfg!(feature = "live-fetch-faults");
+/// Pause after each save step (one sector erase or program, interrupts off)
+/// so the display loop runs between them.
+const STORE_STEP_YIELD: Wait = Wait::from_millis(10);
 
 /// Fault build only: a public root (ISRG Root X1) that is not in CelesTrak's
 /// chain, so the `verify` fault fails real chain verification.
@@ -206,6 +224,15 @@ static DATA: Channel<CriticalSectionRawMutex, (Catalogue, NaiveDateTime), 1> = C
 // Set by the network task around the whole fetch so the display owner can
 // report its longest loop gap while TLS work shares the executor.
 static FETCHING: AtomicBool = AtomicBool::new(false);
+// Set by the network task while a save is in progress (0079).
+static STORING: AtomicBool = AtomicBool::new(false);
+/// Internal-RAM staging for every flash transfer: PSRAM sits behind the cache
+/// that shares the MSPI bus with the ROM flash routines, so the response
+/// buffer is never handed to them directly. Also holds the partition table.
+#[repr(align(4))]
+struct Bounce([u8; element_store::SECTOR as usize]);
+static BOUNCE: ConstStaticCell<Bounce> =
+    ConstStaticCell::new(Bounce([0; element_store::SECTOR as usize]));
 static RESOURCES: StaticCell<StackResources<4>> = StaticCell::new();
 static RX_META: StaticCell<[PacketMetadata; 4]> = StaticCell::new();
 static TX_META: StaticCell<[PacketMetadata; 4]> = StaticCell::new();
@@ -288,6 +315,169 @@ struct FetchResources {
     tcp_tx: &'static mut [u8],
     response: &'static mut [u8],
     capture: &'static mut [u8],
+    store: Option<Store>,
+}
+
+/// esp-storage through the internal bounce buffer.
+struct EspFlash {
+    storage: FlashStorage<'static>,
+    bounce: &'static mut Bounce,
+}
+
+impl element_store::Flash for EspFlash {
+    type Error = FlashStorageError;
+
+    fn read(&mut self, offset: u32, buf: &mut [u8]) -> Result<(), Self::Error> {
+        let mut at = offset;
+        for chunk in buf.chunks_mut(self.bounce.0.len()) {
+            let staged = &mut self.bounce.0[..chunk.len()];
+            self.storage.read_nor(at, staged)?;
+            chunk.copy_from_slice(staged);
+            at += chunk.len() as u32;
+        }
+        Ok(())
+    }
+
+    fn erase_sector(&mut self, offset: u32) -> Result<(), Self::Error> {
+        self.storage.erase(offset, offset + element_store::SECTOR)
+    }
+
+    fn write(&mut self, offset: u32, data: &[u8]) -> Result<(), Self::Error> {
+        let staged = &mut self.bounce.0[..data.len()];
+        staged.copy_from_slice(data);
+        self.storage.write_nor(offset, staged)
+    }
+}
+
+/// The open `elements` partition and where the next save goes.
+struct Store {
+    flash: EspFlash,
+    layout: Slots,
+    next: Target,
+}
+
+/// Finds the `elements` data partition; `Err` names why persistence is off.
+fn open_store(
+    flash: esp_hal::peripherals::FLASH<'static>,
+) -> Result<(EspFlash, Slots), &'static str> {
+    use esp_bootloader_esp_idf::partitions::{self, PARTITION_TABLE_MAX_LEN};
+    let mut storage = FlashStorage::new(flash);
+    let bounce = BOUNCE.take();
+    let (offset, len) = {
+        let table = partitions::read_partition_table(
+            &mut storage,
+            &mut bounce.0[..PARTITION_TABLE_MAX_LEN],
+        )
+        .map_err(|_| "partition_table")?;
+        let entry = table
+            .iter()
+            .find(|e| e.raw_type() == 1 && e.label_as_str() == STORE_LABEL)
+            .ok_or("no_elements_partition")?;
+        (entry.offset(), entry.len())
+    };
+    let layout = Slots::new(offset, len).map_err(|_| "partition_layout")?;
+    diag!(
+        "STORE partition offset=0x{offset:x} len=0x{len:x} slot_capacity={}",
+        layout.capacity()
+    );
+    Ok((EspFlash { storage, bounce }, layout))
+}
+
+/// Loads the newest valid stored copy into `buf` and hands its catalogue to
+/// the display owner; returns the open store and the copy's fetch UTC.
+async fn load_stored(
+    flash: esp_hal::peripherals::FLASH<'static>,
+    buf: &mut [u8],
+) -> (Option<Store>, Option<i64>) {
+    let (mut flash, layout) = match open_store(flash) {
+        Ok(opened) => opened,
+        Err(reason) => {
+            println!("STORE unavailable reason={reason}; fetching every boot");
+            return (None, None);
+        }
+    };
+    let started = uptime_us();
+    let report = element_store::load(&mut flash, &layout, buf);
+    let read_ms = (uptime_us() - started) / 1000;
+    diag!(
+        "STORE scan slot0={:?} slot1={:?} read_ms={read_ms}",
+        report.slots[0],
+        report.slots[1]
+    );
+    let next = report.next_target();
+    let store = Some(Store {
+        flash,
+        layout,
+        next,
+    });
+    let Some(loaded) = report.loaded else {
+        println!(
+            "STORE empty slot0={:?} slot1={:?}",
+            report.slots[0], report.slots[1]
+        );
+        return (store, None);
+    };
+    let h = loaded.header;
+    let Some(fetched_at) = DateTime::from_timestamp(h.fetched_unix_s, 0).map(|t| t.naive_utc())
+    else {
+        println!("STORE rejected slot={} reason=fetch_time", loaded.slot);
+        return (store, None);
+    };
+    let Some(catalogue) = ingest_body(&buf[..h.body_len as usize]) else {
+        println!("STORE rejected slot={} reason=ingest", loaded.slot);
+        return (store, None);
+    };
+    println!(
+        "STORE loaded slot={} seq={} fetched_at={fetched_at:?}Z body_bytes={} load_ms={}",
+        loaded.slot,
+        h.sequence,
+        h.body_len,
+        (uptime_us() - started) / 1000
+    );
+    DATA.send((catalogue, fetched_at)).await;
+    (store, Some(h.fetched_unix_s))
+}
+
+/// Saves a fetched body, one sector step at a time with the display running
+/// between steps. A failure leaves the previous copy as the newest valid one.
+async fn save(store: &mut Store, body: &[u8], fetched_unix_s: i64) {
+    let mut writer = match Writer::new(&store.layout, store.next, body, fetched_unix_s) {
+        Ok(w) => w,
+        Err(e) => {
+            println!("STORE_FAILED {e:?}");
+            return;
+        }
+    };
+    STORING.store(true, Ordering::Relaxed);
+    let started = uptime_us();
+    let (mut erase_max_us, mut write_max_us) = (0u64, 0u64);
+    while !writer.done() {
+        let t = uptime_us();
+        let result = writer.step(&mut store.flash, body);
+        let took = uptime_us() - t;
+        match result {
+            Ok(Did::Erase) => erase_max_us = erase_max_us.max(took),
+            Ok(Did::Write) => write_max_us = write_max_us.max(took),
+            Err(e) => {
+                STORING.store(false, Ordering::Relaxed);
+                println!("STORE_FAILED slot={} error={e:?}", store.next.slot);
+                return;
+            }
+        }
+        Timer::after(STORE_STEP_YIELD).await;
+    }
+    STORING.store(false, Ordering::Relaxed);
+    let h = writer.header();
+    println!(
+        "STORE saved slot={} seq={} body_bytes={} steps={} total_ms={} erase_max_us={erase_max_us} \
+         write_max_us={write_max_us}",
+        store.next.slot,
+        h.sequence,
+        h.body_len,
+        writer.steps(),
+        (uptime_us() - started) / 1000
+    );
+    store.next = store.next.after();
 }
 
 /// Runs the radar forever. `p` comes from `esp_hal::init` at 240 MHz; `banner`
@@ -409,6 +599,14 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
     );
     spawner.spawn(net(runner).unwrap());
     spawner.spawn(connection(controller, wifi_drop).unwrap());
+    // In PSRAM: the 0077 body cap is too large for internal RAM. Also the
+    // load buffer for the stored copy (0079), before Wi-Fi is up.
+    let response = alloc::vec![0u8; element_fetch::MAX_RESPONSE].leak();
+    let (store, mut stored_at) = if PERSIST {
+        load_stored(p.FLASH, response).await
+    } else {
+        (None, None)
+    };
     stack.wait_config_up().await;
     let mut socket = UdpSocket::new(
         stack,
@@ -422,9 +620,9 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
         tls: Tls::new(TLS_TRNG.init(Trng::try_new().expect("TLS TRNG"))).expect("TLS context"),
         tcp_rx: TCP_RX.take(),
         tcp_tx: TCP_TX.take(),
-        // In PSRAM: the 0077 body cap is too large for internal RAM.
-        response: alloc::vec![0u8; element_fetch::MAX_RESPONSE].leak(),
+        response,
         capture: CAPTURE.take(),
+        store,
     };
     let mut schedule = Schedule::new(interval_s);
     let mut attempts: u32 = 0;
@@ -437,7 +635,20 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
             match query(stack, &mut socket, trng, server, seq).await {
                 QueryResult::NoReply => continue, // fallback only after no reply
                 QueryResult::Reply(observation) => {
-                    if let Some(o) = observation.filter(|o| o.uncertainty_us < UTC_BUDGET_US)
+                    let observation = observation.filter(|o| o.uncertainty_us < UTC_BUDGET_US);
+                    if let (Some(o), Some(fetched)) = (observation, stored_at) {
+                        // 0079: date the stored copy once, with trusted UTC.
+                        stored_at = None;
+                        let now_unix = trusted_now_unix_s(o);
+                        let age_s = now_unix.saturating_sub(fetched);
+                        match schedule.resume_stored(uptime_s(), fetched, now_unix) {
+                            Some(wait) => {
+                                println!("FETCH_RESUME stored_age_s={age_s} next_in_s={wait}")
+                            }
+                            None => println!("FETCH_RESUME stored_age_s={age_s} due=now"),
+                        }
+                    }
+                    if let Some(o) = observation
                         && schedule.due(uptime_s())
                     {
                         attempts += 1;
@@ -495,14 +706,17 @@ async fn fetch_once(
     }
     let started = uptime_us();
     let mut sent = false;
+    let mut to_save: Option<(Range<usize>, i64)> = None;
     let result = with_timeout(FETCH_TIMEOUT, fetch(stack, r, utc, &mut sent, fault)).await;
     let outcome = match result {
         Ok(Ok(len)) => match ingest(&r.response[..len]) {
-            Some(catalogue) => {
-                let fetched_at = DateTime::from_timestamp(trusted_now_unix_s(utc), 0)
+            Some((catalogue, body)) => {
+                let fetched_unix_s = trusted_now_unix_s(utc);
+                let fetched_at = DateTime::from_timestamp(fetched_unix_s, 0)
                     .expect("trusted UTC")
                     .naive_utc();
                 DATA.send((catalogue, fetched_at)).await;
+                to_save = Some((body, fetched_unix_s));
                 Outcome::Success
             }
             None => Outcome::Rejected,
@@ -540,6 +754,9 @@ async fn fetch_once(
         );
     }
     FETCHING.store(false, Ordering::Relaxed);
+    if let (Some(store), Some((body, fetched_unix_s))) = (r.store.as_mut(), to_save) {
+        save(store, &r.response[body], fetched_unix_s).await;
+    }
     outcome
 }
 
@@ -597,6 +814,7 @@ async fn fetch(
         tcp_tx,
         response,
         capture,
+        ..
     } = r;
     #[cfg(feature = "live-fetch-faults")]
     let host = if fault == Fault::Dns {
@@ -734,7 +952,8 @@ fn trusted_now_unix_s(utc: ScreenedObservation) -> i64 {
     utc.utc_at_midpoint.and_utc().timestamp() + (elapsed / 1_000_000) as i64
 }
 
-fn ingest(bytes: &[u8]) -> Option<Catalogue> {
+/// The catalogue and where its body sits in `bytes` (kept for the save).
+fn ingest(bytes: &[u8]) -> Option<(Catalogue, Range<usize>)> {
     let body = match element_fetch::parse_response(bytes) {
         Ok(body) => body,
         Err(e) => {
@@ -743,6 +962,13 @@ fn ingest(bytes: &[u8]) -> Option<Catalogue> {
         }
     };
     diag!("FETCH_HTTP status=200 body_bytes={}", body.len());
+    let start = body.as_ptr() as usize - bytes.as_ptr() as usize;
+    let catalogue = ingest_body(body)?;
+    Some((catalogue, start..start + body.len()))
+}
+
+/// Parses a GP JSON body (fetched or stored) into a catalogue.
+fn ingest_body(body: &[u8]) -> Option<Catalogue> {
     let t = uptime_us();
     match element_fetch::ingest(body) {
         Ok(ingested) => {
@@ -826,6 +1052,7 @@ async fn display(
     let mut last_stats = uptime_us();
     let mut last_loop = uptime_us();
     let (mut loop_max_us, mut fetch_max_us, mut was_fetching) = (0u64, 0u64, false);
+    let (mut store_max_us, mut was_storing) = (0u64, false);
     loop {
         let gap = uptime_us() - last_loop;
         loop_max_us = loop_max_us.max(gap);
@@ -839,6 +1066,16 @@ async fn display(
             fetch_max_us = 0; // per fetch, not since boot
         }
         was_fetching = fetching;
+        let storing = STORING.load(Ordering::Relaxed);
+        if storing || was_storing {
+            store_max_us = store_max_us.max(gap);
+            cadence.note(Cause::Store);
+        }
+        if was_storing && !storing {
+            diag!("DISPLAY_STORE_GAP max_loop_gap_us={store_max_us}");
+            store_max_us = 0;
+        }
+        was_storing = storing;
         while let Ok(event) = EVENTS.try_receive() {
             let now = uptime_us();
             let decision = live_utc::apply(&mut gate, &mut app, now, event);
