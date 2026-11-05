@@ -155,6 +155,9 @@ const PERSIST: bool = !cfg!(feature = "live-fetch-faults");
 /// Pause after each save step (one sector erase or program, interrupts off)
 /// so the display loop runs between them.
 const STORE_STEP_YIELD: Wait = Wait::from_millis(10);
+/// Wait before a save so the display applies the new catalogue first: that
+/// frame's full update (~270 ms with 156 objects) is `Load` cost, not flash.
+const STORE_SETTLE: Wait = Wait::from_secs(2);
 
 /// Fault build only: a public root (ISRG Root X1) that is not in CelesTrak's
 /// chain, so the `verify` fault fails real chain verification.
@@ -448,6 +451,7 @@ async fn save(store: &mut Store, body: &[u8], fetched_unix_s: i64) {
             return;
         }
     };
+    Timer::after(STORE_SETTLE).await;
     STORING.store(true, Ordering::Relaxed);
     let started = uptime_us();
     let (mut erase_max_us, mut write_max_us) = (0u64, 0u64);

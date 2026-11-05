@@ -46,7 +46,12 @@ Each reset that fetches costs one CelesTrak request; keep board resets few.
       find partition, boot load (internal bounce buffer, never PSRAM ↔ ROM),
       resume after first in-budget SNTP, save after Success one sector per step
       with yields, STORE/FETCH_RESUME event lines, diag store gap.
-- [ ] Builds + image gate; flash diagnostic; board runs (load, old, erased, corrupt, save cadence).
+- [x] Builds + image gate; flash diagnostic (run 1 erased → fetch → save; run 2 load, no GET).
+- [ ] Run 2 continues to its 2-hour refresh (~16:58 UTC): save to slot 1 seq 2,
+      clean store cadence (background raw `cat` → target/store-run2-refresh.log, to ~17:15 UTC).
+- [ ] Run 3: corrupt slot 1 body (`espflash write-bin --monitor` 4 KiB random at
+      0x7d9000) → slot 1 BodyCrc, slot 0 (age > 2 h) loads → FETCH_RESUME due=now →
+      fetch → save slot 1 seq 3. Run 4: reset → loads slot 1, no GET.
 - [ ] Device app flash; user check.
 - [ ] Decision 0079, README evidence, PLAN/HANDOFF/PROGRESS; delete this file.
 
@@ -57,6 +62,8 @@ Each reset that fetches costs one CelesTrak request; keep board resets few.
 - esp-storage runs ROM flash calls in a critical section (interrupts off) for
   the whole sector erase (~45 ms typical): BOOT sampling and the display loop
   stall for that long per step. Measure; do not batch erases.
+- On this board's flash a sector erase took ≤2.0 ms and a 4 KiB program ≤4.2 ms
+  (run 1), so per-step interrupt-off time is small; BOOT max gap stayed ~14 ms.
 - Flash ↔ PSRAM transfers go through a static internal-RAM 4 KiB buffer
   (ROM flash routines and the cache that serves PSRAM share the MSPI bus).
 
@@ -65,5 +72,14 @@ Each reset that fetches costs one CelesTrak request; keep board resets few.
   `element-fetch` 80, `live-utc-boot` 82, `sharp-boot-capture` 72; dummy release
   builds of `live-fetch-radar`, `device`, `live-fetch-faults` (RWX warning only);
   clippy on `live-fetch-radar`: only the pre-existing `deref_addrof` warnings.
+
+- Run 1 (14:57 UTC, rev cc06868 + nothing): erased → `STORE empty`, fetch 156/156,
+  `STORE saved slot=0 seq=1 body_bytes=65214 steps=34 total_ms=1727
+  erase_max_us=2022 write_max_us=4175`; store window charged the load frame
+  (268 ms) to `store` → added STORE_SETTLE (2 s) before saving.
+- Run 2 (15:04 UTC, settle build, gate ok, 1,384,896 B 17.32% of 7,995,392):
+  `STORE loaded slot=0 seq=1` read_ms=28 load_ms=321 (ingest 287), NO FRAME at
+  0.96 s, `FETCH_RESUME stored_age_s=346 next_in_s=6854`, no FETCH_START, radar
+  first frame on stored data (load frame 344 ms, as for a fetched load).
 
 ## Open questions
