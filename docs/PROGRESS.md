@@ -671,3 +671,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Wired a 24-detent encoder directly (A→IO4, C→GND, B→IO5, switch→IO6; internal pull-ups, no caps); a `knob-test` PCNT image measured 4 counts per detent with no lost counts.
 - Device runtime decodes the knob in hardware (PCNT) and zooms √1.2 per detent, clockwise in (`firmware/src/knob.rs`, `RadarApp::zoom_detents`); BOOT cycling unchanged. User judged the feel good on the board; board left on the device app with the knob.
 - Workspace check/tests (338), fmt, firmware host tests per feature, gate on all three flashed builds.
+
+## 2026-11-05 (24-hour soak, M6 extended operation)
+- Added host-tested per-cause frame-cadence telemetry (`firmware/src/frame_stats.rs`; `FRAME_WINDOW`/`FRAME_BOOT` on `live-fetch-radar` V5).
+- 24-hour board soak: 1.72 M frames, 0.67% skipped deadlines (idle: 1), boot + 3 refreshes 156/156, 1,345 SNTP observations, live heap flat, no panic or Wi-Fi drop; user feel pass good.
+- User accepted selection (~165 ms), knob (~86 ms) and occasional SNTP frame hitches as limits (0060 note); M6 extended-operation box checked.
+- Verified: workspace check, firmware host tests (30/66/82/72), release builds, image gate on both flashed images; board left on the 8-hour device app.

@@ -1,6 +1,6 @@
 # Overhead — Handoff
 
-_Last updated: 2026-11-03 UTC (knob zoom on the device, 0060 note; work item completed). M2 and M3 complete; M4 done for now. M6 standalone device remains open._
+_Last updated: 2026-11-05 UTC (24-hour soak, 0060 note; work item completed). M2 and M3 complete; M4 done for now. M6 standalone device remains open (persistence; BOOT/knob-switch polish)._
 
 ## Current state
 - Shared `app/`, 1-bit `render/` and simulator provide the accepted wide radar; [PLAN](PLAN.md) owns scope and [DESIGN](DESIGN.md) intent. Time/source contracts are [0062–0067](decisions/0062-no-trusted-time-display-preflight.md); the **device app** is `--features device` (`overhead-s3-device`, [0076](decisions/0076-device-app-build.md)); other images are diagnostics. Element persistence and pass prediction on the device remain open.
@@ -32,9 +32,13 @@ _Last updated: 2026-11-03 UTC (knob zoom on the device, 0060 note; work item com
 - Board ([evidence](../firmware/README.md#visual-group-under-the-m2-budget-0077)): 3 fetches 156/156, live heap identical after each load (389,708 B; internal 44.7 KB of 160 KiB), staggered updates median 20 ms / p99 32 ms, every object within 932 ms.
 - Risks: fetch display gap reached 484 ms (VCOM interval 500 ms); at the 256 limit a frame would update ~13 objects (~29 ms, unmeasured).
 
-## Knob zoom ([0060 note](decisions/0060-defer-timing-to-physical-prototype.md#note--2026-11-03-knob-implemented-and-accepted)) — done this session
+## 24-hour soak ([0060 note](decisions/0060-defer-timing-to-physical-prototype.md#note--2026-11-05-24-hour-soak-limits-accepted)) — done this session
+- `firmware/src/frame_stats.rs` (host-tested) charges skipped 50 ms deadlines to causes; `live-fetch-radar` V5 prints `FRAME_WINDOW`/`FRAME_BOOT` ([evidence](../firmware/README.md#extended-operation-and-frame-cadence-24-h-soak)). 24 h: 0.67% skipped (idle 1; mostly the 8 s full resend and diagnostic UART), boot + 3 refreshes, flat heap, user feel pass good. Accepted limits: selection ~165 ms (period-glyph cache miss), knob ~86 ms (coast re-raster), occasional SNTP skip; cheaper frames are optional M5 work.
+- The stats static took ~8.7 KiB of the CPU0 stack region (30,808 B; 7,760 used).
+
+## Knob zoom ([0060 note](decisions/0060-defer-timing-to-physical-prototype.md#note--2026-11-03-knob-implemented-and-accepted)) — earlier session
 - PCNT quadrature in `firmware/src/live_radar.rs`, detent decoding in `firmware/src/knob.rs` (host-tested), `RadarApp::zoom_detents`/`View::zoom_detents` (half a 1.2× step per detent), clockwise zooms in. Wiring check image `knob-test`. [Evidence](../firmware/README.md#rotary-encoder-wiring-check-knob-test): 4 counts/detent, no lost counts; user judged the feel good.
-- Open: the knob's push switch has no role; no clippy run; zoom re-rasters the coastline each turned frame (0060 cost, not measured on this build).
+- Open: the knob's push switch has no role (zoom cost now measured, see the soak).
 
 ## Small SNTP resyncs ([0063 note](decisions/0063-bounded-utc-holdover-direction.md#note--2026-11-03-small-resyncs-keep-tracking)) — earlier session
 - `firmware/src/utc_trust.rs`: a renewal within 100 ms of the old anchor's projected UTC returns `ObservationOutcome::Resynced { step_us }` and keeps samples and selection; first anchors, larger jumps and renewals after expiry still clear. `RadarApp::update_staggered` (`app/src/lib.rs`) staggers backward steps smaller than the window too.
@@ -42,11 +46,12 @@ _Last updated: 2026-11-03 UTC (knob zoom on the device, 0060 note; work item com
 - Not on the board: a >100 ms jump (host-tested), BOOT presses across a renewal.
 
 ## Next work item (recommended)
-- Ask the user which open M6 item to take next: end-to-end performance/extended operation, element persistence, or BOOT risks (a role for the knob's push switch is a possible small item). No `docs/work/` item is active.
+- Ask the user: element persistence in flash (M6's remaining data item), BOOT risks / a role for the knob's push switch, or M5 rendering performance (cheaper selection/zoom frames). No `docs/work/` item is active.
 
 ## Verification and remaining risks
 <a id="verification"></a>
-- This session (knob): `cargo check --workspace`, `cargo test --workspace` (338), fmt; firmware host default 24, `element-fetch` 60, `live-utc-boot` 76, `sharp-boot-capture` 66; release builds of `knob-test`, `live-fetch-radar` and `device`, gate passing on all three, each flashed; UART captures of the wiring check and the knob on the radar; user feel pass. No clippy run.
+- This session (soak): `cargo check --workspace`; firmware host default 30, `element-fetch` 66, `live-utc-boot` 82, `sharp-boot-capture` 72; release builds of `live-fetch-radar` and `device`, gate passing on both, both flashed; 24 h UART capture; user feel pass. Workspace tests not rerun (firmware-only change). No clippy run.
+- Earlier session (knob): `cargo check --workspace`, `cargo test --workspace` (338), fmt; firmware host default 24, `element-fetch` 60, `live-utc-boot` 76, `sharp-boot-capture` 66; release builds of `knob-test`, `live-fetch-radar` and `device`, gate passing on all three, each flashed; UART captures of the wiring check and the knob on the radar; user feel pass. No clippy run.
 - Earlier session (small resyncs): `cargo check --workspace`, `cargo test --workspace` (338), fmt; firmware host default 19, `element-fetch` 55, `live-utc-boot` 71, `sharp-boot-capture` 61; release builds of `live-fetch-radar` and `device` with the image gate passing on both; one 40-minute board capture and the device app's boot capture. No clippy run.
 - Previous session (0077/0078): `cargo check --workspace`, `cargo test --workspace` (337), fmt; firmware host default 19, `element-fetch` 55, `live-utc-boot` 70, `sharp-boot-capture` 60, firmware fmt; dummy release builds of `device`, `live-fetch-radar`, `live-fetch-faults`, `live-fetch`; gate on both flashed builds; one 4-hour diagnostic capture (boot + 2 refreshes) and an 8-hour-app boot capture (156 loaded, 9 in view); user review of simulator icon snapshots and the board.
 - Earlier: per-session verification for 0071–0075 is in [PROGRESS](PROGRESS.md) and the firmware README. Session (0075): `cargo check --workspace`, `cargo test --workspace` (325 passed), app/render `--no-default-features` check, fmt; firmware host `--lib --locked` default 19, `element-fetch` 47, `live-utc-boot` 70, `sharp-boot-capture` 60; `live-fetch-radar` dummy release build, clippy (same warnings as before), offline gate on every flashed build; two captures (4h40m, 10h30m) and the user-observed pass above.

@@ -43,3 +43,21 @@ decodes quadrature in hardware (4 counts per detent, max glitch filter), so
 render/SPI stalls cannot drop steps. One detent is half a 1.2× zoom step
 (√1.2 ≈ 1.095×, `RadarApp::zoom_detents`); clockwise zooms in. The user judged
 the feel good on the board. [Evidence](../../firmware/README.md#rotary-encoder-wiring-check-knob-test).
+
+## Note — 2026-11-05: 24-hour soak, limits accepted
+
+A [24-hour soak](../../firmware/README.md#extended-operation-and-frame-cadence-24-h-soak)
+of the shared runtime held the 20 Hz grid for 99.3% of deadlines: ordinary
+frames take ~41 ms and missed one deadline all day. Skips concentrate on the
+8 s full resend and fetches (expected) and on diagnostic UART output (absent
+from the device app). The user accepted the remaining ones as known limits of
+this prototype, having felt no problem with the knob or BOOT during the soak:
+
+- a selection change costs ~165 ms (two skipped frames): the period glyph's
+  cache misses and its 4,097-sample f64 raster runs in software;
+- a turned knob frame costs ~86 ms median (about one skip): coastline re-raster;
+- an SNTP renewal occasionally skips one frame (151 of 1,345; max 166 ms).
+
+Making these frames cheaper without changing the accepted rasters (for
+example sharing sin/cos work, a multi-entry or prefetched period cache, or a
+cheaper zoom raster) is optional M5 rendering-performance work, not a gate.

@@ -1663,6 +1663,42 @@ fast spins arriving as multi-detent steps (up to 9), three BOOT presses still
 applied, no panic; the user judged the zoom feel good. The board was then left
 on the device app with the knob (gate passed, 156 loaded).
 
+## Extended operation and frame cadence (24 h soak)
+
+`live-fetch-radar` (banner `OVERHEAD_S3_LIVE_FETCH_RADAR_V5`) charges every
+skipped 50 ms deadline to a cause (`src/frame_stats.rs`, host-tested): the
+strongest of the previous frame's and the interval's causes, ordered idle <
+log (diagnostic UART only) < knob < select < full < sntp < load < fetch. It
+prints `FRAME_WINDOW span_ms= frames= skipped= cause=frames/skips/max_work_ms…`
+every 10 s and `FRAME_BOOT cause= frames= skipped= p50_ms= p90_ms= p99_ms=
+p999_ms= max_us=` (since boot, work = update + render + send) every 10 min.
+The device app prints nothing new. The 8 KiB statistics static comes out of
+the CPU0 stack region (30,808 B stack, was 39,568 B). Build, gate and flash as
+above; the default 8-hour refresh.
+
+**On-board evidence, 2026-11-04/05** (devbox, `/dev/ttyUSB0`, MAC
+`80:45:6b:2a:45:08`, rev `00f55d0`, home site, image 1,365,776 B, gate passed;
+one capture 14:28–14:36 UTC next day):
+
+| Measure | Result |
+|---|---|
+| Cadence | 1,721,795 frames, 11,547 skipped deadlines (0.67%): effectively 20 Hz |
+| Per cause (frames / skips / work p50, p99.9 ms) | idle 1,673,407 / **1** / 41, 45 · full 10,687 / 7,214 / 91, 105 (8 s retained full resend: ~52 ms SPI + render) · log 33,660 / 3,582 / 41, 55 (diagnostic only) · select 202 / 396 / 165, 179 · sntp 1,345 / 151 / 42, 94 (max 166) · fetch 197 / 113 / 41, 256 · knob 108 / 75 / 86, 120 |
+| Fetches | boot + 3 refreshes (22:29, 06:30, 14:30 UTC), all 156/156, 3.2–3.9 s; selection kept across every load |
+| SNTP | 1,357 polls: 1,345 observations (1 `Accepted`, 1,342 `Resynced`, 2 `NoRenewal`), 5 timeouts, 1 DNS failure, 6 ignored |
+| Memory | live heap in idle windows 389,708 / 389,896 B throughout (no leak); peak 707,528 B during a refresh (PSRAM); internal 44.7–53.2 KB used; stack 7,760 of 30,808 B |
+| BOOT sampling | max gap 34.4 ms at boot (Wi-Fi association), otherwise ≤23 ms |
+| User feel pass (2026-11-04 ~14:40 UTC) | 119 knob steps, 16 BOOT drains: "Everything seemed good" |
+
+No panic, Wi-Fi drop or `FETCH_FAILED`. Why the costly frames: a selection
+change misses the one-entry period cache (`period_rows`, 4,097 soft-float f64
+sin/cos samples, ~120 ms); a turned knob frame re-rasters the coastline (~45 ms
+extra; zoom does not force a complete update). Accepted as limits under the
+[0060 note](../docs/decisions/0060-defer-timing-to-physical-prototype.md#note--2026-11-05-24-hour-soak-limits-accepted).
+Afterwards the board went back to the 8-hour device app (image 1,368,416 B,
+gate passed): banner `OVERHEAD_DEVICE_V2`, fetch `Success` at 15 s, 156
+loaded, 5 in view.
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing

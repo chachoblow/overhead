@@ -338,8 +338,11 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   ([evidence](../firmware/README.md#fetch-failure-paths-on-the-board-live-fetch-faults-0075)).
   Post-GET failures, the repeated-handshake rule and reload after expiry
   remain host-tested only.
-- [ ] Verify end-to-end performance and extended hardware operation, including
-  the frame-timing work deferred by 0060.
+- [x] Verify end-to-end performance and extended hardware operation, including
+  the frame-timing work deferred by 0060: a [24-hour soak](../firmware/README.md#extended-operation-and-frame-cadence-24-h-soak)
+  held 20 Hz for 99.3% of deadlines with boot + 3 refreshes, no heap growth and a
+  user feel pass; selection/knob/SNTP frame hitches accepted as limits
+  ([0060 note](decisions/0060-defer-timing-to-physical-prototype.md#note--2026-11-05-24-hour-soak-limits-accepted)).
 
 **Done when:** the prototype boots with valid time/data and tracks between
 connections. Cached elements alone do not enable accurate offline cold boot.
