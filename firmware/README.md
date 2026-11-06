@@ -1545,14 +1545,21 @@ compile.
 cargo build --release --locked --bin overhead-s3-device --features device
 ELF="$PWD/target/xtensa-esp32s3-none-elf/release/overhead-s3-device"
 espflash save-image --chip esp32s3 --flash-size 8mb --flash-mode dio \
-  --flash-freq 40mhz --skip-update-check "$ELF" target/device.bin
+  --flash-freq 40mhz --partition-table partitions.csv --skip-update-check \
+  "$ELF" target/device.bin
 python3 image_gate.py "$ELF" target/device.bin
 # flash and capture in one command (absolute paths: a backgrounded shell may
-# not keep the cd); each boot costs one CelesTrak request
+# not keep the cd); a boot costs one CelesTrak request unless a stored copy
+# younger than the interval loads (0079, below)
 timeout 600 espflash flash --port /dev/ttyUSB0 --chip esp32s3 --flash-size 8mb \
-  --flash-mode dio --flash-freq 40mhz --non-interactive --skip-update-check \
+  --flash-mode dio --flash-freq 40mhz --partition-table "$PWD/partitions.csv" \
+  --non-interactive --skip-update-check \
   --monitor "$ELF" > "$PWD/target/device.log" 2>&1
 ```
+
+The same `--partition-table` applies to `live-fetch-radar` and its fault build
+since [0079](../docs/decisions/0079-fetched-element-persistence.md); without it
+the runtime logs `STORE unavailable` and fetches every boot.
 
 To check the MAC without booting the old image (and spending a request):
 `espflash board-info --port /dev/ttyUSB0 --chip esp32s3 --after no-reset`.
@@ -1668,7 +1675,8 @@ on the device app with the knob (gate passed, 156 loaded).
 `live-fetch-radar` (banner `OVERHEAD_S3_LIVE_FETCH_RADAR_V5`) charges every
 skipped 50 ms deadline to a cause (`src/frame_stats.rs`, host-tested): the
 strongest of the previous frame's and the interval's causes, ordered idle <
-log (diagnostic UART only) < knob < select < full < sntp < load < fetch. It
+log (diagnostic UART only) < knob < select < full < sntp < load < fetch <
+store (0079, added after the soak). It
 prints `FRAME_WINDOW span_ms= frames= skipped= cause=frames/skips/max_work_ms…`
 every 10 s and `FRAME_BOOT cause= frames= skipped= p50_ms= p90_ms= p99_ms=
 p999_ms= max_us=` (since boot, work = update + render + send) every 10 min.
@@ -1698,6 +1706,52 @@ extra; zoom does not force a complete update). Accepted as limits under the
 Afterwards the board went back to the 8-hour device app (image 1,368,416 B,
 gate passed): banner `OVERHEAD_DEVICE_V2`, fetch `Success` at 15 s, 156
 loaded, 5 in view.
+
+## Element persistence (0079)
+
+The shared runtime saves each fetched body to the `elements` partition and
+loads it at boot ([0079](../docs/decisions/0079-fetched-element-persistence.md);
+format in `src/element_store.rs`, host-tested). Flash every runtime image with
+`--partition-table partitions.csv` (recipe [above](#device-application-0076)).
+Event lines (device app and diagnostic): `STORE loaded slot= seq= fetched_at=
+body_bytes= load_ms=`, `STORE empty`, `STORE rejected`, `STORE unavailable
+reason=`, `STORE saved slot= seq= body_bytes= steps= total_ms= erase_max_us=
+write_max_us=`, `STORE_FAILED`, and at the first in-budget SNTP observation
+`FETCH_RESUME stored_age_s= next_in_s=` (fetch deferred) or `… due=now`. The
+diagnostic adds `STORE scan` (both slots' headers) and `DISPLAY_STORE_GAP`.
+
+```sh
+# from firmware/: clear the stored copy (next boot fetches and saves slot 0)
+espflash erase-region --port /dev/ttyUSB0 --chip esp32s3 0x7b0000 0x50000
+# damage slot 1's body (boot falls back to slot 0) and watch the boot
+head -c 4096 /dev/urandom > /tmp/corrupt-4k.bin
+timeout 150 espflash write-bin --port /dev/ttyUSB0 --chip esp32s3 --monitor \
+  --non-interactive 0x7d9000 /tmp/corrupt-4k.bin > target/store-corrupt.log 2>&1
+```
+
+Slot 0 starts at 0x7b0000 and slot 1 at 0x7d8000; each body starts one sector
+after its header.
+
+**On-board evidence, 2026-11-05/06** (devbox, `/dev/ttyUSB0`, MAC
+`80:45:6b:2a:45:08`, home site; `live-fetch-radar` V5 at
+`REFRESH_MINUTES=120`, image 1,384,896 B, 17.32%, gate passed; device app
+8-hour build 1,384,800 B, gate passed):
+
+| Run | Result |
+|---|---|
+| 1. Erased partition (14:57 UTC) | `STORE empty`, fetch 156/156, `STORE saved slot=0 seq=1 body_bytes=65214 steps=34 total_ms=1727`; sector erase ≤2.0 ms, 4 KiB program ≤4.2 ms. The save overlapped the catalogue load frame, so a 2 s settle was added before saving |
+| 2. Reset (15:04 UTC) | `STORE loaded slot=0 seq=1` (read 28 ms, load 321 ms), `NO FRAME` at 0.96 s, `FETCH_RESUME stored_age_s=346 next_in_s=6854`, no request; radar on stored data |
+| 2. Its 2-hour refresh (16:59 UTC) | fetch 156/156, `STORE saved slot=1 seq=2 total_ms=1112 erase_max_us=2992 write_max_us=4133`; `DISPLAY_STORE_GAP` 11.8 ms; store window `store=23/0/39` (no skipped frame); live heap 389,708 B before and after; BOOT max gap 11.9–16.2 ms over 2 h 15 min |
+| 3. Slot 1 body corrupted (17:16 UTC) | `slot1=Err(BodyCrc)`, `STORE loaded slot=0 seq=1`, `FETCH_RESUME stored_age_s=8248 due=now`, fetch 156/156, `STORE saved slot=1 seq=3` (erase max 18.3 ms, store gap 18.6 ms, one skipped frame) |
+| 4. Reset (17:18 UTC) | `STORE loaded slot=1 seq=3`, `FETCH_RESUME stored_age_s=146 next_in_s=7054`, no request in 60 s |
+| Device app (17:21 UTC on) | loads `slot=1 seq=3` with no request; its 8-hour refresh at 01:17 UTC saved `slot=0 seq=4`. The user reset it at 04:07 UTC: `STORE loaded slot=0 seq=4`, `FETCH_RESUME stored_age_s=10214 next_in_s=18586`, `RADAR first_frame` at ~6 s, no request; the user saw the radar come back |
+
+Unexplained: before that reset, the user found the device app at `NO FRAME`.
+It had been running at 01:17 UTC, when it fetched and saved, and nothing was
+capturing its console. `NO FRAME` while running means trusted UTC lapsed (SNTP
+not renewing; a KoD would also stop queries until a reboot). The user's first
+reset press showed no change. A non-resetting capture of the device app was
+started at 04:08 UTC (`target/device-overnight.log`, 12 h).
 
 ## Hardware and permission
 

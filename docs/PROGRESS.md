@@ -677,3 +677,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - 24-hour board soak: 1.72 M frames, 0.67% skipped deadlines (idle: 1), boot + 3 refreshes 156/156, 1,345 SNTP observations, live heap flat, no panic or Wi-Fi drop; user feel pass good.
 - User accepted selection (~165 ms), knob (~86 ms) and occasional SNTP frame hitches as limits (0060 note); M6 extended-operation box checked.
 - Verified: workspace check, firmware host tests (30/66/82/72), release builds, image gate on both flashed images; board left on the 8-hour device app.
+
+## 2026-11-05/06 (element persistence, 0079)
+- Decision 0079 (accepted): the fetched body and fetch UTC persist in a two-slot `elements` partition; boot loads the newest valid slot, a copy younger than the interval defers the fetch; saves step one sector at a time after a 2 s settle; esp-storage (already locked).
+- `element_store.rs` (13 host tests incl. every interrupted-save point), `Schedule::resume_stored`, `Cause::Store`, `partitions.csv`; runtime load/save in `live_radar.rs`.
+- Board: erased/reset/refresh/corrupt-slot/reset runs on `live-fetch-radar`, then the device app (8-hour refresh saved seq 4; user reset came back without a request). Store gap ≤18.6 ms, heap flat.
+- Open: the device app was found at `NO FRAME` once, unobserved; a 12-hour capture is running.

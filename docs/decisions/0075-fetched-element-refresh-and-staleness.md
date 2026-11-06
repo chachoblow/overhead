@@ -46,6 +46,9 @@ it; expiry unloaded the catalogue
 5. **No persistence yet.** Without an RTC a reboot loses trusted time and
    shows `NO FRAME` anyway, so stored elements would mainly save one request
    per boot. Flash persistence (0002's consequence) stays a later item.
+   *Replaced 2026-11-05 by [0079](0079-fetched-element-persistence.md): the
+   last fetched body persists in flash and a young stored copy defers the
+   boot fetch.*
 6. **Home site.** The observer comes from build-time `SITE_LAT_DEG`,
    `SITE_LON_DEG` and optional `SITE_ALT_M` (decimal degrees, metres) in the
    ignored `firmware/.site.env`, validated in `firmware/src/site.rs`; a bad

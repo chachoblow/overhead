@@ -328,7 +328,12 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   8-hour refresh with request-boundary backoff and a build-time home site;
   seven on-board refreshes with no heap growth and a user-observed pass
   ([evidence](../firmware/README.md#refresh-staleness-and-home-site-0075)).
-  Flash persistence and a real location source remain open.
+  Persistence done under [0079](decisions/0079-fetched-element-persistence.md):
+  the last fetched body in a two-slot `elements` partition, loaded at boot; a
+  copy younger than the interval defers the fetch; corrupt-slot fallback and
+  reset-without-fetch shown on the board, user-observed on the device app
+  ([evidence](../firmware/README.md#element-persistence-0079)).
+  A real location source remains open.
 - [x] Handle network failure, missing/invalid time or data, and stale elements.
   Under 0075: failed refreshes keep the previous catalogue, `OLD DATA` after
   24 h, unload after 7 days. Shown on the board with the opt-in
