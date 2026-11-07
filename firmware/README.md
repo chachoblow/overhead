@@ -1789,12 +1789,46 @@ MAC `80:45:6b:2a:45:08`, home site, the command above; image 1,399,760 B,
 | B: both `DENY` 200–275 min | Both blocked at 12,006 s, again at 13,862 s and 15,722 s. Refresh at 14,506 s with both blocked: `FETCH_UTC age_s=2560 uncertainty_us=22069`, Success. Holdover lapsed: `NO FRAME` at 15,543 s. First reply after the window: `source=Some(Accepted)` at 17,578 s, radar frames resumed, no reboot |
 | Whole run | 3 fetches, all 156/156; live heap 389,708 B throughout; no panic, no Wi-Fi drop |
 
-Found on the way (pre-existing, not changed): `time.nist.gov` replies were
-mostly `Ignored(BadVersionOrMode)` (39 of 44; 5 observations), because some
-hosts behind the name answer with a version other than 4, which the 0064
-screen rejects. The NIST fallback therefore renews time only now and then,
+Found on the way (fixed since by [0081](#nist-fallback-renews-utc-0081)):
+`time.nist.gov` replies were mostly `Ignored(BadVersionOrMode)` (39 of 44;
+5 observations), because NIST answers a version-4 request with version 3,
+which the 0064 screen rejected. The NIST fallback therefore renews time only now and then,
 and Cloudflare is effectively the one source. In phase A two NIST
 observations happened to keep trust alive while Cloudflare was backed off.
+
+## NIST fallback renews UTC (0081)
+
+The reply screen accepts VN 3 as well as 4
+([0081](../docs/decisions/0081-sntp-accept-version-3-replies.md); NIST answers
+a VN=4 request with VN=3), and the trust gate keeps the tighter anchor
+([0082](../docs/decisions/0082-keep-the-tighter-utc-anchor.md)): a looser
+in-budget reply logs `LIVE_UTC source=Some(NoRenewal)` while the anchor is
+trusted. Both are host-tested (`sntp_screen`, `utc_trust`).
+
+Cloudflare is held off with the 0080 fault build (`DENY` re-injected for the
+whole window; the 30-minute block makes Cloudflare's first real query come
+after it):
+
+```sh
+REFRESH_MINUTES=120 FAULT_KOD="0:DENY:5-185" FAULT_KOD_BLOCK_MIN=30 \
+  cargo build --release --locked --bin overhead-s3-live-fetch-radar --features live-fetch-faults
+# plus the Wi-Fi/site exports; save-image, gate, flash+capture as for the device app
+```
+
+**On-board evidence, 2026-11-07** (devbox, `/dev/ttyUSB0`, MAC
+`80:45:6b:2a:45:08`, home site; gate passed on every flashed image; local
+`target/nist-fallback-run1.log`, `target/nist-fallback.log`,
+`target/device-0082.log`):
+
+| Run | Result |
+|---|---|
+| Run 1, 0081 only (16:29–17:40 UTC) | 61 NIST observations, 0 rejected; tracking held past the 1 h holdover on NIST alone. At uptime 4,184 s one NIST reply carried 99,906 µs; the gate replaced a 23.9 ms anchor with it, it lapsed ~4.7 s later: `NO FRAME` 4,188–4,248 s, then `Accepted` (selection cleared). Led to 0082; run stopped |
+| Run 2, 0081 + 0082 (19:02–22:32 UTC; image 1,402,000 B) | Cloudflare `DENY`ed six times from 335 s; 174 NIST observations, 0 rejected (uncertainty median 27 ms, p90 50 ms, max 54 ms); gate: 1 `Accepted` at boot, 102 `Resynced`, 92 `NoRenewal` (longest kept-anchor run 10 polls, ~11 min); no `NO FRAME` after boot over ~3 h NIST-only. Refresh at 7,260 s dated by NIST `seq=114` (`FETCH_UTC age_s=0 uncertainty_us=24024`), 200, 156/156. Cloudflare answered again at 11,496 s. Live heap 389,708 B throughout |
+| Device app (22:33 UTC; image 1,388,704 B) | stored `seq=8` older than 8 h → fetch 156/156 at 20 s, saved `seq=9`, radar up, next refresh 28,800 s |
+
+Not shown on the board: a near-budget reply arriving under 0082 (none in
+run 2; host test `looser_observation_keeps_tighter_anchor` replays run 1's
+values).
 
 ## Hardware and permission
 

@@ -689,3 +689,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - `firmware/src/sntp_policy.rs`, `UtcTrustPreflight::projection_trusted`, `FAULT_KOD`/`FAULT_KOD_BLOCK_MIN` in `fault_plan.rs`; network loop rewired in `live_radar.rs`.
 - Board (5 h fault build): RATE back-off 128→2048 s, DENY blocks and re-blocks, two refreshes with no server answering (observations 1,280 s and 2,560 s old), `NO FRAME` at holdover lapse and recovery without reboot; heap flat. Found: NIST replies mostly fail the VN=4 screen (39/44).
 - Verified: workspace check, firmware host tests (37/88/90/80), fmt, clippy (pre-existing only), release builds and gate; device app reflashed (stored copy, no request).
+
+## 2026-11-07 (NIST SNTP fallback, 0081/0082)
+- Decision 0081: the reply screen accepts VN 3 as well as 4 (NIST answers VN=3), so the NIST fallback renews UTC. Decision 0082: while an anchor is trusted, a looser in-budget reply is `NoRenewal`; fetch dating uses the same rule (`UtcTrustPreflight::tighter`).
+- Board run 1 (0081 only) found a 99.9 ms NIST reply replacing a 23.9 ms anchor and a 60 s `NO FRAME`, hence 0082. Run 2 (both, Cloudflare `DENY`ed ~3 h): 174 NIST observations, 0 rejected, 92 kept anchors, no `NO FRAME`, refresh dated by NIST, heap flat. Device app reflashed (boot fetch, saved `seq=9`).
+- Verified: workspace check, firmware host tests (37/88/93/83), fmt, release builds and gate on the three flashed images; clippy and workspace tests not rerun (firmware-only).

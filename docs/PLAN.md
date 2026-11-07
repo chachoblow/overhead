@@ -346,7 +346,12 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   SNTP Kiss-o'-Death backs off per server and recovers without reboot, and
   refreshes run on uptime with holdover-dated UTC
   ([0080](decisions/0080-sntp-kod-backoff-and-fetch-independence.md),
-  [evidence](../firmware/README.md#sntp-kod-recovery-0080)).
+  [evidence](../firmware/README.md#sntp-kod-recovery-0080)). The NIST
+  fallback renews UTC (VN=3 accepted) and a looser reply no longer replaces a
+  tighter anchor; ~3 h NIST-only on the board with no `NO FRAME`
+  ([0081](decisions/0081-sntp-accept-version-3-replies.md),
+  [0082](decisions/0082-keep-the-tighter-utc-anchor.md),
+  [evidence](../firmware/README.md#nist-fallback-renews-utc-0081)).
 - [x] Verify end-to-end performance and extended hardware operation, including
   the frame-timing work deferred by 0060: a [24-hour soak](../firmware/README.md#extended-operation-and-frame-cadence-24-h-soak)
   held 20 Hz for 99.3% of deadlines with boot + 3 refreshes, no heap growth and a
