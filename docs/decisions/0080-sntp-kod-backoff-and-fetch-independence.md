@@ -49,3 +49,9 @@ lapses, then shows `NO FRAME` until a block ends (at most 24 h) or a reboot.
 Back-off state is not persisted: a reboot starts every server at 64 s, as
 before. Evidence and the fault-build switches (`FAULT_KOD`,
 `FAULT_KOD_BLOCK_MIN`) are in the [firmware README](../../firmware/README.md#sntp-kod-recovery-0080).
+
+## Note — 2026-11-07: fetch dating keeps the tighter observation
+
+The observation that dates fetches is the tighter of the stored one and a
+new reply ([0082](0082-keep-the-tighter-utc-anchor.md)), not simply the
+newest.

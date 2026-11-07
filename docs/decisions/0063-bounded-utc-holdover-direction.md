@@ -83,3 +83,9 @@ contract. A separately authorized [host-only gate](../../firmware/src/utc_trust.
 uses explicit test inputs; it establishes no measured time quality, source
 validation or device holdover; [0065](0065-prototype-drift-bound-and-holdover.md)
 later sets prototype drift/holdover values. No device build follows from this direction.
+
+## Note — 2026-11-07: the tighter anchor is kept
+
+[0082](0082-keep-the-tighter-utc-anchor.md): while an anchor is trusted, a
+new observation renews only if its bound at that moment is no looser than
+the anchor's projected bound; otherwise `NoRenewal`.

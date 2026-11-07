@@ -1,5 +1,5 @@
 # The NIST SNTP fallback renews UTC when Cloudflare is unavailable
-Status: blocked: user choice on the trust-gate anchor rule (see Discoveries, Open questions)
+Status: active
 Started: 2026-11-07. Scope: PLAN M6 standalone device (unattended operation);
 decisions [0064](../decisions/0064-prototype-sntp-screen-and-leap-boundary.md),
 [0066](../decisions/0066-prototype-live-sntp-stack-and-source.md),
@@ -12,6 +12,8 @@ for longer than the 1 h holdover, the board keeps tracking on NIST alone, and
 the device app runs the change.
 
 ## Done when
+- Decision 0082 and host tests: a looser in-budget reply never replaces a
+  tighter trusted anchor (0082); no `NO FRAME` from that cause on the board.
 - A new decision (0081) amends 0064's reply screen; 0064/0066 carry a pointer.
 - `firmware/src/sntp_screen.rs` accepts VN 3 and 4 (mode 4), still rejects
   other versions/modes; host tests cover both.
@@ -29,14 +31,18 @@ the device app runs the change.
 ## Human gates
 - VN=3 vs replace NIST: answered 2026-11-07: accept VN=3.
 - Board access/flash: covered by 0069 (confirm port + MAC, gate image).
+- Anchor rule (found in run 1): asked 2026-11-07, answered: fix it in this
+  item (decision 0082, keep the tighter anchor).
 
 ## Plan
 - [x] Decision 0081 + pointers in 0064/0066.
 - [x] Screen change + tests; firmware host tests (default, element-fetch,
       live-utc-boot, sharp-boot-capture); `cargo check --workspace`; commit.
-- [ ] Fault build `REFRESH_MINUTES=120 FAULT_KOD="0:DENY:5-185"
+- [x] Decision 0082 (tighter anchor) + notes on 0063/0080; `utc_trust`
+      `observe` rule + `tighter()`; `live_radar` `latest` uses it; tests.
+- [ ] Run 2 (run 1 stopped at ~4,300 s after the finding): fault build `REFRESH_MINUTES=120 FAULT_KOD="0:DENY:5-185"
       FAULT_KOD_BLOCK_MIN=30`; gate; flash; 3.5 h capture to
-      `firmware/target/nist-fallback.log` (started 2026-11-07 ~16:28 UTC,
+      `firmware/target/nist-fallback.log` (run 1 started 2026-11-07 ~16:28 UTC,
       `timeout 12600`). Built, gate passed (image 1,399,584 B, 17.50%,
       ELF sha256 73e7f056…), port /dev/ttyUSB0 MAC 80:45:6b:2a:45:08.
       If interrupted: check the log; rerun the capture only if it is short.
@@ -62,9 +68,7 @@ the device app runs the change.
 
 ## Verification
 - Host tests (root, `--lib --locked`): default 37, element-fetch 88, live-utc-boot 91, sharp-boot-capture 81; `cargo check --workspace` ok; fmt ok.
+- After 0082: default 37, element-fetch 88, live-utc-boot 93, sharp-boot-capture 83; check ok; fmt ok.
+- Run 1 log kept locally as `firmware/target/nist-fallback-run1.log`.
 
 ## Open questions
-- Trust gate: keep the anchor whose projected error bound is smaller (new
-  observation replaces only if uncertainty_new ≤ uncertainty_old + drift ×
-  age_old), via a new decision 0082, inside this item? Recommended: yes, then
-  rerun the board capture.

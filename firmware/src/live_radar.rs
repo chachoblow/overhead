@@ -711,7 +711,8 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
             // No reply or a KoD: the next server, if due (0080 item 2).
         }
         if let Some(o) = observation {
-            latest = Some(o);
+            // 0082: date fetches by the tighter of the two, like the gate.
+            latest = Some(trust.tighter(latest, o, uptime_us()));
             if let Some(fetched) = stored_at {
                 // 0079: date the stored copy once, with fresh trusted UTC.
                 stored_at = None;

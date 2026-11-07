@@ -92,9 +92,39 @@ impl UtcTrustPreflight {
         if age_us >= self.holdover_us || initial_us >= TARGET_ERROR_US {
             return false;
         }
+        self.bound_us(age_us, initial_us) <= u128::from(TARGET_ERROR_US)
+    }
+
+    /// Error bound at `age_us`: initial uncertainty plus drift, rounded up.
+    fn bound_us(&self, age_us: u64, initial_us: u64) -> u128 {
         let product = u128::from(age_us) * u128::from(self.drift_ppm);
         let drift = product / PPM_DENOMINATOR + u128::from(product % PPM_DENOMINATOR != 0);
-        u128::from(initial_us) + drift <= u128::from(TARGET_ERROR_US)
+        u128::from(initial_us) + drift
+    }
+
+    /// 0082: of a trusted `current` and a `candidate`, the one whose bound
+    /// at `now_us` is tighter (ties go to `candidate`, the fresher). Dates
+    /// element fetches with the same rule the gate uses for its anchor.
+    pub fn tighter(
+        &self,
+        current: Option<ScreenedObservation>,
+        candidate: ScreenedObservation,
+        now_us: u64,
+    ) -> ScreenedObservation {
+        let bound = |o: ScreenedObservation| {
+            now_us
+                .checked_sub(o.midpoint_uptime_us)
+                .map(|age| self.bound_us(age, o.uncertainty_us))
+        };
+        match current {
+            Some(c)
+                if self.projection_trusted(c, now_us)
+                    && bound(candidate).is_none_or(|n| bound(c).is_some_and(|b| b < n)) =>
+            {
+                c
+            }
+            _ => candidate,
+        }
     }
 
     fn projected_utc(anchor_utc_us: i64, age_us: u64) -> Option<i64> {
@@ -231,6 +261,17 @@ impl UtcTrustPreflight {
             || !Self::before_leap_boundary(projected, boundary)
         {
             return ObservationOutcome::NoRenewal;
+        }
+        // 0082: a still-trusted anchor whose projected bound is tighter than
+        // the new observation's is kept; adopting the looser one would only
+        // shorten trust (a near-budget reply lapses within seconds).
+        if let Some((midpoint, initial, _, _)) = self.anchor {
+            let kept = now_us.checked_sub(midpoint).is_some_and(|old_age| {
+                self.bound_us(old_age, initial) < self.bound_us(age, observation.uncertainty_us)
+            });
+            if kept {
+                return ObservationOutcome::NoRenewal;
+            }
         }
         // A step within the error budget is indistinguishable from the old
         // anchor's own allowed error: keep samples and selection. A larger
@@ -709,6 +750,71 @@ mod tests {
             gate.next(&mut app, 149_000, true),
             LifecycleAction::RenderNoFrame
         );
+    }
+
+    fn observation_utc(at: u64, utc_offset_us: i64, uncertainty: u64) -> ScreenedObservation {
+        ScreenedObservation {
+            midpoint_uptime_us: at,
+            utc_at_midpoint: epoch() + TimeDelta::microseconds(utc_offset_us),
+            uncertainty_us: uncertainty,
+        }
+    }
+
+    /// 0082, from the 2026-11-07 NIST run: a 99.9 ms reply 64 s after a
+    /// 23.9 ms anchor must not replace it (it would lapse within seconds).
+    #[test]
+    fn looser_observation_keeps_tighter_anchor() {
+        let mut app = app();
+        let mut gate = UtcTrustPreflight::new(PROTOTYPE_HOLDOVER_US, 20).unwrap();
+        gate.next(&mut app, 0, true);
+        gate.no_frame_succeeded(1_000, gate.next_phase());
+        assert_eq!(
+            gate.observe(&mut app, 1_000_000, observation_utc(1_000_000, 0, 23_921)),
+            ObservationOutcome::Accepted
+        );
+        // Old bound at 65 s: 23,921 + 1,280 µs; new: 99,906 µs.
+        assert_eq!(
+            gate.observe(
+                &mut app,
+                65_100_000,
+                observation_utc(65_000_000, 64_049_120, 99_906)
+            ),
+            ObservationOutcome::NoRenewal
+        );
+        // Still trusted where the looser anchor would have lapsed (~5 s).
+        assert!(gate.still_trusted(&mut app, 75_000_000));
+        // An equal-or-tighter one renews as before.
+        assert_eq!(
+            gate.observe(
+                &mut app,
+                129_100_000,
+                observation_utc(129_000_000, 128_003_000, 22_491)
+            ),
+            ObservationOutcome::Resynced { step_us: 3_000 }
+        );
+        // Same uncertainty, fresher midpoint: tighter (less drift), renews.
+        let fresher = observation_utc(129_050_000, 128_053_000, 22_491);
+        assert!(matches!(
+            gate.observe(&mut app, 129_100_000, fresher),
+            ObservationOutcome::Resynced { .. }
+        ));
+    }
+
+    #[test]
+    fn tighter_prefers_trusted_smaller_bound_else_candidate() {
+        let gate = UtcTrustPreflight::new(PROTOTYPE_HOLDOVER_US, 20).unwrap();
+        let good = observation_utc(1_000_000, 0, 23_921);
+        let poor = observation_utc(65_000_000, 64_000_000, 99_906);
+        assert_eq!(gate.tighter(None, poor, 65_100_000), poor);
+        assert_eq!(gate.tighter(Some(good), poor, 65_100_000), good);
+        assert_eq!(gate.tighter(Some(poor), good, 65_100_000), good);
+        // Equal bounds: the candidate.
+        let twin = observation_utc(1_000_000, 7, 23_921);
+        assert_eq!(gate.tighter(Some(good), twin, 2_000_000), twin);
+        // An expired current never wins.
+        let late = PROTOTYPE_HOLDOVER_US + 2_000_000;
+        let fresh = observation_utc(late, 0, 90_000);
+        assert_eq!(gate.tighter(Some(good), fresh, late), fresh);
     }
 
     /// 0063 note: a renewal within 100 ms of the old anchor's projected UTC
