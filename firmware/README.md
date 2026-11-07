@@ -1536,7 +1536,7 @@ with BOOT cycling. It runs the same runtime
 (`src/live_radar.rs`) as the `live-fetch-radar` diagnostic and its fault build;
 the app prints only the event log (banner, `SNTP_WIFI`, `FETCH_FAILED`,
 `FETCH_SCHEDULE`, `LIVE_FETCH` load/stale/expired, `RADAR first_frame`,
-`LIVE_UTC no_frame_sent`, SNTP KoD, `OVERHEAD_DEVICE_FAILED` on panic). It halts
+`LIVE_UTC no_frame_sent`, `SNTP KoD` (0080), `OVERHEAD_DEVICE_FAILED` on panic). It halts
 on panic and never reboots itself. `device` with `live-fetch-faults` does not
 compile.
 
@@ -1749,9 +1749,52 @@ after its header.
 Unexplained: before that reset, the user found the device app at `NO FRAME`.
 It had been running at 01:17 UTC, when it fetched and saved, and nothing was
 capturing its console. `NO FRAME` while running means trusted UTC lapsed (SNTP
-not renewing; a KoD would also stop queries until a reboot). The user's first
+not renewing; a KoD would also stop queries until a reboot, since fixed by
+[0080](#sntp-kod-recovery-0080)). The user's first
 reset press showed no change. A non-resetting capture of the device app was
 started at 04:08 UTC (`target/device-overnight.log`, 12 h).
+
+## SNTP KoD recovery (0080)
+
+The shared runtime no longer stops SNTP until reboot after a KoD
+([0080](../docs/decisions/0080-sntp-kod-backoff-and-fetch-independence.md);
+policy in `src/sntp_policy.rs`, dating check `UtcTrustPreflight::projection_trusted`,
+both host-tested). Event line: `SNTP KoD server= code= action=backoff|block
+next_in_s= interval_s= uptime_s=`. The diagnostic adds `FETCH_UTC age_s=
+uncertainty_us=` (the observation dating each fetch) and `FETCH_DEFERRED
+no_trusted_utc` (a due fetch waiting for trusted UTC).
+
+The fault build injects kiss codes in place of real queries (no packet is
+sent; the display gets the same outcome as a real KoD): `FAULT_KOD` lists
+`server:CODE:from-to` items (server 0 Cloudflare, 1 NIST; four uppercase
+letters; uptime minutes, `to` exclusive; at most 8), and
+`FAULT_KOD_BLOCK_MIN` shortens the 24 h `DENY`/`RSTR` block. It prints
+`FAULT_INJECT_KOD` per injected reply.
+
+```sh
+REFRESH_MINUTES=120 FAULT_KOD="0:RATE:100-135,1:DENY:100-101,0:DENY:200-275,1:DENY:200-275" \
+  FAULT_KOD_BLOCK_MIN=30 \
+  cargo build --release --locked --bin overhead-s3-live-fetch-radar --features live-fetch-faults
+# plus the Wi-Fi/site exports; save-image, gate, flash+capture as for the device app
+```
+
+**On-board evidence, 2026-11-07 03:01–08:06 UTC** (devbox, `/dev/ttyUSB0`,
+MAC `80:45:6b:2a:45:08`, home site, the command above; image 1,399,760 B,
+17.51%, gate passed; local `target/kod-faults.log`):
+
+| Phase (uptime) | Result |
+|---|---|
+| Boot | fetch 156/156 dated by a fresh observation (uncertainty 21.9 ms, so the 1 h holdover, not the 100 ms budget, bounds trust) |
+| A: Cloudflare `RATE` 100–135 min, NIST `DENY` once | Cloudflare backed off 128 → 256 → 512 → 1024 → 2048 s; NIST blocked 1,800 s, asked again after. Refresh at 7,263 s ran with no server answering that poll: `FETCH_UTC age_s=1280`, Success. Cloudflare answered again at 10,019 s and its interval halved back towards 64 s |
+| B: both `DENY` 200–275 min | Both blocked at 12,006 s, again at 13,862 s and 15,722 s. Refresh at 14,506 s with both blocked: `FETCH_UTC age_s=2560 uncertainty_us=22069`, Success. Holdover lapsed: `NO FRAME` at 15,543 s. First reply after the window: `source=Some(Accepted)` at 17,578 s, radar frames resumed, no reboot |
+| Whole run | 3 fetches, all 156/156; live heap 389,708 B throughout; no panic, no Wi-Fi drop |
+
+Found on the way (pre-existing, not changed): `time.nist.gov` replies were
+mostly `Ignored(BadVersionOrMode)` (39 of 44; 5 observations), because some
+hosts behind the name answer with a version other than 4, which the 0064
+screen rejects. The NIST fallback therefore renews time only now and then,
+and Cloudflare is effectively the one source. In phase A two NIST
+observations happened to keep trust alive while Cloudflare was backed off.
 
 ## Hardware and permission
 

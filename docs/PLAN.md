@@ -343,6 +343,10 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   ([evidence](../firmware/README.md#fetch-failure-paths-on-the-board-live-fetch-faults-0075)).
   Post-GET failures, the repeated-handshake rule and reload after expiry
   remain host-tested only.
+  SNTP Kiss-o'-Death backs off per server and recovers without reboot, and
+  refreshes run on uptime with holdover-dated UTC
+  ([0080](decisions/0080-sntp-kod-backoff-and-fetch-independence.md),
+  [evidence](../firmware/README.md#sntp-kod-recovery-0080)).
 - [x] Verify end-to-end performance and extended hardware operation, including
   the frame-timing work deferred by 0060: a [24-hour soak](../firmware/README.md#extended-operation-and-frame-cadence-24-h-soak)
   held 20 Hz for 99.3% of deadlines with boot + 3 refreshes, no heap growth and a

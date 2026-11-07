@@ -683,3 +683,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - `element_store.rs` (13 host tests incl. every interrupted-save point), `Schedule::resume_stored`, `Cause::Store`, `partitions.csv`; runtime load/save in `live_radar.rs`.
 - Board: erased/reset/refresh/corrupt-slot/reset runs on `live-fetch-radar`, then the device app (8-hour refresh saved seq 4; user reset came back without a request). Store gap ≤18.6 ms, heap flat.
 - Open: the device app was found at `NO FRAME` once, unobserved; a 12-hour capture is running.
+
+## 2026-11-06/07 (SNTP KoD recovery, 0080)
+- Decision 0080 (accepted): KoD backs off per server (`RATE` doubles to 1 h and replies halve it; `DENY`/`RSTR` blocks 24 h), fallback to the other server allowed; fetches run on uptime, dated by the newest observation still trusted under 0065. Replaces 0067's stop-until-reboot.
+- `firmware/src/sntp_policy.rs`, `UtcTrustPreflight::projection_trusted`, `FAULT_KOD`/`FAULT_KOD_BLOCK_MIN` in `fault_plan.rs`; network loop rewired in `live_radar.rs`.
+- Board (5 h fault build): RATE back-off 128→2048 s, DENY blocks and re-blocks, two refreshes with no server answering (observations 1,280 s and 2,560 s old), `NO FRAME` at holdover lapse and recovery without reboot; heap flat. Found: NIST replies mostly fail the VN=4 screen (39/44).
+- Verified: workspace check, firmware host tests (37/88/90/80), fmt, clippy (pre-existing only), release builds and gate; device app reflashed (stored copy, no request).

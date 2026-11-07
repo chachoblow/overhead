@@ -48,4 +48,4 @@ With both servers denied, the device keeps tracking until 0065's holdover
 lapses, then shows `NO FRAME` until a block ends (at most 24 h) or a reboot.
 Back-off state is not persisted: a reboot starts every server at 64 s, as
 before. Evidence and the fault-build switches (`FAULT_KOD`,
-`FAULT_KOD_BLOCK_MIN`) are in the [firmware README](../../firmware/README.md).
+`FAULT_KOD_BLOCK_MIN`) are in the [firmware README](../../firmware/README.md#sntp-kod-recovery-0080).

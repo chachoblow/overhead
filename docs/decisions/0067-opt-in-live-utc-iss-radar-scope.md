@@ -2,7 +2,9 @@
 
 Date: 2026-10-26
 Status: accepted fixture-only diagnostic scope; display-owner implementation
-is an experiment, not a standalone-device contract.
+is an experiment, not a standalone-device contract. The KoD rule ("stop
+querying both servers until reboot") is replaced for the shared runtime by
+[0080](0080-sntp-kod-backoff-and-fetch-independence.md) (2026-11-06).
 
 ## Decision
 
