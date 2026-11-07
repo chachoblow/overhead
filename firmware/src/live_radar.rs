@@ -35,6 +35,13 @@
 //! `OLD DATA` and expiry thresholds are shortened, and Wi-Fi is dropped once,
 //! so 0075's failure handling can be captured in one run. Without the feature
 //! every attempt is ordinary and the thresholds are 0075's.
+//!
+//! SNTP Kiss-o'-Death (0080): each server backs off on its own
+//! (`sntp_policy`): `RATE` doubles its interval up to an hour, `DENY`/`RSTR`
+//! leaves it alone for 24 h, and the next server is asked meanwhile. Fetches
+//! follow the schedule on every poll whether or not a server answered, dated
+//! by the newest observation still trusted under 0065's holdover. The fault
+//! build can inject kiss codes per server and time window (`FAULT_KOD`).
 use crate::{
     boot_capture,
     button_input::apply_presses,
@@ -49,6 +56,7 @@ use crate::{
     live_utc,
     sharp_lines::{Kind, LineSender},
     site,
+    sntp_policy::{self, Kiss, Policy},
     sntp_screen::{self, ScreenedObservation, SntpOutcome, SntpRequest},
     stack_watermark, tls_dates,
     utc_trust::{PROTOTYPE_DRIFT_PPM, UtcTrustPreflight},
@@ -128,7 +136,7 @@ macro_rules! diag {
 const SSID: &str = env!("SSID");
 const PASSWORD: &str = env!("PASSWORD");
 const SERVERS: [&str; 2] = ["time.cloudflare.com", "time.nist.gov"];
-const POLL_S: u64 = 64;
+const POLL_S: u64 = sntp_policy::POLL_S;
 const REPLY_TIMEOUT: Wait = Wait::from_secs(5);
 const FETCH_TIMEOUT: Wait = Wait::from_secs(60);
 /// 0065's total-error budget, required of the observation that dates the fetch.
@@ -177,6 +185,8 @@ struct Faults {
     stale_s: Option<u64>,
     expire_after_load_s: Option<u64>,
     wifi_drop: Option<(u64, u64)>,
+    kod: crate::fault_plan::KodPlan,
+    kod_block_s: Option<u64>,
 }
 
 #[cfg(feature = "live-fetch-faults")]
@@ -206,7 +216,35 @@ fn faults() -> Faults {
             "FAULT_EXPIRE_AFTER_LOAD_MIN",
         )),
         wifi_drop: drop_at.map(|at| (at, drop_for.unwrap_or(600))),
+        kod: match crate::fault_plan::KodPlan::parse(option_env!("FAULT_KOD"), SERVERS.len()) {
+            Ok(kod) => kod,
+            Err(e) => panic!("fault configuration: {e}"),
+        },
+        kod_block_s: check(minutes(
+            option_env!("FAULT_KOD_BLOCK_MIN"),
+            "FAULT_KOD_BLOCK_MIN",
+        )),
     }
+}
+
+/// 0080: kiss code to inject in place of a query (fault build only).
+fn kod_for(server: usize) -> Option<[u8; 4]> {
+    #[cfg(feature = "live-fetch-faults")]
+    return faults().kod.for_query(server, uptime_s());
+    #[cfg(not(feature = "live-fetch-faults"))]
+    {
+        let _ = server;
+        None
+    }
+}
+
+/// 0080: how long a `DENY`/`RSTR` server is left alone.
+fn kod_block_s() -> u64 {
+    #[cfg(feature = "live-fetch-faults")]
+    if let Some(s) = faults().kod_block_s {
+        return s;
+    }
+    sntp_policy::DENY_BLOCK_S
 }
 
 fn fault_for(attempt: u32) -> Fault {
@@ -511,12 +549,14 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
     let wifi_drop = {
         let f = faults();
         println!(
-            "FAULT_CONFIG plan={:?} stale_s={:?} expire_after_load_s={:?} wifi_drop_at_for_s={:?}; \
-             diagnostic fault build",
+            "FAULT_CONFIG plan={:?} stale_s={:?} expire_after_load_s={:?} wifi_drop_at_for_s={:?} \
+             kod={:?} kod_block_s={:?}; diagnostic fault build",
             f.plan.steps(),
             f.stale_s,
             f.expire_after_load_s,
-            f.wifi_drop
+            f.wifi_drop,
+            f.kod.windows(),
+            f.kod_block_s
         );
         f.wifi_drop
     };
@@ -632,58 +672,91 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
     let mut attempts: u32 = 0;
     let mut painted = Some(painted);
     let mut seq: u32 = 0;
+    // 0080: per-server KoD back-off, and the newest in-budget observation,
+    // which dates fetches while 0065's holdover still trusts it.
+    let mut policy = Policy::<{ SERVERS.len() }>::new(kod_block_s());
+    let trust = UtcTrustPreflight::prototype();
+    let mut latest: Option<ScreenedObservation> = None;
+    let mut deferred = false;
     loop {
         stack.wait_config_up().await;
         seq = seq.wrapping_add(1);
-        for server in SERVERS {
-            match query(stack, &mut socket, trng, server, seq).await {
-                QueryResult::NoReply => continue, // fallback only after no reply
-                QueryResult::Reply(observation) => {
-                    let observation = observation.filter(|o| o.uncertainty_us < UTC_BUDGET_US);
-                    if let (Some(o), Some(fetched)) = (observation, stored_at) {
-                        // 0079: date the stored copy once, with trusted UTC.
-                        stored_at = None;
-                        let now_unix = trusted_now_unix_s(o);
-                        let age_s = now_unix.saturating_sub(fetched);
-                        match schedule.resume_stored(uptime_s(), fetched, now_unix) {
-                            Some(wait) => {
-                                println!("FETCH_RESUME stored_age_s={age_s} next_in_s={wait}")
-                            }
-                            None => println!("FETCH_RESUME stored_age_s={age_s} due=now"),
-                        }
-                    }
-                    if let Some(o) = observation
-                        && schedule.due(uptime_s())
-                    {
-                        attempts += 1;
-                        let outcome = fetch_once(stack, &mut resources, o, attempts).await;
-                        let now = uptime_s();
-                        let next = schedule.record(now, outcome);
-                        println!(
-                            "FETCH_SCHEDULE attempt={attempts} outcome={outcome:?} \
-                             next_in_s={} uptime_s={now}",
-                            next - now
-                        );
-                        if let Some(painted) = painted.take() {
-                            // SAFETY: same CPU0 stack and boot as the paint.
-                            let w = unsafe { painted.scan() };
-                            diag!(
-                                "STACK_WATERMARK observed_bytes={} stack_bytes={}",
-                                w.observed_bytes,
-                                w.stack_top - w.stack_low
-                            );
-                        }
-                    }
+        let mut observation = None;
+        for (i, server) in SERVERS.into_iter().enumerate() {
+            let asked = uptime_s();
+            if !policy.due(i, asked) {
+                continue;
+            }
+            match query(stack, &mut socket, trng, i, server, seq).await {
+                QueryResult::NoReply => policy.no_reply(i, asked),
+                QueryResult::KissOfDeath(code) => {
+                    let (kiss, wait) = policy.kiss(i, asked, code);
+                    let action = match kiss {
+                        Kiss::Rate => "backoff",
+                        Kiss::Deny => "block",
+                    };
+                    println!(
+                        "SNTP KoD server={server} code={} action={action} next_in_s={wait} \
+                         interval_s={} uptime_s={asked}",
+                        core::str::from_utf8(&code).unwrap_or("?"),
+                        policy.interval_s(i)
+                    );
+                }
+                QueryResult::Reply(o) => {
+                    policy.replied(i, asked);
+                    observation = o.filter(|o| o.uncertainty_us < UTC_BUDGET_US);
                     break;
                 }
-                QueryResult::KissOfDeath => {
-                    // Conservative diagnostic handling: stop querying either
-                    // server after any KoD; do not bypass RATE/DENY via fallback.
-                    println!("SNTP KoD: stop queries until reboot; holdover expires normally");
-                    loop {
-                        Timer::after(Wait::from_secs(3600)).await;
+            }
+            // No reply or a KoD: the next server, if due (0080 item 2).
+        }
+        if let Some(o) = observation {
+            latest = Some(o);
+            if let Some(fetched) = stored_at {
+                // 0079: date the stored copy once, with fresh trusted UTC.
+                stored_at = None;
+                let now_unix = trusted_now_unix_s(o);
+                let age_s = now_unix.saturating_sub(fetched);
+                match schedule.resume_stored(uptime_s(), fetched, now_unix) {
+                    Some(wait) => println!("FETCH_RESUME stored_age_s={age_s} next_in_s={wait}"),
+                    None => println!("FETCH_RESUME stored_age_s={age_s} due=now"),
+                }
+            }
+        }
+        // 0080: the schedule runs on uptime, whether or not a server answered.
+        if schedule.due(uptime_s()) {
+            match latest.filter(|o| trust.projection_trusted(*o, uptime_us())) {
+                Some(o) => {
+                    deferred = false;
+                    attempts += 1;
+                    diag!(
+                        "FETCH_UTC age_s={} uncertainty_us={}",
+                        (uptime_us() - o.midpoint_uptime_us) / 1_000_000,
+                        o.uncertainty_us
+                    );
+                    let outcome = fetch_once(stack, &mut resources, o, attempts).await;
+                    let now = uptime_s();
+                    let next = schedule.record(now, outcome);
+                    println!(
+                        "FETCH_SCHEDULE attempt={attempts} outcome={outcome:?} \
+                         next_in_s={} uptime_s={now}",
+                        next - now
+                    );
+                    if let Some(painted) = painted.take() {
+                        // SAFETY: same CPU0 stack and boot as the paint.
+                        let w = unsafe { painted.scan() };
+                        diag!(
+                            "STACK_WATERMARK observed_bytes={} stack_bytes={}",
+                            w.observed_bytes,
+                            w.stack_top - w.stack_low
+                        );
                     }
                 }
+                None if !deferred => {
+                    deferred = true;
+                    diag!("FETCH_DEFERRED no_trusted_utc uptime_s={}", uptime_s());
+                }
+                None => {}
             }
         }
         Timer::after(Wait::from_secs(POLL_S)).await;
@@ -1378,16 +1451,27 @@ enum QueryResult {
     NoReply,
     /// A matched reply; the observation if it was one.
     Reply(Option<ScreenedObservation>),
-    KissOfDeath,
+    KissOfDeath([u8; 4]),
 }
 
 async fn query(
     stack: Stack<'static>,
     socket: &mut UdpSocket<'_>,
     trng: &mut Trng,
+    index: usize,
     server: &str,
     seq: u32,
 ) -> QueryResult {
+    if let Some(code) = kod_for(index) {
+        // Fault build: no packet; the outcome a real KoD would produce.
+        println!(
+            "FAULT_INJECT_KOD seq={seq} server={server} code={} uptime_s={}",
+            core::str::from_utf8(&code).unwrap_or("?"),
+            uptime_s()
+        );
+        EVENTS.send(SntpOutcome::KissOfDeath(code)).await;
+        return QueryResult::KissOfDeath(code);
+    }
     let Ok(addrs) = stack.dns_query(server, DnsQueryType::A).await else {
         diag!("SNTP seq={seq} server={server} outcome=DnsFailed");
         return QueryResult::NoReply;
@@ -1434,7 +1518,7 @@ async fn query(
         diag!("SNTP seq={seq} server={server} outcome={outcome:?}");
         EVENTS.send(outcome).await;
         return match outcome {
-            SntpOutcome::KissOfDeath(_) => QueryResult::KissOfDeath,
+            SntpOutcome::KissOfDeath(code) => QueryResult::KissOfDeath(code),
             SntpOutcome::Observation(o) => QueryResult::Reply(Some(o)),
             _ => QueryResult::Reply(None),
         };

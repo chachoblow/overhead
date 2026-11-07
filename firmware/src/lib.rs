@@ -58,6 +58,7 @@ pub mod sharp_profile;
 pub mod sharp_test;
 #[cfg(feature = "element-fetch")]
 pub mod site;
+pub mod sntp_policy;
 #[cfg(any(feature = "sharp-radar", feature = "live-sntp"))]
 pub mod sntp_screen;
 #[cfg(feature = "element-fetch")]

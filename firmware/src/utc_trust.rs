@@ -152,6 +152,28 @@ impl UtcTrustPreflight {
         true
     }
 
+    /// 0080: whether `observation`, projected to `now_us`, would still be a
+    /// trusted anchor under this gate's rules (budget, holdover and no month
+    /// boundary crossed). Used outside the display owner to date element
+    /// fetches; it neither touches the gate's state nor needs the app.
+    pub fn projection_trusted(&self, observation: ScreenedObservation, now_us: u64) -> bool {
+        let Some(age) = now_us.checked_sub(observation.midpoint_uptime_us) else {
+            return false;
+        };
+        if validate_utc_time(observation.utc_at_midpoint).is_err() {
+            return false;
+        }
+        let anchor_utc = observation.utc_at_midpoint.and_utc().timestamp_micros();
+        let (Some(projected), Some(boundary)) = (
+            Self::projected_utc(anchor_utc, age),
+            Self::next_month_start_us(observation.utc_at_midpoint),
+        ) else {
+            return false;
+        };
+        self.within_budget(age, observation.uncertainty_us)
+            && Self::before_leap_boundary(projected, boundary)
+    }
+
     /// No reply, disconnected Wi-Fi, KoD or an unmatched/poor-quality packet:
     /// no renewal. An old anchor may still be used only until its original
     /// expiry. The adapter is responsible for honoring KoD rate/deny rules.
@@ -755,6 +777,40 @@ mod tests {
         assert_eq!(
             gate.observe(&mut app, 14_000_002, at(14_000_002, 130_001)),
             ObservationOutcome::Accepted
+        );
+    }
+
+    #[test]
+    fn projection_follows_the_anchor_rules() {
+        let gate = UtcTrustPreflight::prototype();
+        let o = observation(1_000_000, 30_000);
+        assert!(gate.projection_trusted(o, 1_000_000));
+        // 30 ms + 20 ppm reaches 100 ms after 3,500 s.
+        assert!(gate.projection_trusted(o, 1_000_000 + 3_500_000_000));
+        assert!(!gate.projection_trusted(o, 1_000_000 + 3_500_000_001));
+        // Before the observation, or already at the budget.
+        assert!(!gate.projection_trusted(o, 999_999));
+        assert!(!gate.projection_trusted(observation(0, 100_000), 0));
+        // Holdover cap with a tiny initial error.
+        assert!(!gate.projection_trusted(observation(0, 0), 3_600_000_000));
+        // Within the target of the next month start.
+        let late = ScreenedObservation {
+            midpoint_uptime_us: 0,
+            utc_at_midpoint: NaiveDate::from_ymd_opt(2026, 10, 31)
+                .unwrap()
+                .and_hms_opt(23, 50, 0)
+                .unwrap(),
+            uncertainty_us: 10_000,
+        };
+        assert!(gate.projection_trusted(late, 599_000_000));
+        assert!(!gate.projection_trusted(late, 599_900_000));
+        // The check leaves the gate untouched.
+        let mut app = app();
+        let mut gate = UtcTrustPreflight::prototype();
+        assert!(gate.projection_trusted(o, 2_000_000));
+        assert_eq!(
+            gate.next(&mut app, 2_000_000, true),
+            LifecycleAction::RenderNoFrame
         );
     }
 }

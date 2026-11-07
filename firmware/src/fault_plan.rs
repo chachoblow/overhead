@@ -94,6 +94,94 @@ impl Plan {
     }
 }
 
+/// Longest `FAULT_KOD` accepted.
+pub const MAX_KOD_WINDOWS: usize = 8;
+
+/// One `FAULT_KOD` item: server `server` answers every query between
+/// `from_s` (inclusive) and `to_s` (exclusive) of uptime with kiss `code`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct KodWindow {
+    pub server: usize,
+    pub code: [u8; 4],
+    pub from_s: u64,
+    pub to_s: u64,
+}
+
+/// 0080 board evidence: injected Kiss-o'-Death replies, applied in place of
+/// a real query so the per-server policy and the fetch schedule run unchanged.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct KodPlan {
+    windows: [KodWindow; MAX_KOD_WINDOWS],
+    len: usize,
+}
+
+impl KodPlan {
+    /// Parses `FAULT_KOD`, e.g. `0:RATE:100-135,1:DENY:100-101` (server
+    /// index, four-letter code, uptime minutes from-to). Absent or empty
+    /// means none; anything malformed is refused.
+    pub fn parse(value: Option<&str>, servers: usize) -> Result<Self, &'static str> {
+        const BAD: &str = "FAULT_KOD item is not server:CODE:from-to (minutes, from < to)";
+        let mut plan = KodPlan {
+            windows: [KodWindow {
+                server: 0,
+                code: [0; 4],
+                from_s: 0,
+                to_s: 0,
+            }; MAX_KOD_WINDOWS],
+            len: 0,
+        };
+        let Some(value) = value.map(str::trim).filter(|v| !v.is_empty()) else {
+            return Ok(plan);
+        };
+        for item in value.split(',') {
+            if plan.len == MAX_KOD_WINDOWS {
+                return Err("FAULT_KOD has more than 8 items");
+            }
+            let mut parts = item.trim().split(':');
+            let (Some(server), Some(code), Some(range), None) =
+                (parts.next(), parts.next(), parts.next(), parts.next())
+            else {
+                return Err(BAD);
+            };
+            let server: usize = server.parse().map_err(|_| BAD)?;
+            if server >= servers {
+                return Err("FAULT_KOD server index out of range");
+            }
+            let code: [u8; 4] = code.as_bytes().try_into().map_err(|_| BAD)?;
+            if !code.iter().all(u8::is_ascii_uppercase) {
+                return Err(BAD);
+            }
+            let (from, to) = range.split_once('-').ok_or(BAD)?;
+            let from: u64 = from.parse().map_err(|_| BAD)?;
+            let to: u64 = to.parse().map_err(|_| BAD)?;
+            if from >= to {
+                return Err(BAD);
+            }
+            plan.windows[plan.len] = KodWindow {
+                server,
+                code,
+                from_s: from.checked_mul(60).ok_or(BAD)?,
+                to_s: to.checked_mul(60).ok_or(BAD)?,
+            };
+            plan.len += 1;
+        }
+        Ok(plan)
+    }
+
+    /// The kiss code to inject for a query to `server` at `uptime_s`; the
+    /// first matching window wins.
+    pub fn for_query(&self, server: usize, uptime_s: u64) -> Option<[u8; 4]> {
+        self.windows()
+            .iter()
+            .find(|w| w.server == server && (w.from_s..w.to_s).contains(&uptime_s))
+            .map(|w| w.code)
+    }
+
+    pub fn windows(&self) -> &[KodWindow] {
+        &self.windows[..self.len]
+    }
+}
+
 /// Parses an optional positive whole number of minutes into seconds.
 pub fn minutes(value: Option<&str>, name: &'static str) -> Result<Option<u64>, &'static str> {
     let Some(value) = value else {
@@ -187,5 +275,37 @@ mod tests {
         // An epoch after the fetch time (clock skew) counts as age zero.
         assert_eq!(expire_after_s(100, 200, 60), 60);
         assert_eq!(expire_after_s(0, 0, u64::MAX), i64::MAX);
+    }
+
+    #[test]
+    fn kod_windows() {
+        for value in [None, Some(""), Some(" ")] {
+            assert!(KodPlan::parse(value, 2).unwrap().windows().is_empty());
+        }
+        let plan = KodPlan::parse(Some("0:RATE:100-135, 1:DENY:100-101,0:XYZW:1-2"), 2).unwrap();
+        assert_eq!(plan.windows().len(), 3);
+        assert_eq!(plan.for_query(0, 5999), None);
+        assert_eq!(plan.for_query(0, 6000), Some(*b"RATE"));
+        assert_eq!(plan.for_query(0, 8099), Some(*b"RATE"));
+        assert_eq!(plan.for_query(0, 8100), None);
+        assert_eq!(plan.for_query(1, 6059), Some(*b"DENY"));
+        assert_eq!(plan.for_query(1, 6060), None);
+        assert_eq!(plan.for_query(0, 60), Some(*b"XYZW"));
+        for bad in [
+            "2:RATE:1-2",
+            "0:rate:1-2",
+            "0:RAT:1-2",
+            "0:RATE:2-2",
+            "0:RATE:3-2",
+            "0:RATE:1",
+            "0:RATE",
+            "0:RATE:1-2:x",
+            "x:RATE:1-2",
+            "0:RATE:1-99999999999999999999",
+        ] {
+            assert!(KodPlan::parse(Some(bad), 2).is_err(), "{bad}");
+        }
+        let nine = ["0:RATE:1-2"; 9].join(",");
+        assert!(KodPlan::parse(Some(&nine), 2).is_err());
     }
 }
