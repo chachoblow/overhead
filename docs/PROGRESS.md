@@ -694,3 +694,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Decision 0081: the reply screen accepts VN 3 as well as 4 (NIST answers VN=3), so the NIST fallback renews UTC. Decision 0082: while an anchor is trusted, a looser in-budget reply is `NoRenewal`; fetch dating uses the same rule (`UtcTrustPreflight::tighter`).
 - Board run 1 (0081 only) found a 99.9 ms NIST reply replacing a 23.9 ms anchor and a 60 s `NO FRAME`, hence 0082. Run 2 (both, Cloudflare `DENY`ed ~3 h): 174 NIST observations, 0 rejected, 92 kept anchors, no `NO FRAME`, refresh dated by NIST, heap flat. Device app reflashed (boot fetch, saved `seq=9`).
 - Verified: workspace check, firmware host tests (37/88/93/83), fmt, release builds and gate on the three flashed images; clippy and workspace tests not rerun (firmware-only).
+
+## 2026-11-07 (giftable-device proposal, docs only)
+- Gifting makes signed OTA updates with rollback a core requirement. [docs/giftable-device-proposal.md](giftable-device-proposal.md) proposes the fixed foundations (flash layout, settings store, ed25519-signed manifests, custom rollback bootloader, health check), a phone setup page served by the device (no app), and a new M7.
+- Found: the pinned `esp-bootloader-esp-idf` has OTA slot states; espflash's bundled S3 bootloader has no rollback; `esp-radio` supports access-point and combined access-point/station mode; Pages and raw GitHub both serve over TLS 1.2 with no redirects.
+- Hosting agreed (`overhead.wesklein.com`, raw fallback); the rest awaits user review in [the work file](work/giftable-foundations.md). No code; no Rust checks rerun.

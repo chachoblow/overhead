@@ -1,6 +1,6 @@
 # Overhead — Handoff
 
-_Last updated: 2026-11-07 UTC (NIST SNTP fallback, 0081/0082; work item completed). M2 and M3 complete; M4 done for now. M6 standalone device remains open (location source; BOOT/knob-switch polish)._
+_Last updated: 2026-11-07 UTC (giftable-device proposal written; awaiting user review). M2 and M3 complete; M4 done for now. M6 standalone device remains open; a new M7 (giftable device) is proposed, not yet in PLAN._
 
 ## Current state
 - Shared `app/`, 1-bit `render/` and simulator provide the accepted wide radar; [PLAN](PLAN.md) owns scope and [DESIGN](DESIGN.md) intent. Time/source contracts are [0062–0067](decisions/0062-no-trusted-time-display-preflight.md); the **device app** is `--features device` (`overhead-s3-device`, [0076](decisions/0076-device-app-build.md)); other images are diagnostics. Elements persist in flash ([0079](decisions/0079-fetched-element-persistence.md)); SNTP KoD backs off per server and fetches run on uptime ([0080](decisions/0080-sntp-kod-backoff-and-fetch-independence.md)); the NIST fallback renews (VN=3, [0081](decisions/0081-sntp-accept-version-3-replies.md)) and the gate keeps the tighter UTC anchor ([0082](decisions/0082-keep-the-tighter-utc-anchor.md)); pass prediction on the device remains open.
@@ -58,12 +58,16 @@ _Last updated: 2026-11-07 UTC (NIST SNTP fallback, 0081/0082; work item complete
 - Board ([evidence](../firmware/README.md#nist-fallback-renews-utc-0081)): run 1 (0081 only) found a 99.9 ms NIST reply replacing a 23.9 ms anchor → 60 s `NO FRAME`, hence 0082. Run 2: Cloudflare `DENY`ed ~3 h, 174 NIST observations, 0 rejected, 92 kept anchors, no `NO FRAME`, refresh dated by NIST. A near-budget reply under 0082 is host-tested only.
 - Board left on the device app (8 h): fetched at boot (stored copy was 13 h old), saved `seq=9`, radar up.
 
-## Next work item (recommended)
-- No `docs/work/` item is active. Candidates (user to choose): a location source (the main open M6 item), BOOT risks / a role for the knob's push switch, or M5 rendering performance (cheaper selection/zoom frames).
+## Active work item: giftable-device foundations
+- [docs/work/giftable-foundations.md](work/giftable-foundations.md), **blocked on user review** of [docs/giftable-device-proposal.md](giftable-device-proposal.md). The user asked to revisit the plan in a fresh session: start by walking them through it.
+- Why: the user will give a handful of devices as gifts and must update them afterwards. Signed OTA with rollback is a core requirement. Wi-Fi and location move from build-time values to a phone setup page served by the device, with no app.
+- Agreed: hosting at `overhead.wesklein.com` with a raw-GitHub fallback and no redirects followed, and the other choices listed in the work file. Open: accept A–C, E, F; the ESP-IDF bootloader build in rootless Docker (toolchain gate; espflash's bundled S3 bootloader has no rollback); key generation on the user's Mac; the user's DNS/Pages steps.
+- On acceptance: decisions 0083–0087, 0004 superseded, PLAN M7, DESIGN update. No code until then.
 
 ## Verification and remaining risks
 <a id="verification"></a>
-- This session (0081/0082): `cargo check --workspace`; firmware host default 37, `element-fetch` 88, `live-utc-boot` 93, `sharp-boot-capture` 83; firmware fmt; release builds of the `live-fetch-faults` image (twice) and `device`, gate passing on all three, each flashed; 72 min + 3.5 h fault-build captures, device app boot capture. Workspace tests and clippy not rerun (firmware-only change).
+- This session (giftable proposal, docs only): no Rust checks rerun because no code changed; local links checked; `git diff --check`. Research read pinned crate sources (`esp-bootloader-esp-idf` 0.6.0 OTA, `esp-radio` access-point mode), espflash's bootloader manifest, and TLS/HTTP probes of the Pages and raw-GitHub hosts.
+- Previous session (0081/0082): `cargo check --workspace`; firmware host default 37, `element-fetch` 88, `live-utc-boot` 93, `sharp-boot-capture` 83; firmware fmt; release builds of the `live-fetch-faults` image (twice) and `device`, gate passing on all three, each flashed; 72 min + 3.5 h fault-build captures, device app boot capture. Workspace tests and clippy not rerun (firmware-only change).
 - Earlier session (KoD, 0080): `cargo check --workspace`; firmware host default 37, `element-fetch` 88, `live-utc-boot` 90, `sharp-boot-capture` 80; fmt; clippy on `live-fetch-faults` (pre-existing warnings only); release builds of `live-fetch-radar`, `device`, `live-fetch-faults`, gate passing on the two flashed; 5 h fault-build capture; device app boot capture. Workspace tests not rerun (firmware-only change).
 - Earlier session (persistence): `cargo check --workspace`; firmware host default 30, `element-fetch` 80, `live-utc-boot` 82, `sharp-boot-capture` 72; release builds of `live-fetch-radar`, `device`, `live-fetch-faults`, gate passing on the flashed two; clippy on `live-fetch-radar` (pre-existing `deref_addrof` only); four diagnostic runs and the device app on the board; user reset check. Workspace tests not rerun (firmware-only change).
 - Earlier session (soak): `cargo check --workspace`; firmware host default 30, `element-fetch` 66, `live-utc-boot` 82, `sharp-boot-capture` 72; release builds of `live-fetch-radar` and `device`, gate passing on both, both flashed; 24 h UART capture; user feel pass. Workspace tests not rerun (firmware-only change). No clippy run.

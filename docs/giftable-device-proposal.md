@@ -1,6 +1,6 @@
 # Giftable device: signed updates, setup page and fixed foundations — proposal
 
-Status: **proposed 2026-11-07, awaiting the user's review.** Nothing here is
+Status: **proposed 2026-11-07, awaiting the user's review in a fresh session** (the user asked to revisit it there). Section D's addresses are agreed; A–C, E and F still need review. Nothing here is
 implemented or authorized until accepted. On acceptance it becomes decisions
 0083–0087 (listed at the end) and a new PLAN milestone, M7.
 
@@ -28,6 +28,10 @@ device, with no app. Location is entered as coordinates. The signing key lives
 on the user's Mac with an offline backup, and signing is done locally. Updates
 are checked at the element refresh and installed while the device is idle.
 The user's board follows a `beta` channel and the gifts follow `stable`.
+Updates are served from `overhead.wesklein.com`, with a raw-GitHub fallback (D).
+There is no companion app: one would replace only F, at the cost of iOS
+distribution and years of upkeep, and Bluetooth setup could still arrive
+later as a signed update.
 There is no gift date, and the units are "a handful".
 
 ## What was checked (2026-11-07, from devbox)
@@ -159,25 +163,42 @@ All gift units use the same module as the current board, an ESP32-S3 N8R8
   `verify_strict`: it is the most reviewed, and its tables fit in flash. This
   is a dependency added with this reason given, per AGENTS.md.
 
-### D. Hosting and delivery (manifest location fixed)
-- **Host.** GitHub Pages for this repo: `https://chachoblow.github.io/overhead/`
-  with `ota/<channel>/manifest.json` and `ota/images/<build>.bin`, published
-  from a `pages` branch that holds only signed release files. It is one host,
-  with no redirects or tokens, and it is static.
-  - Moving the host later means shipping, under the old host, a release that
-    points elsewhere. The manifest path is therefore one of the fixed items.
-  - Publishing Pages is an outward-facing step and needs the user's approval
-    when it happens.
-- **Certificate roots.**
-  - Ship several roots per host: for Pages, ISRG Root X1 and ISRG Root YR (and
-    X2 if the chain allows); for CelesTrak, 0071's two Sectigo/USERTrust roots.
-  - Root bundles are ordinary app content, renewed by updates.
-  - The risk is a host changing CA while a device is offline for longer than a
-    release cycle.
+### D. Hosting and delivery (addresses fixed; agreed in conversation 2026-11-07)
+- **Addresses, tried in order.** The firmware holds a short list. Any update
+  can change it, as long as one current address still works when that update
+  ships.
+  1. **Main:** `https://overhead.wesklein.com/ota/<channel>/manifest.json`,
+     with images at `…/ota/images/<build>.bin`. This is the `overhead` repo's
+     GitHub Pages site, published from a `pages` branch that holds only signed
+     release files, with `overhead.wesklein.com` (a CNAME to
+     `chachoblow.github.io`) as its own custom domain. A repo-level custom
+     domain replaces the redirect to the account's site domain. It can move to
+     another host by changing DNS, with no firmware change. The same site may
+     later host recipient pages (help, a coordinates helper, recovery).
+  2. **Fallback:** `https://raw.githubusercontent.com/chachoblow/overhead/pages/ota/<channel>/manifest.json`
+     (and images alongside). Checked from devbox: no redirect, TLS 1.2,
+     `Content-Length` over HTTP/1.0, the same Let's Encrypt/ISRG chain. It
+     depends on the account and repo name, not the domain, so one lapse
+     doesn't strand devices. GitHub rate-limits heavy raw use; a handful of
+     devices every 8 hours, and only on main-address failure, is far below it.
+- **No redirects.** The device never follows a redirect for updates. A 3xx
+  counts as a failed check, and it tries the next address. The signature, not
+  the host, decides what is installed.
+- **Checklist items that come with the addresses.**
+  - Keep `wesklein.com` registered with auto-renewal, and verify it on GitHub
+    (profile → Pages → verified domains).
+  - After any domain move, keep the old domain serving files for a long
+    time: offline devices only move when they next check, and nothing reports
+    which have.
+  - Never rename the `chachoblow` account or the `overhead` repo, or make the
+    repo private, without first shipping an update that changes the fallback.
+- **Certificate roots.** ISRG Root X1 and ISRG Root YR for both addresses (X2
+  if the chain allows), and 0071's two Sectigo/USERTrust roots for CelesTrak.
+  Root bundles are ordinary app content, renewed by updates. The risk is a
+  host changing CA while a device is offline for longer than a release cycle.
 - **When to check.**
   - The device checks its channel manifest after each successful element
-    refresh (every 8 hours, 0075), using the same TLS stack: one more fetch
-    from a second host.
+    refresh (every 8 hours, 0075), using the same TLS stack.
   - If an update is available, it installs when nobody has turned the knob or
     pressed BOOT for 2 minutes.
   - During the install it shows `UPDATING n%`, since flash erase and write
@@ -300,8 +321,15 @@ a recurrence on any board blocks gift readiness.
    the v6.1 release, with nothing installed on the host, and commit the
    binary, sdkconfig and hash. The alternative is installing ESP-IDF on your
    Mac.
-3. **Turn on GitHub Pages** for `chachoblow/overhead` from a `pages` branch.
-   This is outward-facing, and I'd ask again just before doing it.
+3. **Hosting setup (your steps; I ask again before anything is published).**
+   - Add `overhead` CNAME `chachoblow.github.io` at your registrar.
+   - Turn on Pages for `chachoblow/overhead` from a `pages` branch, with
+     custom domain `overhead.wesklein.com` and Enforce HTTPS.
+   - Verify `wesklein.com` on GitHub.
+   - Separately, and not part of this work, your personal site seemed down
+     on 2026-11-07: `www.wesklein.com` had a CNAME to `chachowblow.github.io`
+     (an extra "w", which you confirmed was an error), HTTPS to `wesklein.com`
+     timed out, and HTTP gave GitHub's 404.
 4. **Key generation.** I write the tool. You run it on the Mac to make the key
    and its backup, and only the public key comes back into the repo.
 
