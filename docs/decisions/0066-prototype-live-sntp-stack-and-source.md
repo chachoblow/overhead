@@ -37,3 +37,9 @@ plausible with 0065's 20 ppm / 3,600 s, in this home-network setting.
 upgrade. WPA3-only networks are unsupported by this version. The diagnostic is
 not the device app: no trust gate on target, radar integration, element fetch,
 persistence, reconnection policy or production cadence follows.
+
+## Note — 2026-11-07: NIST fallback renews
+
+`time.nist.gov` answers with VN=3, which 0064 rejected; since
+[0081](0081-sntp-accept-version-3-replies.md) the screen accepts it, so the
+fallback renews UTC. Sources and order are unchanged.

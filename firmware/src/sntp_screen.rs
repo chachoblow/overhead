@@ -17,6 +17,7 @@ pub struct ScreenedObservation {
 }
 
 /// A client-mode (3), version-4 request whose transmit field carries `nonce`.
+/// Replies may be VN 3 or 4 (0081).
 pub fn request(nonce: u64) -> [u8; HEADER_LEN] {
     let mut packet = [0u8; HEADER_LEN];
     packet[0] = (4 << 3) | 3;
@@ -169,7 +170,9 @@ pub fn screen(
     }
     *pending = None;
     let (li, vn, mode, stratum) = (reply[0] >> 6, (reply[0] >> 3) & 7, reply[0] & 7, reply[1]);
-    if vn != 4 || mode != 4 {
+    // 0081: NIST answers VN=4 requests with VN=3; the fields read here are
+    // identical in v3 (RFC 1305) and v4 (RFC 5905).
+    if !(3..=4).contains(&vn) || mode != 4 {
         return I(Ignored::BadVersionOrMode);
     }
     if stratum == 0 {
@@ -342,17 +345,46 @@ mod tests {
             screen(&mut pending(), &reply(2, 2, t2, t3), at, 0),
             SntpOutcome::LeapPending
         );
-        let mut v3 = reply(0, 2, t2, t3);
-        v3[0] = (3 << 3) | 4;
-        assert_eq!(
-            screen(&mut pending(), &v3, at, 0),
-            SntpOutcome::Ignored(Ignored::BadVersionOrMode)
-        );
+        for vn in [0u8, 1, 2, 5, 7] {
+            let mut other = reply(0, 2, t2, t3);
+            other[0] = (vn << 3) | 4;
+            assert_eq!(
+                screen(&mut pending(), &other, at, 0),
+                SntpOutcome::Ignored(Ignored::BadVersionOrMode),
+                "VN {vn}"
+            );
+        }
         let mut broadcast = reply(0, 2, t2, t3);
         broadcast[0] = (4 << 3) | 5;
         assert_eq!(
             screen(&mut pending(), &broadcast, at, 0),
             SntpOutcome::Ignored(Ignored::BadVersionOrMode)
+        );
+    }
+
+    #[test]
+    fn version_3_reply_is_screened_like_version_4() {
+        // 0081: time.nist.gov answers a VN=4 request with VN=3.
+        let (t2, t3) = (ntp(base_us()), ntp(base_us() + 4_000));
+        let v4 = reply(0, 1, t2, t3);
+        let mut v3 = v4;
+        v3[0] = (3 << 3) | 4;
+        let a = screen(&mut pending(), &v4, 1_040_000, 500);
+        assert!(matches!(a, SntpOutcome::Observation(_)));
+        assert_eq!(screen(&mut pending(), &v3, 1_040_000, 500), a);
+        // Status fields keep their meaning in v3.
+        let mut kod = reply(0, 0, t2, t3);
+        kod[0] = (3 << 3) | 4;
+        kod[12..16].copy_from_slice(b"RATE");
+        assert_eq!(
+            screen(&mut pending(), &kod, 1_040_000, 0),
+            SntpOutcome::KissOfDeath(*b"RATE")
+        );
+        let mut leap = reply(1, 1, t2, t3);
+        leap[0] = (1 << 6) | (3 << 3) | 4;
+        assert_eq!(
+            screen(&mut pending(), &leap, 1_040_000, 0),
+            SntpOutcome::LeapPending
         );
     }
 

@@ -43,3 +43,8 @@ benign-network trust model.
 No drift bound `D`, holdover `H`, measured `C`, source selection (including
 non-smearing policy), dependency or live integration follows. The ≤100 ms target
 remains undemonstrated.
+
+## Note — 2026-11-07: version-3 replies accepted
+
+[0081](0081-sntp-accept-version-3-replies.md) amends the screen: a reply
+with VN 3 or 4 passes; other versions and modes are still ignored.
