@@ -50,18 +50,34 @@ that build again. Panics reset; a hung loop is reset by a hardware watchdog.
       `espressif/idf:v6.1`), binary + sdkconfig + IDF commit + image digest +
       hash committed; segments match espflash's bundled one (dram2 ok).
 - [x] 0083 partition table written (`firmware/partitions.csv`).
-- [ ] Flash device app with the new bootloader + table; confirm boot, `dram2`
-      heap, element store at the new offset.
+- [x] Flashed drill build 1 by USB (bootloader + 0083 table + erased
+      otadata): boot normal, settings seeded beta, one CelesTrak fetch,
+      stored at the new offset.
+- [x] Update 1 → 2 from the dev host: 20 s install, probation, all five
+      checks at 13 s, `VALID`.
+- [x] Drill panic (build 4): panicked on probation → reset → bootloader
+      aborted → build 3, `failed_build=4`, next check `offer=Failed`.
+- [x] Drill hang (build 5): executor stopped after first frame → RWDT reset
+      (`RTCWDT_RTC_RST`) → build 3, `failed_build=5`.
+- [ ] Drill no-manifest (build 6), bad signature, cut download, power cut.
 - [x] `overhead-update` crate (no_std): manifest, canonical signed bytes,
       ed25519-dalek 3.0.0 `verify_strict`, streaming SHA-256, offer rules.
 - [x] `overhead-release` in tools/: keygen, pubkey, sign, verify.
 - [x] Settings record (`settings_store.rs`, format 1: channel, failed and
       pending build), `ota_health.rs` (boot decision, health), `otadata.rs`
       (own IDF-compatible entries), render `draw_updating`.
-- [ ] Device: reset on panic, hardware watchdog, health check (PendingVerify →
-      Valid/Invalid within 10 min), manifest check after each refresh, stream
-      to inactive slot, 2-min idle gate, `UPDATING n%`, activate and reset.
-- [ ] Dev host for drills (devbox HTTP server, dev feature, test key).
+- [x] Device (`firmware/src/live_ota.rs`, child of `live_radar`): reset on
+      panic, RWDT 20 s fed by the display loop while the net loop beats,
+      health check, manifest check after refresh / on probation, streamed
+      install to the other slot, 2-min idle gate, `UPDATING n%`; dram2 heap
+      unconditional. Builds: device, live-fetch-radar, live-fetch-faults.
+- [x] Dev host: `firmware/ota_dev_server.py` (HTTP/1.0, `--cut-after`),
+      features `ota-dev` (`OTA_DEV_HOST`, `OTA_DEV_PUBLIC_KEY`,
+      `OTA_CHECK_MINUTES`) and `ota-drill` (`OTA_DRILL`). Drill keys in
+      ignored `firmware/target/ota-dev/` (dev.pub 99a1c523…, other.pub
+      790288ff…). Helper used: build with `OVERHEAD_BUILD=N`, `OTA_CHANNEL=beta`,
+      `OTA_DEV_HOST=192.168.4.29:8765`, `OTA_CHECK_MINUTES=2`; images
+      `firmware/target/ota-dev/N.{elf,bin}`, gated.
 - [ ] Brick drill items on the board.
 - [ ] Real key + `pages` branch + `beta` update on the board (gates above).
 - [ ] Promote: decisions notes, firmware README, PLAN, HANDOFF, PROGRESS.
@@ -86,5 +102,12 @@ that build again. Panics reset; a hung loop is reset by a hardware watchdog.
   under `ble-spike`; this item makes it unconditional for runtime images.
 
 ## Verification
+- 2026-11-08 board (devbox `/dev/ttyUSB0`, MAC 80:45:6b:2a:45:08), log
+  `firmware/target/ota-dev/flash1.log` (ignored): see Plan ticks.
+- Build 3 (first panic drill) passed its health check at 13 s before its
+  30 s panic: drills now never confirm themselves and panic on the first
+  loop pass; not a valid drill result.
+- IDF bootloader with erased otadata writes an entry for ota_0 itself: the
+  first USB boot reported `state=Valid`, not `Undefined`.
 
 ## Open questions

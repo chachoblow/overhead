@@ -52,6 +52,7 @@ use crate::{
     element_store::{self, Did, Layout as Slots, Target, Writer},
     fault_plan::Fault,
     frame_stats::{CAUSES, Cause, FrameStats},
+    ota_health::Check,
     knob::{self, Detents},
     live_utc,
     sharp_lines::{Kind, LineSender},
@@ -77,6 +78,7 @@ use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channe
 use embassy_time::{Duration as Wait, Timer, with_timeout};
 use esp_hal::{
     gpio::{Input, InputConfig, Level, Output, OutputConfig, Pull},
+    rtc_cntl::{Rwdt, RwdtStage, RwdtStageAction},
     pcnt::{Pcnt, channel, unit::Unit},
     peripherals::Peripherals,
     rng::{Trng, TrngSource},
@@ -133,6 +135,9 @@ macro_rules! diag {
     };
 }
 
+#[path = "live_ota.rs"]
+mod ota;
+
 const SSID: &str = env!("SSID");
 const PASSWORD: &str = env!("PASSWORD");
 const SERVERS: [&str; 2] = ["time.cloudflare.com", "time.nist.gov"];
@@ -162,8 +167,8 @@ const STAGGER: TimeDelta = TimeDelta::seconds(1);
 /// Certification Authority (0071), NUL-terminated for MbedTLS PEM parsing.
 const ROOTS: &str = concat!(include_str!("../certs/celestrak-roots.pem"), "\0");
 const SERVER_NAME: &core::ffi::CStr = c"celestrak.org";
-/// 0079: the fetched-element partition's label in `partitions.csv`.
-const STORE_LABEL: &str = "elements";
+/// 0086: RWDT timeout; the display loop feeds it every pass (~5 ms).
+const WDT_S: u64 = 20;
 /// The fault build keeps its per-attempt plan: no stored catalogue at boot.
 const PERSIST: bool = !cfg!(feature = "live-fetch-faults");
 /// Pause after each save step (one sector erase or program, interrupts off)
@@ -363,6 +368,26 @@ struct FetchResources {
     response: &'static mut [u8],
     capture: &'static mut [u8],
     store: Option<Store>,
+    /// The one flash handle: elements, settings, otadata and app slots.
+    flash: EspFlash,
+}
+
+impl FetchResources {
+    /// The network pieces an OTA exchange borrows (the response buffer is
+    /// free between element fetches).
+    fn net(&mut self, stack: Stack<'static>) -> (ota::Net<'_>, &mut EspFlash) {
+        (
+            ota::Net {
+                stack,
+                tls: &self.tls,
+                tcp_rx: &mut *self.tcp_rx,
+                tcp_tx: &mut *self.tcp_tx,
+                buf: &mut *self.response,
+                capture: &mut *self.capture,
+            },
+            &mut self.flash,
+        )
+    }
 }
 
 /// esp-storage through the internal bounce buffer.
@@ -398,45 +423,29 @@ impl element_store::Flash for EspFlash {
 
 /// The open `elements` partition and where the next save goes.
 struct Store {
-    flash: EspFlash,
     layout: Slots,
     next: Target,
 }
 
-/// Finds the `elements` data partition; `Err` names why persistence is off.
-fn open_store(
-    flash: esp_hal::peripherals::FLASH<'static>,
-) -> Result<(EspFlash, Slots), &'static str> {
-    use esp_bootloader_esp_idf::partitions::{self, PARTITION_TABLE_MAX_LEN};
-    let mut storage = FlashStorage::new(flash);
-    let bounce = BOUNCE.take();
-    let (offset, len) = {
-        let table = partitions::read_partition_table(
-            &mut storage,
-            &mut bounce.0[..PARTITION_TABLE_MAX_LEN],
-        )
-        .map_err(|_| "partition_table")?;
-        let entry = table
-            .iter()
-            .find(|e| e.raw_type() == 1 && e.label_as_str() == STORE_LABEL)
-            .ok_or("no_elements_partition")?;
-        (entry.offset(), entry.len())
-    };
+/// The `elements` data partition's slots; `Err` names why persistence is off.
+fn open_store(elements: Option<(u32, u32)>) -> Result<Slots, &'static str> {
+    let (offset, len) = elements.ok_or("no_elements_partition")?;
     let layout = Slots::new(offset, len).map_err(|_| "partition_layout")?;
     diag!(
         "STORE partition offset=0x{offset:x} len=0x{len:x} slot_capacity={}",
         layout.capacity()
     );
-    Ok((EspFlash { storage, bounce }, layout))
+    Ok(layout)
 }
 
 /// Loads the newest valid stored copy into `buf` and hands its catalogue to
 /// the display owner; returns the open store and the copy's fetch UTC.
 async fn load_stored(
-    flash: esp_hal::peripherals::FLASH<'static>,
+    flash: &mut EspFlash,
+    elements: Option<(u32, u32)>,
     buf: &mut [u8],
 ) -> (Option<Store>, Option<i64>) {
-    let (mut flash, layout) = match open_store(flash) {
+    let layout = match open_store(elements) {
         Ok(opened) => opened,
         Err(reason) => {
             println!("STORE unavailable reason={reason}; fetching every boot");
@@ -444,7 +453,7 @@ async fn load_stored(
         }
     };
     let started = uptime_us();
-    let report = element_store::load(&mut flash, &layout, buf);
+    let report = element_store::load(flash, &layout, buf);
     let read_ms = (uptime_us() - started) / 1000;
     diag!(
         "STORE scan slot0={:?} slot1={:?} read_ms={read_ms}",
@@ -452,11 +461,7 @@ async fn load_stored(
         report.slots[1]
     );
     let next = report.next_target();
-    let store = Some(Store {
-        flash,
-        layout,
-        next,
-    });
+    let store = Some(Store { layout, next });
     let Some(loaded) = report.loaded else {
         println!(
             "STORE empty slot0={:?} slot1={:?}",
@@ -487,7 +492,7 @@ async fn load_stored(
 
 /// Saves a fetched body, one sector step at a time with the display running
 /// between steps. A failure leaves the previous copy as the newest valid one.
-async fn save(store: &mut Store, body: &[u8], fetched_unix_s: i64) {
+async fn save(store: &mut Store, flash: &mut EspFlash, body: &[u8], fetched_unix_s: i64) {
     let mut writer = match Writer::new(&store.layout, store.next, body, fetched_unix_s) {
         Ok(w) => w,
         Err(e) => {
@@ -501,7 +506,7 @@ async fn save(store: &mut Store, body: &[u8], fetched_unix_s: i64) {
     let (mut erase_max_us, mut write_max_us) = (0u64, 0u64);
     while !writer.done() {
         let t = uptime_us();
-        let result = writer.step(&mut store.flash, body);
+        let result = writer.step(flash, body);
         let took = uptime_us() - t;
         match result {
             Ok(Did::Erase) => erase_max_us = erase_max_us.max(took),
@@ -537,8 +542,8 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
     // atomics, which must not live in PSRAM on the S3.
     esp_alloc::psram_allocator!(p.PSRAM, esp_hal::psram);
     esp_alloc::heap_allocator!(size: HEAP_SIZE);
-    // 0x3FCDB700..0x3FCED710 (73,744 B) is free once the bootloader is done.
-    #[cfg(feature = "ble-spike")]
+    // 0083: 0x3FCDB700..0x3FCED710 (73,744 B) is free once the bootloader
+    // (espflash's or 0086's, same layout) is done.
     esp_alloc::heap_allocator!(#[esp_hal::ram(reclaimed)] size: 72 * 1024);
     // This image's .bss leaves ~21 KiB of CPU0 stack (the fetch-only image
     // had ~65 KiB), so record the written depth through the fetch.
@@ -571,6 +576,26 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
     };
     #[cfg(not(feature = "live-fetch-faults"))]
     let wifi_drop: Option<(u64, u64)> = None;
+
+    // One flash handle for every partition; 0086's boot decision before the
+    // display starts, so probation is known from the first frame.
+    let mut flash = EspFlash {
+        storage: FlashStorage::new(p.FLASH),
+        bounce: BOUNCE.take(),
+    };
+    let parts = match ota::read_parts(&mut flash) {
+        Ok(parts) => parts,
+        Err(e) => panic!("partition table: {e}"),
+    };
+    let mut ota = ota::Ota::boot(&mut flash, &parts);
+    let hang_drill = ota.verifying() && ota::drill() == ota::Drill::Hang;
+    // 0086: RWDT resets the whole chip if the display loop stops feeding it
+    // (the loop also stops feeding when the network loop stalls).
+    let mut wdt = esp_hal::rtc_cntl::Rtc::new(p.RTC_TIMER).rwdt;
+    wdt.set_stage_action(RwdtStage::Stage0, RwdtStageAction::ResetSystem);
+    wdt.set_timeout(RwdtStage::Stage0, esp_hal::time::Duration::from_secs(WDT_S));
+    wdt.enable();
+    ota::NET_BEAT.store(uptime_s() as u32, Ordering::Relaxed);
 
     let cs = Output::new(p.GPIO10, Level::Low, OutputConfig::default());
     let spi = Spi::new(
@@ -625,7 +650,7 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
         _a: knob_a,
         _b: knob_b,
     };
-    spawner.spawn(display(spi, cs, observer, knob).unwrap());
+    spawner.spawn(display(spi, cs, observer, knob, wdt, hang_drill).unwrap());
 
     // Entropy for TLS, DHCP and SNTP nonces: keep the TRNG source alive.
     let _trng_source = TrngSource::new(p.RNG, p.ADC1);
@@ -659,7 +684,7 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
     // load buffer for the stored copy (0079), before Wi-Fi is up.
     let response = alloc::vec![0u8; element_fetch::MAX_RESPONSE].leak();
     let (store, mut stored_at) = if PERSIST {
-        load_stored(p.FLASH, response).await
+        load_stored(&mut flash, parts.elements, response).await
     } else {
         (None, None)
     };
@@ -679,6 +704,7 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
         response,
         capture: CAPTURE.take(),
         store,
+        flash,
     };
     let mut schedule = Schedule::new(interval_s);
     let mut attempts: u32 = 0;
@@ -691,7 +717,19 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
     let mut latest: Option<ScreenedObservation> = None;
     let mut deferred = false;
     loop {
+        ota::NET_BEAT.store(uptime_s() as u32, Ordering::Relaxed);
         stack.wait_config_up().await;
+        ota::NET_BEAT.store(uptime_s() as u32, Ordering::Relaxed);
+        ota.note(Check::WifiJoined);
+        if ota::FRAME_SHOWN.load(Ordering::Relaxed) {
+            ota.note(Check::Frame);
+        }
+        if ota::CATALOGUE_LOADED.load(Ordering::Relaxed) {
+            ota.note(Check::CatalogueLoaded);
+        }
+        if ota.verifying() && ota::drill() == ota::Drill::Panic {
+            panic!("OTA drill: panic on probation");
+        }
         seq = seq.wrapping_add(1);
         let mut observation = None;
         for (i, server) in SERVERS.into_iter().enumerate() {
@@ -736,6 +774,11 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
                 }
             }
         }
+        let trusted = latest.filter(|o| trust.projection_trusted(*o, uptime_us()));
+        if trusted.is_some() {
+            ota.note(Check::TrustedUtc);
+        }
+        let mut refreshed = false;
         // 0080: the schedule runs on uptime, whether or not a server answered.
         if schedule.due(uptime_s()) {
             match latest.filter(|o| trust.projection_trusted(*o, uptime_us())) {
@@ -748,6 +791,7 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
                         o.uncertainty_us
                     );
                     let outcome = fetch_once(stack, &mut resources, o, attempts).await;
+                    refreshed = outcome == Outcome::Success;
                     let now = uptime_s();
                     let next = schedule.record(now, outcome);
                     println!(
@@ -772,6 +816,18 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
                 None => {}
             }
         }
+        // 0085: check the channel after each refresh (and on probation until
+        // a manifest verifies); install an offer once nobody is using it.
+        if let Some(o) = trusted.filter(|_| refreshed || ota.check_due()) {
+            let (mut net, _) = resources.net(stack);
+            ota.check(&mut net, o).await;
+            ota::NET_BEAT.store(uptime_s() as u32, Ordering::Relaxed);
+        }
+        if let Some(o) = trusted {
+            let (mut net, flash) = resources.net(stack);
+            ota.maybe_install(&mut net, flash, o).await;
+        }
+        ota.poll_health(&mut resources.flash);
         Timer::after(Wait::from_secs(POLL_S)).await;
     }
 }
@@ -845,7 +901,7 @@ async fn fetch_once(
     }
     FETCHING.store(false, Ordering::Relaxed);
     if let (Some(store), Some((body, fetched_unix_s))) = (r.store.as_mut(), to_save) {
-        save(store, &r.response[body], fetched_unix_s).await;
+        save(store, &mut r.flash, &r.response[body], fetched_unix_s).await;
     }
     outcome
 }
@@ -1110,6 +1166,8 @@ async fn display(
     mut cs: Output<'static>,
     observer: GeodeticPosition,
     knob_input: KnobInput,
+    mut wdt: Rwdt,
+    hang_drill: bool,
 ) {
     // Clockwise counts negative on this encoder; clockwise zooms in.
     let mut detents = Detents::new(knob_input.unit.value(), true);
@@ -1144,6 +1202,21 @@ async fn display(
     let (mut loop_max_us, mut fetch_max_us, mut was_fetching) = (0u64, 0u64, false);
     let (mut store_max_us, mut was_storing) = (0u64, false);
     loop {
+        // 0086: feed only while the network loop is alive too.
+        let beat = ota::NET_BEAT.load(Ordering::Relaxed);
+        if (uptime_s() as u32).saturating_sub(beat) < ota::NET_STALL_S {
+            wdt.feed();
+        }
+        if hang_drill && frames > 0 {
+            println!("OTA drill: hanging the executor on probation");
+            loop {
+                core::hint::spin_loop();
+            }
+        }
+        let updating = match ota::UPDATING.load(Ordering::Relaxed) {
+            255 => None,
+            pct => Some(pct),
+        };
         let gap = uptime_us() - last_loop;
         loop_max_us = loop_max_us.max(gap);
         let fetching = FETCHING.load(Ordering::Relaxed);
@@ -1179,6 +1252,7 @@ async fn display(
             }
             let before = app.selected_id();
             app.load_fetched_catalogue(catalogue, fetched_at);
+            ota::CATALOGUE_LOADED.store(true, Ordering::Relaxed);
             cadence.note(Cause::Load);
             loads += 1;
             let c = app.counts();
@@ -1196,6 +1270,7 @@ async fn display(
         let now = uptime_us();
         let presses = boot_capture::take_presses();
         if presses > 0 {
+            ota::LAST_INPUT_S.store(uptime_s() as u32, Ordering::Relaxed);
             let applied = apply_presses(presses, &mut app);
             diag!(
                 "BOOT_CAPTURE drained={presses} applied={applied} uptime_us={now} valid={} selected={:?}",
@@ -1205,6 +1280,7 @@ async fn display(
         }
         let turned = detents.update(knob_input.unit.value());
         if turned != 0 {
+            ota::LAST_INPUT_S.store(uptime_s() as u32, Ordering::Relaxed);
             app.zoom_detents(turned);
             cadence.note(Cause::Knob);
             diag!(
@@ -1264,8 +1340,18 @@ async fn display(
         }
         match gate.next(&mut app, now, retained) {
             LifecycleAction::RenderNoFrame => {
-                overhead_render::draw_cached(screen, &app, Layout::wide(), false, coast, period)
-                    .expect("NO FRAME render");
+                match updating {
+                    Some(pct) => overhead_render::draw_updating(screen, pct),
+                    None => overhead_render::draw_cached(
+                        screen,
+                        &app,
+                        Layout::wide(),
+                        false,
+                        coast,
+                        period,
+                    ),
+                }
+                .expect("NO FRAME render");
                 let phase = gate.next_phase();
                 cs.set_high();
                 let result = sender.send(phase, &screen.pixels, true, |part| spi.write(part));
@@ -1276,6 +1362,7 @@ async fn display(
                 }
                 let done = uptime_us();
                 gate.no_frame_succeeded(done, phase);
+                ota::FRAME_SHOWN.store(true, Ordering::Relaxed);
                 retained = true;
                 println!("LIVE_UTC no_frame_sent uptime_us={done}");
             }
@@ -1289,8 +1376,18 @@ async fn display(
                 let took = uptime_us() - started;
                 update_max_us = update_max_us.max(took);
                 update_boot_max_us = update_boot_max_us.max(took);
-                overhead_render::draw_cached(screen, &app, Layout::wide(), false, coast, period)
-                    .expect("radar render");
+                match updating {
+                    Some(pct) => overhead_render::draw_updating(screen, pct),
+                    None => overhead_render::draw_cached(
+                        screen,
+                        &app,
+                        Layout::wide(),
+                        false,
+                        coast,
+                        period,
+                    ),
+                }
+                .expect("radar render");
                 let phase = gate.next_phase();
                 cs.set_high();
                 let result = sender.send(phase, &screen.pixels, full, |part| spi.write(part));
@@ -1304,6 +1401,7 @@ async fn display(
                 };
                 let done = uptime_us();
                 gate.transfer_succeeded(done, phase, transfer.kind == Kind::Full);
+                ota::FRAME_SHOWN.store(true, Ordering::Relaxed);
                 retained = true;
                 frames += 1;
                 if app.selected_id() != last_selected {

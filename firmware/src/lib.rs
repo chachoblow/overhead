@@ -40,6 +40,8 @@ pub mod ota_health;
 #[cfg(feature = "ota")]
 pub mod otadata;
 #[cfg(feature = "ota")]
+pub mod release_keys;
+#[cfg(feature = "ota")]
 pub mod settings_store;
 pub mod knob;
 #[cfg(feature = "sharp-radar")]

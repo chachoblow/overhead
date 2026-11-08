@@ -56,6 +56,12 @@ live-fetch = ["live-sntp", "element-fetch", "embassy-net/tcp", "esp-alloc/intern
 # 0085/0086: signed manifests, settings record and the health check;
 # host-tested. The runtime (live-fetch-radar and the device app) uses it.
 ota = ["element-fetch", "dep:overhead-update"]
+# Drill-only update source (0086 brick drill): asks the plain-HTTP LAN host
+# `OTA_DEV_HOST` and also trusts `OTA_DEV_PUBLIC_KEY`. Never a release image.
+ota-dev = ["ota"]
+# Brick-drill misbehaviour on probation (`OTA_DRILL` = panic, hang or
+# no-manifest). Never a release image.
+ota-drill = ["ota"]
 # 0074: live-UTC radar with BOOT capture on freshly fetched STATIONS elements
 # (one request per boot, certificate dates checked). Not the device app.
 live-fetch-radar = ["live-utc-boot", "live-fetch", "ota", "dep:esp-storage"]
