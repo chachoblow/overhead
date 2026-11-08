@@ -32,3 +32,12 @@ is accepted for home gifts: reading it needs the board in hand.
 - The settings format is fixed from the first gift; contents grow through new
   format versions.
 - The observer still enters core/render as an input (0004's consequence holds).
+
+## Note — 2026-11-08: formats 1 and 2, Wi-Fi and site in M7 item 1
+
+`firmware/src/settings_store.rs`. Format 1 (channel, failed and pending
+build) shipped first; format 2 adds one Wi-Fi network and the site, and reads
+format 1 (migrated on the board). `pending_build` is an internal field: the
+build an install activated but has not confirmed (0086). Wi-Fi/site and
+`dev-settings` moved from M7 item 2 into item 1 (user, 2026-11-08) because
+the `beta` image is published. `failed_build` keeps only the last failure.

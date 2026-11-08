@@ -366,18 +366,23 @@ connections. Cached elements alone do not enable accurate offline cold boot.
 ## M7 — Giftable device
 A handful of units given as gifts, set up by recipients on an iPhone and
 updated over the air afterwards ([proposal and research](giftable-device-proposal.md)).
-- [ ] **Signed OTA with rollback on the user's board:**
+- [x] **Signed OTA with rollback on the user's board:**
   [0083](decisions/0083-flash-layout-for-updatable-devices.md) layout and
   `dram2` heap, [0086](decisions/0086-bootloader-rollback-and-health-check.md)
   custom bootloader (rootless Docker, `espressif/idf` v6.1), reset on panic,
   watchdog and health check, [0085](decisions/0085-signed-updates-and-release-keys.md)
   manifest, `overhead-release` signing tool (key made by the user on the Mac),
   Pages hosting, and the brick drill. Ends with the board updating itself
-  from `beta`.
+  from `beta`. Done 2026-11-08: all six drills passed; the board installed
+  user-signed release 12 from `beta` on raw GitHub
+  ([evidence](../firmware/README.md#signed-ota-and-rollback-00830086)). The
+  0084 Wi-Fi/site settings and release images without personal data were
+  pulled in here; `overhead.wesklein.com` awaits the user's DNS/Pages setup.
 - [ ] **Settings store and iOS setup app:** [0084](decisions/0084-settings-store.md)
   and [0087](decisions/0087-ios-setup-app-over-ble.md): BLE setup service
-  with passkey pairing, the app in `ios/` on TestFlight for the user, release
-  images with no personal data, factory reset and the info page. Ends with the
+  with passkey pairing, the app in `ios/` on TestFlight for the user
+  (writing the settings record's Wi-Fi/site, done in item 1), bonding keys,
+  factory reset and the info page. Ends with the
   board set up only through the app, then updated over the air with its
   settings intact. BLE coexistence already shown by the
   [spike](../firmware/README.md#ble-coexistence-spike).

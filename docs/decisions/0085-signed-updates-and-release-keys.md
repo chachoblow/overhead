@@ -59,3 +59,22 @@ recovery.
   account or repo or make it private without first shipping a new fallback.
 - A host changing CA while a device is offline longer than a release cycle
   strands it until USB.
+
+## Note — 2026-11-08: implemented; TLS 1.2 cap; key backup
+
+- Signed bytes: a fixed line format rebuilt from the parsed fields
+  (`overhead-update::signed_bytes`, domain `overhead-manifest-v1`), so JSON
+  spacing, key order or extra keys never change what was signed. Manifest
+  format 1 only; a later format is served at a new address.
+- `ed25519-dalek` =3.0.0 (default features off) and `sha2` 0.11. Key 1
+  `961ae46e…92496` (user, 2026-11-08) is the only accepted key.
+- OTA TLS is capped at 1.2: raw.githubusercontent.com negotiates TLS 1.3,
+  whose encrypted certificates the 0074 date check cannot see (release 9
+  failed its health check on the board for this reason and rolled back).
+  If GitHub drops TLS 1.2, devices are stranded until an update changes the
+  rule, as for CelesTrak.
+- The user keeps the private key's only backup in 1Password (synced, not
+  offline as above); accepted 2026-11-08.
+- `pages` is an orphan branch with signed files and a README; build 12 is the
+  first `beta` release. `ota-dev` drill builds use a LAN HTTP host and their
+  own key and are never published.

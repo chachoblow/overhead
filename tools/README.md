@@ -478,3 +478,26 @@ Shared-core tests additionally cover interval ordering and retained typed report
 Synthetic record mutations test catalogue/aggregation policy, not physical accuracy.
 Tests need no Python, network, SDL window, or hardware. Workspace commands are
 in [AGENTS.md](../AGENTS.md).
+
+## `overhead-release`
+
+Signs OTA releases ([0085](../docs/decisions/0085-signed-updates-and-release-keys.md)).
+Run it on the key holder's Mac; the private key never goes to devbox,
+GitHub or the repo (the user keeps its backup in 1Password). Manifest format
+and checks live in the `update/` crate (`overhead-update`), which the
+firmware shares.
+
+```sh
+cargo run -q -p overhead-tools --bin overhead-release -- keygen ~/overhead-release.key
+cargo run -q -p overhead-tools --bin overhead-release -- pubkey ~/overhead-release.key
+cargo run -q -p overhead-tools --bin overhead-release -- \
+  sign ~/overhead-release.key beta 12 0.1.12-beta 12.bin OUT   # [MIN_SETTINGS]
+cargo run -q -p overhead-tools --bin overhead-release -- \
+  verify OUT/ota/beta/manifest.json PUBLIC_HEX OUT/ota/images/12.bin
+```
+
+`keygen` writes 64 hex characters (mode 0600, refuses to overwrite) and prints
+the public key for `firmware/src/release_keys.rs`. `sign` copies the image to
+`OUT/ota/images/BUILD.bin` and writes `OUT/ota/CHANNEL/manifest.json`, then
+checks it with the device's own verification. BUILD must equal the image's
+`OVERHEAD_BUILD`. Release steps: [firmware README](../firmware/README.md#signed-ota-and-rollback-00830086).

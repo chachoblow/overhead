@@ -1536,9 +1536,13 @@ with BOOT cycling. It runs the same runtime
 (`src/live_radar.rs`) as the `live-fetch-radar` diagnostic and its fault build;
 the app prints only the event log (banner, `SNTP_WIFI`, `FETCH_FAILED`,
 `FETCH_SCHEDULE`, `LIVE_FETCH` load/stale/expired, `RADAR first_frame`,
-`LIVE_UTC no_frame_sent`, `SNTP KoD` (0080), `OVERHEAD_DEVICE_FAILED` on panic). It halts
-on panic and never reboots itself. `device` with `live-fetch-faults` does not
-compile.
+`LIVE_UTC no_frame_sent`, `SNTP KoD` (0080), `OVERHEAD_DEVICE_FAILED` on panic,
+and since 0086 the `OTA`/`SETTINGS` lines below). Since
+[0086](../docs/decisions/0086-bootloader-rollback-and-health-check.md) it
+resets on panic (it halted before). `device` with `live-fetch-faults` does not
+compile. **Since 0083–0086 the recipe below is historical**: runtime images
+need the rollback bootloader, the OTA table and `dev-settings` for a local
+build; see [Signed OTA and rollback](#signed-ota-and-rollback-00830086).
 
 ```sh
 # from firmware/, after . "$HOME/export-esp.sh" and the Wi-Fi/site exports above
@@ -1873,6 +1877,100 @@ internal_free_min=` (sampled every 50 ms) `internal_free_now= connected=`.
 
 Not measured: pairing/encryption, long connections, BLE during a refresh
 with a phone connected.
+
+Since 0083 every runtime image adds `dram2` (the spike's 128 KiB static heap
+is unchanged); build the spike with `--features ble-spike,dev-settings`.
+
+## Signed OTA and rollback (0083–0086)
+
+Runtime images (device app, `live-fetch-radar`, its fault build) run on the
+[0083](../docs/decisions/0083-flash-layout-for-updatable-devices.md) table
+(`partitions.csv`: two 3 MiB slots, `otadata`, `settings`, `elements` at
+0x620000) under the [0086](../docs/decisions/0086-bootloader-rollback-and-health-check.md)
+rollback bootloader, with `dram2` as a second internal heap. Code:
+`src/live_ota.rs` (device side, a child of `live_radar`), `src/otadata.rs`
+(IDF `otadata` entries, written directly: `esp-bootloader-esp-idf` 0.6.0's
+`Ota` picks a wrong slot after an erased `otadata`), `src/ota_health.rs`,
+`src/settings_store.rs` (0084 record, format 2: channel, failed/pending
+build, Wi-Fi, site), `src/release_keys.rs`; manifests in the `update/` crate
+([0085](../docs/decisions/0085-signed-updates-and-release-keys.md)); signing
+with [`overhead-release`](../tools/README.md#overhead-release).
+
+**Bootloader.** `bootloader/build.sh` builds `bootloader/bootloader.bin` in
+rootless Docker from `espressif/idf:v6.1` (digest in `image-digest.txt`, IDF
+commit `fff9895c` in `idf-commit.txt`, sdkconfig and sha256 committed);
+`CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y` is the only change from espflash's
+bundled one, whose load segments it matches (so `dram2` stays reclaimable).
+Rebuilding it is a toolchain change: ask first.
+
+**Features.** `dev-settings` (developer only) seeds missing Wi-Fi/site
+settings from `.wifi.env`/`.site.env`; without it an image holds no personal
+data and, on an empty store, waits on `NO FRAME` for setup (`SETTINGS
+unconfigured`). `ota-dev` asks only the plain-HTTP LAN host `OTA_DEV_HOST`
+(`a.b.c.d:port`) and also trusts `OTA_DEV_PUBLIC_KEY`, with `OTA_CHECK_MINUTES`
+for frequent checks; `ota-drill` with `OTA_DRILL=panic|hang|no-manifest`
+misbehaves on probation and never confirms itself. Neither is ever a release.
+Build env: `OVERHEAD_BUILD` (decimal, default 0), `OVERHEAD_VERSION`,
+`OTA_CHANNEL` (`beta`/`stable`, only seeds an empty store; default `stable`).
+
+```sh
+# local device build for the user's board (from firmware/)
+. "$HOME/export-esp.sh"; set -a; . ./.wifi.env; . ./.site.env; set +a
+OTA_CHANNEL=beta cargo build --release --locked --bin overhead-s3-device \
+  --features device,dev-settings
+ELF="$PWD/target/xtensa-esp32s3-none-elf/release/overhead-s3-device"
+espflash save-image --chip esp32s3 --flash-size 8mb --flash-mode dio \
+  --flash-freq 40mhz --partition-table partitions.csv --skip-update-check \
+  "$ELF" target/device.bin
+python3 image_gate.py "$ELF" target/device.bin
+# USB flash: writes ota_0, erases otadata; settings and elements are kept
+timeout 600 espflash flash --port /dev/ttyUSB0 --chip esp32s3 --flash-size 8mb \
+  --flash-mode dio --flash-freq 40mhz --bootloader "$PWD/bootloader/bootloader.bin" \
+  --partition-table "$PWD/partitions.csv" --erase-parts otadata \
+  --non-interactive --skip-update-check --monitor "$ELF" > "$PWD/target/device.log" 2>&1
+```
+
+**Release.** On devbox build without `dev-settings`/`ota-dev`/`ota-drill`,
+with `OVERHEAD_BUILD=N` (larger than every published build) and no Wi-Fi/site
+env; save-image and gate as above; check the `.bin` holds no SSID. The key
+holder copies `N.bin` to the Mac, checks its sha256, runs `overhead-release
+sign KEY beta N VERSION N.bin OUT` and `verify`, and copies `OUT` back. Push
+`OUT/ota/…` to the orphan `pages` branch (signed files and a README only).
+The device checks after each element refresh (8 h) and installs once the knob
+and BOOT have been idle 2 min (`UPDATING n%`).
+
+**Lines.** `OTA boot build= version= slot= state= outcome=Normal|Verify|RolledBack
+channel= failed_build=`; `OTA_HEALTH met=… missing=0x..`, `valid`, `failed …;
+resetting`; `OTA_CHECK source= build= offer=Install|Current|Failed|…` or
+`failed=`/`refused=`; `OTA_INSTALL start|done|failed=`; `OTA_TLS`,
+`OTA_CERT_DATES`, `OTA_HTTP`; `SETTINGS seeded|empty|unconfigured`.
+
+**Drill host.** `python3 ota_dev_server.py ROOT [--port 8765] [--cut-after N]`
+serves an `overhead-release sign` output over HTTP/1.0 (exact
+`Content-Length`) on 0.0.0.0, and with `--cut-after` closes image downloads
+after N bytes. Drill keys live in the ignored `target/ota-dev/`.
+
+**On-board evidence, 2026-11-08** (devbox, `/dev/ttyUSB0`, MAC
+`80:45:6b:2a:45:08`; `ota-dev` drill builds 1–8 on the LAN host, release
+builds 9–12; each image gated):
+
+| Check | Result |
+|---|---|
+| First USB flash (build 1) | bootloader/table/erased otadata; boot normal (IDF wrote an `ota_0` entry, `state=Valid`), settings seeded, one fetch, stored at 0x620000 |
+| Update 1 → 2 | 20 s install, probation, five checks at 13 s, `VALID` |
+| Panic drill (4) | panic on probation → bootloader aborted it → build 3, `failed_build=4`, then `offer=Failed` |
+| Hang drill (5) | executor stopped after first frame → `RTCWDT_RTC_RST` → build 3, `failed_build=5` |
+| No manifest (6) | 404 each poll → health failed at 10 min (`missing=0x10`) → `INVALID` → build 3 |
+| Bad signature (7, other key) | `refused=signature`, no image request |
+| Cut download | `--cut-after 700000`, then a server restart mid-transfer: `failed=truncated` twice, nothing activated, retried |
+| Settings 1 → 2 (build 7) | format-1 record read, Wi-Fi/site seeded, `VALID` |
+| Power cut (8) | user pulled USB mid-download → build 7, user saw the radar; next check reinstalled 8, `VALID` |
+| Release 9 (bridge) | `OTA_CERT_DATES NoCertificate` on raw GitHub (TLS 1.3 hides certificates) → health failed → rolled back to 8; fixed by capping OTA TLS at 1.2 |
+| Release 11 (bridge) → 12 | 11 verified the user-signed `beta` manifest on raw GitHub (Pages DNS not set: `failed=dns`, fallback), `VALID`; installed 12 from raw GitHub (37.5 s); 12 `VALID` |
+
+The board was left on release build 12 (`beta`, Wi-Fi/site from settings).
+Not shown on the board: `overhead.wesklein.com` (no CNAME yet), BLE with OTA,
+a >1 release cycle offline, the `stable` channel.
 
 ## Hardware and permission
 

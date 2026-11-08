@@ -39,3 +39,11 @@ example a city list).
   needs a new layout, which only USB can install.
 - The custom bootloader ([0086](0086-bootloader-rollback-and-health-check.md))
   must agree with `otadata` and the `dram2` reclaim.
+
+## Note — 2026-11-08: implemented
+
+`firmware/partitions.csv` holds this table and every runtime image adds
+`dram2`. A USB flash with `--erase-parts otadata` boots `ota_0`; the IDF
+bootloader then writes an `ota_0` entry itself (first boot reported `Valid`).
+The first flash of the layout cleared the stored elements as expected.
+[Evidence](../../firmware/README.md#signed-ota-and-rollback-00830086).

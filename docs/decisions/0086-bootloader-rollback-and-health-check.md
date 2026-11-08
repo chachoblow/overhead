@@ -39,3 +39,16 @@ retries with the next build.
   diagnostics may still halt.
 - The toolchain gains a Docker-built bootloader artefact; rebuilding it is a
   toolchain change.
+
+## Note — 2026-11-08: implemented; brick drill passed
+
+Bootloader built by `firmware/bootloader/build.sh` (IDF v6.1 `fff9895c`,
+sha256 `d86e62bf…`). The firmware writes `otadata` itself
+(`firmware/src/otadata.rs`): `esp-bootloader-esp-idf` 0.6.0's `Ota` gives
+sequence 0 for `ota_1` after an erased `otadata`. Rollback is detected from
+settings `pending_build` (saved just before activation). RWDT (20 s) is fed
+by the display loop only while the network loop beats (15 min). A new image
+checks its manifest as soon as it has trusted UTC rather than waiting for the
+8 h refresh. Drill images never confirm themselves. All six drills passed on
+the user's board, plus a real defect (release 9, TLS 1.3) rolled back.
+[Evidence](../../firmware/README.md#signed-ota-and-rollback-00830086).
