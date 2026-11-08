@@ -40,7 +40,9 @@ that build again. Panics reset; a hung loop is reset by a hardware watchdog.
   a release image): asked 2026-11-08; default yes (recommended; "start it").
 - Hosting: raw GitHub fallback first, then the custom domain once the user's
   DNS/Pages/verification is done: asked 2026-11-08; default as recommended.
-- First push to `pages`: ask before it (not yet asked).
+- Push to public `pages` (orphan, signed release files only): asked
+  2026-11-08, answered: yes (builds 9 and 10).
+- Wi-Fi/site settings pulled into this item: asked 2026-11-08, answered: keep.
 - User at the Mac: generate the release key with `overhead-release`, sign the
   final `beta` manifest. Batched at the end.
 - Power cut mid-install drill: user pulls USB on cue. Batched at the end.
@@ -120,8 +122,5 @@ that build again. Panics reset; a hung loop is reset by a hardware watchdog.
   first USB boot reported `state=Valid`, not `Undefined`.
 
 ## Open questions
-- Scope: Wi-Fi/site settings fields + `dev-settings` (PLAN lists "release
-  images with no personal data" under item 2) were pulled into this item,
-  since the `beta` image is published. Default taken; confirm at the gate.
 - `failed_build` remembers only the last failure (0084 wording): after 4 and
   then 5 failed, a manifest still offering 4 would be retried once more.
