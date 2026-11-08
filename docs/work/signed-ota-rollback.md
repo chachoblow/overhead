@@ -1,5 +1,5 @@
 # The user's board updates itself from signed `beta` releases and rolls back bad ones
-Status: blocked: user at the board (power-cut drill), release key from the Mac, approval to push `pages`
+Status: blocked: release public key from the user's Mac (`overhead-release keygen`)
 Started: 2026-11-08. Scope: PLAN M7 item 1; decisions
 [0083](../decisions/0083-flash-layout-for-updatable-devices.md),
 [0084](../decisions/0084-settings-store.md) (failed-build field only),
@@ -70,7 +70,10 @@ that build again. Panics reset; a hung loop is reset by a hardware watchdog.
       build 3 kept running and retried.
 - [x] Build 7 (settings format 2) installed over 3: read format 1, seeded
       Wi-Fi/site from dev-settings, joined Wi-Fi from settings, `VALID`.
-- [ ] Drill power cut (build 8 served; user pulls USB during UPDATING).
+- [x] Drill power cut (build 8): user pulled USB at ~09:59 during the
+      download (server: connection reset by peer, no SENT) → board back on
+      build 7, user saw the radar; next check reinstalled 8 (31.7 s) → `VALID`.
+      All six 0086 drills passed.
 - [x] `overhead-update` crate (no_std): manifest, canonical signed bytes,
       ed25519-dalek 3.0.0 `verify_strict`, streaming SHA-256, offer rules.
 - [x] `overhead-release` in tools/: keygen, pubkey, sign, verify.
