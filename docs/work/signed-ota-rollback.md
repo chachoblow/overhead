@@ -1,5 +1,5 @@
 # The user's board updates itself from signed `beta` releases and rolls back bad ones
-Status: active
+Status: blocked: user at the board (power-cut drill), release key from the Mac, approval to push `pages`
 Started: 2026-11-08. Scope: PLAN M7 item 1; decisions
 [0083](../decisions/0083-flash-layout-for-updatable-devices.md),
 [0084](../decisions/0084-settings-store.md) (failed-build field only),
