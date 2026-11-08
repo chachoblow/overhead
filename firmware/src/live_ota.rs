@@ -236,6 +236,7 @@ impl Ota {
         };
         let (boot, c) = ota_health::on_boot(BUILD, state, &mut settings);
         changed |= c;
+        changed |= seed_dev_settings(&mut settings);
         let mut ota = Self {
             store,
             settings,
@@ -260,6 +261,10 @@ impl Ota {
             drill()
         );
         ota
+    }
+
+    pub fn settings(&self) -> &Settings {
+        &self.settings
     }
 
     fn save(&mut self, flash: &mut EspFlash) {
@@ -458,6 +463,44 @@ impl Ota {
             reset();
         }
     }
+}
+
+/// 0084 `dev-settings`: fills a missing Wi-Fi or site from the ignored
+/// `.wifi.env`/`.site.env` (personal data; never in a published image).
+/// Returns whether anything was filled.
+#[cfg(feature = "dev-settings")]
+fn seed_dev_settings(s: &mut Settings) -> bool {
+    let mut changed = false;
+    if s.wifi.is_none() {
+        s.wifi = settings_store::Wifi::new(env!("SSID"), env!("PASSWORD"));
+        assert!(s.wifi.is_some(), "dev-settings: SSID/PASSWORD out of range");
+        changed = true;
+    }
+    if s.site.is_none() {
+        let p = match crate::site::parse(
+            env!("SITE_LAT_DEG"),
+            env!("SITE_LON_DEG"),
+            option_env!("SITE_ALT_M"),
+        ) {
+            Ok(p) => p,
+            Err(e) => panic!("dev-settings site: {e}"),
+        };
+        s.site = Some(settings_store::Site {
+            lat_deg: p.latitude_rad.to_degrees(),
+            lon_deg: p.longitude_rad.to_degrees(),
+            alt_m: p.altitude_km * 1000.0,
+        });
+        changed = true;
+    }
+    if changed {
+        println!("SETTINGS seeded from dev-settings");
+    }
+    changed
+}
+
+#[cfg(not(feature = "dev-settings"))]
+fn seed_dev_settings(_: &mut Settings) -> bool {
+    false
 }
 
 pub fn reset() -> ! {

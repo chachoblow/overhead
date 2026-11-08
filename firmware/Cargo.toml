@@ -56,6 +56,9 @@ live-fetch = ["live-sntp", "element-fetch", "embassy-net/tcp", "esp-alloc/intern
 # 0085/0086: signed manifests, settings record and the health check;
 # host-tested. The runtime (live-fetch-radar and the device app) uses it.
 ota = ["element-fetch", "dep:overhead-update"]
+# 0084 developer-only: seed missing Wi-Fi/site settings from the ignored
+# `.wifi.env`/`.site.env`. Never in a published (release) image.
+dev-settings = ["ota"]
 # Drill-only update source (0086 brick drill): asks the plain-HTTP LAN host
 # `OTA_DEV_HOST` and also trusts `OTA_DEV_PUBLIC_KEY`. Never a release image.
 ota-dev = ["ota"]

@@ -26,9 +26,9 @@ that build again. Panics reset; a hung loop is reset by a hardware watchdog.
 - `cargo check --workspace`, firmware host tests, release builds gated.
 
 ## Boundaries
-- Not item 2: no BLE, no setup app, no settings UI; Wi-Fi and site stay
-  build-time (`.wifi.env`/`.site.env`). Only the settings fields this item
-  needs are written, in a format item 2 extends.
+- Not item 2: no BLE, no setup app, no settings UI. Wi-Fi and site moved
+  into the settings record (format 2) with `dev-settings` seeding, because a
+  published image must carry no personal data (see Open questions).
 - No `stable` channel, no gift images, no Secure Boot or flash encryption.
 - The release private key never touches devbox, GitHub or the repo.
 - Pushing anything to the public `pages` branch: ask first (HANDOFF).
@@ -59,7 +59,16 @@ that build again. Panics reset; a hung loop is reset by a hardware watchdog.
       aborted → build 3, `failed_build=4`, next check `offer=Failed`.
 - [x] Drill hang (build 5): executor stopped after first frame → RWDT reset
       (`RTCWDT_RTC_RST`) → build 3, `failed_build=5`.
-- [ ] Drill no-manifest (build 6), bad signature, cut download, power cut.
+- [x] Drill no-manifest (build 6): 404 each poll, health failed at 10 min
+      (`missing=0x10`) → `INVALID` → build 3, `failed_build=6`.
+- [x] Drill bad signature (build 7 signed with other.key): `refused=signature`,
+      no image request.
+- [x] Drill cut download (server `--cut-after 700000`, then a server
+      restart mid-transfer): `failed=truncated` twice, nothing activated,
+      build 3 kept running and retried.
+- [x] Build 7 (settings format 2) installed over 3: read format 1, seeded
+      Wi-Fi/site from dev-settings, joined Wi-Fi from settings, `VALID`.
+- [ ] Drill power cut (build 8 served; user pulls USB during UPDATING).
 - [x] `overhead-update` crate (no_std): manifest, canonical signed bytes,
       ed25519-dalek 3.0.0 `verify_strict`, streaming SHA-256, offer rules.
 - [x] `overhead-release` in tools/: keygen, pubkey, sign, verify.
@@ -111,3 +120,8 @@ that build again. Panics reset; a hung loop is reset by a hardware watchdog.
   first USB boot reported `state=Valid`, not `Undefined`.
 
 ## Open questions
+- Scope: Wi-Fi/site settings fields + `dev-settings` (PLAN lists "release
+  images with no personal data" under item 2) were pulled into this item,
+  since the `beta` image is published. Default taken; confirm at the gate.
+- `failed_build` remembers only the last failure (0084 wording): after 4 and
+  then 5 failed, a manifest still offering 4 would be retried once more.

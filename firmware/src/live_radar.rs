@@ -56,7 +56,7 @@ use crate::{
     knob::{self, Detents},
     live_utc,
     sharp_lines::{Kind, LineSender},
-    site,
+    settings_store,
     sntp_policy::{self, Kiss, Policy},
     sntp_screen::{self, ScreenedObservation, SntpOutcome, SntpRequest},
     stack_watermark, tls_dates,
@@ -138,8 +138,6 @@ macro_rules! diag {
 #[path = "live_ota.rs"]
 mod ota;
 
-const SSID: &str = env!("SSID");
-const PASSWORD: &str = env!("PASSWORD");
 const SERVERS: [&str; 2] = ["time.cloudflare.com", "time.nist.gov"];
 const POLL_S: u64 = sntp_policy::POLL_S;
 const REPLY_TIMEOUT: Wait = Wait::from_secs(5);
@@ -346,16 +344,12 @@ fn uptime_s() -> u64 {
     uptime_us() / 1_000_000
 }
 
-/// Home site from the build environment; a bad value stops the boot before
-/// any request rather than tracking from the wrong place.
-fn home_site() -> GeodeticPosition {
-    match site::parse(
-        env!("SITE_LAT_DEG"),
-        env!("SITE_LON_DEG"),
-        option_env!("SITE_ALT_M"),
-    ) {
-        Ok(site) => site,
-        Err(e) => panic!("site configuration: {e}"),
+/// The observer from settings (0084; checked when decoded or seeded).
+fn observer_from(s: settings_store::Site) -> GeodeticPosition {
+    GeodeticPosition {
+        latitude_rad: s.lat_deg.to_radians(),
+        longitude_rad: s.lon_deg.to_radians(),
+        altitude_km: s.alt_m / 1000.0,
     }
 }
 
@@ -552,7 +546,6 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
     let painted = unsafe { stack_watermark::paint() };
     let timg0 = TimerGroup::new(p.TIMG0);
     esp_rtos::start(timg0.timer0, p.FROM_CPU_INTR0);
-    let observer = home_site();
     let interval_s = match element_refresh::interval_from_minutes(option_env!("REFRESH_MINUTES")) {
         Ok(s) => s,
         Err(e) => panic!("refresh configuration: {e}"),
@@ -588,6 +581,18 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
         Err(e) => panic!("partition table: {e}"),
     };
     let mut ota = ota::Ota::boot(&mut flash, &parts);
+    // 0084: Wi-Fi and site come from settings. Without both (an image with
+    // no `dev-settings` on an empty store) the device waits for setup (M7
+    // item 2) on `NO FRAME`; it never tracks from a made-up place.
+    let configured = ota.settings().wifi.zip(ota.settings().site);
+    let observer = configured.map_or(
+        GeodeticPosition {
+            latitude_rad: 0.0,
+            longitude_rad: 0.0,
+            altitude_km: 0.0,
+        },
+        |(_, site)| observer_from(site),
+    );
     let hang_drill = ota.verifying() && ota::drill() == ota::Drill::Hang;
     // 0086: RWDT resets the whole chip if the display loop stops feeding it
     // (the loop also stops feeding when the network loop stalls).
@@ -657,11 +662,18 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
     let trng = TRNG.init(Trng::try_new().expect("TRNG"));
     let seed = (u64::from(trng.random()) << 32) | u64::from(trng.random());
 
+    let Some((wifi, _)) = configured else {
+        println!("SETTINGS unconfigured wifi_or_site_missing; waiting for setup");
+        loop {
+            ota::NET_BEAT.store(uptime_s() as u32, Ordering::Relaxed);
+            Timer::after(Wait::from_secs(POLL_S)).await;
+        }
+    };
     let station = Config::Station(
         StationConfig::default()
-            .with_ssid(SSID.try_into().expect("SSID"))
+            .with_ssid(wifi.ssid().try_into().expect("SSID"))
             .with_authentication(AuthenticationMethodConfig::Wpa2Personal(
-                PASSWORD.try_into().expect("PASSWORD"),
+                wifi.passphrase().try_into().expect("PASSWORD"),
             )),
     );
     let controller = WifiController::new(

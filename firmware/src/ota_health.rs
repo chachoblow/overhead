@@ -120,9 +120,9 @@ mod tests {
 
     fn settings(pending: Option<u32>, failed: Option<u32>) -> Settings {
         Settings {
-            channel: Channel::Beta,
             failed_build: failed,
             pending_build: pending,
+            ..Settings::defaults(Channel::Beta)
         }
     }
 
