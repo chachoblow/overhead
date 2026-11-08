@@ -95,7 +95,14 @@ pub fn start(spawner: Spawner, bt: BT<'static>) {
     let mut addr = [m[5], m[4], m[3], m[2], m[1], m[0]];
     addr[5] |= 0xc0;
     spawner.spawn(monitor().unwrap());
-    spawner.spawn(ble(Controller::new(connector), Address::random(addr), name.as_str()).unwrap());
+    spawner.spawn(
+        ble(
+            Controller::new(connector),
+            Address::random(addr),
+            name.as_str(),
+        )
+        .unwrap(),
+    );
 }
 
 #[embassy_executor::task]
@@ -129,17 +136,17 @@ async fn ble(controller: Controller, address: Address, name: &'static str) {
         appearance: &appearance::UNKNOWN,
     }))
     .expect("GATT server");
-    println!(
-        "BLE_READY name={name} internal_free={}",
-        internal_free()
-    );
+    println!("BLE_READY name={name} internal_free={}", internal_free());
     let _ = join(run_host(runner), async {
         loop {
             match advertise(name, &mut peripheral, &server).await {
                 Ok(conn) => {
                     CONNECTED.store(true, Ordering::Relaxed);
                     println!("BLE_CONNECTED internal_free={}", internal_free());
-                    let _ = server.setup.status.set(&server, &HeaplessString::try_from("waiting").unwrap_or_default());
+                    let _ = server.setup.status.set(
+                        &server,
+                        &HeaplessString::try_from("waiting").unwrap_or_default(),
+                    );
                     events(&server, &conn).await;
                     CONNECTED.store(false, Ordering::Relaxed);
                 }

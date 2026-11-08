@@ -143,7 +143,10 @@ pub fn read_parts(flash: &mut EspFlash) -> Result<Parts, &'static str> {
         }
     }
     if let Ok(Some(b)) = table.booted_partition() {
-        p.booted = p.slots.iter().position(|s| *s == Some((b.offset(), b.len())));
+        p.booted = p
+            .slots
+            .iter()
+            .position(|s| *s == Some((b.offset(), b.len())));
     }
     Ok(p)
 }
@@ -226,7 +229,10 @@ impl Ota {
             if let Some(s) = r.loaded {
                 (settings, changed) = (s, false);
             } else {
-                println!("SETTINGS empty slot0={:?} slot1={:?}", r.slots[0], r.slots[1]);
+                println!(
+                    "SETTINGS empty slot0={:?} slot1={:?}",
+                    r.slots[0], r.slots[1]
+                );
             }
         }
         let entries = parts.otadata.map(|at| read_entries(flash, at));
@@ -286,7 +292,11 @@ impl Ota {
             && !h.met(c)
         {
             h.note(c);
-            println!("OTA_HEALTH met={c:?} missing=0x{:02x} uptime_s={}", h.missing(), uptime_s());
+            println!(
+                "OTA_HEALTH met={c:?} missing=0x{:02x} uptime_s={}",
+                h.missing(),
+                uptime_s()
+            );
         }
     }
 
@@ -319,7 +329,10 @@ impl Ota {
                 self.boot = Boot::Normal;
                 self.settings.pending_build = None;
                 self.save(flash);
-                println!("OTA_HEALTH valid build={BUILD} otadata_ok={ok} uptime_s={}", uptime_s());
+                println!(
+                    "OTA_HEALTH valid build={BUILD} otadata_ok={ok} uptime_s={}",
+                    uptime_s()
+                );
             }
             Verdict::Failed => {
                 let ok = self.mark(flash, otadata::state::INVALID);
@@ -401,7 +414,9 @@ impl Ota {
         if self.verifying() {
             return;
         }
-        let Some((m, src)) = self.offer.take() else { return };
+        let Some((m, src)) = self.offer.take() else {
+            return;
+        };
         let idle = (uptime_s() as u32).saturating_sub(LAST_INPUT_S.load(Ordering::Relaxed));
         if idle < IDLE_S {
             self.offer = Some((m, src));
@@ -417,7 +432,10 @@ impl Ota {
             return;
         };
         if m.length > len {
-            println!("OTA_INSTALL refused=too_large length={} slot={len}", m.length);
+            println!(
+                "OTA_INSTALL refused=too_large length={} slot={len}",
+                m.length
+            );
             return;
         }
         let src = &sources()[src];
@@ -547,7 +565,9 @@ fn sources() -> [Source; 2] {
 /// `OTA_DEV_HOST` = `a.b.c.d:port` on the LAN; nothing else is asked.
 #[cfg(feature = "ota-dev")]
 fn sources() -> [Source; 1] {
-    let (addr, port) = env!("OTA_DEV_HOST").split_once(':').expect("OTA_DEV_HOST a.b.c.d:port");
+    let (addr, port) = env!("OTA_DEV_HOST")
+        .split_once(':')
+        .expect("OTA_DEV_HOST a.b.c.d:port");
     let mut ip = [0u8; 4];
     for (o, part) in ip.iter_mut().zip(addr.split('.')) {
         *o = part.parse().expect("OTA_DEV_HOST address");
@@ -666,9 +686,12 @@ impl Net<'_> {
         flash: &mut EspFlash,
     ) -> Result<(), &'static str> {
         let mut sink = |chunk: &[u8]| writer.push(flash, chunk);
-        with_timeout(IMAGE_TIMEOUT, self.exchange(src, path, utc, length, &mut sink))
-            .await
-            .map_err(|_| "timeout")?
+        with_timeout(
+            IMAGE_TIMEOUT,
+            self.exchange(src, path, utc, length, &mut sink),
+        )
+        .await
+        .map_err(|_| "timeout")?
     }
 
     async fn exchange(
@@ -697,7 +720,10 @@ impl Net<'_> {
         };
         let mut socket = TcpSocket::new(self.stack, self.tcp_rx, self.tcp_tx);
         socket.set_timeout(Some(Wait::from_secs(20)));
-        socket.connect((addr, port)).await.map_err(|_| "tcp_connect")?;
+        socket
+            .connect((addr, port))
+            .await
+            .map_err(|_| "tcp_connect")?;
         if src.plain.is_some() {
             return transfer(&mut socket, request.as_bytes(), self.buf, max_body, sink).await;
         }
@@ -719,8 +745,9 @@ impl Net<'_> {
             len: 0,
             cut_after_first_byte: false,
         };
-        let mut session = Session::new(self.tls.reference(), stream, &SessionConfig::Client(config))
-            .map_err(|_| "tls_session")?;
+        let mut session =
+            Session::new(self.tls.reference(), stream, &SessionConfig::Client(config))
+                .map_err(|_| "tls_session")?;
         if session.connect().await.is_err() {
             println!(
                 "OTA_TLS ok=false verify=0x{:x}",
@@ -755,7 +782,10 @@ async fn transfer<S: io::Read + io::Write>(
     s.flush().await.map_err(|_| "flush")?;
     let mut len = 0;
     let head = loop {
-        let n = s.read(&mut buf[len..element_fetch::MAX_HEAD]).await.map_err(|_| "read")?;
+        let n = s
+            .read(&mut buf[len..element_fetch::MAX_HEAD])
+            .await
+            .map_err(|_| "read")?;
         if n == 0 {
             return Err("incomplete_head");
         }

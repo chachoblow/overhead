@@ -52,8 +52,8 @@ impl Wifi {
     /// (WPA2-Personal).
     pub fn new(ssid: &str, pass: &str) -> Option<Self> {
         let (s, p) = (ssid.as_bytes(), pass.as_bytes());
-        let pass_ok = (8..=63).contains(&p.len())
-            || (p.len() == 64 && p.iter().all(u8::is_ascii_hexdigit));
+        let pass_ok =
+            (8..=63).contains(&p.len()) || (p.len() == 64 && p.iter().all(u8::is_ascii_hexdigit));
         if s.is_empty() || s.len() > SSID_MAX || !pass_ok {
             return None;
         }
@@ -324,18 +324,34 @@ mod tests {
         fn erase_sector(&mut self, offset: u32) -> Result<(), ()> {
             self.ops += 1;
             let o = offset as usize;
-            let n = if self.fail_at == Some(self.ops) { 100 } else { SECTOR as usize };
+            let n = if self.fail_at == Some(self.ops) {
+                100
+            } else {
+                SECTOR as usize
+            };
             self.bytes[o..o + n].fill(0xFF);
-            if self.fail_at == Some(self.ops) { Err(()) } else { Ok(()) }
+            if self.fail_at == Some(self.ops) {
+                Err(())
+            } else {
+                Ok(())
+            }
         }
         fn write(&mut self, offset: u32, data: &[u8]) -> Result<(), ()> {
             self.ops += 1;
             let o = offset as usize;
-            let n = if self.fail_at == Some(self.ops) { data.len() / 2 } else { data.len() };
+            let n = if self.fail_at == Some(self.ops) {
+                data.len() / 2
+            } else {
+                data.len()
+            };
             for (d, s) in self.bytes[o..o + n].iter_mut().zip(data) {
                 *d &= *s;
             }
-            if self.fail_at == Some(self.ops) { Err(()) } else { Ok(()) }
+            if self.fail_at == Some(self.ops) {
+                Err(())
+            } else {
+                Ok(())
+            }
         }
     }
 
@@ -434,7 +450,11 @@ mod tests {
             f.fail_at = Some(fail_at);
             assert!(st.save(&mut f, &sample(3)).is_err());
             let mut again = Store::new(BASE, 0x4000).unwrap();
-            assert_eq!(again.load(&mut f).loaded, Some(sample(2)), "fail_at={fail_at}");
+            assert_eq!(
+                again.load(&mut f).loaded,
+                Some(sample(2)),
+                "fail_at={fail_at}"
+            );
         }
     }
 

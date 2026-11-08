@@ -317,8 +317,7 @@ pub fn sha256(data: &[u8]) -> [u8; 32] {
 fn valid_version(v: &str) -> bool {
     !v.is_empty()
         && v.len() <= MAX_VERSION_LEN
-        && v
-            .bytes()
+        && v.bytes()
             .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'-' | b'+'))
 }
 
@@ -326,9 +325,9 @@ fn valid_image_path(p: &str) -> bool {
     !p.is_empty()
         && p.len() <= MAX_IMAGE_PATH_LEN
         && !p.starts_with('/')
-        && p.split('/').all(|seg| !seg.is_empty() && seg != "." && seg != "..")
-        && p
-            .bytes()
+        && p.split('/')
+            .all(|seg| !seg.is_empty() && seg != "." && seg != "..")
+        && p.bytes()
             .all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'-' | b'_' | b'/'))
 }
 
@@ -422,7 +421,14 @@ mod tests {
         let m = manifest();
         let sig = sign(&m, &SECRET);
         let keys = [public_key(&SECRET)];
-        let mut changed = [m.clone(), m.clone(), m.clone(), m.clone(), m.clone(), m.clone()];
+        let mut changed = [
+            m.clone(),
+            m.clone(),
+            m.clone(),
+            m.clone(),
+            m.clone(),
+            m.clone(),
+        ];
         changed[0].build = 6;
         changed[1].channel = Channel::Stable;
         changed[2].length = 12;
@@ -481,12 +487,48 @@ mod tests {
             settings_format: 1,
         };
         assert_eq!(offer(&m, &r), Offer::Install);
-        assert_eq!(offer(&m, &Running { channel: Channel::Stable, ..r }), Offer::OtherChannel);
+        assert_eq!(
+            offer(
+                &m,
+                &Running {
+                    channel: Channel::Stable,
+                    ..r
+                }
+            ),
+            Offer::OtherChannel
+        );
         assert_eq!(offer(&m, &Running { build: 5, ..r }), Offer::Current);
         assert_eq!(offer(&m, &Running { build: 9, ..r }), Offer::Current);
-        assert_eq!(offer(&m, &Running { failed_build: Some(5), ..r }), Offer::Failed);
-        assert_eq!(offer(&m, &Running { failed_build: Some(3), ..r }), Offer::Install);
-        assert_eq!(offer(&m, &Running { settings_format: 0, ..r }), Offer::SettingsTooOld);
+        assert_eq!(
+            offer(
+                &m,
+                &Running {
+                    failed_build: Some(5),
+                    ..r
+                }
+            ),
+            Offer::Failed
+        );
+        assert_eq!(
+            offer(
+                &m,
+                &Running {
+                    failed_build: Some(3),
+                    ..r
+                }
+            ),
+            Offer::Install
+        );
+        assert_eq!(
+            offer(
+                &m,
+                &Running {
+                    settings_format: 0,
+                    ..r
+                }
+            ),
+            Offer::SettingsTooOld
+        );
     }
 
     #[test]

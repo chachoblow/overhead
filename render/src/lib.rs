@@ -174,7 +174,10 @@ struct LineText<const N: usize> {
 }
 
 const fn heapless_text<const N: usize>() -> LineText<N> {
-    LineText { buf: [0; N], len: 0 }
+    LineText {
+        buf: [0; N],
+        len: 0,
+    }
 }
 
 impl<const N: usize> LineText<N> {
@@ -3377,7 +3380,11 @@ mod tests {
 
     #[test]
     fn updating_screen_is_centred_text_only() {
-        for (percent, text, x) in [(0u8, "UPDATING 0%", 167), (42, "UPDATING 42%", 164), (250, "UPDATING 100%", 161)] {
+        for (percent, text, x) in [
+            (0u8, "UPDATING 0%", 167),
+            (42, "UPDATING 42%", 164),
+            (250, "UPDATING 100%", 161),
+        ] {
             let mut screen = Screen {
                 pixels: [[true; 400]; 240],
             };

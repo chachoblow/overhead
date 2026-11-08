@@ -35,6 +35,9 @@ pub mod element_store;
 #[cfg(feature = "element-fetch")]
 pub mod fault_plan;
 pub mod frame_stats;
+pub mod knob;
+#[cfg(feature = "sharp-radar")]
+pub mod live_utc;
 #[cfg(feature = "ota")]
 pub mod ota_health;
 #[cfg(feature = "ota")]
@@ -43,9 +46,6 @@ pub mod otadata;
 pub mod release_keys;
 #[cfg(feature = "ota")]
 pub mod settings_store;
-pub mod knob;
-#[cfg(feature = "sharp-radar")]
-pub mod live_utc;
 // Target-only runtime shared by the device app and the live-fetch-radar
 // diagnostic (0076); they differ only in log level.
 #[cfg(all(target_arch = "xtensa", feature = "ble-spike"))]

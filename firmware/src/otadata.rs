@@ -122,24 +122,45 @@ mod tests {
         // agrees for both values.
         assert_eq!(crc(&1u32.to_le_bytes()), 0x4743_989a);
         assert_eq!(crc(&2u32.to_le_bytes()), 0x55f6_3774);
-        assert_eq!(Entry::decode(&Entry { seq: 1, state: 0 }.encode()).map(|e| e.seq), Some(1));
+        assert_eq!(
+            Entry::decode(&Entry { seq: 1, state: 0 }.encode()).map(|e| e.seq),
+            Some(1)
+        );
     }
 
     #[test]
     fn erased_and_corrupt_entries_are_invalid() {
         assert_eq!(Entry::decode(&[0xFF; ENTRY_LEN]), None);
-        let mut b = Entry { seq: 3, state: state::VALID }.encode();
+        let mut b = Entry {
+            seq: 3,
+            state: state::VALID,
+        }
+        .encode();
         b[0] ^= 1;
         assert_eq!(Entry::decode(&b), None);
     }
 
     #[test]
     fn selection_follows_highest_sequence() {
-        let e = |seq| Some(Entry { seq, state: state::VALID });
+        let e = |seq| {
+            Some(Entry {
+                seq,
+                state: state::VALID,
+            })
+        };
         assert_eq!(selected([None, None]), None);
-        assert_eq!(selected([e(1), None]).map(|(s, x)| (s, x.slot())), Some((0, 0)));
-        assert_eq!(selected([e(1), e(2)]).map(|(s, x)| (s, x.slot())), Some((1, 1)));
-        assert_eq!(selected([e(5), e(4)]).map(|(s, x)| (s, x.slot())), Some((0, 0)));
+        assert_eq!(
+            selected([e(1), None]).map(|(s, x)| (s, x.slot())),
+            Some((0, 0))
+        );
+        assert_eq!(
+            selected([e(1), e(2)]).map(|(s, x)| (s, x.slot())),
+            Some((1, 1))
+        );
+        assert_eq!(
+            selected([e(5), e(4)]).map(|(s, x)| (s, x.slot())),
+            Some((0, 0))
+        );
     }
 
     #[test]
@@ -167,7 +188,13 @@ mod tests {
 
     #[test]
     fn a_cut_activation_keeps_the_running_slot() {
-        let running = [Some(Entry { seq: 1, state: state::VALID }), None];
+        let running = [
+            Some(Entry {
+                seq: 1,
+                state: state::VALID,
+            }),
+            None,
+        ];
         let (sector, _) = activate(running, 1);
         let mut after = running;
         after[sector] = None; // erased, never programmed
@@ -177,12 +204,24 @@ mod tests {
     #[test]
     fn state_rewrites_the_selected_entry() {
         let entries = [
-            Some(Entry { seq: 1, state: state::VALID }),
-            Some(Entry { seq: 2, state: state::PENDING_VERIFY }),
+            Some(Entry {
+                seq: 1,
+                state: state::VALID,
+            }),
+            Some(Entry {
+                seq: 2,
+                state: state::PENDING_VERIFY,
+            }),
         ];
         assert_eq!(
             set_state(entries, state::VALID),
-            Some((1, Entry { seq: 2, state: state::VALID }))
+            Some((
+                1,
+                Entry {
+                    seq: 2,
+                    state: state::VALID
+                }
+            ))
         );
         assert_eq!(set_state([None, None], state::VALID), None);
     }

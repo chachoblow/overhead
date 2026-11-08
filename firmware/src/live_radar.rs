@@ -52,11 +52,11 @@ use crate::{
     element_store::{self, Did, Layout as Slots, Target, Writer},
     fault_plan::Fault,
     frame_stats::{CAUSES, Cause, FrameStats},
-    ota_health::Check,
     knob::{self, Detents},
     live_utc,
-    sharp_lines::{Kind, LineSender},
+    ota_health::Check,
     settings_store,
+    sharp_lines::{Kind, LineSender},
     sntp_policy::{self, Kiss, Policy},
     sntp_screen::{self, ScreenedObservation, SntpOutcome, SntpRequest},
     stack_watermark, tls_dates,
@@ -78,10 +78,10 @@ use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, channel::Channe
 use embassy_time::{Duration as Wait, Timer, with_timeout};
 use esp_hal::{
     gpio::{Input, InputConfig, Level, Output, OutputConfig, Pull},
-    rtc_cntl::{Rwdt, RwdtStage, RwdtStageAction},
     pcnt::{Pcnt, channel, unit::Unit},
     peripherals::Peripherals,
     rng::{Trng, TrngSource},
+    rtc_cntl::{Rwdt, RwdtStage, RwdtStageAction},
     spi::{
         BitOrder, Mode,
         master::{Config as SpiConfig, Spi},

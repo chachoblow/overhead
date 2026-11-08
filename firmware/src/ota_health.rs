@@ -129,16 +129,26 @@ mod tests {
     #[test]
     fn new_image_verifies() {
         let mut s = settings(Some(7), None);
-        assert_eq!(on_boot(7, SlotState::PendingVerify, &mut s), (Boot::Verify, false));
+        assert_eq!(
+            on_boot(7, SlotState::PendingVerify, &mut s),
+            (Boot::Verify, false)
+        );
         assert_eq!(s, settings(Some(7), None));
         assert_eq!(on_boot(7, SlotState::New, &mut s), (Boot::Verify, false));
     }
 
     #[test]
     fn old_image_records_the_rollback() {
-        for state in [SlotState::Valid, SlotState::Undefined, SlotState::PendingVerify] {
+        for state in [
+            SlotState::Valid,
+            SlotState::Undefined,
+            SlotState::PendingVerify,
+        ] {
             let mut s = settings(Some(7), Some(3));
-            assert_eq!(on_boot(6, state, &mut s), (Boot::RolledBack { failed: 7 }, true));
+            assert_eq!(
+                on_boot(6, state, &mut s),
+                (Boot::RolledBack { failed: 7 }, true)
+            );
             assert_eq!(s, settings(None, Some(7)));
         }
     }
@@ -149,15 +159,24 @@ mod tests {
         assert_eq!(on_boot(7, SlotState::Valid, &mut s), (Boot::Normal, true));
         assert_eq!(s, settings(None, None));
         let mut s = settings(Some(7), None);
-        assert_eq!(on_boot(7, SlotState::Undefined, &mut s), (Boot::Normal, true));
+        assert_eq!(
+            on_boot(7, SlotState::Undefined, &mut s),
+            (Boot::Normal, true)
+        );
     }
 
     #[test]
     fn ordinary_boots() {
         let mut s = settings(None, Some(4));
         assert_eq!(on_boot(5, SlotState::Valid, &mut s), (Boot::Normal, false));
-        assert_eq!(on_boot(5, SlotState::Undefined, &mut s), (Boot::Normal, false));
-        assert_eq!(on_boot(5, SlotState::PendingVerify, &mut s), (Boot::Verify, false));
+        assert_eq!(
+            on_boot(5, SlotState::Undefined, &mut s),
+            (Boot::Normal, false)
+        );
+        assert_eq!(
+            on_boot(5, SlotState::PendingVerify, &mut s),
+            (Boot::Verify, false)
+        );
         assert_eq!(s, settings(None, Some(4)));
     }
 
@@ -165,7 +184,12 @@ mod tests {
     fn health_needs_every_check_in_time() {
         let mut h = Health::new(1_000);
         assert_eq!(h.verdict(1_000), Verdict::Waiting);
-        for c in [Check::Frame, Check::WifiJoined, Check::TrustedUtc, Check::CatalogueLoaded] {
+        for c in [
+            Check::Frame,
+            Check::WifiJoined,
+            Check::TrustedUtc,
+            Check::CatalogueLoaded,
+        ] {
             h.note(c);
             assert_eq!(h.verdict(2_000), Verdict::Waiting);
         }
