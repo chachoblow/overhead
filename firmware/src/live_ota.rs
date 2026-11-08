@@ -707,7 +707,10 @@ impl Net<'_> {
         let config = ClientSessionConfig {
             ca_chain: Some(Certificate::new(X509::PEM(c_str(OTA_ROOTS))).map_err(|_| "roots")?),
             server_name: Some(server_name),
+            // TLS 1.3 encrypts the certificates, which hides them from the
+            // 0074 date check (raw.githubusercontent.com prefers 1.3).
             min_version: TlsVersion::Tls1_2,
+            max_version: Some(TlsVersion::Tls1_2),
             ..ClientSessionConfig::new()
         };
         let stream = Recording {

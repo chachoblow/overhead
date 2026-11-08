@@ -124,6 +124,14 @@ that build again. Panics reset; a hung loop is reset by a hardware watchdog.
 - IDF bootloader with erased otadata writes an entry for ota_0 itself: the
   first USB boot reported `state=Valid`, not `Undefined`.
 
+- Release key backup: the user keeps the only backup in 1Password (synced,
+  not offline as 0085 says) — add a note to 0085 at completion.
+- raw.githubusercontent.com negotiates TLS 1.3, which hides certificates
+  from the 0074 date check (`OTA_CERT_DATES NoCertificate`); OTA sessions
+  are now capped at TLS 1.2. Risk: GitHub dropping TLS 1.2 strands devices
+  until an update changes the rule. Builds 9/10 (published 10) have the bug;
+  9 failed its health check on the board; replaced by 11 (bridge) / 12.
+
 ## Open questions
 - `failed_build` remembers only the last failure (0084 wording): after 4 and
   then 5 failed, a manifest still offering 4 would be retried once more.
