@@ -80,6 +80,11 @@ pub enum HttpError {
 /// whatever its headers. A 200 needs a single `Content-Length` within the cap,
 /// so the receiver can stop early instead of downloading an oversized body.
 pub fn parse_head(bytes: &[u8]) -> Result<Option<Head>, HttpError> {
+    parse_head_capped(bytes, MAX_BODY)
+}
+
+/// [`parse_head`] with another body cap (OTA manifests and images, 0085).
+pub fn parse_head_capped(bytes: &[u8], max_body: usize) -> Result<Option<Head>, HttpError> {
     let Some(end) = find(bytes, b"\r\n\r\n") else {
         // A full-size buffer without the terminator cannot become valid.
         return if bytes.len() >= MAX_HEAD {
@@ -114,7 +119,7 @@ pub fn parse_head(bytes: &[u8]) -> Result<Option<Head>, HttpError> {
         }
     }
     let content_length = content_length.ok_or(HttpError::MissingContentLength)?;
-    if content_length > MAX_BODY {
+    if content_length > max_body {
         return Err(HttpError::BodyTooLarge {
             length: content_length,
         });
@@ -128,7 +133,12 @@ pub fn parse_head(bytes: &[u8]) -> Result<Option<Head>, HttpError> {
 
 /// Checks a response received up to connection close and returns its body.
 pub fn parse_response(bytes: &[u8]) -> Result<&[u8], HttpError> {
-    let head = parse_head(bytes)?.ok_or(HttpError::IncompleteHead)?;
+    parse_response_capped(bytes, MAX_BODY)
+}
+
+/// [`parse_response`] with another body cap.
+pub fn parse_response_capped(bytes: &[u8], max_body: usize) -> Result<&[u8], HttpError> {
+    let head = parse_head_capped(bytes, max_body)?.ok_or(HttpError::IncompleteHead)?;
     let body = &bytes[head.body_start..];
     let (expected, received) = (head.content_length, body.len());
     match received.cmp(&expected) {

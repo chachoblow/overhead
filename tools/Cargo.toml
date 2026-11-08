@@ -12,3 +12,5 @@ overhead-app = { path = "../app" }
 serde = { version = "1", features = ["derive"] }
 # Preserve each record's raw JSON so duplicate metadata keys are not erased.
 serde_json = { version = "1", features = ["raw_value"] }
+# 0085: manifest signing and checks shared with the firmware.
+overhead-update = { path = "../update", features = ["sign"] }

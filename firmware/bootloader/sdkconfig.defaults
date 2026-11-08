@@ -1,0 +1,6 @@
+# 0086: the only change from espflash 4.6.0's bundled ESP32-S3 bootloader
+# (ESP-IDF release/v6.1, no overrides) is app rollback. Flash size is written
+# into the image header for the N8R8 board (espflash also rewrites it).
+CONFIG_IDF_TARGET="esp32s3"
+CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE=y
+CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y

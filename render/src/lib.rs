@@ -146,6 +146,52 @@ pub fn draw_preparing<D: DrawTarget<Color = BinaryColor>>(display: &mut D) -> Re
 
 const PREPARING: &str = "PREPARING MAP";
 
+/// Full-screen install frame (0085): `UPDATING n%` while an update streams
+/// into the other slot. Display and input pause during flash writes.
+pub fn draw_updating<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    percent: u8,
+) -> Result<(), D::Error> {
+    let mut display = display.clipped(&Rectangle::new(Point::zero(), DISPLAY_SIZE));
+    display.clear(BinaryColor::Off)?;
+    let mut text = heapless_text::<16>();
+    let _ = core::fmt::Write::write_fmt(&mut text, format_args!("UPDATING {}%", percent.min(100)));
+    let s = text.as_str();
+    Text::with_baseline(
+        s,
+        Point::new(200 - s.len() as i32 * 3, 115),
+        MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+        Baseline::Top,
+    )
+    .draw(&mut display)?;
+    Ok(())
+}
+
+/// Fixed-capacity text for one line; longer writes are cut.
+struct LineText<const N: usize> {
+    buf: [u8; N],
+    len: usize,
+}
+
+const fn heapless_text<const N: usize>() -> LineText<N> {
+    LineText { buf: [0; N], len: 0 }
+}
+
+impl<const N: usize> LineText<N> {
+    fn as_str(&self) -> &str {
+        core::str::from_utf8(&self.buf[..self.len]).unwrap_or("")
+    }
+}
+
+impl<const N: usize> core::fmt::Write for LineText<N> {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        let take = s.len().min(N - self.len);
+        self.buf[self.len..self.len + take].copy_from_slice(&s.as_bytes()[..take]);
+        self.len += take;
+        Ok(())
+    }
+}
+
 /// Draw with explicit monotonic presentation time. Only the wide data glyphs
 /// transition; square diagnostics and all true-state readouts remain immediate.
 pub fn draw_at<D: DrawTarget<Color = BinaryColor>>(
@@ -3327,6 +3373,28 @@ mod tests {
         .unwrap();
         // No radar, limb, coast, strip, separator or notices from any scene.
         assert_eq!(screen.pixels, expected.pixels);
+    }
+
+    #[test]
+    fn updating_screen_is_centred_text_only() {
+        for (percent, text, x) in [(0u8, "UPDATING 0%", 167), (42, "UPDATING 42%", 164), (250, "UPDATING 100%", 161)] {
+            let mut screen = Screen {
+                pixels: [[true; 400]; 240],
+            };
+            draw_updating(&mut screen, percent).unwrap();
+            let mut expected = Screen {
+                pixels: [[false; 400]; 240],
+            };
+            Text::with_baseline(
+                text,
+                Point::new(x, 115),
+                MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+                Baseline::Top,
+            )
+            .draw(&mut expected)
+            .unwrap();
+            assert_eq!(screen.pixels, expected.pixels, "{text}");
+        }
     }
 
     #[test]

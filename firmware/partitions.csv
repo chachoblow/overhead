@@ -1,10 +1,16 @@
-# 0079 layout for the live-fetch-radar runtime (device app and diagnostic).
-# Pass with `--partition-table partitions.csv`; other images keep espflash's
-# default (nvs, phy_init, factory to the end of the 8 MB flash).
-# `elements` holds two 160 KiB slots of the last fetched element body
-# (firmware/src/element_store.rs). espflash rejects numeric custom subtypes.
+# 0083 layout for every runtime image (device app and live-fetch-radar
+# diagnostics), fixed from the first gift: two 3 MiB OTA slots, no factory
+# slot. Flash with `--partition-table partitions.csv` and the 0086 bootloader
+# (`--bootloader bootloader/bootloader.bin`). USB flashing writes ota_0 and
+# erases otadata. `elements` holds 0079's two element slots; `settings` 0084's
+# record; `spare` is never written by today's firmware.
+# espflash rejects numeric custom subtypes.
 # Name,   Type, SubType,   Offset,   Size
-nvs,      data, nvs,       0x9000,   0x6000,
+nvs,      data, nvs,       0x9000,   0x4000,
+otadata,  data, ota,       0xd000,   0x2000,
 phy_init, data, phy,       0xf000,   0x1000,
-factory,  app,  factory,   0x10000,  0x7a0000,
-elements, data, undefined, 0x7b0000, 0x50000,
+ota_0,    app,  ota_0,     0x10000,  0x300000,
+ota_1,    app,  ota_1,     0x310000, 0x300000,
+settings, data, undefined, 0x610000, 0x10000,
+elements, data, undefined, 0x620000, 0x50000,
+spare,    data, undefined, 0x670000, 0x190000,

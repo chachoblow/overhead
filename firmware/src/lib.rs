@@ -35,6 +35,12 @@ pub mod element_store;
 #[cfg(feature = "element-fetch")]
 pub mod fault_plan;
 pub mod frame_stats;
+#[cfg(feature = "ota")]
+pub mod ota_health;
+#[cfg(feature = "ota")]
+pub mod otadata;
+#[cfg(feature = "ota")]
+pub mod settings_store;
 pub mod knob;
 #[cfg(feature = "sharp-radar")]
 pub mod live_utc;

@@ -1,0 +1,21 @@
+[package]
+name = "overhead-update"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# 0085: the most reviewed ed25519 implementation, the same crate on device and
+# host; default features off (no precomputed tables in flash, no zeroize).
+ed25519-dalek = { version = "=3.0.0", default-features = false }
+# Image hash; already the hash ed25519-dalek 3.0.0 uses internally.
+sha2 = { version = "0.11", default-features = false }
+# Manifest JSON; both already used by core/firmware (alloc, no std).
+serde = { version = "1", default-features = false, features = ["alloc", "derive"] }
+serde_json = { version = "1", default-features = false, features = ["alloc"] }
+
+[features]
+# Host signing (overhead-release); never enabled by firmware.
+sign = ["ed25519-dalek/zeroize"]
+
+[dev-dependencies]
+overhead-update = { path = ".", features = ["sign"] }

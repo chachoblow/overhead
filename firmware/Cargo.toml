@@ -53,9 +53,12 @@ element-fetch = ["overhead-core/catalogue", "dep:serde_json"]
 # 0071 slice 2+: display-free one-request STATIONS fetch over TLS (mbedtls-rs,
 # prebuilt MbedTLS) after one screened SNTP observation. Never the device app.
 live-fetch = ["live-sntp", "element-fetch", "embassy-net/tcp", "esp-alloc/internal-heap-stats", "dep:mbedtls-rs"]
+# 0085/0086: signed manifests, settings record and the health check;
+# host-tested. The runtime (live-fetch-radar and the device app) uses it.
+ota = ["element-fetch", "dep:overhead-update"]
 # 0074: live-UTC radar with BOOT capture on freshly fetched STATIONS elements
 # (one request per boot, certificate dates checked). Not the device app.
-live-fetch-radar = ["live-utc-boot", "live-fetch", "dep:esp-storage"]
+live-fetch-radar = ["live-utc-boot", "live-fetch", "ota", "dep:esp-storage"]
 # Same image with a build-time fault plan (`fault_plan`): injected DNS/TCP/TLS
 # failures, shortened freshness and a Wi-Fi drop, to show 0075's failure
 # handling on the board. Diagnostic only; the image above has none of it.
@@ -77,6 +80,8 @@ overhead-core = { path = "../core" }
 overhead-app = { path = "../app", optional = true }
 overhead-render = { path = "../render", optional = true }
 embedded-graphics = { version = "0.8", optional = true }
+# 0085: manifest checks shared with the host signing tool (no `sign`).
+overhead-update = { path = "../update", optional = true }
 # Same checked OMM-array path as the host experiment, without std.
 serde_json = { version = "1", default-features = false, features = ["alloc", "raw_value"], optional = true }
 
