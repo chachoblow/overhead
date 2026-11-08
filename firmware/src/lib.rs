@@ -40,6 +40,8 @@ pub mod knob;
 pub mod live_utc;
 // Target-only runtime shared by the device app and the live-fetch-radar
 // diagnostic (0076); they differ only in log level.
+#[cfg(all(target_arch = "xtensa", feature = "ble-spike"))]
+pub mod ble_spike;
 #[cfg(all(target_arch = "xtensa", feature = "live-fetch-radar"))]
 pub mod live_radar;
 #[cfg(feature = "sharp-natural-audit")]

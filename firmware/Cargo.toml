@@ -62,6 +62,10 @@ live-fetch-radar = ["live-utc-boot", "live-fetch", "dep:esp-storage"]
 live-fetch-faults = ["live-fetch-radar"]
 # 0076: the device application. Same runtime as live-fetch-radar, event log only.
 device = ["live-fetch-radar"]
+# Throwaway BLE + Wi-Fi coexistence spike (giftable-device proposal, F): the
+# live-fetch-radar diagnostic plus a BLE GATT peripheral a phone can write to,
+# with internal-RAM telemetry. Never a device image.
+ble-spike = ["live-fetch-radar", "esp-radio/ble", "esp-radio/coex", "esp-radio/unstable", "dep:trouble-host", "dep:embassy-futures"]
 # Isolated rotary-encoder wiring check (PCNT on IO4/IO5, switch IO6); UART only.
 knob-test = ["esp-hal/unstable"]
 # Separately named pinned-OMM visibility diagnostic; original source path retained.
@@ -108,6 +112,12 @@ embassy-sync = { version = "=0.8.0", optional = true }
 # locked through esp-bootloader-esp-idf (whose `partitions` reader takes its
 # FlashStorage); default `critical-section` keeps interrupts off during ROM calls.
 esp-storage = { version = "=0.10.0", features = ["esp32s3"], optional = true }
+
+# ble-spike only: BLE host stack recommended by esp-radio; 0.7.0 is the release
+# on bt-hci 0.9 (esp-radio's pin) and embassy-sync 0.8 (already locked).
+trouble-host = { version = "=0.7.0", default-features = false, features = ["peripheral", "gatt", "derive", "default-packet-pool", "default-packet-pool-mtu-255"], optional = true }
+# Already locked (0.1.2) through the embassy crates; join/select for the BLE task.
+embassy-futures = { version = "0.1", optional = true }
 
 [build-dependencies]
 # Convert original fixtures on the host; the default target remains allocation-free.

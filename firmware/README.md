@@ -1830,6 +1830,50 @@ Not shown on the board: a near-budget reply arriving under 0082 (none in
 run 2; host test `looser_observation_keeps_tighter_anchor` replays run 1's
 values).
 
+## BLE coexistence spike
+
+Throwaway diagnostic for the [giftable-device proposal](../docs/giftable-device-proposal.md)
+(F: iOS setup app over BLE). `--features ble-spike` adds to the
+`live-fetch-radar` image (`src/ble_spike.rs`) a trouble-host =0.7.0 GATT
+peripheral on esp-radio's `ble` + `coex`, advertising `OVERHEAD-xxxx` (last two
+MAC bytes). Service `6f760001-…`: `6f760002-…` write/read (96 B stand-in for the
+setup payload), `6f760003-…` read/notify status (`received N bytes`). No
+pairing. Never a device image.
+
+Memory layout under the feature: 128 KiB static internal heap plus the
+bootloader-reclaimed `dram2` region (`#[ram(reclaimed)]`, 72 KiB of
+0x3FCDB700..0x3FCED710) as a second internal region. BLE adds ~33 KB of
+statics (BT controller code in the shared D/IRAM +20.6 KB, `.data` +5 KB,
+`.bss` +6 KB), so the usual 160 KiB static heap does not link; `dram2` is
+unused by every other image too.
+
+```sh
+set -a; . ./.wifi.env; . ./.site.env; set +a
+REFRESH_MINUTES=120 cargo build --release \
+  --bin overhead-s3-live-fetch-radar --features ble-spike
+# save-image (--partition-table partitions.csv), image_gate.py and flash as
+# for the device app; capture with --monitor
+```
+
+Lines: `BLE_INIT internal_free_before= internal_free_after= cost=`, `BLE_READY`,
+`BLE_ADVERTISING`, `BLE_CONNECTED`, `BLE_WRITE offset= len=` (bytes never
+printed), `BLE_DISCONNECTED reason=`, and every 60 s `BLE_MEM
+internal_free_min=` (sampled every 50 ms) `internal_free_now= connected=`.
+
+**On-board evidence, 2026-11-08** (devbox, `/dev/ttyUSB0`, MAC
+`80:45:6b:2a:45:08`, ELF sha256 `4f6708af…`, gate passed, home site,
+`REFRESH_MINUTES=120`; phone: iPhone with nRF Connect):
+
+| Check | Result |
+|---|---|
+| Controller start | 35,440 B of internal heap (free 160,880 → 125,440 of 200 KiB) |
+| Boot fetch with BLE advertising | HTTP 200, 156/156, 15.0 s; internal free min 116,112 B through boot, Wi-Fi, SNTP and TLS |
+| Phone | connected, wrote 10 B and 9 B, read the `received 10 bytes` reply; two earlier attempts ended `Connection Timeout` before one held |
+| While connected | internal free flat at 124,632 B; `FRAME_WINDOW` 1–2 skipped of ~200, as without BLE; user: radar kept updating, knob felt normal |
+
+Not measured: pairing/encryption, long connections, BLE during a refresh
+with a phone connected.
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing

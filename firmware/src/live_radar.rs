@@ -146,7 +146,13 @@ const UTC_BUDGET_US: u64 = 100_000;
 const FOV_DEG: f64 = 60.0;
 /// Internal-RAM heap. Before PSRAM (0077) one 160 KiB heap held everything
 /// and peaked at ~137 KB with 20 STATIONS objects.
+#[cfg(not(feature = "ble-spike"))]
 const HEAP_SIZE: usize = 160 * 1024;
+/// BLE spike: the controller adds ~33 KB of statics (mostly IRAM code in the
+/// shared D/IRAM), so the static heap shrinks and the bootloader-reclaimed
+/// `dram2` region (unused until now) becomes a second internal region.
+#[cfg(feature = "ble-spike")]
+const HEAP_SIZE: usize = 128 * 1024;
 /// 0077: most objects tracked from one load; ~1.6× the 156-object `visual`
 /// group of 2026-11-03.
 const OBJECT_LIMIT: usize = 256;
@@ -531,6 +537,9 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
     // atomics, which must not live in PSRAM on the S3.
     esp_alloc::psram_allocator!(p.PSRAM, esp_hal::psram);
     esp_alloc::heap_allocator!(size: HEAP_SIZE);
+    // 0x3FCDB700..0x3FCED710 (73,744 B) is free once the bootloader is done.
+    #[cfg(feature = "ble-spike")]
+    esp_alloc::heap_allocator!(#[esp_hal::ram(reclaimed)] size: 72 * 1024);
     // This image's .bss leaves ~21 KiB of CPU0 stack (the fetch-only image
     // had ~65 KiB), so record the written depth through the fetch.
     // SAFETY: CPU0 linker stack, painted before the scheduler starts; esp-rtos
@@ -643,6 +652,9 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
     );
     spawner.spawn(net(runner).unwrap());
     spawner.spawn(connection(controller, wifi_drop).unwrap());
+    // Throwaway coexistence spike (giftable proposal, F); never a device image.
+    #[cfg(feature = "ble-spike")]
+    crate::ble_spike::start(spawner, p.BT);
     // In PSRAM: the 0077 body cap is too large for internal RAM. Also the
     // load buffer for the stored copy (0079), before Wi-Fi is up.
     let response = alloc::vec![0u8; element_fetch::MAX_RESPONSE].leak();

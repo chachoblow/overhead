@@ -1,6 +1,6 @@
-# Giftable device: signed updates, setup page and fixed foundations — proposal
+# Giftable device: signed updates, setup app and fixed foundations — proposal
 
-Status: **proposed 2026-11-07, awaiting the user's review in a fresh session** (the user asked to revisit it there). Section D's addresses are agreed; A–C, E and F still need review. Nothing here is
+Status: **proposed 2026-11-07; F revised 2026-11-08 after the BLE spike.** Section D's addresses are agreed; A–C, E and the revised F still need the user's acceptance. Nothing here is
 implemented or authorized until accepted. On acceptance it becomes decisions
 0083–0087 (listed at the end) and a new PLAN milestone, M7.
 
@@ -16,23 +16,27 @@ three things:
 
 1. **Updates that arrive by themselves**: signed, with rollback, installed
    without the recipient doing anything.
-2. **Setup the recipient can do**: Wi-Fi and coordinates entered from a phone
-   web page served by the device. There is no companion app.
+2. **Setup the recipient can do**: Wi-Fi and location sent from an iPhone
+   app over Bluetooth (F). Location comes from the phone's GPS.
 3. **Foundations that don't change after the first gift**: the partition
    table, the bootloader, the settings format, the signing scheme and the
    first public key, and the manifest location. An update can replace the app
    but none of these.
 
-Already agreed in conversation (2026-11-07): the setup page is served by the
-device, with no app. Location is entered as coordinates. The signing key lives
+Already agreed in conversation (2026-11-07): the signing key lives
 on the user's Mac with an offline backup, and signing is done locally. Updates
 are checked at the element refresh and installed while the device is idle.
 The user's board follows a `beta` channel and the gifts follow `stable`.
 Updates are served from `overhead.wesklein.com`, with a raw-GitHub fallback (D).
-There is no companion app: one would replace only F, at the cost of iOS
-distribution and years of upkeep, and Bluetooth setup could still arrive
-later as a signed update.
 There is no gift date, and the units are "a handful".
+
+Revised 2026-11-08: every recipient uses an iPhone, and the user has an Apple
+Developer account and will publish an app. The setup path changes from a page
+served by the device to an iOS app over BLE (F), after a board spike showed BLE
+and Wi-Fi fit together (below). Updates stay device-pulled (C–E): the reasons
+to update come from outside (a CelesTrak TLS change, a CA rotation) and must
+reach a device nobody opens an app for. Wired updates (browser flasher, UF2)
+were weighed and kept only as the USB recovery path.
 
 ## What was checked (2026-11-07, from devbox)
 
@@ -55,7 +59,7 @@ There is no gift date, and the units are "a handful".
   toolchain addition, which is a gate (see the decisions below). Without it, a
   new image that boots and then hangs or panics before marking itself bad
   would be booted forever.
-- **Access-point Wi-Fi.** `esp-radio` =1.0.0-beta.1 has
+- **Access-point Wi-Fi (captive-portal fallback only).** `esp-radio` =1.0.0-beta.1 has
   `Config::AccessPoint` and `Config::AccessPointStation`, so the device can run
   its own network and join another at the same time. Its WPA2 access point
   requires a non-empty password, and it can scan for networks
@@ -74,10 +78,28 @@ There is no gift date, and the units are "a handful".
     parser of 0071.
 - **Image size.** The current `overhead-s3-device` release ELF loads about
   1.39 MB (text 1,368,131 B and data 20,464 B; bss 648,972 B takes no flash).
+- **BLE + Wi-Fi coexistence spike (2026-11-08, board).** The `ble-spike`
+  feature adds a trouble-host =0.7.0 GATT peripheral (esp-radio `ble` + `coex`)
+  to the `live-fetch-radar` diagnostic; evidence in the
+  [firmware README](../firmware/README.md#ble-coexistence-spike).
+  - Static RAM: BLE adds about 33 KB (mostly controller code in the shared
+    D/IRAM), so the 160 KiB static internal heap no longer links. The
+    bootloader-reclaimed `dram2` region (72 KiB, unused by every image so far)
+    became a second internal heap region beside a 128 KiB static one; the CPU0
+    stack stays at baseline (23,640 B vs 23,888 B).
+  - Runtime: starting the controller takes 35,440 B of internal heap. Lowest
+    internal free through boot, Wi-Fi, SNTP and a TLS fetch: 116,112 B of
+    200 KiB. A phone (nRF Connect, iPhone) connected, wrote 10 and 9 bytes and
+    read the reply; frame skips stayed at 1–2 per 200 and internal free stayed
+    flat while connected. The user saw the radar keep updating and the knob
+    feel normal.
+  - Not measured: pairing/encryption (needed for setup), a fetch while a phone
+    is connected, long-lived connections. Two of three first connection
+    attempts ended in `Connection Timeout` before one held: the app must retry.
 - **Web-search leads, not yet verified against the pinned stack:**
   - `picoserve` 0.19 (an async `no_std` HTTP server; 0.x API, GET/POST/HEAD
     only).
-  - `edge-net`'s `edge-dhcp` (DHCP server) and `edge-captive` (captive DNS),
+  - For the captive-portal fallback only: `edge-net`'s `edge-dhcp` (DHCP server) and `edge-captive` (captive DNS),
     which target embassy-net.
   - `ed25519-dalek` (`no_std` with default features off, widely reviewed,
     roughly 40 kB of tables) and `salty` (smaller, built for
@@ -116,7 +138,7 @@ All gift units use the same module as the current board, an ESP32-S3 N8R8
     versions)
   - observer latitude, longitude and optional altitude
   - update channel (`stable` by default)
-  - setup-network password (random, made on first boot)
+  - BLE bonding keys for a paired phone, if bonds are kept (decided in F's work item)
   - the last update version that failed its health check (so it isn't
     reinstalled)
 - Future firmware must read every earlier format version (or migrate it).
@@ -235,45 +257,49 @@ All gift units use the same module as the current board, an ESP32-S3 N8R8
   cut off mid-download, and a power cut mid-install. All must leave the board
   on a working image.
 
-### F. Setup page (behavior; the look is reviewed later)
-- **When setup starts.** The device enters setup mode when it has no stored
-  Wi-Fi, when it can't join for 5 minutes after boot, or when the knob switch
-  (IO6) is held for 3 s at boot.
-- **On screen.** It runs WPA2 network `OVERHEAD-xxxx` (last four MAC hex
-  digits) with its stored random password, alongside its own station
-  connection (`AccessPointStation`). The Sharp shows the name, the password
-  and a Wi-Fi join QR code.
-- **Captive portal.** A captive DNS answers every name with the device's
-  address, a small DHCP server hands out addresses, and an HTTP/1.0 server
-  serves one page from flash.
-- **The page.**
-  - A network list from a scan, plus a passphrase field.
-  - Coordinates as one field (`lat, lon`, as copied from a maps app) and an
-    optional altitude.
-  - Read-only status: firmware build, channel, MAC, data age, last fetch,
-    update result.
-- **Saving.**
-  - Before saving, the device tests the new network while staying in setup
-    mode. Success or the error shows on the page **and** on the Sharp.
-  - Then it saves, leaves setup mode, prepares the coastline for the new
-    location (0057/0058) and runs.
+### F. iOS setup app over BLE (behavior; the app's look is reviewed later)
+- **When setup is possible.** The device advertises its setup service when it
+  has no stored Wi-Fi, when it can't join for 5 minutes after boot, or when
+  the knob switch (IO6) is held for 3 s at boot. Outside setup it does not
+  accept setting changes over BLE.
+- **Pairing.** BLE LE Secure Connections with passkey entry: the Sharp shows
+  a 6-digit code, the recipient types it on the phone. Without it anyone in
+  range could rewrite the Wi-Fi settings during setup.
+- **The app** (SwiftUI + CoreBluetooth, in `ios/` in this repo so the BLE
+  message format and the firmware change together):
+  - finds `OVERHEAD-xxxx` (last four MAC hex digits) and pairs;
+  - lists networks from the device's scan, takes the passphrase;
+  - reads location from the phone's GPS (one permission prompt), with a
+    manual `lat, lon` entry as fallback;
+  - shows read-only status: firmware build, channel, MAC, data age, last
+    fetch, update result.
+- **Saving.** The device tests the new network first and reports success or
+  the error to the app **and** on the Sharp; only then does it save, leave
+  setup, prepare the coastline for the new location (0057/0058) and run.
+- **Protocol.** One versioned GATT service with a small framed message format
+  (version, type, payload), so later firmware and later app versions can tell
+  each other apart. Older devices must keep working with newer apps.
+- **Distribution.** App Store (unlisted distribution if Apple approves it,
+  otherwise listed), with a privacy policy and a review demo video. TestFlight
+  and Ad Hoc builds expire and are not used for recipients.
+- **Memory.** Uses the reclaimed `dram2` heap region shown by the spike; the
+  device app gets the same heap layout.
 - **Recovery.**
   - Factory reset: hold the knob switch for 10 s at boot. It clears settings
     and stored elements, then enters setup.
   - The info page is also reachable by a short knob press, for the recipient
     to photograph.
-- **Dependencies.** Decided in its work item. My lean: hand-write the HTTP
-  server (one form, like 0071's hand-written client) and the captive DNS
-  (answer every A query). Use `edge-dhcp` unless a minimal DHCP responder
-  proves simpler.
-- **Not proposed:** serving the page on the home network (`overhead.local`),
-  the knob menu, a city list, IP geolocation, and phone GPS (the browser
-  blocks location on plain HTTP).
+  - USB reflash by the user, in person, is the last resort.
+- **Fallback.** If pairing or the full protocol does not fit, the served
+  setup page (captive portal: access point, DHCP, captive DNS, one HTTP form)
+  is the fallback; the rest of the plan does not change.
+- **Not proposed:** an Android app, setting changes over the home network, a
+  city list, IP geolocation, firmware delivery through the app.
 
 ## Proposed milestone and work items
 
 **M7 — Giftable device** (new PLAN milestone, after M6's open items).
-**Done when:** a device set up only through the setup page on a phone that
+**Done when:** a device set up only through the iOS app on a phone that
 isn't the user's tracks at its recipient's coordinates, and receives a signed
 `stable` release with no hands-on step. The brick drill has passed on the
 user's board.
@@ -290,12 +316,14 @@ Work items, in order:
 
    It ends with a board that updates itself from `beta`. It comes first
    because every later fix reaches the gifts through it.
-2. **Settings store and setup page.** B and F, release images with no
-   personal data, factory reset and the info screen. It ends with the board
-   set up only through the phone, then updated over the air with its settings
-   intact.
-3. **Gift readiness.** A soak test of a release image set up only through the
-   page, setup on a phone that isn't the user's, the release and recovery
+2. **Settings store and iOS setup app.** B and F: BLE setup service with
+   passkey pairing, the app in `ios/` on TestFlight for the user, release
+   images with no personal data, factory reset and the info screen. It ends
+   with the board set up only through the app, then updated over the air with
+   its settings intact.
+3. **Gift readiness.** The app published on the App Store, a soak test of a
+   release image set up only through the app, setup on an iPhone that isn't
+   the user's, the release and recovery
    checklist (key backup, USB recovery flash), and flashing the gift units.
 
 M6's open items (BOOT risks, knob switch role) stay in M6; F gives the knob
@@ -310,11 +338,11 @@ a recurrence on any board blocks gift readiness.
 - 0085 Signed updates and release keys (C, D)
 - 0086 Bootloader rollback and the health check (E; amends 0076's
   halt-on-panic)
-- 0087 Phone setup page (F)
+- 0087 iOS setup app over BLE (F; captive-portal page as fallback)
 
 ## Gates for you
 
-1. **Accept A–F** as written, or say what to change.
+1. **Accept A–C, E and the revised F** as written, or say what to change.
 2. **Build the custom bootloader with ESP-IDF.** This is a toolchain addition,
    which needs your approval. My recommendation: build it once on devbox in
    rootless Docker from Espressif's official `espressif/idf` image pinned to
