@@ -1,8 +1,6 @@
 # Giftable device: signed updates, setup app and fixed foundations — proposal
 
-Status: **proposed 2026-11-07; F revised 2026-11-08 after the BLE spike.** Section D's addresses are agreed; A–C, E and the revised F still need the user's acceptance. Nothing here is
-implemented or authorized until accepted. On acceptance it becomes decisions
-0083–0087 (listed at the end) and a new PLAN milestone, M7.
+Status: **accepted 2026-11-08 (user: "yes to all", with F revised after the BLE spike, the ESP-IDF bootloader build in rootless Docker and key generation on the Mac).** Recorded as decisions [0083](decisions/0083-flash-layout-for-updatable-devices.md)–[0087](decisions/0087-ios-setup-app-over-ble.md), which own the contracts; this file is the history and research behind them. Scope is PLAN M7.
 
 ## Why now
 

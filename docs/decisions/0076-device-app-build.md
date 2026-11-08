@@ -55,3 +55,9 @@ explain itself. Auto-reboot was rejected for now (point 3).
   revisions recorded in the firmware README.
 - Knob zoom, persistence, location source and frame-timing policy are later
   work on this app build.
+
+## Note — 2026-11-08: reset on panic for updatable devices
+[0086](0086-bootloader-rollback-and-health-check.md): once signed updates
+land, the device app resets on panic (and a hardware watchdog resets a hung
+loop) so the rollback bootloader can recover a bad image. Halting remains
+acceptable for diagnostics.

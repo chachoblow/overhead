@@ -698,4 +698,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 ## 2026-11-07 (giftable-device proposal, docs only)
 - Gifting makes signed OTA updates with rollback a core requirement. [docs/giftable-device-proposal.md](giftable-device-proposal.md) proposes the fixed foundations (flash layout, settings store, ed25519-signed manifests, custom rollback bootloader, health check), a phone setup page served by the device (no app), and a new M7.
 - Found: the pinned `esp-bootloader-esp-idf` has OTA slot states; espflash's bundled S3 bootloader has no rollback; `esp-radio` supports access-point and combined access-point/station mode; Pages and raw GitHub both serve over TLS 1.2 with no redirects.
-- Hosting agreed (`overhead.wesklein.com`, raw fallback); the rest awaits user review in [the work file](work/giftable-foundations.md). No code; no Rust checks rerun.
+- Hosting agreed (`overhead.wesklein.com`, raw fallback); the rest awaited user review in the work file (deleted on completion, 2026-11-08). No code; no Rust checks rerun.
+
+## 2026-11-08 (giftable-device foundations accepted, BLE spike)
+- User weighed the conventional options (wired/browser/UF2 flashing, captive portal, phone app); with all recipients on iPhones, setup moved to an iOS app over BLE while updates stay device-pulled. Proposal accepted as decisions [0083](decisions/0083-flash-layout-for-updatable-devices.md)–[0087](decisions/0087-ios-setup-app-over-ble.md); 0004 superseded; notes on 0002/0075/0076; PLAN M7 added; DESIGN updated.
+- BLE spike (`ble-spike` feature, `firmware/src/ble_spike.rs`, [evidence](../firmware/README.md#ble-coexistence-spike)): BLE needs ~33 KB statics + 35 KB heap; fits with the unused `dram2` region as a second internal heap; internal free ≥116 KB through a TLS fetch; an iPhone connected, wrote and read; frames, radar and knob unaffected (user).
+- Verified: workspace check, firmware host tests (37), `ble-spike` and `device` release builds with gate passing, both flashed; board back on the device app (stored copy, no request).

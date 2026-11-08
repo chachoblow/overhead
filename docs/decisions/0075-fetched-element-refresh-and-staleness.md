@@ -68,3 +68,9 @@ Retries before the GET can still be 24 per day during a long outage, all
 below HTTP. The 2-hour floor and the after-request rule bound HTTP requests to
 one per interval. The `OLD DATA`/`NO DATA` thresholds are app policy and apply
 only to apps given a `Freshness`; the simulator is unchanged.
+
+## Note — 2026-11-08: home site becomes a setting
+[0084](0084-settings-store.md): point 6's build-time home site becomes
+developer-only (`dev-settings`); release images read the observer from the
+settings store, set by the iOS setup app ([0087](0087-ios-setup-app-over-ble.md)).
+Refresh, staleness and expiry rules are unchanged.

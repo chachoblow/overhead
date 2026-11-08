@@ -6,7 +6,8 @@ done for now (user, 2026-10-24); M6 standalone device remains open; M6 element
 fetch runs under [0071](decisions/0071-https-element-fetch-first-slice.md),
 [0074](decisions/0074-live-utc-radar-on-fetched-elements.md) and
 [0075](decisions/0075-fetched-element-refresh-and-staleness.md); the device
-app build is [0076](decisions/0076-device-app-build.md).**
+app build is [0076](decisions/0076-device-app-build.md). M7 giftable device
+(accepted 2026-11-08, [0083–0087](decisions/0083-flash-layout-for-updatable-devices.md)) is next.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -333,7 +334,8 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   copy younger than the interval defers the fetch; corrupt-slot fallback and
   reset-without-fetch shown on the board, user-observed on the device app
   ([evidence](../firmware/README.md#element-persistence-0079)).
-  A real location source remains open.
+  The location source moves to M7 ([0084](decisions/0084-settings-store.md),
+  [0087](decisions/0087-ios-setup-app-over-ble.md)).
 - [x] Handle network failure, missing/invalid time or data, and stale elements.
   Under 0075: failed refreshes keep the previous catalogue, `OLD DATA` after
   24 h, unload after 7 days. Shown on the board with the opt-in
@@ -361,9 +363,38 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
 **Done when:** the prototype boots with valid time/data and tracks between
 connections. Cached elements alone do not enable accurate offline cold boot.
 
+## M7 — Giftable device
+A handful of units given as gifts, set up by recipients on an iPhone and
+updated over the air afterwards ([proposal and research](giftable-device-proposal.md)).
+- [ ] **Signed OTA with rollback on the user's board:**
+  [0083](decisions/0083-flash-layout-for-updatable-devices.md) layout and
+  `dram2` heap, [0086](decisions/0086-bootloader-rollback-and-health-check.md)
+  custom bootloader (rootless Docker, `espressif/idf` v6.1), reset on panic,
+  watchdog and health check, [0085](decisions/0085-signed-updates-and-release-keys.md)
+  manifest, `overhead-release` signing tool (key made by the user on the Mac),
+  Pages hosting, and the brick drill. Ends with the board updating itself
+  from `beta`.
+- [ ] **Settings store and iOS setup app:** [0084](decisions/0084-settings-store.md)
+  and [0087](decisions/0087-ios-setup-app-over-ble.md): BLE setup service
+  with passkey pairing, the app in `ios/` on TestFlight for the user, release
+  images with no personal data, factory reset and the info page. Ends with the
+  board set up only through the app, then updated over the air with its
+  settings intact. BLE coexistence already shown by the
+  [spike](../firmware/README.md#ble-coexistence-spike).
+- [ ] **Gift readiness:** the app on the App Store, a soak of a release image
+  set up only through the app, setup on an iPhone that isn't the user's, the
+  release and recovery checklist (key backup, USB recovery flash), and
+  flashing the gift units.
+
+**Done when:** a device set up only through the iOS app on an iPhone that
+isn't the user's tracks at its recipient's location and receives a signed
+`stable` release with no hands-on step, and the brick drill has passed on the
+user's board. M6's open items stay in M6; the 2026-11-06 `NO FRAME` remains a
+concern, and a recurrence on any board blocks gift readiness.
+
 ## Boundaries
 Keep tuning inputs explicit; they need not be device settings. Defer uncertain
 presentation policies rather than building a plugin system. Knob hardware and
 continuous zoom are in scope under M6 ([0060](decisions/0060-defer-timing-to-physical-prototype.md)).
-Enclosure, battery integration, RTC, real location source, and Starlink/full
+Enclosure, battery integration, RTC, an Android app, and Starlink/full
 catalogue remain outside this roadmap.

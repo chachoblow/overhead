@@ -1,7 +1,7 @@
 # 0004 — Hardcoded location for now
 
 Date: 2026-10-04
-Status: accepted (interim — expect a successor decision)
+Status: superseded by [0084](0084-settings-store.md) and [0087](0087-ios-setup-app-over-ble.md) (2026-11-08): location becomes a stored setting sent from the iOS setup app; build-time values are developer-only.
 
 ## Decision
 The observer location is a configured latitude/longitude constant: a config

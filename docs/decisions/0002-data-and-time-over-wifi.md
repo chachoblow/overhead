@@ -25,3 +25,9 @@ its clock via SNTP on each connection. No battery-backed RTC for now.
   timestamp persist in flash.
 - The planned simulator uses host time and a checked-in OMM snapshot.
 - Adding an RTC later remains open if offline boot matters.
+
+## Note — 2026-11-08: credentials move to the settings store
+[0084](0084-settings-store.md): Wi-Fi credentials are a stored setting entered
+through the iOS setup app ([0087](0087-ios-setup-app-over-ble.md)), not build
+values; build-time `SSID`/`PASSWORD` remain only under the developer
+`dev-settings` feature. Fetch and SNTP behavior are unchanged.

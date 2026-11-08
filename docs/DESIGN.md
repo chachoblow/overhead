@@ -1,7 +1,10 @@
 # Overhead — Design
 
 A handheld, realtime satellite radar for a set location, inspired by Nathan
-Matsuda's flight-tracking interfaces. A rewrite of “Satellite notifier,” which
+Matsuda's flight-tracking interfaces. A handful will be given as gifts: each
+recipient sets Wi-Fi and location from an iPhone app over Bluetooth, and the
+device updates itself over the air from signed releases
+([0083–0087](decisions/0083-flash-layout-for-updatable-devices.md)). A rewrite of “Satellite notifier,” which
 used an LED matrix and a position API.
 
 ## Hardware
@@ -240,7 +243,10 @@ information or battery indicator.
 [On-device SGP4](decisions/0001-on-device-sgp4.md),
 [Wi-Fi elements/SNTP](decisions/0002-data-and-time-over-wifi.md),
 [curated catalogue](decisions/0003-curated-catalogue.md)
-(scale tuned through [0021](decisions/0021-radar-first-iteration-on-verified-engine.md)), and
-[configured location](decisions/0004-hardcoded-location.md) are settled;
+(scale tuned through [0021](decisions/0021-radar-first-iteration-on-verified-engine.md)),
+[recipient-set location and Wi-Fi](decisions/0084-settings-store.md) through the
+[iOS setup app](decisions/0087-ios-setup-app-over-ble.md), and
+[signed over-the-air updates](decisions/0085-signed-updates-and-release-keys.md)
+with [rollback](decisions/0086-bootloader-rollback-and-health-check.md) are settled;
 follow those records for rationale and constraints. Implementation order and
 deferred scope belong to [PLAN.md](PLAN.md).
