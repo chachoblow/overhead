@@ -1,5 +1,5 @@
 # The device can be set up over BLE with passkey pairing
-Status: active: nRF Connect check with the user next
+Status: active: published release next
 Started: 2026-11-08. Scope: PLAN M7 item 2, firmware half (user, 2026-11-08:
 split agreed; the iOS app is the next item); decisions
 [0084](../decisions/0084-settings-store.md), [0087](../decisions/0087-ios-setup-app-over-ble.md),
@@ -67,7 +67,7 @@ iPhone check forces it (then one bond in settings format 3).
       protocol from devbox, passkey from the UART log (`--passkey-log`).
 - [x] board runs: empty settings → setup → tracking; 3 s re-entry; factory
       reset; wrong passphrase; memory; join timeout (runs 5b–7).
-- [ ] user gates: physical presses/screens, nRF Connect.
+- [x] user gates: physical presses/screens, nRF Connect.
 - [ ] published release via Mac signing; OTA with settings intact.
 - [ ] promote: decision note(s) on 0084/0087 (protocol contract), firmware
       README usage/evidence, tools README, PLAN, HANDOFF, PROGRESS.
@@ -165,7 +165,9 @@ iPhone check forces it (then one bond in settings format 3).
   One stalled pairing (stale table), one `ConfirmValueFailed` (code from a
   previous connection typed), then paired `EncryptedAuthenticated`, not
   bonded, `GetInfo` → `0181…` notification. Stack watermark 22,656 of
-  46,920 B.
+  46,920 B. Factory reset (`held_ms=14338`, settings + elements erased) →
+  pair again from the same iPhone: new code asked, paired, `GetInfo`
+  answered; no "Forget This Device" needed (user: A). No bond store.
 
 ## Open questions
 - GATT caching: iOS keeps an unbonded device's attribute table, so the
