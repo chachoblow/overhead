@@ -1,5 +1,5 @@
 # The device can be set up over BLE with passkey pairing
-Status: active: physical checks with the user next
+Status: active: nRF Connect check with the user next
 Started: 2026-11-08. Scope: PLAN M7 item 2, firmware half (user, 2026-11-08:
 split agreed; the iOS app is the next item); decisions
 [0084](../decisions/0084-settings-store.md), [0087](../decisions/0087-ios-setup-app-over-ble.md),
@@ -65,8 +65,8 @@ iPhone check forces it (then one bond in settings format 3).
       every `live-fetch-radar`/`device` image, static heap 128 KiB + dram2.
 - [x] tools: `overhead-setup-client` (bluer, Linux-only deps) driving the
       protocol from devbox, passkey from the UART log (`--passkey-log`).
-- [ ] board runs: empty settings → setup → tracking; 3 s re-entry; factory
-      reset; wrong passphrase; memory.
+- [x] board runs: empty settings → setup → tracking; 3 s re-entry; factory
+      reset; wrong passphrase; memory; join timeout (runs 5b–7).
 - [ ] user gates: physical presses/screens, nRF Connect.
 - [ ] published release via Mac signing; OTA with settings intact.
 - [ ] promote: decision note(s) on 0084/0087 (protocol contract), firmware
@@ -151,5 +151,11 @@ iPhone check forces it (then one bond in settings format 3).
 - Run 7 (ELF `408fdff9…`, setup-test, no `dev-settings`, settings kept):
   for the physical checks. Short press during tracking: info page shown,
   then hidden (`INFO_PAGE shown=true/false`); user: looked good.
+  IO6 held at boot: `held_ms=3845 hold=Setup` → setup `reason=Button
+  configured=true`; client paired (code on the Sharp) and saved → tracking.
+  Held `16214 ms` → `FactoryReset`: settings and elements erased → setup
+  `reason=FactoryReset configured=false` (`Info`: nothing stored,
+  last_fetch 0); Sharp showed the erased / "use your phone" screen (user).
+  Client set it up again → `Saved` → fresh fetch (2.7 s) → tracking (sky=6).
 
 ## Open questions
