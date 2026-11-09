@@ -181,7 +181,9 @@ pub enum Response<'a> {
 /// Device status. Payload: build u32, version string, channel u8, MAC 6
 /// bytes, flags u8, setup reason u8, stored SSID string (empty if none), last
 /// successful element fetch (Unix seconds, 0 = none) i64, last build that
-/// failed its health check (0 = none) u32.
+/// failed its health check (0 = none) u32, result of this setup window's
+/// last `Configure` u8 (0xFF = none: a client that lost the link during
+/// `Testing` reconnects and reads it here).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Info<'a> {
     pub build: u32,
@@ -194,6 +196,7 @@ pub struct Info<'a> {
     pub ssid: &'a str,
     pub last_fetch_unix_s: i64,
     pub failed_build: u32,
+    pub last_result: Option<ConfigureResult>,
 }
 
 impl Info<'_> {
@@ -454,6 +457,7 @@ pub fn encode_response(r: &Response, buf: &mut [u8]) -> Result<usize, EncodeErro
             w.str(i.ssid, SSID_MAX)?;
             w.bytes(&i.last_fetch_unix_s.to_le_bytes())?;
             w.bytes(&i.failed_build.to_le_bytes())?;
+            w.u8(i.last_result.map_or(0xFF, ConfigureResult::byte))?;
         }
         Response::Network(n) => {
             w.bytes(&n.rssi_dbm.to_le_bytes())?;
@@ -487,6 +491,10 @@ pub fn decode_response(frame: &[u8]) -> Result<Frame<Response<'_>>, DecodeError>
             ssid: r.str(SSID_MAX)?,
             last_fetch_unix_s: i64::from_le_bytes(r.array()?),
             failed_build: u32::from_le_bytes(r.array()?),
+            last_result: match r.u8()? {
+                0xFF => None,
+                b => Some(ConfigureResult::from_byte(b).ok_or(DecodeError::BadValue)?),
+            },
         }),
         ty::NETWORK => Response::Network(Network {
             rssi_dbm: i8::from_le_bytes(r.array()?),

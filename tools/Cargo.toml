@@ -14,3 +14,13 @@ serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value"] }
 # 0085: manifest signing and checks shared with the firmware.
 overhead-update = { path = "../update", features = ["sign"] }
+# 0087 BLE setup protocol frames, shared with the firmware.
+overhead-setup = { path = "../setup" }
+
+# `overhead-setup-client` only (devbox: BlueZ over D-Bus). Linux-only so the
+# workspace still builds on macOS. bluer is BlueZ's official Rust binding and,
+# unlike btleplug, registers a pairing agent (needed for the passkey).
+[target.'cfg(target_os = "linux")'.dependencies]
+bluer = { version = "0.17.4", features = ["bluetoothd"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "fs", "io-std", "io-util"] }
+futures = "0.3"

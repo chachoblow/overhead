@@ -18,6 +18,12 @@ pub const JOIN_TIMEOUT_S: u64 = 5 * 60;
 pub const SETUP_IDLE_S: u64 = 10 * 60;
 /// Networks sent per scan, strongest first.
 pub const SCAN_MAX: usize = 20;
+/// While no app is connected the device rescans this often, so a `Scan` is
+/// answered without sweeping channels under a live BLE link (a sweep can
+/// outlast a central's supervision timeout).
+pub const RESCAN_S: u64 = 60;
+/// A cached scan younger than this answers `Scan`; older, the device scans.
+pub const SCAN_CACHE_S: u64 = 120;
 
 /// What the knob switch held at boot asks for.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -96,9 +102,12 @@ pub fn configured(s: &Settings, wifi: Wifi, site: Site) -> Settings {
 }
 
 /// Up to `SCAN_MAX` networks, one entry per SSID (its strongest access
-/// point), strongest first; hidden (empty) SSIDs are left out.
+/// point and that point's channel), strongest first; hidden (empty) SSIDs
+/// are left out.
+#[derive(Clone)]
 pub struct NetworkList {
-    entries: [(Ssid, i8, Security); SCAN_MAX],
+    /// SSID, RSSI (dBm), security, channel.
+    entries: [(Ssid, i8, Security, u8); SCAN_MAX],
     len: usize,
 }
 
@@ -130,12 +139,22 @@ impl NetworkList {
                 },
                 0,
                 Security::Unsupported,
+                0,
             ); SCAN_MAX],
             len: 0,
         }
     }
 
-    pub fn offer(&mut self, ssid: &str, rssi_dbm: i8, security: Security) {
+    /// The channel of `ssid`'s strongest access point, if it was seen.
+    pub fn channel_of(&self, ssid: &str) -> Option<u8> {
+        self.entries[..self.len]
+            .iter()
+            .find(|e| e.0.as_str() == ssid)
+            .map(|e| e.3)
+            .filter(|c| (1..=14).contains(c))
+    }
+
+    pub fn offer(&mut self, ssid: &str, rssi_dbm: i8, security: Security, channel: u8) {
         let b = ssid.as_bytes();
         if b.is_empty() || b.len() > overhead_setup::SSID_MAX || b.iter().all(|c| *c == 0) {
             return;
@@ -147,6 +166,7 @@ impl NetworkList {
             if rssi_dbm > e.1 {
                 e.1 = rssi_dbm;
                 e.2 = security;
+                e.3 = channel;
             }
             return;
         }
@@ -156,12 +176,12 @@ impl NetworkList {
         };
         s.bytes[..b.len()].copy_from_slice(b);
         if self.len < SCAN_MAX {
-            self.entries[self.len] = (s, rssi_dbm, security);
+            self.entries[self.len] = (s, rssi_dbm, security, channel);
             self.len += 1;
         } else if let Some(weakest) = self.entries.iter_mut().min_by_key(|e| e.1)
             && rssi_dbm > weakest.1
         {
-            *weakest = (s, rssi_dbm, security);
+            *weakest = (s, rssi_dbm, security, channel);
         }
     }
 
@@ -178,7 +198,7 @@ impl NetworkList {
         }
         entries
             .iter()
-            .map(|(s, rssi, sec)| overhead_setup::Network {
+            .map(|(s, rssi, sec, _)| overhead_setup::Network {
                 rssi_dbm: *rssi,
                 security: *sec,
                 ssid: s.as_str(),
@@ -335,12 +355,15 @@ mod tests {
     #[test]
     fn scan_list_dedupes_sorts_and_caps() {
         let mut l = NetworkList::new();
-        l.offer("", -30, Security::Open);
-        l.offer("\0\0", -30, Security::Open);
-        l.offer("b", -70, Security::Personal);
-        l.offer("a", -50, Security::Personal);
-        l.offer("b", -40, Security::Unsupported); // stronger AP of the same SSID
-        l.offer("a", -90, Security::Open); // weaker: ignored
+        l.offer("", -30, Security::Open, 1);
+        l.offer("\0\0", -30, Security::Open, 1);
+        l.offer("b", -70, Security::Personal, 1);
+        l.offer("a", -50, Security::Personal, 6);
+        l.offer("b", -40, Security::Unsupported, 11); // stronger AP of the same SSID
+        l.offer("a", -90, Security::Open, 3); // weaker: ignored
+        assert_eq!(l.channel_of("a"), Some(6));
+        assert_eq!(l.channel_of("b"), Some(11));
+        assert_eq!(l.channel_of("c"), None);
         let got: std::vec::Vec<_> = l
             .sorted()
             .map(|n| (n.ssid, n.rssi_dbm, n.security))
@@ -356,7 +379,7 @@ mod tests {
         let mut l = NetworkList::new();
         for i in 0..30i8 {
             let name = std::format!("n{i}");
-            l.offer(&name, -100 + i, Security::Personal);
+            l.offer(&name, -100 + i, Security::Personal, 0);
         }
         assert_eq!(l.len(), SCAN_MAX);
         let got: std::vec::Vec<_> = l.sorted().map(|n| n.rssi_dbm).collect();

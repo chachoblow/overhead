@@ -1,5 +1,5 @@
 # The device can be set up over BLE with passkey pairing
-Status: active
+Status: blocked: devbox BLE link too weak to verify (antennas?)
 Started: 2026-11-08. Scope: PLAN M7 item 2, firmware half (user, 2026-11-08:
 split agreed; the iOS app is the next item); decisions
 [0084](../decisions/0084-settings-store.md), [0087](../decisions/0087-ios-setup-app-over-ble.md),
@@ -60,8 +60,8 @@ iPhone check forces it (then one bond in settings format 3).
 - [x] firmware: info page in normal run (display task; builds).
 - [x] BLE spike removed (feature `ble-spike`, `ble_spike.rs`); BLE now in
       every `live-fetch-radar`/`device` image, static heap 128 KiB + dram2.
-- [ ] tools: `overhead-setup-client` (bluer) driving the protocol from
-      devbox, passkey from the UART capture in dev builds.
+- [x] tools: `overhead-setup-client` (bluer, Linux-only deps) driving the
+      protocol from devbox, passkey from the UART log (`--passkey-log`).
 - [ ] board runs: empty settings → setup → tracking; 3 s re-entry; factory
       reset; wrong passphrase; memory.
 - [ ] user gates: physical presses/screens, nRF Connect.
@@ -94,7 +94,40 @@ iPhone check forces it (then one bond in settings format 3).
   word; whether the 0086 bootloader keeps it across `software_reset` is
   checked on the board.
 - Info page: a press can be missed during a TLS stall (~450 ms loop gap).
+- Run 1: CPU0 stack overflow right after BLE start (trouble-host makes its
+  P-256 key pair on the runner's first poll). Static heap 128 → 96 KiB:
+  stack 48,936 B; pairing wrote 20,304 B (run 2). Internal free in setup:
+  172 KB at open, 92.6 KB after the BLE controller.
+- Run 2: a Wi-Fi scan while connected dropped the link (BlueZ's default
+  420 ms supervision timeout); every notification after it failed (ATT 1).
+  Run 3 asks for 30–50 ms interval / 4 s timeout after connect
+  (`update_connection_params`).
+- devbox hears the board at −95/−96 dBm (AX200, likely no antennas or far
+  from the board): connects abort 1–2 times before one holds; run 3 lost the
+  link during pairing. Unclear yet whether that is RF or the param update
+  colliding with pairing.
 
 ## Verification
+- Runs use `live-fetch-radar,setup-test`, no `dev-settings`, build 0,
+  channel stable, each gated; settings partition (0x610000, 64 KiB) erased
+  before run 1 so setup opens `Unconfigured` (the board was on release 12
+  with dev-seeded settings; setup restores Wi-Fi/site). Logs
+  `firmware/target/setup/runN.log` (ignored).
+- Run 2 (ELF `14865939…`): `info` end to end: found `OVERHEAD-4508`,
+  paired `EncryptedAuthenticated`, not bonded, ATT MTU 246, `Info` v1 in
+  360 ms. Scan: device saw 14 APs, listed 11; link lost (above).
+- Run 3 (ELF `1fc2e149…`): conn params requested; link lost in pairing.
+- Run 4 (ELF `aad97e08…`): scan cache (rescan every 60 s while no app is
+  connected, `Scan` answered from a cache < 120 s old: 93 ms); test join
+  given the cached channel. Wrong passphrase: device classified
+  `FourWayHandshakeTimeout` → `WrongPassphrase` in 9.3 s, nothing saved, but
+  the link was gone before the result went out. ~half of sessions lose the
+  link in connect/pairing. No `ConnectionParamsUpdated` event ever arrives
+  (LL procedure or L2CAP fallback: unknown which, neither applied).
+- Run 5 (ELF `f289fe31…`): `Info.last_result` added (protocol v1, unshipped)
+  so a client that loses the link during `Testing` reconnects and reads the
+  result; the device's failure log no longer prints the SSID (run 4's did,
+  local log only). Link RSSI read returns 0 (controller doesn't report it).
+  1 of 3 `info` sessions completed.
 
 ## Open questions

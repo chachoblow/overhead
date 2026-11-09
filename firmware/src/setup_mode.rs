@@ -275,6 +275,15 @@ struct Device {
     elements: Option<(u32, u32)>,
     mac: [u8; 6],
     reason: SetupReason,
+    /// CPU0 stack paint, scanned once after the first pairing (P-256).
+    painted: Option<crate::stack_watermark::Painted>,
+    /// The last scan (made while no app was connected when possible), its
+    /// result and uptime.
+    cache: NetworkList,
+    cache_ok: bool,
+    cache_at_us: Option<u64>,
+    /// This window's last `Configure` result, for a client that lost the link.
+    last_result: Option<ConfigureResult>,
 }
 
 impl Device {
@@ -304,7 +313,20 @@ impl Device {
             ssid: s.wifi.as_ref().map_or("", |w| w.ssid()),
             last_fetch_unix_s: last_fetch.unwrap_or(0),
             failed_build: s.failed_build.unwrap_or(0),
+            last_result: self.last_result,
         }
+    }
+
+    /// Rescans into the cache.
+    async fn refresh(&mut self) {
+        let mut list = NetworkList::new();
+        self.cache_ok = self.scan(&mut list).await;
+        self.cache = list;
+        self.cache_at_us = Some(uptime_us());
+    }
+
+    fn cache_age_s(&self) -> Option<u64> {
+        self.cache_at_us.map(|t| (uptime_us() - t) / 1_000_000)
     }
 
     /// Scans into `list`; false if the scan failed.
@@ -320,6 +342,7 @@ impl Device {
                         ap.ssid.as_str(),
                         ap.signal_strength,
                         security(ap.auth_method),
+                        ap.channel,
                     );
                 }
                 println!("SETUP scan seen={} listed={}", aps.len(), list.len());
@@ -334,13 +357,18 @@ impl Device {
 
     /// Joins `wifi` and waits for a DHCP lease, then leaves the network.
     async fn test(&mut self, wifi: &Wifi) -> ConfigureResult {
-        let station = Config::Station(
-            StationConfig::default()
-                .with_ssid(wifi.ssid().try_into().expect("checked SSID"))
-                .with_authentication(AuthenticationMethodConfig::Wpa2Personal(
-                    wifi.passphrase().try_into().expect("checked passphrase"),
-                )),
-        );
+        let mut config = StationConfig::default()
+            .with_ssid(wifi.ssid().try_into().expect("checked SSID"))
+            .with_authentication(AuthenticationMethodConfig::Wpa2Personal(
+                wifi.passphrase().try_into().expect("checked passphrase"),
+            ));
+        // The cached channel spares the join a full sweep under the BLE link.
+        let channel = self.cache.channel_of(wifi.ssid());
+        if let Some(c) = channel {
+            config = config.with_channel(c);
+        }
+        println!("SETUP test channel={channel:?}");
+        let station = Config::Station(config);
         if let Err(e) = self.controller.set_config(&station) {
             println!("SETUP test set_config_failed {e:?}");
             return ConfigureResult::JoinFailed;
@@ -350,7 +378,13 @@ impl Device {
         {
             Err(_) => ConfigureResult::JoinFailed,
             Ok(Err(e)) => {
-                println!("SETUP test connect_failed {e:?}");
+                // The reason only: the disconnect info holds the SSID.
+                match &e {
+                    ConnectionError::Failed(info) => {
+                        println!("SETUP test connect_failed reason={:?}", info.reason)
+                    }
+                    _ => println!("SETUP test connect_failed wifi_error"),
+                }
                 join_failure(&e)
             }
             Ok(Ok(_)) => match with_timeout(Wait::from_secs(20), self.stack.wait_config_up()).await
@@ -381,6 +415,7 @@ pub async fn run(
     wifi: WIFI<'static>,
     bt: BT<'static>,
     seed: u64,
+    painted: crate::stack_watermark::Painted,
 ) -> ! {
     let mac = esp_hal::efuse::base_mac_address();
     let mac: [u8; 6] = mac.as_bytes().try_into().expect("6-byte MAC");
@@ -418,6 +453,11 @@ pub async fn run(
         elements,
         mac,
         reason,
+        painted: Some(painted),
+        cache: NetworkList::new(),
+        cache_ok: false,
+        cache_at_us: None,
+        last_result: None,
     };
     ble::serve(bt, name, mac, device, configured).await
 }
@@ -520,32 +560,39 @@ mod ble {
         let _ = join(run_host(runner), async {
             let mut idle_since = uptime_us();
             loop {
-                let idle_left_s = setup_policy::SETUP_IDLE_S
-                    .saturating_sub((uptime_us() - idle_since) / 1_000_000);
-                let accepted = if configured {
-                    match with_timeout(
-                        Wait::from_secs(idle_left_s.max(1)),
-                        advertise(name, &mut peripheral, &server),
-                    )
-                    .await
-                    {
-                        Ok(r) => r,
-                        Err(_) => {
-                            println!(
-                                "SETUP idle_timeout after_s={}; restarting on the stored settings",
-                                setup_policy::SETUP_IDLE_S
-                            );
-                            ota::reset();
-                        }
-                    }
-                } else {
-                    advertise(name, &mut peripheral, &server).await
+                let idle_s = (uptime_us() - idle_since) / 1_000_000;
+                if configured && idle_s >= setup_policy::SETUP_IDLE_S {
+                    println!(
+                        "SETUP idle_timeout after_s={}; restarting on the stored settings",
+                        setup_policy::SETUP_IDLE_S
+                    );
+                    ota::reset();
+                }
+                // Scan while no app is connected (advertising pauses for it).
+                if device
+                    .cache_age_s()
+                    .is_none_or(|a| a >= setup_policy::RESCAN_S)
+                {
+                    device.refresh().await;
+                }
+                let mut wait_s = setup_policy::RESCAN_S;
+                if configured {
+                    wait_s = wait_s.min(setup_policy::SETUP_IDLE_S.saturating_sub(idle_s));
+                }
+                let accepted = match with_timeout(
+                    Wait::from_secs(wait_s.max(1)),
+                    advertise(name, &mut peripheral, &server),
+                )
+                .await
+                {
+                    Ok(r) => r,
+                    Err(_) => continue,
                 };
                 match accepted {
                     Ok(conn) => {
                         CONNECTED.store(true, Ordering::Relaxed);
                         println!("SETUP ble_connected internal_free={}", internal_free());
-                        session(&server, &conn, &mut device).await;
+                        session(&stack, &server, &conn, &mut device).await;
                         CONNECTED.store(false, Ordering::Relaxed);
                         idle_since = uptime_us();
                         show(Show::Waiting);
@@ -623,11 +670,33 @@ mod ble {
     }
 
     /// One phone connection: pairing, then requests until it disconnects.
-    async fn session<P: PacketPool>(
+    async fn session(
+        stack: &trouble_host::Stack<'_, Controller, DefaultPacketPool>,
         server: &Server<'_>,
-        conn: &GattConnection<'_, '_, P>,
+        conn: &GattConnection<'_, '_, DefaultPacketPool>,
         device: &mut Device,
     ) {
+        // A Wi-Fi scan or join takes the shared radio for long stretches;
+        // BlueZ's default 420 ms supervision timeout drops the link then.
+        // Ask for 4 s (Apple's accessory rules: 2–6 s, max interval at least
+        // 15 ms above min).
+        let params = RequestedConnParams {
+            min_connection_interval: embassy_time::Duration::from_millis(30),
+            max_connection_interval: embassy_time::Duration::from_millis(50),
+            max_latency: 0,
+            min_event_length: embassy_time::Duration::from_millis(0),
+            max_event_length: embassy_time::Duration::from_millis(0),
+            supervision_timeout: embassy_time::Duration::from_secs(4),
+        };
+        match conn.raw().update_connection_params(stack, &params).await {
+            Ok(()) => println!("SETUP conn_params requested supervision_ms=4000"),
+            Err(e) => println!("SETUP conn_params_failed {e:?}"),
+        }
+        // The device's view of the link, to tell weak RF from coexistence.
+        match conn.raw().rssi(stack).await {
+            Ok(r) => println!("SETUP link rssi_dbm={r}"),
+            Err(e) => println!("SETUP link rssi_failed {e:?}"),
+        }
         // Ask the phone to pair now, so the code shows at once (a request
         // before pairing is refused by the characteristic permissions).
         if let Err(e) = conn.raw().request_security() {
@@ -653,6 +722,27 @@ mod ble {
                         internal_free()
                     );
                     show(Show::Paired);
+                    if let Some(p) = device.painted.take() {
+                        // SAFETY: same CPU0 stack and boot as the paint.
+                        let w = unsafe { p.scan() };
+                        println!(
+                            "SETUP stack_watermark observed_bytes={} stack_bytes={}",
+                            w.observed_bytes,
+                            w.stack_top - w.stack_low
+                        );
+                    }
+                }
+                GattConnectionEvent::ConnectionParamsUpdated {
+                    conn_interval,
+                    peripheral_latency,
+                    supervision_timeout,
+                } => {
+                    println!(
+                        "SETUP conn_params interval_ms={} latency={peripheral_latency} \
+                         supervision_ms={}",
+                        conn_interval.as_millis(),
+                        supervision_timeout.as_millis()
+                    );
                 }
                 GattConnectionEvent::PairingFailed(e) => {
                     println!("SETUP pairing_failed {e:?}");
@@ -711,8 +801,14 @@ mod ble {
             }
             Request::Scan => {
                 println!("SETUP request scan");
-                let mut list = NetworkList::new();
-                let ok = device.scan(&mut list).await;
+                let age = device.cache_age_s();
+                if age.is_none_or(|a| a >= setup_policy::SCAN_CACHE_S) || !device.cache_ok {
+                    device.refresh().await;
+                } else {
+                    println!("SETUP scan cached age_s={age:?}");
+                }
+                let ok = device.cache_ok;
+                let mut list = device.cache.clone();
                 let count = list.len() as u8;
                 for n in list.sorted() {
                     notify(server, conn, &Response::Network(n)).await;
@@ -739,6 +835,7 @@ mod ble {
                         result = ConfigureResult::SaveFailed;
                     }
                 }
+                device.last_result = Some(result);
                 notify(server, conn, &Response::ConfigureResult(result)).await;
                 if result == ConfigureResult::Saved {
                     show(Show::Saved(wifi));

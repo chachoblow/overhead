@@ -151,9 +151,10 @@ const UTC_BUDGET_US: u64 = 100_000;
 const FOV_DEG: f64 = 60.0;
 /// Internal-RAM heap. Before PSRAM (0077) one 160 KiB heap held everything
 /// and peaked at ~137 KB with 20 STATIONS objects. The BLE controller (0087
-/// setup) adds ~33 KB of statics (mostly IRAM code in the shared D/IRAM), so
-/// the static heap is 128 KiB plus the bootloader-reclaimed `dram2` region.
-const HEAP_SIZE: usize = 128 * 1024;
+/// setup) adds ~33 KB of statics (mostly IRAM code in the shared D/IRAM), and
+/// pairing's P-256 work needs CPU0 stack, so the static heap is 96 KiB plus
+/// the bootloader-reclaimed `dram2` region (72 KiB); the rest is stack.
+const HEAP_SIZE: usize = 96 * 1024;
 /// 0077: most objects tracked from one load; ~1.6× the 156-object `visual`
 /// group of 2026-11-03.
 const OBJECT_LIMIT: usize = 256;
@@ -635,6 +636,7 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
             p.WIFI,
             p.BT,
             seed,
+            painted,
         )
         .await
     }

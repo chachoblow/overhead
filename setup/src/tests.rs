@@ -30,6 +30,7 @@ const INFO: Info = Info {
     ssid: "home",
     last_fetch_unix_s: 1_794_000_000,
     failed_build: 0,
+    last_result: Some(ConfigureResult::WrongPassphrase),
 };
 
 /// Reference bytes for the iOS app's tests: change only with a new version.
@@ -62,6 +63,7 @@ fn fixed_vectors() {
         4, b'h', b'o', b'm', b'e',
         0x80, 0x44, 0xEE, 0x6A, 0, 0, 0, 0, // 1_794_000_000
         0, 0, 0, 0,
+        5, // last result: WrongPassphrase (0xFF: none)
     ];
     assert_eq!(&b[..n], expected);
 
@@ -224,6 +226,17 @@ fn newer_peers_keep_working() {
     b[n] = 0x42;
     let f = decode_response(&b[..n + 1]).unwrap();
     assert_eq!((f.version, f.message), (2, Response::Info(INFO)));
+    // No result yet encodes as 0xFF.
+    let none = Info {
+        last_result: None,
+        ..INFO
+    };
+    let (b, n) = resp(&Response::Info(none));
+    assert_eq!(b[n - 1], 0xFF);
+    assert_eq!(
+        decode_response(&b[..n]).unwrap().message,
+        Response::Info(none)
+    );
 }
 
 #[test]
