@@ -2,7 +2,7 @@
 //! a Linux host through BlueZ, with the same protocol crate as the firmware.
 //! A test tool for devbox, not the setup app. Usage: tools/README.md.
 //!
-//! The passphrase and site are never printed.
+//! The SSID it sends, the passphrase and the site are never printed.
 
 #[cfg(not(target_os = "linux"))]
 fn main() {
@@ -175,7 +175,7 @@ Without --passkey/--passkey-log the passkey is read from stdin.";
                     .lines()
                     .filter_map(|l| l.split("SETUP_PASSKEY ").nth(1))
                     .filter_map(|c| c.trim().get(..6)?.parse().ok())
-                    .last()
+                    .next_back()
                 {
                     return Some(code);
                 }

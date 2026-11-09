@@ -501,3 +501,27 @@ the public key for `firmware/src/release_keys.rs`. `sign` copies the image to
 `OUT/ota/images/BUILD.bin` and writes `OUT/ota/CHANNEL/manifest.json`, then
 checks it with the device's own verification. BUILD must equal the image's
 `OVERHEAD_BUILD`. Release steps: [firmware README](../firmware/README.md#signed-ota-and-rollback-00830086).
+
+## `overhead-setup-client`
+
+Drives a device's BLE setup service ([0087](../docs/decisions/0087-ios-setup-app-over-ble.md))
+from Linux through BlueZ (`bluer`, `tokio`; Linux-only dependencies, so the
+Mac builds a stub). A devbox test tool sharing the firmware's protocol crate
+(`setup/`), not the setup app. It finds the first `OVERHEAD-` device, pairs
+(passkey from `--passkey N`, or the newest `SETUP_PASSKEY` line in a
+`setup-test` image's UART log), sends one request, prints the response lines
+and removes the device from BlueZ, so each run pairs afresh. It never prints
+the SSID it sends, the passphrase or the site.
+
+```sh
+cargo build -p overhead-tools --bin overhead-setup-client
+C=target/debug/overhead-setup-client L=firmware/target/setup/runN.log
+$C --passkey-log $L info
+$C --passkey-log $L scan
+$C --passkey-log $L configure --wifi-env firmware/.wifi.env \
+  --site-env firmware/.site.env [--passphrase WRONG]   # SSID/PASSWORD, SITE_* keys
+$C --passkey-log $L raw 0101                            # one hex frame
+```
+
+Needs `bluetooth.service` (devbox: `bluez`, see ~/code/devbox/README.md)
+and, on devbox, the AX200's antennas.

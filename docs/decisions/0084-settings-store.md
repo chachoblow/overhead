@@ -41,3 +41,12 @@ format 1 (migrated on the board). `pending_build` is an internal field: the
 build an install activated but has not confirmed (0086). Wi-Fi/site and
 `dev-settings` moved from M7 item 2 into item 1 (user, 2026-11-08) because
 the `beta` image is published. `failed_build` keeps only the last failure.
+
+## Note — 2026-11-09: no bonds; setup writes format 2
+
+No BLE bonds are stored: every setup session pairs afresh with a new
+passkey, and the user's iPhone paired again after a factory reset without
+"Forget This Device" ([0087 note](0087-ios-setup-app-over-ble.md#note--2026-11-09-setup-protocol-and-firmware)).
+The bonding-keys field is therefore not added; format 2 stays current, and
+setup replaces its Wi-Fi/site with a tested network. A factory reset writes
+defaults on `stable`, keeping only `failed_build`.

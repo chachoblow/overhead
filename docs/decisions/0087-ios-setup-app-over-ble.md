@@ -49,3 +49,44 @@ must not depend on anyone opening it, [0085](0085-signed-updates-and-release-key
 - Unmeasured until the work item: pairing cost, long connections, BLE during a
   refresh with a phone connected; two of three first connection attempts
   timed out in the spike.
+
+## Note — 2026-11-09: setup protocol and firmware
+
+Firmware half done (M7 item 2, split from the app with the user,
+2026-11-08); usage and board evidence in the
+[firmware README](../../firmware/README.md#ble-setup-service-0087).
+- **Protocol contract** (`setup/`, `overhead-setup`, no_std, no alloc; types
+  and fixed byte vectors in its tests are the Swift app's reference).
+  Service `6f760010-8a3e-4c1d-9b7a-0b5e1c2d3a40`; the client writes request
+  frames to `…0011` (write with response) and reads responses as
+  notifications on `…0012`; both need an authenticated (passkey) link. A
+  frame is `version, type, payload` in one ATT value (≤180 bytes; MTU 246 on
+  BlueZ and iOS). Version 1: requests `GetInfo`, `Scan`, `Configure`;
+  responses `Info`, `Network`×n + `ScanDone`, `Testing` then
+  `ConfigureResult`, `Error`. Fields are only appended; readers ignore
+  trailing bytes and answer unknown types with `Error`. Requests are answered
+  one at a time, in order. `Info.last_result` carries the window's last
+  `Configure` result, so a client that loses the link while the device
+  tests a network can reconnect and read it.
+- **GATT table is fixed.** iOS caches an unbonded device's attribute table
+  (it showed the old spike's service until Bluetooth was toggled), so the
+  service's attributes never change for a device's life; new behaviour goes
+  into frames or a new service UUID with Service Changed added first.
+- **No bonds** (see [0084 note](0084-settings-store.md#note--2026-11-09-no-bonds-setup-writes-format-2)):
+  `DisplayOnly`, LE Secure Connections, not bondable. Rejected: storing one
+  bond (iOS re-pairs after a factory reset without "Forget").
+- **Setup is a separate boot mode.** The window replaces the radar (no
+  fetch/TLS while BLE runs) and is left by a software reset after a save, or
+  after 10 min with no client when settings exist (so a slow router after a
+  power cut doesn't strand the device). While an update is on
+  probation (0086) it opens only with no Wi-Fi stored. The 5 min join timeout survives the reset as an RTC flag.
+- **Scanning.** The device scans while no client is connected (every 60 s)
+  and answers `Scan` from that cache when it is < 120 s old: a scan under a
+  live link took the shared radio long enough to drop BlueZ's link. The test
+  join uses the scanned channel. The device asks for a 4 s supervision
+  timeout; iOS applies it, BlueZ doesn't.
+- **Costs.** BLE controller ~35 KB internal; 92.5 KB internal free while
+  paired. Pairing's P-256 work needs ~22.6 KB of CPU0 stack, so the static
+  heap shrank 128 → 96 KiB (stack 46.9 KB). Pairing ~4.4 s.
+- Dev images only (`setup-test`) print the passkey on UART; release images
+  never do. The channel can't be changed over BLE.

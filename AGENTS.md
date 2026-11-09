@@ -32,11 +32,15 @@ progress reports. Handoffs normally happen when a work item completes.
   400×240 radar/readouts consuming shared app state.
 - `sim/` → `overhead-sim`: real-data SDL2 replay, 400×240 at 2×, LcdWhite theme;
   explicit inputs and headless PNG snapshots. Usage in sim/README.md.
-- `tools/` → `overhead-tools`: headless tracking/catalogue tools, offline fixture generators
-  and `overhead-release` (OTA signing, run on the key holder's Mac); usage in
+- `tools/` → `overhead-tools`: headless tracking/catalogue tools, offline fixture generators,
+  `overhead-release` (OTA signing, run on the key holder's Mac) and
+  `overhead-setup-client` (BLE setup test client, Linux/BlueZ); usage in
   tools/README.md. Default binary is still a placeholder.
 - `update/` → `overhead-update`: no_std + alloc signed OTA manifests (0085),
   shared by the firmware and `overhead-release`.
+- `setup/` → `overhead-setup`: no_std, no alloc versioned BLE setup protocol
+  (0087), shared by the firmware and `overhead-setup-client`; its byte
+  vectors are the iOS app's reference.
 - `firmware/` → `overhead-s3-benchmark`: no_std S3 kernel benchmark and device
   diagnostics, plus the device app (`--features device`, `overhead-s3-device`,
   [0076](docs/decisions/0076-device-app-build.md)); excluded from host workspace. Own lockfile and local

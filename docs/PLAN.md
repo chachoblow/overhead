@@ -7,7 +7,7 @@ fetch runs under [0071](decisions/0071-https-element-fetch-first-slice.md),
 [0074](decisions/0074-live-utc-radar-on-fetched-elements.md) and
 [0075](decisions/0075-fetched-element-refresh-and-staleness.md); the device
 app build is [0076](decisions/0076-device-app-build.md). M7 giftable device
-(accepted 2026-11-08, [0083–0087](decisions/0083-flash-layout-for-updatable-devices.md)) is next.**
+(accepted 2026-11-08, [0083–0087](decisions/0083-flash-layout-for-updatable-devices.md)) is in progress: OTA and the BLE setup service done, the iOS app next.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -377,15 +377,21 @@ updated over the air afterwards ([proposal and research](giftable-device-proposa
   user-signed release 12 from `beta` on raw GitHub
   ([evidence](../firmware/README.md#signed-ota-and-rollback-00830086)). The
   0084 Wi-Fi/site settings and release images without personal data were
-  pulled in here; `overhead.wesklein.com` awaits the user's DNS/Pages setup.
-- [ ] **Settings store and iOS setup app:** [0084](decisions/0084-settings-store.md)
-  and [0087](decisions/0087-ios-setup-app-over-ble.md): BLE setup service
-  with passkey pairing, the app in `ios/` on TestFlight for the user
-  (writing the settings record's Wi-Fi/site, done in item 1), bonding keys,
-  factory reset and the info page. Ends with the
-  board set up only through the app, then updated over the air with its
-  settings intact. BLE coexistence already shown by the
-  [spike](../firmware/README.md#ble-coexistence-spike).
+  pulled in here; `overhead.wesklein.com` went live 2026-11-09.
+- [x] **BLE setup service (firmware half of item 2; split agreed with the
+  user 2026-11-08):** [0087](decisions/0087-ios-setup-app-over-ble.md)'s
+  setup window, passkey pairing, versioned protocol (`setup/`,
+  `overhead-setup`), factory reset and info page, driven from devbox by
+  `overhead-setup-client`. Done 2026-11-09: set up from empty settings,
+  join-timeout and 3 s re-entry, factory reset, wrong passphrase, nRF Connect
+  pairing on the user's iPhone (no bond needed), and user-signed release 13
+  installed from `beta` with the BLE-saved settings intact
+  ([evidence](../firmware/README.md#ble-setup-service-0087)).
+- [ ] **iOS setup app:** the app in `ios/` (SwiftUI + CoreBluetooth) on
+  TestFlight for the user, written against the
+  [0087 protocol note](decisions/0087-ios-setup-app-over-ble.md#note--2026-11-09-setup-protocol-and-firmware)
+  and `setup/`'s byte vectors. Ends with the board set up only through the
+  app, then updated over the air with its settings intact.
 - [ ] **Gift readiness:** the app on the App Store, a soak of a release image
   set up only through the app, setup on an iPhone that isn't the user's, the
   release and recovery checklist (key backup, USB recovery flash), and

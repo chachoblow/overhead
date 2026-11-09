@@ -1836,33 +1836,15 @@ values).
 
 ## BLE coexistence spike
 
-Throwaway diagnostic for the [giftable-device proposal](../docs/giftable-device-proposal.md)
-(F: iOS setup app over BLE). `--features ble-spike` adds to the
-`live-fetch-radar` image (`src/ble_spike.rs`) a trouble-host =0.7.0 GATT
-peripheral on esp-radio's `ble` + `coex`, advertising `OVERHEAD-xxxx` (last two
-MAC bytes). Service `6f760001-…`: `6f760002-…` write/read (96 B stand-in for the
-setup payload), `6f760003-…` read/notify status (`received N bytes`). No
-pairing. Never a device image.
-
-Memory layout under the feature: 128 KiB static internal heap plus the
-bootloader-reclaimed `dram2` region (`#[ram(reclaimed)]`, 72 KiB of
-0x3FCDB700..0x3FCED710) as a second internal region. BLE adds ~33 KB of
-statics (BT controller code in the shared D/IRAM +20.6 KB, `.data` +5 KB,
-`.bss` +6 KB), so the usual 160 KiB static heap does not link; `dram2` is
-unused by every other image too.
-
-```sh
-set -a; . ./.wifi.env; . ./.site.env; set +a
-REFRESH_MINUTES=120 cargo build --release \
-  --bin overhead-s3-live-fetch-radar --features ble-spike
-# save-image (--partition-table partitions.csv), image_gate.py and flash as
-# for the device app; capture with --monitor
-```
-
-Lines: `BLE_INIT internal_free_before= internal_free_after= cost=`, `BLE_READY`,
-`BLE_ADVERTISING`, `BLE_CONNECTED`, `BLE_WRITE offset= len=` (bytes never
-printed), `BLE_DISCONNECTED reason=`, and every 60 s `BLE_MEM
-internal_free_min=` (sampled every 50 ms) `internal_free_now= connected=`.
+Historical (removed 2026-11-08; Git keeps `src/ble_spike.rs` and the
+`ble-spike` feature): a throwaway trouble-host GATT peripheral on the
+`live-fetch-radar` image for the [giftable-device proposal](../docs/giftable-device-proposal.md),
+with no pairing. It established that BLE adds ~33 KB of statics (BT
+controller code +20.6 KB in shared D/IRAM, `.data` +5 KB, `.bss` +6 KB), so
+the 160 KiB static heap no longer links and the bootloader-reclaimed `dram2`
+region (72 KiB, `#[ram(reclaimed)]`) became a second internal heap on every
+runtime image. Its service `6f760001-…` may still be in an iPhone's cache
+(see the [setup service](#ble-setup-service-0087)).
 
 **On-board evidence, 2026-11-08** (devbox, `/dev/ttyUSB0`, MAC
 `80:45:6b:2a:45:08`, ELF sha256 `4f6708af…`, gate passed, home site,
@@ -1878,8 +1860,68 @@ internal_free_min=` (sampled every 50 ms) `internal_free_now= connected=`.
 Not measured: pairing/encryption, long connections, BLE during a refresh
 with a phone connected.
 
-Since 0083 every runtime image adds `dram2` (the spike's 128 KiB static heap
-is unchanged); build the spike with `--features ble-spike,dev-settings`.
+## BLE setup service (0087)
+
+Every runtime image (`device`, `live-fetch-radar`) carries the setup window
+of [0087](../docs/decisions/0087-ios-setup-app-over-ble.md) (contract: its
+[2026-11-09 note](../docs/decisions/0087-ios-setup-app-over-ble.md#note--2026-11-09-setup-protocol-and-firmware);
+protocol crate `setup/`). Code: `src/setup_mode.rs` (the window: panel,
+boot hold, GATT server, scan cache, test join), `src/setup_policy.rs` (rules,
+host-tested), screens in `render/src/setup.rs`; the info page lives in
+`live_radar.rs`'s display task. BLE is off outside the window.
+
+- **Opens** with no Wi-Fi stored (`reason=Unconfigured`), after 5 min without
+  joining (`JoinTimeout`, an RTC flag across the reset), or with IO6 held
+  3 s at boot (`Button`; the Sharp says when to release). Held 10 s:
+  factory reset (settings and elements erased, `FactoryReset`). A short
+  press while tracking shows the info page for 30 s.
+- **Leaves** by a software reset 3 s after `Saved`, or after 10 min with no
+  client when settings exist.
+- Static heap is 96 KiB (was 128) so pairing's P-256 work fits the CPU0 stack.
+- `setup-test` (dev only) prints `SETUP_PASSKEY n` on UART for
+  [`overhead-setup-client`](../tools/README.md#overhead-setup-client). Test
+  from empty settings on an image without `dev-settings` (it re-seeds an
+  empty store); erase settings with `espflash erase-region --port
+  /dev/ttyUSB0 --chip esp32s3 0x610000 0x10000` (add elements: `0x60000`).
+
+```sh
+. "$HOME/export-esp.sh"
+OTA_CHANNEL=beta cargo build --release --locked --bin overhead-s3-device \
+  --features device,setup-test
+# save-image, image_gate.py and flash as in the OTA section, with --monitor
+# into target/setup/runN.log; then from the repo root:
+target/debug/overhead-setup-client --passkey-log firmware/target/setup/runN.log \
+  configure --wifi-env firmware/.wifi.env --site-env firmware/.site.env
+```
+
+Lines (never the SSID, passphrase or site): `SETUP boot_hold held_ms= hold=`,
+`SETUP factory_reset settings_ok= elements_ok=`, `SETUP open reason= name=
+configured= internal_free=`, `SETUP ble_init`, `SETUP scan seen= listed=`,
+`SETUP advertising`, `SETUP ble_connected`, `SETUP conn_params …`,
+`SETUP passkey_shown`, `SETUP paired level= bonded=`, `SETUP
+stack_watermark`, `SETUP request …`, `SETUP test channel=`, `SETUP test
+result= ms=`, `SETUP saved; restarting`, `SETUP join_timeout after_s=300`,
+`SETUP ble_disconnected reason=`, `INFO_PAGE shown=`.
+
+**On-board evidence, 2026-11-08/09** (devbox `/dev/ttyUSB0`, MAC
+`80:45:6b:2a:45:08`, every image gated; client on devbox's AX200, which
+needs its antennas: without them −95 dBm and half the sessions dropped):
+
+| Check | Result |
+|---|---|
+| Empty settings | setup `Unconfigured`; paired `EncryptedAuthenticated`, not bonded, MTU 246, ~4.4 s; `Info` 88 ms; `Scan` 11 networks from the cache in 97 ms |
+| Wrong passphrase | `WrongPassphrase` in 9.4 s, nothing stored, `Info.last_result` shows it |
+| Correct network | `Saved` in ~11 s → reset → joined at 2 s, tracking |
+| Join timeout | `dev-settings` seeded a network that doesn't exist: 300 s → reset → setup `JoinTimeout`; restored over BLE |
+| IO6 3 s / 10 s (user) | `Button` setup, code on the Sharp, saved; 14–16 s hold erased settings and elements, `FactoryReset`, refetch 2.7 s |
+| Info page (user) | shown and hidden; user: looked good |
+| iPhone, nRF Connect (user) | paired with the Sharp's code, `GetInfo` answered; after a factory reset paired again with no "Forget"; iOS had cached the spike's table until Bluetooth was toggled; iOS applies the 4 s supervision timeout |
+| Memory | BLE controller ~35 KB; internal free 92.5 KB paired, 122–127 KB in the normal run; pairing stack watermark 22.6 of 46.9 KB |
+| Release 13 | user-signed `0.1.13-beta` (no dev features, no SSID/password/site in the `.bin`), from build 0 set up over BLE: found on `overhead.wesklein.com`, installed in 47 s, joined with the BLE-saved settings, `VALID` at 13 s |
+
+The board was left on release build 13 (`beta`, settings from BLE setup).
+Not shown: BLE during a refresh (never: separate boot mode), a slow router
+recovering inside the 10 min window, setup on another iPhone.
 
 ## Signed OTA and rollback (0083–0086)
 
@@ -1970,7 +2012,7 @@ builds 9–12; each image gated):
 | Release 9 (bridge) | `OTA_CERT_DATES NoCertificate` on raw GitHub (TLS 1.3 hides certificates) → health failed → rolled back to 8; fixed by capping OTA TLS at 1.2 |
 | Release 11 (bridge) → 12 | 11 verified the user-signed `beta` manifest on raw GitHub (Pages DNS not set: `failed=dns`, fallback), `VALID`; installed 12 from raw GitHub (37.5 s); 12 `VALID` |
 
-The board was left on release build 12 (`beta`, Wi-Fi/site from settings).
+The board was then left on release build 12 (`beta`, Wi-Fi/site from settings); since 2026-11-09 it runs build 13 ([setup service](#ble-setup-service-0087)).
 Not shown on the board: `overhead.wesklein.com` (no CNAME yet), BLE with OTA,
 a >1 release cycle offline, the `stable` channel.
 
