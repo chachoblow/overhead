@@ -149,6 +149,7 @@ iPhone check forces it (then one bond in settings format 3).
   join failure log printed the SSID (pre-existing, UART only); now prints
   the reason only.
 - Run 7 (ELF `408fdff9…`, setup-test, no `dev-settings`, settings kept):
-  for the physical checks.
+  for the physical checks. Short press during tracking: info page shown,
+  then hidden (`INFO_PAGE shown=true/false`); user: looked good.
 
 ## Open questions
