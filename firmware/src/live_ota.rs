@@ -273,14 +273,22 @@ impl Ota {
         &self.settings
     }
 
-    fn save(&mut self, flash: &mut EspFlash) {
+    fn save(&mut self, flash: &mut EspFlash) -> bool {
         let Some(st) = self.store.as_mut() else {
             println!("SETTINGS unavailable");
-            return;
+            return false;
         };
         if let Err(e) = st.save(flash, &self.settings) {
             println!("SETTINGS save_failed {e:?}");
+            return false;
         }
+        true
+    }
+
+    /// 0087 setup and factory reset: saves `s` as the record in force.
+    pub fn replace_settings(&mut self, flash: &mut EspFlash, s: Settings) -> bool {
+        self.settings = s;
+        self.save(flash)
     }
 
     pub fn verifying(&self) -> bool {

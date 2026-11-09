@@ -44,7 +44,7 @@
 //! build can inject kiss codes per server and time window (`FAULT_KOD`).
 use crate::{
     boot_capture,
-    button_input::apply_presses,
+    button_input::{CompletedPress, apply_presses},
     coast_measurement::Screen,
     device_timing::{DiagnosticAction, LifecycleAction},
     element_fetch::{self, HttpError},
@@ -55,7 +55,7 @@ use crate::{
     knob::{self, Detents},
     live_utc,
     ota_health::Check,
-    settings_store,
+    settings_store, setup_policy,
     sharp_lines::{Kind, LineSender},
     sntp_policy::{self, Kiss, Policy},
     sntp_screen::{self, ScreenedObservation, SntpOutcome, SntpRequest},
@@ -105,7 +105,7 @@ use overhead_core::{
     catalogue::Catalogue,
     sgp4::chrono::{DateTime, NaiveDateTime, TimeDelta},
 };
-use overhead_render::{CoastLayer, Layout, PeriodCache};
+use overhead_render::{CoastLayer, Layout, PeriodCache, setup::InfoPage};
 use static_cell::{ConstStaticCell, StaticCell};
 
 /// What the runtime prints over UART (0076). Blocking prints sit in the
@@ -137,6 +137,8 @@ macro_rules! diag {
 
 #[path = "live_ota.rs"]
 mod ota;
+#[path = "setup_mode.rs"]
+mod setup_mode;
 
 const SERVERS: [&str; 2] = ["time.cloudflare.com", "time.nist.gov"];
 const POLL_S: u64 = sntp_policy::POLL_S;
@@ -148,13 +150,9 @@ const UTC_BUDGET_US: u64 = 100_000;
 /// objects can share the view for BOOT cycling (0035 labels stay on).
 const FOV_DEG: f64 = 60.0;
 /// Internal-RAM heap. Before PSRAM (0077) one 160 KiB heap held everything
-/// and peaked at ~137 KB with 20 STATIONS objects.
-#[cfg(not(feature = "ble-spike"))]
-const HEAP_SIZE: usize = 160 * 1024;
-/// BLE spike: the controller adds ~33 KB of statics (mostly IRAM code in the
-/// shared D/IRAM), so the static heap shrinks and the bootloader-reclaimed
-/// `dram2` region (unused until now) becomes a second internal region.
-#[cfg(feature = "ble-spike")]
+/// and peaked at ~137 KB with 20 STATIONS objects. The BLE controller (0087
+/// setup) adds ~33 KB of statics (mostly IRAM code in the shared D/IRAM), so
+/// the static heap is 128 KiB plus the bootloader-reclaimed `dram2` region.
 const HEAP_SIZE: usize = 128 * 1024;
 /// 0077: most objects tracked from one load; ~1.6× the 156-object `visual`
 /// group of 2026-11-03.
@@ -581,9 +579,8 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
         Err(e) => panic!("partition table: {e}"),
     };
     let mut ota = ota::Ota::boot(&mut flash, &parts);
-    // 0084: Wi-Fi and site come from settings. Without both (an image with
-    // no `dev-settings` on an empty store) the device waits for setup (M7
-    // item 2) on `NO FRAME`; it never tracks from a made-up place.
+    // 0084: Wi-Fi and site come from settings; without both the device opens
+    // setup (0087) below. It never tracks from a made-up place.
     let configured = ota.settings().wifi.zip(ota.settings().site);
     let observer = configured.map_or(
         GeodeticPosition {
@@ -613,6 +610,38 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
     .expect("SPI configuration")
     .with_sck(p.GPIO13)
     .with_mosi(p.GPIO11);
+    // 0087: the knob switch (IO6, to ground) held at boot asks for setup or
+    // a factory reset; while running, a short press shows the info page.
+    let switch = Input::new(p.GPIO6, InputConfig::default().with_pull(Pull::Up));
+    let mut panel = setup_mode::Panel::new(spi, cs);
+    let hold = setup_mode::boot_hold(&switch, &mut panel, &mut wdt).await;
+    let join_timed_out = setup_mode::take_join_timeout();
+    let setup = setup_policy::setup_reason(ota.settings(), hold, join_timed_out, ota.verifying());
+    if let Some(reason) = setup {
+        if reason == overhead_setup::SetupReason::FactoryReset {
+            setup_mode::factory_reset(&mut panel, &mut flash, &mut ota, parts.elements);
+        }
+        let _trng_source = TrngSource::new(p.RNG, p.ADC1);
+        let trng = Trng::try_new().expect("TRNG");
+        let seed = (u64::from(trng.random()) << 32) | u64::from(trng.random());
+        setup_mode::run(
+            spawner,
+            panel,
+            wdt,
+            flash,
+            ota,
+            parts.elements,
+            reason,
+            p.WIFI,
+            p.BT,
+            seed,
+        )
+        .await
+    }
+    if hold != setup_policy::BootHold::None {
+        println!("SETUP boot_hold ignored on probation");
+    }
+    let setup_mode::Panel { spi, cs, .. } = panel;
     // 0070: GPIO0 (DevKitC-1 BOOT strap) is sampled by a 5 ms TIMG1
     // interrupt, independent of render/SPI and the executor.
     let boot = Input::new(p.GPIO0, InputConfig::default().with_pull(Pull::Up));
@@ -655,20 +684,25 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
         _a: knob_a,
         _b: knob_b,
     };
-    spawner.spawn(display(spi, cs, observer, knob, wdt, hang_drill).unwrap());
+    let mac: [u8; 6] = esp_hal::efuse::base_mac_address()
+        .as_bytes()
+        .try_into()
+        .expect("6-byte MAC");
+    let info = Info {
+        name: NAME.init(setup_policy::ble_name(mac)),
+        mac,
+        wifi: ota.settings().wifi,
+        channel: ota.settings().channel.as_str(),
+        failed_build: ota.settings().failed_build,
+    };
+    spawner.spawn(display(spi, cs, observer, knob, wdt, hang_drill, switch, info).unwrap());
 
     // Entropy for TLS, DHCP and SNTP nonces: keep the TRNG source alive.
     let _trng_source = TrngSource::new(p.RNG, p.ADC1);
     let trng = TRNG.init(Trng::try_new().expect("TRNG"));
     let seed = (u64::from(trng.random()) << 32) | u64::from(trng.random());
 
-    let Some((wifi, _)) = configured else {
-        println!("SETTINGS unconfigured wifi_or_site_missing; waiting for setup");
-        loop {
-            ota::NET_BEAT.store(uptime_s() as u32, Ordering::Relaxed);
-            Timer::after(Wait::from_secs(POLL_S)).await;
-        }
-    };
+    let (wifi, _) = configured.expect("setup opens without Wi-Fi and site");
     let station = Config::Station(
         StationConfig::default()
             .with_ssid(wifi.ssid().try_into().expect("SSID"))
@@ -689,9 +723,6 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
     );
     spawner.spawn(net(runner).unwrap());
     spawner.spawn(connection(controller, wifi_drop).unwrap());
-    // Throwaway coexistence spike (giftable proposal, F); never a device image.
-    #[cfg(feature = "ble-spike")]
-    crate::ble_spike::start(spawner, p.BT);
     // In PSRAM: the 0077 body cap is too large for internal RAM. Also the
     // load buffer for the stored copy (0079), before Wi-Fi is up.
     let response = alloc::vec![0u8; element_fetch::MAX_RESPONSE].leak();
@@ -700,7 +731,19 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
     } else {
         (None, None)
     };
-    stack.wait_config_up().await;
+    // 0087: no join within 5 min of boot restarts into setup (not on
+    // probation, where the health check decides).
+    let join_left = Wait::from_secs(setup_policy::JOIN_TIMEOUT_S.saturating_sub(uptime_s()));
+    if with_timeout(join_left, stack.wait_config_up())
+        .await
+        .is_err()
+    {
+        if ota.verifying() {
+            stack.wait_config_up().await;
+        } else {
+            setup_mode::restart_after_join_timeout();
+        }
+    }
     let mut socket = UdpSocket::new(
         stack,
         RX_META.init([PacketMetadata::EMPTY; 4]),
@@ -1172,6 +1215,41 @@ struct KnobInput {
     _b: Input<'static>,
 }
 
+/// What the info page (0087) shows besides live state.
+struct Info {
+    name: &'static [u8; 13],
+    mac: [u8; 6],
+    wifi: Option<settings_store::Wifi>,
+    channel: &'static str,
+    failed_build: Option<u32>,
+}
+
+static NAME: StaticCell<[u8; 13]> = StaticCell::new();
+/// The station is associated (set by the `connection` task).
+static WIFI_UP: AtomicBool = AtomicBool::new(false);
+/// A short knob press shows the info page this long, or until the next press.
+const INFO_SHOWN_US: u64 = 30_000_000;
+
+impl Info {
+    fn page<'a>(&'a self, app: &RadarApp) -> InfoPage<'a> {
+        let data_age_s = match (app.time(), app.fetched_at()) {
+            (Some(now), Some(at)) => Some((now - at).num_seconds().max(0) as u64),
+            _ => None,
+        };
+        InfoPage {
+            name: core::str::from_utf8(self.name).unwrap_or("OVERHEAD"),
+            version: ota::VERSION,
+            build: ota::BUILD,
+            channel: self.channel,
+            mac: self.mac,
+            ssid: self.wifi.as_ref().map(|w| w.ssid()),
+            wifi_joined: WIFI_UP.load(Ordering::Relaxed),
+            data_age_s,
+            failed_build: self.failed_build,
+        }
+    }
+}
+
 #[embassy_executor::task]
 async fn display(
     mut spi: Spi<'static, esp_hal::Blocking>,
@@ -1180,7 +1258,13 @@ async fn display(
     knob_input: KnobInput,
     mut wdt: Rwdt,
     hang_drill: bool,
+    switch: Input<'static>,
+    info: Info,
 ) {
+    // 0087 info page: a completed press (20 ms debounce) toggles it; a press
+    // begun at boot (the setup hold) never counts.
+    let mut info_press = CompletedPress::new(20_000).expect("debounce");
+    let mut info_until: Option<u64> = None;
     // Clockwise counts negative on this encoder; clockwise zooms in.
     let mut detents = Detents::new(knob_input.unit.value(), true);
     // No elements until the fetch delivers them: NO FRAME, then NO DATA.
@@ -1280,6 +1364,22 @@ async fn display(
             );
         }
         let now = uptime_us();
+        let mut info_changed = false;
+        if info_press.sample(now, switch.is_low()) {
+            ota::LAST_INPUT_S.store(uptime_s() as u32, Ordering::Relaxed);
+            info_until = match info_until {
+                Some(_) => None,
+                None => Some(now + INFO_SHOWN_US),
+            };
+            info_changed = true;
+            diag!("INFO_PAGE shown={}", info_until.is_some());
+        }
+        if info_until.is_some_and(|until| now >= until) {
+            info_until = None;
+            info_changed = true;
+        }
+        let page = info_until.map(|_| info.page(&app));
+        let mut sent = false;
         let presses = boot_capture::take_presses();
         if presses > 0 {
             ota::LAST_INPUT_S.store(uptime_s() as u32, Ordering::Relaxed);
@@ -1352,9 +1452,10 @@ async fn display(
         }
         match gate.next(&mut app, now, retained) {
             LifecycleAction::RenderNoFrame => {
-                match updating {
-                    Some(pct) => overhead_render::draw_updating(screen, pct),
-                    None => overhead_render::draw_cached(
+                match (updating, page.as_ref()) {
+                    (Some(pct), _) => overhead_render::draw_updating(screen, pct),
+                    (None, Some(p)) => overhead_render::setup::draw_info(screen, p),
+                    (None, None) => overhead_render::draw_cached(
                         screen,
                         &app,
                         Layout::wide(),
@@ -1376,6 +1477,7 @@ async fn display(
                 gate.no_frame_succeeded(done, phase);
                 ota::FRAME_SHOWN.store(true, Ordering::Relaxed);
                 retained = true;
+                sent = true;
                 println!("LIVE_UTC no_frame_sent uptime_us={done}");
             }
             LifecycleAction::Scheduled(DiagnosticAction::Frame { sample, full }) => {
@@ -1388,9 +1490,10 @@ async fn display(
                 let took = uptime_us() - started;
                 update_max_us = update_max_us.max(took);
                 update_boot_max_us = update_boot_max_us.max(took);
-                match updating {
-                    Some(pct) => overhead_render::draw_updating(screen, pct),
-                    None => overhead_render::draw_cached(
+                match (updating, page.as_ref()) {
+                    (Some(pct), _) => overhead_render::draw_updating(screen, pct),
+                    (None, Some(p)) => overhead_render::setup::draw_info(screen, p),
+                    (None, None) => overhead_render::draw_cached(
                         screen,
                         &app,
                         Layout::wide(),
@@ -1415,6 +1518,7 @@ async fn display(
                 gate.transfer_succeeded(done, phase, transfer.kind == Kind::Full);
                 ota::FRAME_SHOWN.store(true, Ordering::Relaxed);
                 retained = true;
+                sent = true;
                 frames += 1;
                 if app.selected_id() != last_selected {
                     last_selected = app.selected_id();
@@ -1470,6 +1574,26 @@ async fn display(
                 gate.transfer_succeeded(uptime_us(), phase, false);
             }
             LifecycleAction::Scheduled(DiagnosticAction::Wait) => {}
+        }
+        // Without a frame this loop (no trusted UTC: NO FRAME stays up), show
+        // the page change at once, as a retained refresh with new pixels.
+        if info_changed && retained && !sent && updating.is_none() {
+            match page.as_ref() {
+                Some(p) => overhead_render::setup::draw_info(screen, p),
+                None => {
+                    overhead_render::draw_cached(screen, &app, Layout::wide(), false, coast, period)
+                }
+            }
+            .expect("info render");
+            let phase = gate.next_phase();
+            cs.set_high();
+            let result = sender.send(phase, &screen.pixels, true, |part| spi.write(part));
+            cs.set_low();
+            if result.is_err() {
+                gate.transfer_failed();
+                panic!("info SPI failed; panel state unknown");
+            }
+            gate.transfer_succeeded(uptime_us(), phase, true);
         }
         last_loop = uptime_us();
         // Independent of DNS, association, UDP and TLS awaits; CPU-bound TLS
@@ -1655,6 +1779,7 @@ async fn connection(mut controller: WifiController<'static>, mut wifi_drop: Opti
     loop {
         match controller.connect_async().await {
             Ok(_) => {
+                WIFI_UP.store(true, Ordering::Relaxed);
                 println!("SNTP_WIFI connected uptime_s={}", uptime_s());
                 if let Some((at_s, for_s)) = wifi_drop {
                     let wait = Wait::from_secs(at_s.saturating_sub(uptime_s()));
@@ -1673,6 +1798,7 @@ async fn connection(mut controller: WifiController<'static>, mut wifi_drop: Opti
                 } else {
                     let _ = controller.wait_for_disconnect_async().await;
                 }
+                WIFI_UP.store(false, Ordering::Relaxed);
                 println!("SNTP_WIFI disconnected uptime_s={}", uptime_s());
             }
             Err(e) => println!("SNTP_WIFI connect_failed {e:?}"),

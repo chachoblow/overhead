@@ -27,8 +27,8 @@
 //! **Exchange.** `GetInfo` → `Info`. `Scan` → zero or more `Network`, then
 //! `ScanDone`. `Configure` → `Testing`, then `ConfigureResult`; on
 //! [`ConfigureResult::Saved`] the device leaves setup and restarts on the new
-//! settings. One request at a time: a request while another is running gets
-//! [`ErrorCode::Busy`].
+//! settings. The device answers requests one at a time, in order; a client
+//! waits for each answer before sending the next.
 
 /// This protocol version.
 pub const VERSION: u8 = 1;
@@ -40,6 +40,48 @@ pub const SERVICE_UUID: &str = "6f760010-8a3e-4c1d-9b7a-0b5e1c2d3a40";
 pub const REQUEST_UUID: &str = "6f760011-8a3e-4c1d-9b7a-0b5e1c2d3a40";
 /// Device → client: response frames (notify).
 pub const RESPONSE_UUID: &str = "6f760012-8a3e-4c1d-9b7a-0b5e1c2d3a40";
+
+/// A UUID string's 16 bytes in advertising (little-endian) order.
+pub const fn uuid_le(s: &str) -> [u8; 16] {
+    const fn nibble(c: u8) -> u8 {
+        match c {
+            b'0'..=b'9' => c - b'0',
+            b'a'..=b'f' => c - b'a' + 10,
+            b'A'..=b'F' => c - b'A' + 10,
+            _ => panic!("not a hex digit"),
+        }
+    }
+    let b = s.as_bytes();
+    let mut out = [0u8; 16];
+    let (mut i, mut n) = (0, 0);
+    while i < b.len() {
+        if b[i] == b'-' {
+            i += 1;
+            continue;
+        }
+        out[15 - n] = (nibble(b[i]) << 4) | nibble(b[i + 1]);
+        n += 1;
+        i += 2;
+    }
+    assert!(n == 16, "a UUID has 16 bytes");
+    out
+}
+
+/// Byte-wise `str` equality usable in `const` checks.
+pub const fn str_eq(a: &str, b: &str) -> bool {
+    let (a, b) = (a.as_bytes(), b.as_bytes());
+    if a.len() != b.len() {
+        return false;
+    }
+    let mut i = 0;
+    while i < a.len() {
+        if a[i] != b[i] {
+            return false;
+        }
+        i += 1;
+    }
+    true
+}
 
 /// Advertised name prefix; the device appends the last two MAC bytes in hex.
 pub const NAME_PREFIX: &str = "OVERHEAD-";
@@ -240,8 +282,6 @@ byte_enum!(
         Malformed = 1,
         /// A request type this device doesn't know (a newer client).
         UnknownType = 2,
-        /// Another request is still running.
-        Busy = 3,
     }
 );
 

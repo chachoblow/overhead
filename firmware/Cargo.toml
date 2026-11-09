@@ -55,7 +55,7 @@ element-fetch = ["overhead-core/catalogue", "dep:serde_json"]
 live-fetch = ["live-sntp", "element-fetch", "embassy-net/tcp", "esp-alloc/internal-heap-stats", "dep:mbedtls-rs"]
 # 0085/0086: signed manifests, settings record and the health check;
 # host-tested. The runtime (live-fetch-radar and the device app) uses it.
-ota = ["element-fetch", "dep:overhead-update"]
+ota = ["element-fetch", "dep:overhead-update", "dep:overhead-setup"]
 # 0084 developer-only: seed missing Wi-Fi/site settings from the ignored
 # `.wifi.env`/`.site.env`. Never in a published (release) image.
 dev-settings = ["ota"]
@@ -67,17 +67,18 @@ ota-dev = ["ota"]
 ota-drill = ["ota"]
 # 0074: live-UTC radar with BOOT capture on freshly fetched STATIONS elements
 # (one request per boot, certificate dates checked). Not the device app.
-live-fetch-radar = ["live-utc-boot", "live-fetch", "ota", "dep:esp-storage"]
+# 0087: also the BLE setup window (its own boot mode; BLE + Wi-Fi coexistence,
+# LE Secure Connections pairing).
+live-fetch-radar = ["live-utc-boot", "live-fetch", "ota", "dep:esp-storage", "esp-radio/ble", "esp-radio/coex", "esp-radio/unstable", "dep:trouble-host", "trouble-host/security", "trouble-host/central", "dep:embassy-futures"]
+# 0087 developer-only: print the pairing passkey on UART so the devbox test
+# client can pair without a person reading the Sharp. Never a release image.
+setup-test = ["live-fetch-radar"]
 # Same image with a build-time fault plan (`fault_plan`): injected DNS/TCP/TLS
 # failures, shortened freshness and a Wi-Fi drop, to show 0075's failure
 # handling on the board. Diagnostic only; the image above has none of it.
 live-fetch-faults = ["live-fetch-radar"]
 # 0076: the device application. Same runtime as live-fetch-radar, event log only.
 device = ["live-fetch-radar"]
-# Throwaway BLE + Wi-Fi coexistence spike (giftable-device proposal, F): the
-# live-fetch-radar diagnostic plus a BLE GATT peripheral a phone can write to,
-# with internal-RAM telemetry. Never a device image.
-ble-spike = ["live-fetch-radar", "esp-radio/ble", "esp-radio/coex", "esp-radio/unstable", "dep:trouble-host", "dep:embassy-futures"]
 # Isolated rotary-encoder wiring check (PCNT on IO4/IO5, switch IO6); UART only.
 knob-test = ["esp-hal/unstable"]
 # Separately named pinned-OMM visibility diagnostic; original source path retained.
@@ -91,6 +92,9 @@ overhead-render = { path = "../render", optional = true }
 embedded-graphics = { version = "0.8", optional = true }
 # 0085: manifest checks shared with the host signing tool (no `sign`).
 overhead-update = { path = "../update", optional = true }
+# 0087: BLE setup protocol frames, shared with the host test client and the
+# reference for the iOS app. No dependencies.
+overhead-setup = { path = "../setup", optional = true }
 # Same checked OMM-array path as the host experiment, without std.
 serde_json = { version = "1", default-features = false, features = ["alloc", "raw_value"], optional = true }
 
@@ -127,10 +131,14 @@ embassy-sync = { version = "=0.8.0", optional = true }
 # FlashStorage); default `critical-section` keeps interrupts off during ROM calls.
 esp-storage = { version = "=0.10.0", features = ["esp32s3"], optional = true }
 
-# ble-spike only: BLE host stack recommended by esp-radio; 0.7.0 is the release
-# on bt-hci 0.9 (esp-radio's pin) and embassy-sync 0.8 (already locked).
+# 0087 setup service: BLE host stack recommended by esp-radio; 0.7.0 is the
+# release on bt-hci 0.9 (esp-radio's pin) and embassy-sync 0.8 (already
+# locked). Its `security` feature (LE Secure Connections: P-256, AES-CMAC,
+# ChaCha RNG seeded by the controller) brings p256/aes/cmac/rand_chacha.
+# 0.7.0 defines its GAP attribute count only for `security` with `central`,
+# so the setup feature enables `central` too (unused).
 trouble-host = { version = "=0.7.0", default-features = false, features = ["peripheral", "gatt", "derive", "default-packet-pool", "default-packet-pool-mtu-255"], optional = true }
-# Already locked (0.1.2) through the embassy crates; join/select for the BLE task.
+# Already locked (0.1.2) through the embassy crates; join for the BLE host and session.
 embassy-futures = { version = "0.1", optional = true }
 
 [build-dependencies]

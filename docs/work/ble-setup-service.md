@@ -42,22 +42,24 @@ iPhone check forces it (then one bond in settings format 3).
 - Split / bonds / BLE outside window / dev passkey on UART / test-client
   dependency: asked and answered 2026-11-08: agreed as recommended.
 - BlueZ on devbox (`bluez` package + `bluetooth.service`; machine change,
-  needs sudo): needed.
+  needs sudo): asked 2026-11-08, answered: user installed it; logged in
+  ~/code/devbox/README.md, snapshot run. `bluetoothctl show` works as the
+  user without group changes.
 - Physical: hold IO6 3 s / 10 s at boot, short press; look at the Sharp
   screens (passkey, result, info page): later, asked once.
 - nRF Connect pair / reset / re-pair on the user's iPhone: later.
 - Sign the release on the Mac and push `pages`: at the end.
 
 ## Plan
-- [ ] `setup/` crate: protocol types, encode/decode, vectors, tests.
-- [ ] render: setup screens (waiting with name, passkey, testing, result,
-      hold feedback, info page).
-- [ ] firmware: IO6 switch input (boot hold classification, short press).
-- [ ] firmware: setup mode (separate boot path): BLE service with
-      authenticated characteristics, passkey display, Wi-Fi scan, test join
-      (association + DHCP), save, reset into normal run. Unconfigured /
-      5-min-no-join / 3 s hold enter it; factory reset clears and enters it.
-- [ ] firmware: info page in normal run.
+- [x] `setup/` crate: protocol types, encode/decode, vectors, tests.
+- [x] render: setup screens (waiting with name, passkey, testing, result,
+      hold feedback, info page) — `render/src/setup.rs`.
+- [x] firmware: IO6 switch input (boot hold classification, short press).
+- [x] firmware: setup mode (`setup_mode.rs`, rules in `setup_policy.rs`):
+      builds; not yet run on the board.
+- [x] firmware: info page in normal run (display task; builds).
+- [x] BLE spike removed (feature `ble-spike`, `ble_spike.rs`); BLE now in
+      every `live-fetch-radar`/`device` image, static heap 128 KiB + dram2.
 - [ ] tools: `overhead-setup-client` (bluer) driving the protocol from
       devbox, passkey from the UART capture in dev builds.
 - [ ] board runs: empty settings → setup → tracking; 3 s re-entry; factory
@@ -83,6 +85,15 @@ iPhone check forces it (then one bond in settings format 3).
   router after a power cut doesn't strand the device in setup.
 - Default: no setup window while the image is on probation (0086); the
   health check decides first.
+- trouble-host 0.7.0 needs `central` with `security` (its GAP attribute
+  count is only defined for that pair); enabled, unused.
+- `dev-settings` images re-seed an empty store at every boot, so setup from
+  empty settings is tested on an image built without `dev-settings`
+  (`setup-test` prints the passkey on UART for the devbox client).
+- The join-timeout flag lives in RTC fast RAM (`persistent`) with a magic
+  word; whether the 0086 bootloader keeps it across `software_reset` is
+  checked on the board.
+- Info page: a press can be missed during a TLS stall (~450 ms loop gap).
 
 ## Verification
 

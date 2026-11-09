@@ -227,6 +227,27 @@ impl Target {
     }
 }
 
+/// The newest header's fetch UTC (Unix seconds), from the headers alone:
+/// for the setup app's status, where a wrong body only costs a stale age.
+pub fn newest_fetch<F: Flash>(flash: &mut F, layout: &Layout) -> Option<i64> {
+    (0..2)
+        .filter_map(|slot| {
+            let mut b = [0u8; HEADER_LEN];
+            flash.read(layout.slot_offset(slot), &mut b).ok()?;
+            Header::decode(&b, layout.capacity()).ok()
+        })
+        .max_by_key(|h| h.sequence)
+        .map(|h| h.fetched_unix_s)
+}
+
+/// Factory reset (0087): erases both headers, so neither slot loads.
+pub fn erase<F: Flash>(flash: &mut F, layout: &Layout) -> Result<(), F::Error> {
+    for slot in 0..2 {
+        flash.erase_sector(layout.slot_offset(slot))?;
+    }
+    Ok(())
+}
+
 const fn round4(n: usize) -> usize {
     (n + 3) & !3
 }
@@ -508,6 +529,37 @@ mod tests {
             steps += 1;
         }
         assert_eq!(steps, w.steps());
+    }
+
+    #[test]
+    fn newest_fetch_and_erase() {
+        let l = layout();
+        let mut f = Nor::new();
+        assert_eq!(newest_fetch(&mut f, &l), None);
+        save(
+            &mut f,
+            Target {
+                slot: 0,
+                sequence: 4,
+            },
+            &body(5000, 1),
+            1_000,
+        );
+        save(
+            &mut f,
+            Target {
+                slot: 1,
+                sequence: 5,
+            },
+            &body(6000, 2),
+            2_000,
+        );
+        assert_eq!(newest_fetch(&mut f, &l), Some(2_000));
+        erase(&mut f, &l).unwrap();
+        assert_eq!(newest_fetch(&mut f, &l), None);
+        let r = load(&mut f, &l, &mut buf());
+        assert_eq!(r.loaded, None);
+        assert_eq!(r.slots, [Err(SlotError::Erased), Err(SlotError::Erased)]);
     }
 
     #[test]

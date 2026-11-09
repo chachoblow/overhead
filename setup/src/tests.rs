@@ -111,7 +111,7 @@ fn every_message_round_trips() {
         Response::Testing,
         Response::ConfigureResult(ConfigureResult::Saved),
         Response::Error {
-            code: ErrorCode::Busy,
+            code: ErrorCode::Malformed,
             request_type: 0x02,
         },
     ];
@@ -253,4 +253,14 @@ fn configure_check_matches_the_settings_rules() {
     assert_eq!(with(|c| c.lon_deg = f64::NAN), Err(InvalidSite));
     assert_eq!(with(|c| c.alt_m = 9_001.0), Err(InvalidSite));
     assert_eq!(with(|c| c.lon_deg = -180.0), Ok(()));
+}
+
+#[test]
+fn uuid_bytes_are_little_endian() {
+    let b = uuid_le(SERVICE_UUID);
+    assert_eq!(b[15], 0x6f);
+    assert_eq!(b[0], 0x40);
+    assert_eq!(&b[12..14], &[0x10, 0x00]);
+    assert!(str_eq(SERVICE_UUID, "6f760010-8a3e-4c1d-9b7a-0b5e1c2d3a40"));
+    assert!(!str_eq(SERVICE_UUID, REQUEST_UUID));
 }
