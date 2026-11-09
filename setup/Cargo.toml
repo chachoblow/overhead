@@ -1,0 +1,8 @@
+[package]
+name = "overhead-setup"
+version = "0.1.0"
+edition = "2024"
+
+# 0087 BLE setup protocol, shared by the firmware and the host test client.
+# no_std, no alloc and no dependencies.
+[dependencies]

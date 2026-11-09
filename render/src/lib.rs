@@ -25,6 +25,7 @@ mod glyphs;
 #[cfg(feature = "measurement")]
 pub mod measurement;
 pub mod presentation;
+pub mod setup;
 mod visibility;
 
 pub use coast::CoastLayer;
