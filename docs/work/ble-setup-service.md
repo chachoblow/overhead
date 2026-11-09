@@ -157,5 +157,18 @@ iPhone check forces it (then one bond in settings format 3).
   `reason=FactoryReset configured=false` (`Info`: nothing stored,
   last_fetch 0); Sharp showed the erased / "use your phone" screen (user).
   Client set it up again → `Saved` → fresh fetch (2.7 s) → tracking (sky=6).
+- iPhone, nRF Connect (run 7, setup by 3 s hold): iOS showed the old
+  spike's GATT table (`6f760001…`/`0002`/`0003`) from its cache for this
+  unbonded address and never rediscovered; Bluetooth off/on in Settings
+  cleared it (no "Forget"). Then: iOS applies the 4 s supervision request
+  (`conn_params interval_ms=30–50 supervision_ms=4000`; BlueZ never did).
+  One stalled pairing (stale table), one `ConfirmValueFailed` (code from a
+  previous connection typed), then paired `EncryptedAuthenticated`, not
+  bonded, `GetInfo` → `0181…` notification. Stack watermark 22,656 of
+  46,920 B.
 
 ## Open questions
+- GATT caching: iOS keeps an unbonded device's attribute table, so the
+  setup service's attributes must stay fixed for the device's life (new
+  fields go inside frames, per the protocol), or the firmware must add
+  Service Changed / a database hash. Promote into the 0087 note.
