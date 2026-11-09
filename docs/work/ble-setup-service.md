@@ -1,5 +1,5 @@
 # The device can be set up over BLE with passkey pairing
-Status: blocked: devbox BLE link too weak to verify (antennas?)
+Status: active: board runs (join timeout next)
 Started: 2026-11-08. Scope: PLAN M7 item 2, firmware half (user, 2026-11-08:
 split agreed; the iOS app is the next item); decisions
 [0084](../decisions/0084-settings-store.md), [0087](../decisions/0087-ios-setup-app-over-ble.md),
@@ -46,7 +46,8 @@ iPhone check forces it (then one bond in settings format 3).
   ~/code/devbox/README.md, snapshot run. `bluetoothctl show` works as the
   user without group changes.
 - devbox AX200 antennas (link at −95 dBm, ~half of sessions drop): asked
-  2026-11-09, answered: user will attach them; rerun the same checks after.
+  2026-11-09, answered: user attached them; link now −54 dBm, every
+  session holds (run 5b).
 - Physical: hold IO6 3 s / 10 s at boot, short press; look at the Sharp
   screens (passkey, result, info page): later, asked once.
 - nRF Connect pair / reset / re-pair on the user's iPhone: later.
@@ -131,5 +132,13 @@ iPhone check forces it (then one bond in settings format 3).
   result; the device's failure log no longer prints the SSID (run 4's did,
   local log only). Link RSSI read returns 0 (controller doesn't report it).
   1 of 3 `info` sessions completed.
+- Run 5b (same image, AX200 antennas attached): FOUND at −53…−56 dBm, 8
+  of 8 sessions connected first try, paired in ~4.4 s. `info` ×3, `scan`
+  (11 networks, cached, 97 ms), wrong passphrase → `WrongPassphrase` in
+  9.4 s delivered, `Info` afterwards: nothing stored,
+  `last_result=WrongPassphrase`. Correct `configure` → `Saved` in 10.9 s →
+  reset → normal run joined Wi-Fi at 2 s, tracking (sky=8, stale=false).
+  Internal free 92.5 KB paired; 122–127 KB in the normal run after.
+  The client no longer prints the SSID it sends (length only).
 
 ## Open questions

@@ -435,7 +435,10 @@ Without --passkey/--passkey-log the passkey is read from stdin.";
                     lon_deg: *lon,
                     alt_m: *alt,
                 };
-                println!("CONFIGURE ssid={ssid:?} (passphrase and site not printed)");
+                println!(
+                    "CONFIGURE ssid_len={} (ssid, passphrase and site not printed)",
+                    ssid.len()
+                );
                 (encode(&Request::Configure(c), &mut buf)?, 90)
             }
             Command::Raw(bytes) => (bytes.clone(), 5),
