@@ -1803,7 +1803,11 @@ async fn connection(mut controller: WifiController<'static>, mut wifi_drop: Opti
                 WIFI_UP.store(false, Ordering::Relaxed);
                 println!("SNTP_WIFI disconnected uptime_s={}", uptime_s());
             }
-            Err(e) => println!("SNTP_WIFI connect_failed {e:?}"),
+            // The reason only: the disconnect info holds the SSID.
+            Err(esp_radio::wifi::ConnectionError::Failed(info)) => {
+                println!("SNTP_WIFI connect_failed reason={:?}", info.reason)
+            }
+            Err(_) => println!("SNTP_WIFI connect_failed wifi_error"),
         }
         Timer::after(Wait::from_secs(5)).await;
     }

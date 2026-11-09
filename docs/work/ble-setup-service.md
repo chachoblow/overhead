@@ -1,5 +1,5 @@
 # The device can be set up over BLE with passkey pairing
-Status: active: board runs (join timeout next)
+Status: active: physical checks with the user next
 Started: 2026-11-08. Scope: PLAN M7 item 2, firmware half (user, 2026-11-08:
 split agreed; the iOS app is the next item); decisions
 [0084](../decisions/0084-settings-store.md), [0087](../decisions/0087-ios-setup-app-over-ble.md),
@@ -140,5 +140,15 @@ iPhone check forces it (then one bond in settings format 3).
   reset → normal run joined Wi-Fi at 2 s, tracking (sky=8, stale=false).
   Internal free 92.5 KB paired; 122–127 KB in the normal run after.
   The client no longer prints the SSID it sends (length only).
+- Run 6 (ELF `dd6f03e1…`, `dev-settings` seeded with a network that
+  doesn't exist, settings erased first): the normal run failed to join
+  (`NoAccessPointFound`) for 300 s → `SETUP join_timeout` → software reset →
+  setup opened `reason=JoinTimeout configured=true`: the RTC flag survives
+  `software_reset` under the 0086 bootloader. `Info` flags=0b11; client
+  restored the real network → `Saved` → tracking (sky=16). The normal run's
+  join failure log printed the SSID (pre-existing, UART only); now prints
+  the reason only.
+- Run 7 (ELF `408fdff9…`, setup-test, no `dev-settings`, settings kept):
+  for the physical checks.
 
 ## Open questions
