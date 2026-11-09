@@ -1935,7 +1935,9 @@ with `OVERHEAD_BUILD=N` (larger than every published build) and no Wi-Fi/site
 env; save-image and gate as above; check the `.bin` holds no SSID. The key
 holder copies `N.bin` to the Mac, checks its sha256, runs `overhead-release
 sign KEY beta N VERSION N.bin OUT` and `verify`, and copies `OUT` back. Push
-`OUT/ota/…` to the orphan `pages` branch (signed files and a README only).
+`OUT/ota/…` to the orphan `pages` branch (signed files, a README and GitHub's
+`CNAME` for `overhead.wesklein.com`: pull first and never force-push, or the
+custom domain drops and devices fall back to raw GitHub).
 The device checks after each element refresh (8 h) and installs once the knob
 and BOOT have been idle 2 min (`UPDATING n%`).
 
