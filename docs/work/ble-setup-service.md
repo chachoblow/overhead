@@ -45,6 +45,8 @@ iPhone check forces it (then one bond in settings format 3).
   needs sudo): asked 2026-11-08, answered: user installed it; logged in
   ~/code/devbox/README.md, snapshot run. `bluetoothctl show` works as the
   user without group changes.
+- devbox AX200 antennas (link at −95 dBm, ~half of sessions drop): asked
+  2026-11-09, answered: user will attach them; rerun the same checks after.
 - Physical: hold IO6 3 s / 10 s at boot, short press; look at the Sharp
   screens (passkey, result, info page): later, asked once.
 - nRF Connect pair / reset / re-pair on the user's iPhone: later.
