@@ -714,3 +714,9 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Implemented 0087's device side: `setup/` (`overhead-setup`, versioned framed protocol with byte vectors), setup window as a separate boot mode (`firmware/src/setup_mode.rs`, `setup_policy.rs`), passkey pairing (trouble-host `security`, no bonds), scan cache, tested join, factory reset, info page, render setup screens, `overhead-setup-client` (BlueZ) on devbox; BLE spike removed; static heap 128 → 96 KiB for pairing's stack. Contract: [0087 note](decisions/0087-ios-setup-app-over-ble.md#note--2026-11-09-setup-protocol-and-firmware), [0084 note](decisions/0084-settings-store.md#note--2026-11-09-no-bonds-setup-writes-format-2).
 - Board ([evidence](../firmware/README.md#ble-setup-service-0087)): setup from empty settings, wrong passphrase, join timeout, 3 s/10 s holds and info page (user), nRF Connect on the user's iPhone (re-pair after factory reset needs no "Forget"); user-signed release 13 installed from `overhead.wesklein.com` with BLE-saved settings intact. Found: devbox's AX200 needed antennas; iOS caches an unbonded GATT table; logs printed the SSID (fixed).
 - Verified: workspace check/tests (361), firmware host tests (37/114/93), fmt, clippy on `overhead-setup`/`overhead-tools`; gated builds of runs 1–8 and release 13.
+
+## 2026-11-10 (M7 iOS setup app)
+- Added `ios/`: `OverheadSetupKit` (Swift mirror of `setup/`, tested against its byte vectors; CoreBluetooth session with retries and Testing-loss recovery) and a SwiftUI app; TestFlight 0.1.0 (1) as "Overhead Setup".
+- The user set the board up only through the app (pairing, wrong-passphrase report, `Saved`, tracking).
+- User-signed release 14 on `beta` installed at the next 8 h refresh and went `VALID` on the app-saved settings; PLAN M7 item 3 checked off, 0087 app note added.
+- Verified: `swift test` (7), simulator build, archive/upload, release-14 image gate; app reconnect during `Testing` untested on hardware.

@@ -1918,10 +1918,13 @@ needs its antennas: without them −95 dBm and half the sessions dropped):
 | iPhone, nRF Connect (user) | paired with the Sharp's code, `GetInfo` answered; after a factory reset paired again with no "Forget"; iOS had cached the spike's table until Bluetooth was toggled; iOS applies the 4 s supervision timeout |
 | Memory | BLE controller ~35 KB; internal free 92.5 KB paired, 122–127 KB in the normal run; pairing stack watermark 22.6 of 46.9 KB |
 | Release 13 | user-signed `0.1.13-beta` (no dev features, no SSID/password/site in the `.bin`), from build 0 set up over BLE: found on `overhead.wesklein.com`, installed in 47 s, joined with the BLE-saved settings, `VALID` at 13 s |
+| iOS app (user, 2026-11-09) | [setup app](../ios/README.md) 0.1.0 (1) from TestFlight: IO6 3 s, paired with the Sharp's code, wrong passphrase reported, correct one `Saved`, board restarted and tracked (no UART log: unplugging for the hold ends the capture) |
+| Release 14 (2026-11-10) | user-signed `0.1.14-beta` (same firmware as 13) on `beta`: at the next 8 h refresh `offer=Install`, installed in 47.7 s; build 14 joined at 2 s on the app-saved settings, `VALID` at 13 s (devbox `target/setup/ios-ota14.log`) |
 
-The board was left on release build 13 (`beta`, settings from BLE setup).
+The board was left on release build 14 (`beta`, settings from the iOS app).
 Not shown: BLE during a refresh (never: separate boot mode), a slow router
-recovering inside the 10 min window, setup on another iPhone.
+recovering inside the 10 min window, setup on another iPhone, the app's
+reconnect after a link loss during `Testing`.
 
 ## Signed OTA and rollback (0083–0086)
 

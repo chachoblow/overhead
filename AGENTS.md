@@ -41,6 +41,9 @@ progress reports. Handoffs normally happen when a work item completes.
 - `setup/` → `overhead-setup`: no_std, no alloc versioned BLE setup protocol
   (0087), shared by the firmware and `overhead-setup-client`; its byte
   vectors are the iOS app's reference.
+- `ios/`: SwiftUI + CoreBluetooth setup app (0087) and its `OverheadSetupKit`
+  package; not a Cargo crate, Mac/Xcode only. Test: `cd ios/OverheadSetupKit
+  && swift test`; build/TestFlight steps in ios/README.md.
 - `firmware/` → `overhead-s3-benchmark`: no_std S3 kernel benchmark and device
   diagnostics, plus the device app (`--features device`, `overhead-s3-device`,
   [0076](docs/decisions/0076-device-app-build.md)); excluded from host workspace. Own lockfile and local

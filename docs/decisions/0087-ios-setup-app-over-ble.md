@@ -90,3 +90,19 @@ Firmware half done (M7 item 2, split from the app with the user,
   heap shrank 128 → 96 KiB (stack 46.9 KB). Pairing ~4.4 s.
 - Dev images only (`setup-test`) print the passkey on UART; release images
   never do. The channel can't be changed over BLE.
+
+## Note — 2026-11-10: the iOS app
+
+M7 item 3 done; usage in [ios/README](../../ios/README.md), evidence in the
+[firmware README](../../firmware/README.md#ble-setup-service-0087).
+- **Shape.** `ios/OverheadSetupKit` (protocol mirror tested against
+  `setup/`'s vectors, plus the CoreBluetooth session) and a SwiftUI app; the
+  Xcode project is checked in (a synced folder, no XcodeGen/Tuist). Bundle
+  ID `com.wesklein.overhead`, iOS 17+, iPhone only; App Store Connect name
+  "Overhead Setup" ("Overhead" was taken), home-screen name "Overhead".
+- **Link loss during `Testing`.** The app waits up to 60 s for the device to
+  advertise, reconnects (pairing again, as there are no bonds) and reads
+  `Info.last_result`; a device that doesn't return has left setup, which it
+  does only after `Saved`. Not yet seen on hardware.
+- **Location.** The phone's `ellipsoidalAltitude` (WGS-84, as `Configure`
+  wants; 0 without a vertical fix); typed coordinates send altitude 0.
