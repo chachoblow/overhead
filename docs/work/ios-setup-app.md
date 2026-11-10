@@ -1,5 +1,5 @@
 # The board is set up only through an iOS app on TestFlight
-Status: blocked: user accepts Apple's updated Program License Agreement (developer.apple.com/account) and creates the App Store Connect record
+Status: blocked: user installs from TestFlight and runs setup on the board (IO6 held 3 s at power-on)
 Started: 2026-11-09. Scope: PLAN M7 "iOS setup app"; decisions
 [0087](../decisions/0087-ios-setup-app-over-ble.md) (protocol note),
 [0084](../decisions/0084-settings-store.md), [0085](../decisions/0085-signed-updates-and-release-keys.md)
@@ -27,7 +27,7 @@ only through the app, then updates over the air with those settings intact.
 
 ## Human gates
 - Bundle ID / display name: asked 2026-11-09 / answered: `com.wesklein.overhead`, "Overhead"
-- App Store Connect: asked 2026-11-09 / answered: user creates the app record; agent uploads with xcodebuild (user's Xcode account)
+- App Store Connect: asked 2026-11-09 / answered: user created the record, named "Overhead Setup" (home-screen name stays "Overhead"); agent uploads with xcodebuild (user's Xcode account)
 - Board: answered 2026-11-09: stays on devbox, user nearby with the phone; agent reads UART over SSH. User presses/observes later
 - New release for the OTA half (devbox build, user signs): later
 
@@ -43,7 +43,7 @@ only through the app, then updates over the air with those settings intact.
 - [x] Xcode project (`ios/Overhead.xcodeproj`, synchronized folder, local package),
       generated Info.plist with usage strings, `ITSAppUsesNonExemptEncryption = NO`,
       1-bit radar icon (`AppIcon.png`, from a CoreGraphics script); simulator build.
-- [ ] Device archive (blocked: PLA), TestFlight upload (gate).
+- [x] Device archive and TestFlight upload: 0.1.0 (1), internal testing only.
 - [ ] User run on the board; OTA with settings intact.
 - [ ] Promote: README for `ios/`, 0087 note, PLAN/HANDOFF/PROGRESS.
 
@@ -55,6 +55,7 @@ only through the app, then updates over the air with those settings intact.
 ## Verification
 - `swift test` in `ios/OverheadSetupKit` → 7 tests passed (2026-11-09).
 - `xcodebuild … -destination 'platform=iOS Simulator,name=iPhone 17' build` → succeeded, no warnings; launched, list screen renders.
-- `xcodebuild … archive -allowProvisioningUpdates` → failed: "PLA Update available" (user's account).
+- `xcodebuild … archive -allowProvisioningUpdates` → succeeded after the user accepted the PLA; `-exportArchive` (method app-store-connect, destination upload) → "Upload succeeded", 0.1.0 (1).
+- Board run capture: devbox `firmware/target/setup/ios-run1.log` (started 2026-11-09, 1 h).
 
 ## Open questions
