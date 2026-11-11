@@ -2019,6 +2019,52 @@ The board was then left on release build 12 (`beta`, Wi-Fi/site from settings); 
 Not shown on the board: `overhead.wesklein.com` (no CNAME yet), BLE with OTA,
 a >1 release cycle offline, the `stable` channel.
 
+## Release and recovery checklist
+
+_Draft (2026-11-11, soak work item): steps 1–6 will be checked on release 15,
+recovery on the board after the soak._ Commands for each step are in
+[Signed OTA and rollback](#signed-ota-and-rollback-00830086) and
+[`overhead-release`](../tools/README.md#overhead-release).
+
+**Release N** (gift units use `stable`, the user's board `beta`; one image
+signed for both channels when it goes to both):
+1. **Build on devbox** from a clean, pushed `main`: no `dev-settings`,
+   `ota-dev`, `ota-drill`; `OVERHEAD_BUILD=N` above every published build;
+   `OVERHEAD_VERSION=0.1.N` (one image, so no channel suffix when it goes to
+   `stable`); `OTA_CHANNEL` unset (`stable` seed for USB-flashed gift units);
+   no Wi-Fi/site env. `save-image` to `target/release/N.bin`, keep the ELF as
+   `target/release/N.elf`, run `image_gate.py`.
+2. **Personal-data check:** none of `.wifi.env`'s `SSID`/`PASSWORD` or
+   `.site.env`'s `SITE_*` values occur in `N.bin`
+   (`grep -c -F -- "$value" N.bin` prints `0` for each; never echo the values).
+3. **Hand over:** `sha256sum N.bin`; the key holder copies it to the Mac and
+   checks the hash.
+4. **Sign on the Mac:** `sign KEY beta N 0.1.N N.bin OUT`, and for `stable`
+   `sign KEY stable N 0.1.N N.bin OUT` into the same `OUT`; `verify` each
+   manifest. Copy `OUT/ota/` back to devbox.
+5. **Publish:** in a `pages` worktree, pull, add `ota/images/N.bin` and the
+   manifests, commit, fast-forward push. Never force-push (it drops the
+   `CNAME` and devices fall back to raw GitHub).
+6. **Check:** after ~10 min (Pages CDN), fetch
+   `https://overhead.wesklein.com/ota/CHANNEL/manifest.json` and run
+   `verify` on devbox with the public key from `src/release_keys.rs`; the
+   board takes it after its next 8 h refresh (`OTA_CHECK … offer=Install`,
+   `OTA_INSTALL done`, `OTA_HEALTH valid`).
+
+**Key.** The private key lives only on the key holder's Mac
+(`~/overhead-release.key`) with a 1Password backup; it never touches devbox
+or GitHub. Losing both means no device can be updated without USB (a new key
+needs a USB flash of every unit).
+
+**USB recovery flash** (a unit that won't boot or update; keeps `settings`
+and `elements`, so Wi-Fi, site and channel survive): with the board on the
+UART port, flash the newest published image's ELF exactly as the "USB flash"
+command above (bootloader, partition table, `--erase-parts otadata`, app in
+`ota_0`). After a factory reset, or for a board whose store is empty, the
+image's `OTA_CHANNEL` seed decides the channel: build with
+`OTA_CHANNEL=beta` for the user's board. Then confirm `OTA boot … state=`,
+first frame and `OTA_CHECK … offer=Current`.
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing
