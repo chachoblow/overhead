@@ -75,3 +75,9 @@ Host tests cover `Catalogue::limit`, staggered updates against complete
 frames on the pinned `visual` fixture, fallbacks, the debug count and the
 fetch caps. Board evidence (fetch, heap across refreshes, update cost) is
 recorded in the [firmware README](../../firmware/README.md#visual-group-under-the-m2-budget-0077).
+
+## Note — 2026-11-10: device pass prediction not planned
+The user doesn't need pass prediction on the device. It stays a possible
+later improvement, not open scope: no milestone (M6 or M7) waits on it, and
+the user doesn't expect it to be worth doing. Host pass search (0012–0016)
+and 0050's deferred next-pass countdown are unchanged.

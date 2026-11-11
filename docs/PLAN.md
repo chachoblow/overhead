@@ -412,3 +412,5 @@ presentation policies rather than building a plugin system. Knob hardware and
 continuous zoom are in scope under M6 ([0060](decisions/0060-defer-timing-to-physical-prototype.md)).
 Enclosure, battery integration, RTC, an Android app, and Starlink/full
 catalogue remain outside this roadmap.
+Possible later improvement, not planned: pass prediction on the device
+([0077 note](decisions/0077-m2-operating-budget-visual-group.md#note--2026-11-10-device-pass-prediction-not-planned)).

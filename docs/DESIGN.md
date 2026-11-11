@@ -47,7 +47,8 @@ requirement to add dashboard density or decorative activity indicators.
 A responsive, full but legible radar is the priority, not a particular satellite
 count. Curate and tune density on the small 1-bit display: tens may work better
 than hundreds. Pass prediction remains useful but secondary to radar quality
-([0021](decisions/0021-radar-first-iteration-on-verified-engine.md)).
+([0021](decisions/0021-radar-first-iteration-on-verified-engine.md)); on the device it is
+not planned ([0077 note](decisions/0077-m2-operating-budget-visual-group.md#note--2026-11-10-device-pass-prediction-not-planned)).
 
 The radar is a north-up perspective view of actual 3D satellite positions,
 from a fixed camera above the configured observer looking down toward that
