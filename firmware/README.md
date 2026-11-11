@@ -2036,7 +2036,9 @@ signed for both channels when it goes to both):
    `target/release/N.elf`, run `image_gate.py`.
 2. **Personal-data check:** none of `.wifi.env`'s `SSID`/`PASSWORD` or
    `.site.env`'s `SITE_*` values occur in `N.bin`
-   (`grep -c -F -- "$value" N.bin` prints `0` for each; never echo the values).
+   (`grep -c -a -F -- "$value" N.bin` prints `0` for each; never echo the
+   values). A 1–3 digit `SITE_ALT_M` matches by chance (release 14 holds the
+   same count); SSID, password, latitude and longitude must be `0`.
 3. **Hand over:** `sha256sum N.bin`; the key holder copies it to the Mac and
    checks the hash.
 4. **Sign on the Mac:** `sign KEY beta N 0.1.N N.bin OUT`, and for `stable`
