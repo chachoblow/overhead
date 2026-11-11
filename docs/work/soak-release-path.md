@@ -18,12 +18,12 @@ Out of scope: `ios/`, App Store, another iPhone, gift-unit flashing. Board stays
 
 ## Human gates
 - Defaults for release content/timing/recovery: asked 2026-11-10, answered 2026-11-11 "go" (version bump only; publish ~36 h; sign beta+stable in one Mac session; recovery flash keeps settings, seeded `beta`; capture via `systemd-run --user`).
-- User signs release 15 (beta + stable) on the Mac: needed at ~36 h (~2026-11-12 15:00 UTC).
+- User signs release 15 (beta + stable) on the Mac: user plans Thu 2026-11-12 morning PST, fallback Wed 11-11 evening PST. Any publish before a refresh works: before ~07:15Z (Wed 11:15 pm PST), ~15:15Z (Thu 7:15 am PST) or ~23:15Z (Thu 3:15 pm PST) installs at the following :46 refresh. Have `15.bin` + sha256 + exact commands ready by Wed 2026-11-11 afternoon PST.
 - `NO FRAME` recurrence: stop, report to user.
 
 ## Plan
 - [x] Start capture: unit `overhead-soak.service` (transient, linger on), started 2026-11-11T03:05:24Z, appends to `firmware/target/soak/soak72.log`. Check: `systemctl --user status overhead-soak`. Stop: `systemctl --user stop overhead-soak`.
-- [ ] Confirm board is on build 14 / `beta` from the capture (refresh line).
+- [x] Confirm board is on build 14 / `beta` from the capture: 2026-11-11T07:48Z refresh `attempt=3 outcome=Success uptime_s=86525`, `OTA_CHECK build=14 offer=Current` (no reset since 11-10 07:45Z; `attempt` counts per boot, so the uncaptured 23:46Z refresh was attempt 2).
 - [x] Draft release/recovery checklist in firmware README (`## Release and recovery checklist`, marked draft).
 - [ ] ~36 h: build release 15 (version bump only), image gate, personal-data check, hand `.bin` + sha256 to user for signing (beta + stable).
 - [ ] Push 15 to `pages` (`ota/images/15.bin`, beta + stable manifests), fast-forward only; verify stable manifest from devbox.
@@ -39,5 +39,6 @@ Out of scope: `ios/`, App Store, another iPhone, gift-unit flashing. Board stays
 - The board logs only at 8 h refreshes; last seen 2026-11-10T15:46Z, so expected ~23:46Z (uncaptured) and ~2026-11-11T07:46Z. `uptime_s` there (~86,400 s since 07:45Z on 11-10) shows whether it reset in the uncaptured gap.
 
 ## Verification
+- Refresh times so far (UTC): 11-10 15:46:39, 11-11 07:48:41 (each cycle starts after the previous fetch ends, so ~1 min drift per cycle is expected).
 
 ## Open questions
