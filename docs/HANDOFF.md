@@ -1,6 +1,6 @@
 # Overhead — Handoff
 
-_Last updated: 2026-11-10 UTC (M7 item 3 done: iOS setup app on TestFlight, board set up through it and updated to release 14). M2 and M3 complete; M4 done for now; M6 standalone device open; **M7 giftable device in progress, gift readiness next**._
+_Last updated: 2026-11-10 UTC (planning: soak and release path next on devbox, app UI/UX in parallel; M7 item 3 done). M2 and M3 complete; M4 done for now; M6 standalone device open; **M7 giftable device in progress, gift readiness next**._
 
 ## Current state
 - Shared `app/`, 1-bit `render/` and simulator give the accepted wide radar; [PLAN](PLAN.md) owns scope, [DESIGN](DESIGN.md) intent. Device runtime: `firmware/src/live_radar.rs` (device app `--features device`, [0076](decisions/0076-device-app-build.md); `live-fetch-radar` diagnostic), `visual` group in PSRAM ([0077](decisions/0077-m2-operating-budget-visual-group.md)), stored elements ([0079](decisions/0079-fetched-element-persistence.md)), SNTP rules [0062–0067](decisions/0062-no-trusted-time-display-preflight.md), [0080–0082](decisions/0080-sntp-kod-backoff-and-fetch-independence.md). Pass prediction on the device remains open.
@@ -16,8 +16,11 @@ _Last updated: 2026-11-10 UTC (M7 item 3 done: iOS setup app on TestFlight, boar
 
 ## Next: M7 gift readiness
 - No active work item. Scope: [PLAN M7](PLAN.md#m7--giftable-device). **Order agreed with the user 2026-11-10:** keep the app on internal TestFlight while the user does rounds of UI/UX fine-tuning (no review, builds in minutes; [ios/README](../ios/README.md) has the upload steps, raise `CURRENT_PROJECT_VERSION` each time; builds expire after 90 days). The App Store submission comes last, once the app is polished.
-- **Likely first item: app UI/UX refinement** driven by the user's feedback. Ask what to change; nothing specific has been raised yet (the first run "went as described").
-- In parallel, not blocked by the app: the soak (length undecided; recommended 72 h of a release image set up only through the app, ideally with a release published mid-soak. The board has qualified since release 14 went `VALID` 2026-11-10 07:45 UTC, but its devbox capture `firmware/target/setup/ios-ota14.log` ends ~18:00 UTC that day), the release/recovery checklist (incl. a first `stable` release: gift units use `stable`), and setup on another iPhone (add that person as an internal TestFlight tester).
+- **Two parallel tracks agreed with the user 2026-11-10, run in separate sessions:**
+  - **Next work item (devbox session): soak and release path.** Done when: (a) a **72 h** soak of the board on app-saved settings with a continuous devbox UART capture (no `NO FRAME`, no unexpected reset, 8 h refreshes on time); (b) a release published mid-soak installs over the air and goes `VALID` with settings intact; (c) that same build is also published as the **first `stable` release** (gift units use `stable`; the user's board stays on `beta`); (d) a release/recovery checklist (build, `.bin` personal-data check, Mac signing, `pages` push, key backup, USB recovery flash) in the firmware README, with the recovery flash tried once on the board after the soak. Out of scope: `ios/`, App Store submission, another iPhone, gift-unit flashing. Gates: the user signs on the Mac; a `NO FRAME` recurrence stops gift readiness. Release 14 went `VALID` 2026-11-10 07:45 UTC; its capture `firmware/target/setup/ios-ota14.log` ends ~18:00 UTC, so start a fresh capture.
+  - **App UI/UX refinement (user-driven, Mac session):** touches only `ios/`. Ask the user what to change; nothing specific raised yet.
+  - Only one session edits HANDOFF/PLAN at a time: the app session pulls first or leaves notes until the soak item lands.
+- Later: setup on another iPhone (add that person as an internal TestFlight tester), then flashing the gift units.
 - Submission prep, when it's time (~half a day; ~1–2 h of the user's): privacy policy on `overhead.wesklein.com`, store text, review notes, screenshots via a simulator demo mode, a user-recorded demo video, ASC questionnaires (Data Not Collected), optional unlisted-distribution request.
 - Owners may need Bluetooth toggled once if their iPhone met an older GATT table (only the user's).
 
