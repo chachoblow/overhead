@@ -2043,7 +2043,9 @@ signed for both channels when it goes to both):
    checks the hash.
 4. **Sign on the Mac:** `sign KEY beta N 0.1.N N.bin OUT`, and for `stable`
    `sign KEY stable N 0.1.N N.bin OUT` into the same `OUT`; `verify` each
-   manifest. Copy `OUT/ota/` back to devbox.
+   manifest (the Mac shell is zsh: wrap the cargo command in a function, not
+   a `$R` string, and keep `#` comments out of pasted lines). Copy `OUT`
+   back to devbox.
 5. **Publish:** in a `pages` worktree, pull, add `ota/images/N.bin` and the
    manifests, commit, fast-forward push. Never force-push (it drops the
    `CNAME` and devices fall back to raw GitHub).

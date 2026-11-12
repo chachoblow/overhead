@@ -26,9 +26,10 @@ Out of scope: `ios/`, App Store, another iPhone, gift-unit flashing. Board stays
 - [x] Confirm board is on build 14 / `beta` from the capture: 2026-11-11T07:48Z refresh `attempt=3 outcome=Success uptime_s=86525`, `OTA_CHECK build=14 offer=Current` (no reset since 11-10 07:45Z; `attempt` counts per boot, so the uncaptured 23:46Z refresh was attempt 2).
 - [x] Draft release/recovery checklist in firmware README (`## Release and recovery checklist`, marked draft).
 - [x] Build release 15 at `b32c08b` (firmware identical to `origin/main`): `OVERHEAD_BUILD=15 OVERHEAD_VERSION=0.1.15`, `--features device`, no channel/Wi-Fi/site env. `target/release/15.{elf,bin}`, 2,056,480 bytes, sha256 `69fa1d54903ed635103979e80eeb87eec79407dd31f453702ee994d39974663c`; `image_gate.py` exit 0; SSID/PASSWORD/LAT/LON 0 matches (2-digit ALT matches by chance, 42× in published 14.bin too). Two-channel sign into one OUT dry-run with a throwaway key: both `verify` ok.
-- [ ] User signs on the Mac (commands below), copies `ota15/` back to devbox `firmware/target/release/ota15/`.
-- [ ] Push 15 to `pages` (`ota/images/15.bin`, beta + stable manifests), fast-forward only; verify stable manifest from devbox.
-- [ ] Watch next 8 h refresh: install, `VALID`, settings intact.
+- [x] User signed on the Mac 2026-11-12 ~02:33Z (beta + stable, both `verify` ok); devbox: image `cmp`-identical to the build, both manifests `verify` ok against `release_keys.rs`.
+- [x] Pushed to `pages` `feb8aac..71303d8` (fast-forward) 2026-11-12T02:34Z.
+- [ ] Live manifests from `overhead.wesklein.com` verified (both channels).
+- [ ] Watch next refresh (~2026-11-12T07:52Z): install, `VALID`, settings intact.
 - [ ] At 72 h (≥ 2026-11-14T03:05Z): stop capture, scan log (resets, `NO FRAME`, refresh times).
 - [ ] Recovery flash per checklist; confirm tracking; finish checklist text.
 - [ ] Complete: promote to README/PLAN/HANDOFF/PROGRESS, delete this file.
@@ -46,13 +47,14 @@ Out of scope: `ios/`, App Store, another iPhone, gift-unit flashing. Board stays
 ```sh
 cd <overhead checkout> && git pull
 scp devbox:code/overhead/firmware/target/release/15.bin /tmp/15.bin
-shasum -a 256 /tmp/15.bin   # 69fa1d54903ed635103979e80eeb87eec79407dd31f453702ee994d39974663c
-R="cargo run -q -p overhead-tools --bin overhead-release --"; rm -rf /tmp/ota15
-$R sign ~/overhead-release.key beta   15 0.1.15 /tmp/15.bin /tmp/ota15
-$R sign ~/overhead-release.key stable 15 0.1.15 /tmp/15.bin /tmp/ota15
-PUB=$($R pubkey ~/overhead-release.key)
-$R verify /tmp/ota15/ota/beta/manifest.json   $PUB /tmp/ota15/ota/images/15.bin
-$R verify /tmp/ota15/ota/stable/manifest.json $PUB /tmp/ota15/ota/images/15.bin
+shasum -a 256 /tmp/15.bin
+r() { cargo run -q -p overhead-tools --bin overhead-release -- "$@"; }   # zsh: no r word-splitting
+rm -rf /tmp/ota15
+r sign ~/overhead-release.key beta   15 0.1.15 /tmp/15.bin /tmp/ota15
+r sign ~/overhead-release.key stable 15 0.1.15 /tmp/15.bin /tmp/ota15
+PUB=$(r pubkey ~/overhead-release.key)
+r verify /tmp/ota15/ota/beta/manifest.json   $PUB /tmp/ota15/ota/images/15.bin
+r verify /tmp/ota15/ota/stable/manifest.json $PUB /tmp/ota15/ota/images/15.bin
 scp -r /tmp/ota15 devbox:code/overhead/firmware/target/release/
 ```
 
