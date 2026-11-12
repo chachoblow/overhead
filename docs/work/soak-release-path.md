@@ -28,7 +28,7 @@ Out of scope: `ios/`, App Store, another iPhone, gift-unit flashing. Board stays
 - [x] Build release 15 at `b32c08b` (firmware identical to `origin/main`): `OVERHEAD_BUILD=15 OVERHEAD_VERSION=0.1.15`, `--features device`, no channel/Wi-Fi/site env. `target/release/15.{elf,bin}`, 2,056,480 bytes, sha256 `69fa1d54903ed635103979e80eeb87eec79407dd31f453702ee994d39974663c`; `image_gate.py` exit 0; SSID/PASSWORD/LAT/LON 0 matches (2-digit ALT matches by chance, 42× in published 14.bin too). Two-channel sign into one OUT dry-run with a throwaway key: both `verify` ok.
 - [x] User signed on the Mac 2026-11-12 ~02:33Z (beta + stable, both `verify` ok); devbox: image `cmp`-identical to the build, both manifests `verify` ok against `release_keys.rs`.
 - [x] Pushed to `pages` `feb8aac..71303d8` (fast-forward) 2026-11-12T02:34Z.
-- [ ] Live manifests from `overhead.wesklein.com` verified (both channels).
+- [x] Live from `overhead.wesklein.com` at 02:35:56Z: `ota/beta` and `ota/stable` manifests both build 15, `verify` ok against `release_keys.rs`; live `images/15.bin` `cmp`-identical. Done-when (c) met.
 - [ ] Watch next refresh (~2026-11-12T07:52Z): install, `VALID`, settings intact.
 - [ ] At 72 h (≥ 2026-11-14T03:05Z): stop capture, scan log (resets, `NO FRAME`, refresh times).
 - [ ] Recovery flash per checklist; confirm tracking; finish checklist text.
