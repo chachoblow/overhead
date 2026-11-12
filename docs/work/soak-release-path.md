@@ -29,7 +29,7 @@ Out of scope: `ios/`, App Store, another iPhone, gift-unit flashing. Board stays
 - [x] User signed on the Mac 2026-11-12 ~02:33Z (beta + stable, both `verify` ok); devbox: image `cmp`-identical to the build, both manifests `verify` ok against `release_keys.rs`.
 - [x] Pushed to `pages` `feb8aac..71303d8` (fast-forward) 2026-11-12T02:34Z.
 - [x] Live from `overhead.wesklein.com` at 02:35:56Z: `ota/beta` and `ota/stable` manifests both build 15, `verify` ok against `release_keys.rs`; live `images/15.bin` `cmp`-identical. Done-when (c) met.
-- [ ] Watch next refresh (~2026-11-12T07:52Z): install, `VALID`, settings intact.
+- [x] Release 15 over the air (done-when (b) met): 2026-11-12T07:51:53Z refresh (`attempt=6`, `uptime_s=173111`, no reset on 14) `offer=Install`; `OTA_INSTALL done ms=51111 ok=true`; expected `RTC_SW_SYS_RST`; `OTA boot build=15 slot=Some(1) state=PendingVerify channel=beta`; Wi-Fi at 2 s, stored elements resumed, first frame, `OTA_HEALTH valid build=15` at 13 s, `offer=Current`. Settings intact (channel `beta`, Wi-Fi, home site).
 - [ ] At 72 h (≥ 2026-11-14T03:05Z): stop capture, scan log (resets, `NO FRAME`, refresh times).
 - [ ] Recovery flash per checklist; confirm tracking; finish checklist text.
 - [ ] Complete: promote to README/PLAN/HANDOFF/PROGRESS, delete this file.
@@ -41,7 +41,7 @@ Out of scope: `ios/`, App Store, another iPhone, gift-unit flashing. Board stays
 - The board logs only at 8 h refreshes; last seen 2026-11-10T15:46Z, so expected ~23:46Z (uncaptured) and ~2026-11-11T07:46Z. `uptime_s` there (~86,400 s since 07:45Z on 11-10) shows whether it reset in the uncaptured gap.
 
 ## Verification
-- Refresh times so far (UTC): 11-10 15:46:39, 11-11 07:48:41 (each cycle starts after the previous fetch ends, so ~1 min drift per cycle is expected).
+- Refresh times (UTC): 11-10 15:46:39, 11-11 07:48:41, 15:49:41, 23:50:50, 11-12 07:51:52 (install; build 15 resumed stored elements, next due ~15:51Z) (each cycle starts after the previous fetch ends, so ~1 min drift per cycle is expected).
 
 ## Signing commands for the user (Mac)
 ```sh
