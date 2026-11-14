@@ -1,5 +1,5 @@
 # Device inputs a gift unit can use, and M6 closed
-Status: blocked: user wires IO7 button, then tap session
+Status: blocked: user taps the knob during the ~07:03 UTC 2 h refresh (TLS stall)
 Started: 2026-11-13. Scope: PLAN M6 (two open boxes); decisions 0068, 0070, 0087, 0060
 
 ## Outcome
@@ -35,8 +35,8 @@ ticked with evidence, and the accepted input limits are recorded.
 - Selection control: asked 2026-11-13 / answered: separate button; BOOT not
   reachable on gift units, which will have a button and a knob.
 - Fix in this item: answered 2026-11-13: yes.
-- Wiring: user wires a momentary button IO7 → GND on the board (needed
-  before the tap session).
+- Wiring: done 2026-11-14 (four-leg tactile button: wires on diagonally
+  opposite legs; same-side legs are always connected).
 - Tap session: user presses buttons and watches the panel.
 
 ## Plan
@@ -48,10 +48,15 @@ ticked with evidence, and the accepted input limits are recorded.
       and `fetching`, so a press drained after a TLS stall is visible.
 - [x] Host test for the toggle helper; checks and tests.
 - [x] Device build, gate, flashed once (boot healthy, settings kept).
-- [ ] Session image: `OTA_CHANNEL=beta REFRESH_MINUTES=120 OVERHEAD_BUILD=15
+- [x] Session image: `OTA_CHANNEL=beta REFRESH_MINUTES=120 OVERHEAD_BUILD=15
       OVERHEAD_VERSION=0.1.15-inputs`, `device,dev-settings`; built and gated
       (ELF sha256 prefix 3d61d4de). Flash only when the user is ready: the
-      stored copy is >2 h old, so it fetches right after boot.
+      stored copy is >2 h old, so it fetches right after boot. Flashed
+      05:02 UTC; its boot fetch (05:02:44) ran before the user could press.
+- [x] Selection and info page on the board (below).
+- [ ] Knob taps during the next 2 h refresh (~07:03 UTC; a sooner fetch
+      would break CelesTrak's 2 h rule); capture around it, look for
+      `INFO_PAGE … loop_gap_us≫5 ms fetching=true`.
 - [ ] Ask user: wire IO7, then flash + tap session with capture
       (`target/inputs-session.log`); afterwards reflash a default-interval
       build (`OVERHEAD_BUILD=15`, no `REFRESH_MINUTES`).
@@ -77,5 +82,10 @@ ticked with evidence, and the accepted input limits are recorded.
 - First device build: gate pass; flashed 2026-11-14 04:44 UTC: `OTA boot
   build=0 … state=Valid channel=beta`, `STORE loaded`, Wi-Fi 2 s, first frame,
   no panic (`firmware/target/inputs-boot.log`).
+- Session 2026-11-14 05:02 UTC (`firmware/target/inputs-session.log`):
+  `OTA boot build=15 version=0.1.15-inputs … Valid channel=beta`, fetch
+  05:02:44, 5 in view; IO7 presses: 11 `SELECT drained=1 applied=1`, cycling
+  20443→22286→22803→28415→20443…, user saw the selection change; knob:
+  `INFO_PAGE` shown=true then false.
 
 ## Open questions
