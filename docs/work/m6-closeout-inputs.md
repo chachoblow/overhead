@@ -1,5 +1,5 @@
 # Device inputs a gift unit can use, and M6 closed
-Status: active
+Status: blocked: user wires IO7 button, then tap session
 Started: 2026-11-13. Scope: PLAN M6 (two open boxes); decisions 0068, 0070, 0087, 0060
 
 ## Outcome
@@ -40,13 +40,21 @@ ticked with evidence, and the accepted input limits are recorded.
 - Tap session: user presses buttons and watches the panel.
 
 ## Plan
-- [ ] `boot_capture`: optional second (info) input sampled in the same ISR,
+- [x] `boot_capture`: optional second (info) input sampled in the same ISR,
       own `PressLatch`, `take_info_presses()`.
-- [ ] `live_radar`: selection on GPIO7, knob switch into the capture after
-      the boot hold, info toggle from drained presses; rename diag lines.
-- [ ] Host test for the toggle helper; checks and tests.
-- [ ] Device build (`dev-settings`, `OTA_CHANNEL=beta`), gate, commit.
-- [ ] Ask user: wire IO7, then flash + tap session with capture.
+- [x] `live_radar`: selection on GPIO7, knob switch into the capture after
+      the boot hold, info toggle from drained presses. `SELECT` and
+      `INFO_PAGE` are event-log lines (app prints them) with `loop_gap_us`
+      and `fetching`, so a press drained after a TLS stall is visible.
+- [x] Host test for the toggle helper; checks and tests.
+- [x] Device build, gate, flashed once (boot healthy, settings kept).
+- [ ] Session image: `OTA_CHANNEL=beta REFRESH_MINUTES=120 OVERHEAD_BUILD=15
+      OVERHEAD_VERSION=0.1.15-inputs`, `device,dev-settings`; built and gated
+      (ELF sha256 prefix 3d61d4de). Flash only when the user is ready: the
+      stored copy is >2 h old, so it fetches right after boot.
+- [ ] Ask user: wire IO7, then flash + tap session with capture
+      (`target/inputs-session.log`); afterwards reflash a default-interval
+      build (`OVERHEAD_BUILD=15`, no `REFRESH_MINUTES`).
 - [ ] Decision 0088, DESIGN, PLAN, README, HANDOFF; delete this file.
 
 ## Discoveries and assumptions
@@ -56,7 +64,18 @@ ticked with evidence, and the accepted input limits are recorded.
 - IO7 is free on the DevKitC-1 N8R8 (not a strap, flash/PSRAM or USB pin).
 - Default: GPIO0 selection is dropped from the device app, not kept as a
   second selector.
+- A dev build with `OVERHEAD_BUILD=0` is offered release 15 on `beta` at the
+  next refresh and would reinstall it, so board builds here use
+  `OVERHEAD_BUILD=15` (`Offer::Current`); release 16 still installs over it.
+- First flash with `timeout 90` stopped before the write; flashes need the
+  documented 600 s window (re-flashed fine).
 
 ## Verification
+- `cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked` →
+  38 passed (incl. `info_presses_toggle_per_press_and_a_boot_hold_never_counts`).
+- `cargo check --workspace` ok; `cargo test --workspace` → 361 passed.
+- First device build: gate pass; flashed 2026-11-14 04:44 UTC: `OTA boot
+  build=0 … state=Valid channel=beta`, `STORE loaded`, Wi-Fi 2 s, first frame,
+  no panic (`firmware/target/inputs-boot.log`).
 
 ## Open questions

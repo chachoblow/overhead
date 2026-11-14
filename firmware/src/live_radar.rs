@@ -1379,7 +1379,7 @@ async fn display(
             info_changed = shown.is_some() != info_until.is_some();
             info_until = shown;
             println!(
-                "INFO_PAGE presses={info_presses} shown={}",
+                "INFO_PAGE presses={info_presses} shown={} loop_gap_us={gap} fetching={fetching}",
                 info_until.is_some()
             );
         }
@@ -1394,7 +1394,7 @@ async fn display(
             ota::LAST_INPUT_S.store(uptime_s() as u32, Ordering::Relaxed);
             let applied = apply_presses(presses, &mut app);
             println!(
-                "SELECT drained={presses} applied={applied} uptime_us={now} valid={} selected={:?}",
+                "SELECT drained={presses} applied={applied} uptime_us={now} loop_gap_us={gap} fetching={fetching} valid={} selected={:?}",
                 app.time().is_some(),
                 app.selected_id()
             );
