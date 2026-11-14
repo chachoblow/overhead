@@ -147,6 +147,24 @@ impl PressLatch {
     }
 }
 
+/// 0087/0088 info page from drained knob-switch presses: each press toggles
+/// it, so presses applied late (after a TLS stall) leave the state the user
+/// pressed for. Showing starts a fresh `shown_us` timeout from `now_us`.
+pub fn toggle_info(
+    presses: u16,
+    shown_until: Option<u64>,
+    now_us: u64,
+    shown_us: u64,
+) -> Option<u64> {
+    if presses % 2 == 0 {
+        return shown_until;
+    }
+    match shown_until {
+        Some(_) => None,
+        None => Some(now_us.saturating_add(shown_us)),
+    }
+}
+
 /// Display-side half of 0070, applying [0068] to drained presses: each one
 /// advances the selection once when a valid frame exists; otherwise all are
 /// consumed, not queued. Validity is judged at drain time. Returns the number
@@ -626,6 +644,25 @@ mod tests {
         twin.update(time).unwrap();
         assert_eq!(app.selected_id(), twin.selected_id());
         assert!(app.selected_id().is_some());
+    }
+
+    #[test]
+    fn info_presses_toggle_per_press_and_a_boot_hold_never_counts() {
+        assert_eq!(toggle_info(0, None, 5, 10), None);
+        assert_eq!(toggle_info(1, None, 5, 10), Some(15));
+        assert_eq!(toggle_info(1, Some(15), 7, 10), None);
+        assert_eq!(toggle_info(2, Some(15), 7, 10), Some(15));
+        assert_eq!(toggle_info(3, None, 7, 10), Some(17));
+        assert_eq!(toggle_info(1, None, u64::MAX, 10), Some(u64::MAX));
+        // A setup hold still down when sampling starts, released inside a
+        // long display stall, then a real press: only the real press counts.
+        let mut latch = PressLatch::new(20_000).unwrap();
+        let pressed = |t: u64| t < 300_000 || (600_000..700_000).contains(&t);
+        for t in (0..1_000_000).step_by(5_000) {
+            latch.sample(t, pressed(t));
+        }
+        let shown = toggle_info(latch.take_presses(), None, 1_000_000, 10);
+        assert_eq!(shown, Some(1_000_010));
     }
 
     #[test]

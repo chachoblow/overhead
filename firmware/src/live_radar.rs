@@ -2,7 +2,7 @@
 //! CelesTrak's `visual` group under the 0077 operating budget), shared by the device application (`device`, 0076: event log only)
 //! and the `live-fetch-radar` diagnostic (`Log::Diagnostic`: every telemetry
 //! line). The two differ only in what they print. One display task owns app,
-//! UTC gate, BOOT selection and SPI; the network side screens SNTP replies,
+//! UTC gate, button selection and SPI; the network side screens SNTP replies,
 //! fetches elements over HTTPS after the first in-budget observation, then
 //! again on 0075's schedule (`element_refresh`: one interval after a success
 //! or anything past the request, short backoff only before it), and hands
@@ -44,7 +44,7 @@
 //! build can inject kiss codes per server and time window (`FAULT_KOD`).
 use crate::{
     boot_capture,
-    button_input::{CompletedPress, apply_presses},
+    button_input::{apply_presses, toggle_info},
     coast_measurement::Screen,
     device_timing::{DiagnosticAction, LifecycleAction},
     element_fetch::{self, HttpError},
@@ -644,12 +644,19 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
         println!("SETUP boot_hold ignored on probation");
     }
     let setup_mode::Panel { spi, cs, .. } = panel;
-    // 0070: GPIO0 (DevKitC-1 BOOT strap) is sampled by a 5 ms TIMG1
-    // interrupt, independent of render/SPI and the executor.
-    let boot = Input::new(p.GPIO0, InputConfig::default().with_pull(Pull::Up));
+    // 0088: the selection button (IO7, to ground; BOOT/GPIO0 is not
+    // reachable on a gift unit) and the knob switch are sampled by a 5 ms
+    // TIMG1 interrupt (0070), independent of render/SPI, TLS and the
+    // executor, so a press during a fetch is applied late, not lost.
+    let select = Input::new(p.GPIO7, InputConfig::default().with_pull(Pull::Up));
     let timg1 = TimerGroup::new(p.TIMG1);
-    boot_capture::start(PeriodicTimer::new(timg1.timer0), boot, 20_000);
-    diag!("BOOT_CAPTURE_READY live fetch sample_ms=5 timer=TIMG1");
+    boot_capture::start_with_info(
+        PeriodicTimer::new(timg1.timer0),
+        select,
+        Some(switch),
+        20_000,
+    );
+    diag!("INPUT_CAPTURE_READY select=IO7 info=IO6 sample_ms=5 timer=TIMG1");
     // Knob zoom (0060): PCNT unit 0 decodes A=IO4/B=IO5 quadrature in
     // hardware, so render/SPI stalls cannot drop steps; the display task
     // reads the count once per loop. Wiring and polarity: firmware README.
@@ -697,7 +704,7 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
         channel: ota.settings().channel.as_str(),
         failed_build: ota.settings().failed_build,
     };
-    spawner.spawn(display(spi, cs, observer, knob, wdt, hang_drill, switch, info).unwrap());
+    spawner.spawn(display(spi, cs, observer, knob, wdt, hang_drill, info).unwrap());
 
     // Entropy for TLS, DHCP and SNTP nonces: keep the TRNG source alive.
     let _trng_source = TrngSource::new(p.RNG, p.ADC1);
@@ -1260,12 +1267,10 @@ async fn display(
     knob_input: KnobInput,
     mut wdt: Rwdt,
     hang_drill: bool,
-    switch: Input<'static>,
     info: Info,
 ) {
-    // 0087 info page: a completed press (20 ms debounce) toggles it; a press
-    // begun at boot (the setup hold) never counts.
-    let mut info_press = CompletedPress::new(20_000).expect("debounce");
+    // 0087 info page: each completed knob-switch press (20 ms debounce,
+    // interrupt-captured under 0088) toggles it; the setup hold never counts.
     let mut info_until: Option<u64> = None;
     // Clockwise counts negative on this encoder; clockwise zooms in.
     let mut detents = Detents::new(knob_input.unit.value(), true);
@@ -1367,14 +1372,16 @@ async fn display(
         }
         let now = uptime_us();
         let mut info_changed = false;
-        if info_press.sample(now, switch.is_low()) {
+        let info_presses = boot_capture::take_info_presses();
+        if info_presses > 0 {
             ota::LAST_INPUT_S.store(uptime_s() as u32, Ordering::Relaxed);
-            info_until = match info_until {
-                Some(_) => None,
-                None => Some(now + INFO_SHOWN_US),
-            };
-            info_changed = true;
-            diag!("INFO_PAGE shown={}", info_until.is_some());
+            let shown = toggle_info(info_presses, info_until, now, INFO_SHOWN_US);
+            info_changed = shown.is_some() != info_until.is_some();
+            info_until = shown;
+            println!(
+                "INFO_PAGE presses={info_presses} shown={}",
+                info_until.is_some()
+            );
         }
         if info_until.is_some_and(|until| now >= until) {
             info_until = None;
@@ -1386,8 +1393,8 @@ async fn display(
         if presses > 0 {
             ota::LAST_INPUT_S.store(uptime_s() as u32, Ordering::Relaxed);
             let applied = apply_presses(presses, &mut app);
-            diag!(
-                "BOOT_CAPTURE drained={presses} applied={applied} uptime_us={now} valid={} selected={:?}",
+            println!(
+                "SELECT drained={presses} applied={applied} uptime_us={now} valid={} selected={:?}",
                 app.time().is_some(),
                 app.selected_id()
             );
@@ -1428,7 +1435,7 @@ async fn display(
                 _ => -1,
             };
             diag!(
-                "BOOT_CAPTURE_STATS samples={} max_gap_us={} loop_max_us={loop_max_us} \
+                "INPUT_CAPTURE_STATS samples={} max_gap_us={} loop_max_us={loop_max_us} \
                  update_max_us={update_max_us} update_boot_max_us={update_boot_max_us} \
                  oldest_ms={oldest_ms} catalogue={} sky={} view={} stale={} heap_now={} \
                  internal_used={internal} internal_free={internal_free} psram_used={psram} \
