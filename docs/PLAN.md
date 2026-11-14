@@ -2,7 +2,8 @@
 
 **Current: M0, M1, M2 and M3 complete (M2 closed under
 [0077](decisions/0077-m2-operating-budget-visual-group.md) on 2026-11-03); M4
-done for now (user, 2026-10-24); M6 standalone device remains open; M6 element
+done for now (user, 2026-10-24); M6 standalone device complete (2026-11-14,
+device inputs under [0088](decisions/0088-selection-button-and-captured-knob-switch.md)); M6 element
 fetch runs under [0071](decisions/0071-https-element-fetch-first-slice.md),
 [0074](decisions/0074-live-utc-radar-on-fetched-elements.md) and
 [0075](decisions/0075-fetched-element-refresh-and-staleness.md); the device
@@ -306,17 +307,21 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
     accuracy, physical COM edges or sustained cadence.
   - Wi-Fi/display contention, SPI failure service, aging elements and
     whole-device timing remain open.
-- [ ] Run shared engine/renderer on S3 + Sharp. Intended controls under 0060:
+- [x] Run shared engine/renderer on S3 + Sharp. Intended controls under 0060:
   button cycles satellites, knob zooms continuously (presets as fallback).
   BOOT cycling under [0068](decisions/0068-boot-selection-gesture.md) with
   [0070](decisions/0070-boot-input-capture-independent-of-render.md) interrupt
-  capture is implemented in diagnostics and passed user tap sessions;
-  [HANDOFF](HANDOFF.md) tracks open BOOT risks. The device app build exists
+  capture passed user tap sessions on the diagnostics; since
+  [0088](decisions/0088-selection-button-and-captured-knob-switch.md) the
+  device selects with a button on IO7 (gift units don't expose BOOT) and the
+  knob switch is captured the same way (user tap session 2026-11-14,
+  [evidence](../firmware/README.md#selection-button-and-captured-knob-switch-0088));
+  [HANDOFF](HANDOFF.md) tracks the input limits. The device app build exists
   under [0076](decisions/0076-device-app-build.md) (`--features device`,
   shared runtime with the `live-fetch-radar` diagnostic, event log only;
   [evidence](../firmware/README.md#device-application-0076)). Knob zoom done
   ([0060 note](decisions/0060-defer-timing-to-physical-prototype.md#note--2026-11-03-knob-implemented-and-accepted)).
-- [ ] Add Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes
+- [x] Add Wi-Fi credentials, HTTPS elements, SNTP, persistence, and refreshes
   per [0002](decisions/0002-data-and-time-over-wifi.md). First slice accepted as
   [0071](decisions/0071-https-element-fetch-first-slice.md): mbedtls-rs, STATIONS JSON,
   one request per boot; slices 1–3 done: one on-board fetch ingested 20/20 STATIONS records
@@ -334,7 +339,8 @@ closure neither selects production capacity/cadence nor authorizes follow-on wor
   copy younger than the interval defers the fetch; corrupt-slot fallback and
   reset-without-fetch shown on the board, user-observed on the device app
   ([evidence](../firmware/README.md#element-persistence-0079)).
-  The location source moves to M7 ([0084](decisions/0084-settings-store.md),
+  Credentials and the location source moved to M7 and are done there
+  ([0084](decisions/0084-settings-store.md),
   [0087](decisions/0087-ios-setup-app-over-ble.md)).
 - [x] Handle network failure, missing/invalid time or data, and stale elements.
   Under 0075: failed refreshes keep the previous catalogue, `OLD DATA` after

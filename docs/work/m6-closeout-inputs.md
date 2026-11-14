@@ -64,16 +64,20 @@ ticked with evidence, and the accepted input limits are recorded.
 - [ ] Knob taps during the next 2 h refresh (~07:03 UTC; a sooner fetch
       would break CelesTrak's 2 h rule); capture around it, look for
       `INFO_PAGE … loop_gap_us≫5 ms fetching=true`.
-- [ ] Ask user: wire IO7, then flash + tap session with capture
-      (`target/inputs-session.log`); afterwards reflash a default-interval
-      build (`OVERHEAD_BUILD=15`, no `REFRESH_MINUTES`).
 - [x] Decision 0088 (accepted, from the user's 2026-11-13 answers), DESIGN
       controls, 0068/0070 pointers, README OTA-idle wording.
-- [ ] After the refresh capture (`firmware/target/inputs-refresh.log`,
-      host-timestamped, started after the session capture): README evidence
-      section `selection-button-and-captured-knob-switch-0088` (0088 links to
-      it) + wiring line, PLAN M6 boxes ticked, HANDOFF board wiring/limits;
-      reflash an 8 h build (`OVERHEAD_BUILD=15`); delete this file; handoff.
+- [x] README section `selection-button-and-captured-knob-switch-0088`
+      (wiring, capture, log, evidence with the stall row **pending**), device
+      app/BLE section pointers, PLAN M6 boxes ticked and header, HANDOFF
+      wiring/board/limits (2026-11-14 15:15 UTC).
+- [x] 8 h image built and gated, not flashed: `firmware/target/inputs-8h.elf`
+      (`.bin`), same settings without `REFRESH_MINUTES`, ELF sha256 prefix
+      b98da4c8.
+- [ ] After the stall tap: fill the README's pending row (and drop "pending"
+      from 0088 if wording needs it), flash `target/inputs-8h.elf` as in the
+      OTA section (600 s window; confirm `refresh_s=28800` or the next
+      `next_in_s=28800`), update HANDOFF's board line (8 h), delete this file,
+      handoff.
 
 ## Discoveries and assumptions
 - Selection presses were already interrupt-captured (0070); only the info
@@ -88,6 +92,9 @@ ticked with evidence, and the accepted input limits are recorded.
 - The follow-on refresh capture never ran: its `pgrep -f "espflash flash"`
   wait matched its own command line. No log of the 07:03–15:03 refreshes;
   next expected ~17:03 UTC (2 h steps from 05:02:44, uptime-based).
+- Passive capture `firmware/target/inputs-refresh.log` (host-timestamped,
+  `stty … && timeout 8400 cat | gawk strftime`) started 15:13 UTC to cover
+  the ~17:03 refresh even without taps (shows the refresh itself).
 - First flash with `timeout 90` stopped before the write; flashes need the
   documented 600 s window (re-flashed fine).
 

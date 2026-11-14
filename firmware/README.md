@@ -1534,6 +1534,8 @@ group since [0077](../docs/decisions/0077-m2-operating-budget-visual-group.md),
 banner `OVERHEAD_DEVICE_V2`; STATIONS before), refreshed and aged under 0075,
 with BOOT cycling. It runs the same runtime
 (`src/live_radar.rs`) as the `live-fetch-radar` diagnostic and its fault build;
+since [0088](#selection-button-and-captured-knob-switch-0088) a button on IO7
+cycles instead of BOOT;
 the app prints only the event log (banner, `SNTP_WIFI`, `FETCH_FAILED`,
 `FETCH_SCHEDULE`, `LIVE_FETCH` load/stale/expired, `RADAR first_frame`,
 `LIVE_UTC no_frame_sent`, `SNTP KoD` (0080), `OVERHEAD_DEVICE_FAILED` on panic,
@@ -1648,6 +1650,54 @@ in `utc_trust`), and BOOT presses across a renewal (no presses in this run;
 the selection itself survived every renewal). Afterwards the board was left
 on the default 8-hour app (image 1,358,208 B, gate passed): 156 loaded, 11 in
 view.
+
+## Selection button and captured knob switch (0088)
+
+[0088](../docs/decisions/0088-selection-button-and-captured-knob-switch.md):
+gift units expose a button and a knob, not BOOT. In the runtime
+(`src/live_radar.rs`, device app and `live-fetch-radar`):
+
+- **Wiring:** a momentary button from **IO7 to G** (internal pull-up, active
+  low). On a four-leg tactile button use **diagonally opposite legs**:
+  same-side pairs are always connected, so wires there never switch. Encoder
+  wiring is unchanged ([knob check](#rotary-encoder-wiring-check-knob-test)).
+- **Capture:** after the setup hold, IO7 (selection) and IO6 (knob switch,
+  info page) are sampled by 0070's 5 ms TIMG1 interrupt
+  (`boot_capture::start_with_info`, 20 ms qualification) and drained at the
+  display loop boundary; `button_input::toggle_info` (host-tested) toggles
+  the info page once per drained press. The diagnostics
+  (`sharp_boot_capture_main`, `live_utc_main`) still read GPIO0.
+- **Log:** `INPUT_CAPTURE_READY select=IO7 info=IO6 …` (diagnostic only);
+  the app prints `SELECT drained= applied= uptime_us= loop_gap_us= fetching=
+  valid= selected=` and `INFO_PAGE presses= shown= loop_gap_us= fetching=`.
+  A press held through a stall shows as `loop_gap_us` far above 5 ms.
+
+```sh
+# session image (from firmware/, after . "$HOME/export-esp.sh" and the env
+# exports); the 8 h build is the same without REFRESH_MINUTES
+OTA_CHANNEL=beta REFRESH_MINUTES=120 OVERHEAD_BUILD=15 \
+  OVERHEAD_VERSION=0.1.15-inputs cargo build --release --locked \
+  --bin overhead-s3-device --features device,dev-settings
+# save-image, image_gate.py and flash as in the OTA section
+```
+
+`OVERHEAD_BUILD=15` keeps a dev image from reinstalling release 15 from
+`beta` at its next refresh (`Offer::Current`); release 16 still installs over
+it.
+
+**On-board evidence, 2026-11-14** (devbox `/dev/ttyUSB0`, MAC
+`80:45:6b:2a:45:08`, every image gated, settings kept):
+
+| Check | Result |
+|---|---|
+| First flash (04:44 UTC, build 0) | `OTA boot … state=Valid channel=beta`, `STORE loaded`, Wi-Fi 2 s, first frame, no panic (`target/inputs-boot.log`) |
+| Session image (05:02 UTC) | `OTA boot build=15 version=0.1.15-inputs … Valid channel=beta`; fetch at 05:02:44, 156 loaded, 5 in view (`target/inputs-session.log`) |
+| IO7 selection (user) | 11 presses, each `SELECT drained=1 applied=1`, cycling 20443→22286→22803→28415→20443…; user saw the selection change |
+| Knob info page (user) | `INFO_PAGE presses=1 shown=true`, then `shown=false` on the next press |
+| Knob press during a refresh (TLS stall) | **pending:** deferred by the user; capture `target/inputs-refresh.log` |
+
+Not shown: a press during the ~34–41 ms Wi-Fi association gap (0070's limit,
+now for both inputs).
 
 ## Rotary encoder wiring check (knob-test)
 
@@ -1874,7 +1924,9 @@ host-tested), screens in `render/src/setup.rs`; the info page lives in
   joining (`JoinTimeout`, an RTC flag across the reset), or with IO6 held
   3 s at boot (`Button`; the Sharp says when to release). Held 10 s:
   factory reset (settings and elements erased, `FactoryReset`). A short
-  press while tracking shows the info page for 30 s.
+  press while tracking shows the info page for 30 s; since
+  [0088](#selection-button-and-captured-knob-switch-0088) each press toggles
+  it and presses are interrupt-captured.
 - **Leaves** by a software reset 3 s after `Saved`, or after 10 min with no
   client when settings exist.
 - Static heap is 96 KiB (was 128) so pairing's P-256 work fits the CPU0 stack.
@@ -1901,7 +1953,8 @@ configured= internal_free=`, `SETUP ble_init`, `SETUP scan seen= listed=`,
 `SETUP passkey_shown`, `SETUP paired level= bonded=`, `SETUP
 stack_watermark`, `SETUP request …`, `SETUP test channel=`, `SETUP test
 result= ms=`, `SETUP saved; restarting`, `SETUP join_timeout after_s=300`,
-`SETUP ble_disconnected reason=`, `INFO_PAGE shown=`.
+`SETUP ble_disconnected reason=`, `INFO_PAGE presses= shown= loop_gap_us=
+fetching=` (0088).
 
 **On-board evidence, 2026-11-08/09** (devbox `/dev/ttyUSB0`, MAC
 `80:45:6b:2a:45:08`, every image gated; client on devbox's AX200, which
