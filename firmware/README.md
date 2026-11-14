@@ -1686,7 +1686,8 @@ OTA_CHANNEL=beta REFRESH_MINUTES=120 OVERHEAD_BUILD=15 \
 it.
 
 **On-board evidence, 2026-11-14** (devbox `/dev/ttyUSB0`, MAC
-`80:45:6b:2a:45:08`, every image gated, settings kept):
+`80:45:6b:2a:45:08`, every image gated, settings kept; the board was left on
+the 8 h build):
 
 | Check | Result |
 |---|---|
@@ -1694,7 +1695,8 @@ it.
 | Session image (05:02 UTC) | `OTA boot build=15 version=0.1.15-inputs … Valid channel=beta`; fetch at 05:02:44, 156 loaded, 5 in view (`target/inputs-session.log`) |
 | IO7 selection (user) | 11 presses, each `SELECT drained=1 applied=1`, cycling 20443→22286→22803→28415→20443…; user saw the selection change |
 | Knob info page (user) | `INFO_PAGE presses=1 shown=true`, then `shown=false` on the next press |
-| Knob press during a refresh (TLS stall) | **pending:** deferred by the user; capture `target/inputs-refresh.log` |
+| Knob presses across a refresh (user, 17:00–17:09 UTC) | 214 `INFO_PAGE` lines, ~1 per second; six during the fetch (`fetching=true`, normal gaps); one pressed during a 479 ms stall right after the store save, applied when the loop resumed (`loop_gap_us=478539`); fetch `Success`, `OTA_CHECK … offer=Current`, no panic or `NO FRAME` (`target/inputs-refresh.log`, host-timestamped) |
+| 8 h build (17:11 UTC) | `OTA boot build=15 … Valid channel=beta`, `STORE loaded` (17:08 copy, so no boot fetch), Wi-Fi 2 s, first frame (`target/inputs-8h.log`) |
 
 Not shown: a press during the ~34–41 ms Wi-Fi association gap (0070's limit,
 now for both inputs).

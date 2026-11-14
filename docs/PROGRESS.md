@@ -725,3 +725,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - 72 h devbox UART soak of the board on iOS-app-saved settings: 9 refreshes on time, no `NO FRAME`, no unexpected reset.
 - Release 15 (`0.1.15`, same firmware as 14) built on devbox, user-signed for `beta` and `stable`; first `stable` manifest on `pages` (`71303d8`). Installed over the air ~29 h into the soak, `VALID` at 13 s, settings intact.
 - Release and recovery checklist in the firmware README; USB recovery flash of release 15 tried on the board after the soak (settings and channel kept). 0085 note on one image for both channels.
+
+## 2026-11-13/14 (M6 closed: device inputs)
+- [0088](decisions/0088-selection-button-and-captured-knob-switch.md): satellites cycle with a button on IO7 (gift units don't expose BOOT); the knob switch keeps setup/factory reset and its info-page press is now interrupt-captured like selection.
+- User tap sessions on the board: IO7 cycled selection; a knob press during a 479 ms refresh stall was applied when the display resumed. Host tests 38, workspace tests 361.
+- PLAN M6 boxes ticked; gift-unit build and check sheet written in the firmware README (not yet exercised).

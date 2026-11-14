@@ -4,7 +4,7 @@ Date: 2026-11-14
 Status: accepted (user, 2026-11-13: separate button; the fix belongs in the
 M6 closeout). Implemented in the device runtime (`firmware/src/live_radar.rs`,
 `boot_capture.rs`, `button_input.rs`); selection and info page shown on the
-board 2026-11-14
+board 2026-11-14, including a knob press applied after a 479 ms refresh stall
 ([evidence](../../firmware/README.md#selection-button-and-captured-knob-switch-0088)).
 
 ## Problem
