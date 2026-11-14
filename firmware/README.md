@@ -2004,8 +2004,8 @@ Rebuilding it is a toolchain change: ask first.
 
 **Features.** `dev-settings` (developer only) seeds missing Wi-Fi/site
 settings from `.wifi.env`/`.site.env`; without it an image holds no personal
-data and, on an empty store, waits on `NO FRAME` for setup (`SETTINGS
-unconfigured`). `ota-dev` asks only the plain-HTTP LAN host `OTA_DEV_HOST`
+data and, on an empty store, opens setup (`SETTINGS empty …`, then `SETUP
+open reason=Unconfigured`, [0087](#ble-setup-service-0087)). `ota-dev` asks only the plain-HTTP LAN host `OTA_DEV_HOST`
 (`a.b.c.d:port`) and also trusts `OTA_DEV_PUBLIC_KEY`, with `OTA_CHECK_MINUTES`
 for frequent checks; `ota-drill` with `OTA_DRILL=panic|hang|no-manifest`
 misbehaves on probation and never confirms itself. Neither is ever a release.
@@ -2044,7 +2044,7 @@ and selection button (BOOT before 0088) have been idle 2 min (`UPDATING n%`).
 channel= failed_build=`; `OTA_HEALTH met=… missing=0x..`, `valid`, `failed …;
 resetting`; `OTA_CHECK source= build= offer=Install|Current|Failed|…` or
 `failed=`/`refused=`; `OTA_INSTALL start|done|failed=`; `OTA_TLS`,
-`OTA_CERT_DATES`, `OTA_HTTP`; `SETTINGS seeded|empty|unconfigured`.
+`OTA_CERT_DATES`, `OTA_HTTP`; `SETTINGS seeded from dev-settings|empty slot0= slot1=|unavailable|save_failed`.
 
 **Drill host.** `python3 ota_dev_server.py ROOT [--port 8765] [--cut-after N]`
 serves an `overhead-release sign` output over HTTP/1.0 (exact
