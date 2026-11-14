@@ -2056,8 +2056,10 @@ timeout 600 espflash flash --port /dev/ttyUSB0 --chip esp32s3 --flash-size 8mb \
 **Release.** On devbox build without `dev-settings`/`ota-dev`/`ota-drill`,
 with `OVERHEAD_BUILD=N` (larger than every published build) and no Wi-Fi/site
 env; save-image and gate as above; check the `.bin` holds no SSID. The key
-holder copies `N.bin` to the Mac, checks its sha256, runs `overhead-release
-sign KEY beta N VERSION N.bin OUT` and `verify`, and copies `OUT` back. Push
+holder copies `N.bin` to the Mac into a throwaway directory (`cd "$(mktemp -d)"`,
+not `~` or the repo), checks its sha256, runs `overhead-release
+sign KEY beta N VERSION N.bin OUT` and `verify`, and copies `OUT` back; once
+`pages` is pushed, delete that directory (its files are on `pages`). Push
 `OUT/ota/…` to the orphan `pages` branch (signed files, a README and GitHub's
 `CNAME` for `overhead.wesklein.com`: pull first and never force-push, or the
 custom domain drops and devices fall back to raw GitHub).
