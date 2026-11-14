@@ -85,6 +85,9 @@ ticked with evidence, and the accepted input limits are recorded.
 - A dev build with `OVERHEAD_BUILD=0` is offered release 15 on `beta` at the
   next refresh and would reinstall it, so board builds here use
   `OVERHEAD_BUILD=15` (`Offer::Current`); release 16 still installs over it.
+- The follow-on refresh capture never ran: its `pgrep -f "espflash flash"`
+  wait matched its own command line. No log of the 07:03–15:03 refreshes;
+  next expected ~17:03 UTC (2 h steps from 05:02:44, uptime-based).
 - First flash with `timeout 90` stopped before the write; flashes need the
   documented 600 s window (re-flashed fine).
 
