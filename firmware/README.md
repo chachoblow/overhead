@@ -1985,7 +1985,7 @@ sign KEY beta N VERSION N.bin OUT` and `verify`, and copies `OUT` back. Push
 `CNAME` for `overhead.wesklein.com`: pull first and never force-push, or the
 custom domain drops and devices fall back to raw GitHub).
 The device checks after each element refresh (8 h) and installs once the knob
-and BOOT have been idle 2 min (`UPDATING n%`).
+and selection button (BOOT before 0088) have been idle 2 min (`UPDATING n%`).
 
 **Lines.** `OTA boot build= version= slot= state= outcome=Normal|Verify|RolledBack
 channel= failed_build=`; `OTA_HEALTH met=… missing=0x..`, `valid`, `failed …;

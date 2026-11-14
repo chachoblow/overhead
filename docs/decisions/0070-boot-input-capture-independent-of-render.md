@@ -9,6 +9,10 @@ Adopted in the `live-utc-boot` image on TIMG1 via the shared
 the same day: 44 presses, 44 single-press events
 ([capture](../../firmware/README.md#opt-in-boot-selection-on-the-live-utc-diagnostic-interrupt-capture-user-tap-session)).
 
+Since [0088](0088-selection-button-and-captured-knob-switch.md) (2026-11-14) the device app
+samples the IO7 selection button and the knob switch this way; GPIO0 only on the
+historical diagnostics.
+
 ## Problem
 
 The BOOT diagnostics read GPIO0 only between blocking render and SPI work. The

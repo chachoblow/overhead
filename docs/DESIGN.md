@@ -234,11 +234,13 @@ information or battery indicator.
 - Intended device ([0060](decisions/0060-defer-timing-to-physical-prototype.md)):
   a button cycles through satellites and a knob zooms continuously; zoom presets
   remain a fallback if the knob proves infeasible.
-- The first firmware prototype may start with BOOT-button control; [0068](decisions/0068-boot-selection-gesture.md)
-  accepts in-view cycling once per completed debounced press, with no queued
-  press across invalid frames. The provisional GPIO0/20 ms experiments do not
-  set device timing or implement the knob. Optional auto-zoom demo mode comes
-  later; neither blocks the prototype.
+- Device inputs ([0088](decisions/0088-selection-button-and-captured-knob-switch.md)):
+  a separate button cycles in-view satellites once per completed debounced
+  press ([0068](decisions/0068-boot-selection-gesture.md)); the knob's push
+  switch holds for setup/factory reset at boot and toggles the info page
+  ([0087](decisions/0087-ios-setup-app-over-ble.md)). Presses during a fetch
+  stall apply late rather than being lost. BOOT is not a device control.
+  Optional auto-zoom demo mode comes later.
 
 ## Product choices
 [On-device SGP4](decisions/0001-on-device-sgp4.md),

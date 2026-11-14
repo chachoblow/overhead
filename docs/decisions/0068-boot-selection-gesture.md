@@ -2,6 +2,9 @@
 
 Date: 2026-10-30
 Status: accepted bounded M6 prototype behavior; input timing remains provisional
+Since [0088](0088-selection-button-and-captured-knob-switch.md) (2026-11-14) the device app
+selects with a separate button on IO7, not BOOT/GPIO0; these rules are unchanged.
+
 
 ## Decision
 
