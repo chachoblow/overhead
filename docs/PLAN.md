@@ -398,7 +398,12 @@ updated over the air afterwards ([proposal and research](giftable-device-proposa
 - [ ] **Gift readiness:** the app on the App Store, a soak of a release image
   set up only through the app, setup on an iPhone that isn't the user's, the
   release and recovery checklist (key backup, USB recovery flash), and
-  flashing the gift units.
+  flashing the gift units. Soak and release path done 2026-11-14: 72 h on
+  app-saved settings with no `NO FRAME` or unexpected reset; release 15
+  installed mid-soak and is the first `stable` release; checklist exercised,
+  recovery flash tried
+  ([evidence](../firmware/README.md#release-and-recovery-checklist)).
+  Remaining: App Store, another iPhone, gift units.
 
 **Done when:** a device set up only through the iOS app on an iPhone that
 isn't the user's tracks at its recipient's location and receives a signed

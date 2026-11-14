@@ -78,3 +78,17 @@ recovery.
 - `pages` is an orphan branch with signed files and a README; build 12 is the
   first `beta` release. `ota-dev` drill builds use a LAN HTTP host and their
   own key and are never published.
+
+## Note — 2026-11-14: first `stable` release; one image for both channels
+
+- Release 15 is the first `stable` release: the same `.bin` signed for
+  `beta` and `stable` (two `sign` runs into one output folder). An image
+  that goes to `stable` carries a plain version (`0.1.15`), not a channel
+  suffix; `-beta` versions stay for beta-only builds.
+- Release images are built with `OTA_CHANNEL` unset, so a USB-flashed gift
+  unit or an emptied store seeds `stable`; existing boards keep their stored
+  channel through OTA and USB flashes.
+- Until release 15, `ota/stable/manifest.json` did not exist, so any board on
+  `stable` (including a factory-reset one) failed its health check and
+  rolled back. Every release that changes `stable` keeps it present.
+- Release and recovery steps: [firmware README checklist](../../firmware/README.md#release-and-recovery-checklist).

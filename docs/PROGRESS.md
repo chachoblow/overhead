@@ -720,3 +720,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - The user set the board up only through the app (pairing, wrong-passphrase report, `Saved`, tracking).
 - User-signed release 14 on `beta` installed at the next 8 h refresh and went `VALID` on the app-saved settings; PLAN M7 item 3 checked off, 0087 app note added.
 - Verified: `swift test` (7), simulator build, archive/upload, release-14 image gate; app reconnect during `Testing` untested on hardware.
+
+## 2026-11-11/14 (M7 soak and release path)
+- 72 h devbox UART soak of the board on iOS-app-saved settings: 9 refreshes on time, no `NO FRAME`, no unexpected reset.
+- Release 15 (`0.1.15`, same firmware as 14) built on devbox, user-signed for `beta` and `stable`; first `stable` manifest on `pages` (`71303d8`). Installed over the air ~29 h into the soak, `VALID` at 13 s, settings intact.
+- Release and recovery checklist in the firmware README; USB recovery flash of release 15 tried on the board after the soak (settings and channel kept). 0085 note on one image for both channels.

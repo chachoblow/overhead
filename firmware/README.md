@@ -1921,7 +1921,8 @@ needs its antennas: without them −95 dBm and half the sessions dropped):
 | iOS app (user, 2026-11-09) | [setup app](../ios/README.md) 0.1.0 (1) from TestFlight: IO6 3 s, paired with the Sharp's code, wrong passphrase reported, correct one `Saved`, board restarted and tracked (no UART log: unplugging for the hold ends the capture) |
 | Release 14 (2026-11-10) | user-signed `0.1.14-beta` (same firmware as 13) on `beta`: at the next 8 h refresh `offer=Install`, installed in 47.7 s; build 14 joined at 2 s on the app-saved settings, `VALID` at 13 s (devbox `target/setup/ios-ota14.log`) |
 
-The board was left on release build 14 (`beta`, settings from the iOS app).
+The board was left on release build 14 (`beta`, settings from the iOS app);
+since 2026-11-12 it runs release 15 ([checklist evidence](#release-and-recovery-checklist)).
 Not shown: BLE during a refresh (never: separate boot mode), a slow router
 recovering inside the 10 min window, setup on another iPhone, the app's
 reconnect after a link loss during `Testing`.
@@ -2017,12 +2018,14 @@ builds 9–12; each image gated):
 
 The board was then left on release build 12 (`beta`, Wi-Fi/site from settings); since 2026-11-09 it runs build 13 ([setup service](#ble-setup-service-0087)).
 Not shown on the board: `overhead.wesklein.com` (no CNAME yet), BLE with OTA,
-a >1 release cycle offline, the `stable` channel.
+a >1 release cycle offline, the `stable` channel. (Later shown: the custom
+domain from release 13, BLE settings through OTA from 13; `stable` is
+published from release 15 but no board runs it yet.)
 
 ## Release and recovery checklist
 
-_Draft (2026-11-11, soak work item): steps 1–6 will be checked on release 15,
-recovery on the board after the soak._ Commands for each step are in
+Exercised end to end on release 15 (2026-11-11/14, evidence below). Commands
+for each step are in
 [Signed OTA and rollback](#signed-ota-and-rollback-00830086) and
 [`overhead-release`](../tools/README.md#overhead-release).
 
@@ -2066,8 +2069,23 @@ UART port, flash the newest published image's ELF exactly as the "USB flash"
 command above (bootloader, partition table, `--erase-parts otadata`, app in
 `ota_0`). After a factory reset, or for a board whose store is empty, the
 image's `OTA_CHANNEL` seed decides the channel: build with
-`OTA_CHANNEL=beta` for the user's board. Then confirm `OTA boot … state=`,
-first frame and `OTA_CHECK … offer=Current`.
+`OTA_CHANNEL=beta` for the user's board. Then confirm `OTA boot … slot=Some(0)
+state=Valid channel=…`, Wi-Fi, `STORE loaded` and `RADAR first_frame`. A
+USB-flashed image is `Valid` at once (no probation), so its first
+`OTA_CHECK` comes at the next 8 h refresh.
+
+**Evidence, 2026-11-11/14** (devbox `/dev/ttyUSB0`, MAC `80:45:6b:2a:45:08`,
+host-timestamped capture `target/soak/soak72.log`, 72 h from 11-11 03:05 UTC):
+
+| Check | Result |
+|---|---|
+| Soak on app-saved settings | 9 refreshes, 8 h 0–1 min apart, all `Success`; no `NO FRAME`, panic, rollback, `failed=`/`refused=` or KoD; one reset (the OTA one). Uptime continuous: build 14 from 11-10 07:45 to 48 h, build 15 from install to 40 h |
+| Release 15 (`0.1.15`, same firmware as 14) | built at `d7e8f03`, gate pass, personal-data check 0 (2-digit altitude matches by chance, 42× in 14.bin too), user-signed for `beta` and `stable` into one `OUT`, verified on devbox against `release_keys.rs`; `pages` `71303d8`; live manifests and image served and verified ~1 min after push |
+| OTA install mid-soak (11-12 07:51 UTC, ~29 h in) | `offer=Install`, `OTA_INSTALL done ms=51111`, build 15 in slot 1 `PendingVerify`, Wi-Fi 2 s, `VALID` 13 s, channel `beta`, settings intact |
+| USB recovery flash (11-14 03:07 UTC) | `target/release/15.elf` with the command above: build 15 in `ota_0`, `state=Valid`, `channel=beta`, Wi-Fi 2 s from saved settings, stored elements loaded, first frame (`target/soak/recovery15.log`) |
+
+Not shown: a board on `stable` installing a release (gift units), recovery
+of a board with an empty store.
 
 ## Hardware and permission
 
