@@ -2140,6 +2140,68 @@ host-timestamped capture `target/soak/soak72.log`, 72 h from 11-11 03:05 UTC):
 Not shown: a board on `stable` installing a release (gift units), recovery
 of a board with an empty store.
 
+## Gift unit build and check
+
+Per unit, before it is given (written 2026-11-14; **not yet exercised**, it
+needs a spare board). A gift unit runs a published release on `stable`,
+leaves the bench unconfigured and is set up by its recipient with the
+[iOS app](../ios/README.md).
+
+**Release.** Use the newest published release that carries
+[0088](#selection-button-and-captured-knob-switch-0088) (release 16 or
+later): release 15 and earlier select with BOOT and ignore IO7. Its ELF is
+`target/release/N.elf` from the [checklist](#release-and-recovery-checklist)
+(built without `OTA_CHANNEL`, so an empty store seeds `stable`).
+
+**Wiring** (ESP32-S3-DevKitC-1-N8R8, direct, internal pull-ups):
+
+| Part | Connections |
+|---|---|
+| Sharp #4694 | GND→G, Vin→5V, Clk→IO13, DI→IO11, CS→IO10 |
+| Encoder | A→IO4, C (middle)→G, B→IO5; switch→IO6 and G |
+| Selection button | IO7 and G, on **diagonally opposite** legs of a four-leg tactile button |
+
+**Flash** (from `firmware/`, board on the UART port; confirm the port and
+MAC first and write the MAC in the table below). A new board is erased
+whole, so no factory test app, settings or elements survive:
+
+```sh
+. "$HOME/export-esp.sh"
+espflash board-info --port /dev/ttyUSB0 --chip esp32s3 --after no-reset
+timeout 300 espflash erase-flash --port /dev/ttyUSB0 --chip esp32s3 \
+  --non-interactive --skip-update-check
+python3 image_gate.py target/release/N.elf target/release/N.bin
+timeout 600 espflash flash --port /dev/ttyUSB0 --chip esp32s3 --flash-size 8mb \
+  --flash-mode dio --flash-freq 40mhz --bootloader "$PWD/bootloader/bootloader.bin" \
+  --partition-table "$PWD/partitions.csv" --erase-parts otadata \
+  --non-interactive --skip-update-check --monitor "$PWD/target/release/N.elf" \
+  > "$PWD/target/gift/MAC.log" 2>&1
+```
+
+**Bench check** (~5 min, UART capture running; the bench Wi-Fi is any
+network the tester's iPhone can set):
+
+1. **Unconfigured boot:** `OTA boot build=N … state=Valid channel=stable`,
+   `SETTINGS empty …`, `SETUP open reason=Unconfigured`; the Sharp shows
+   the setup screen.
+2. **Set up with the app:** pair with the Sharp's code, save the bench
+   Wi-Fi and a site → `SETUP saved; restarting` → Wi-Fi joined, `LIVE_FETCH
+   loaded`, `RADAR first_frame`; radar on the Sharp.
+3. **Inputs:** the knob zooms; each button press logs `SELECT … applied=1`
+   (the marker changes when two or more are in view); a knob press opens the
+   info page (`INFO_PAGE … shown=true`), the next closes it.
+4. **Factory reset:** unplug, hold the knob switch while plugging in until
+   the Sharp shows the factory reset (≥10 s; 14–16 s on the user's board) →
+   `SETUP factory_reset settings_ok=true elements_ok=true`, `SETUP open
+   reason=FactoryReset`. The channel returns to `stable`.
+5. **Hand over unplugged.** No panic, `NO FRAME` after the first frame, or
+   rollback in the log. The recipient sets it up; it takes the next `stable`
+   release after its first 8 h refresh.
+
+| Unit (MAC) | Release | Date | Result |
+|---|---|---|---|
+| — | — | — | — |
+
 ## Hardware and permission
 
 Ask before installing toolchains or flashing. Flashing replaces the existing

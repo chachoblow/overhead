@@ -18,7 +18,7 @@ _Last updated: 2026-11-14 UTC (M7 soak and release path done; release 15 is the 
 ## Next: M7 gift readiness
 - No active work item. Scope: [PLAN M7](PLAN.md#m7--giftable-device). Remaining for gift readiness: the App Store, setup on another iPhone, flashing the gift units. **Order agreed with the user 2026-11-10:** keep the app on internal TestFlight while the user does rounds of UI/UX fine-tuning (user-driven Mac session, touches only `ios/`; [ios/README](../ios/README.md) has the upload steps, raise `CURRENT_PROJECT_VERSION` each time; builds expire after 90 days). The App Store submission comes last, once the app is polished.
 - **Recommended next devbox item:** setup on another iPhone (add that person as an internal TestFlight tester): factory-reset the board or use a fresh unit on `stable`, set up only through the app, and watch it take a `stable` release. That is the first board on `stable`; afterwards re-seed the user's board to `beta` (USB flash of a `OTA_CHANNEL=beta` build after the factory reset). Needs the other person and their iPhone.
-- Later: flashing the gift units (release image, `stable` seed; checklist above).
+- Later: flashing the gift units with a release that carries 0088 (16 or later): [gift unit build and check](../firmware/README.md#gift-unit-build-and-check) (written, not yet exercised; needs a spare board).
 - Submission prep, when it's time (~half a day; ~1–2 h of the user's): privacy policy on `overhead.wesklein.com`, store text, review notes, screenshots via a simulator demo mode, a user-recorded demo video, ASC questionnaires (Data Not Collected), optional unlisted-distribution request.
 - Owners may need Bluetooth toggled once if their iPhone met an older GATT table (only the user's).
 
