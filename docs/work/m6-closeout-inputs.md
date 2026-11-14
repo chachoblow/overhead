@@ -1,5 +1,5 @@
 # Device inputs a gift unit can use, and M6 closed
-Status: blocked: user taps the knob during the ~07:03 UTC 2 h refresh (TLS stall)
+Status: blocked: user taps the knob during a refresh (TLS stall), deferred by the user 2026-11-14
 Started: 2026-11-13. Scope: PLAN M6 (two open boxes); decisions 0068, 0070, 0087, 0060
 
 ## Outcome
@@ -37,7 +37,14 @@ ticked with evidence, and the accepted input limits are recorded.
 - Fix in this item: answered 2026-11-13: yes.
 - Wiring: done 2026-11-14 (four-leg tactile button: wires on diagonally
   opposite legs; same-side legs are always connected).
-- Tap session: user presses buttons and watches the panel.
+- Tap session: selection/info done 2026-11-14. Knob taps during a refresh
+  deferred by the user (asleep at the 07:03 UTC refresh). The board stays on
+  the 2 h session image, so refreshes come every ~2 h from 05:02:44 UTC
+  (07:03, 09:03, 11:03, 13:03, …; check `FETCH_SCHEDULE`/`LIVE_FETCH loaded`
+  times in a fresh capture before telling the user a time). To resume: start
+  a host-timestamped capture a few minutes before the next refresh
+  (`stty -F /dev/ttyUSB0 115200 raw -echo -hupcl`, `cat`, no reset), user
+  taps the knob ~1/s across it.
 
 ## Plan
 - [x] `boot_capture`: optional second (info) input sampled in the same ISR,
