@@ -60,7 +60,13 @@ ticked with evidence, and the accepted input limits are recorded.
 - [ ] Ask user: wire IO7, then flash + tap session with capture
       (`target/inputs-session.log`); afterwards reflash a default-interval
       build (`OVERHEAD_BUILD=15`, no `REFRESH_MINUTES`).
-- [ ] Decision 0088, DESIGN, PLAN, README, HANDOFF; delete this file.
+- [x] Decision 0088 (accepted, from the user's 2026-11-13 answers), DESIGN
+      controls, 0068/0070 pointers, README OTA-idle wording.
+- [ ] After the refresh capture (`firmware/target/inputs-refresh.log`,
+      host-timestamped, started after the session capture): README evidence
+      section `selection-button-and-captured-knob-switch-0088` (0088 links to
+      it) + wiring line, PLAN M6 boxes ticked, HANDOFF board wiring/limits;
+      reflash an 8 h build (`OVERHEAD_BUILD=15`); delete this file; handoff.
 
 ## Discoveries and assumptions
 - Selection presses were already interrupt-captured (0070); only the info
