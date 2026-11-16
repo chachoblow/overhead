@@ -11,6 +11,8 @@
 #   ./mac.sh flash ELF LOG [SECS]  USB flash (bootloader, table, erase otadata,
 #                                  app in ota_0; settings/elements kept), then
 #                                  monitor SECS seconds after flashing (default 120)
+#   ./mac.sh erase MAC             erase the whole chip (new/gift boards): the
+#                                  board's MAC must be given and must match
 #
 # Env: OVERHEAD_MAC_HOST (default mac), OVERHEAD_MAC_PORT (default: the single
 # /dev/cu.usbserial-* on the Mac), OVERHEAD_MAC (expected board MAC, default
@@ -87,6 +89,13 @@ flash)
     wait "$flasher" || true
     grep -qa 'Flashing has completed' "$log" || die "flash did not complete; see $log"
     echo "wrote $log ($(wc -c <"$log") bytes)" ;;
+erase)
+    [[ $# -eq 1 ]] || die "usage: erase MAC (the board's, from ./mac.sh info)"
+    [[ "$1" =~ ^([0-9a-f]{2}:){5}[0-9a-f]{2}$ ]] || die "not a MAC: $1"
+    p="$(port)"; echo "port $p"
+    EXPECT_MAC="$1" check_mac "$p"
+    echo "erasing $1 (settings, elements and app)"
+    gate erase "$p" ;;
 *)
-    sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+    sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
 esac

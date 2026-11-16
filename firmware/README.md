@@ -24,7 +24,9 @@ and capture through `./mac.sh` (run `./mac.sh` for usage):
 command [below](#device-application-0076) (bootloader, table, erased
 `otadata`, app in `ota_0`; settings and elements kept). `flash` refuses a
 board whose MAC isn't `OVERHEAD_MAC` (default the user's board) and checks the
-uploaded ELF's sha256. Run the image gate before flashing, as for USB.
+uploaded ELF's sha256. `erase MAC` wipes the whole chip (new gift boards
+only) after checking the board has that MAC; giving the user's own MAC would
+wipe its Wi-Fi, site and channel. Run the image gate before flashing, as for USB.
 
 devbox's SSH key can only run the Mac's forced-command gate
 (`~/code/devbox/mac/overhead-gate`; why and how in the devbox README,
@@ -2185,9 +2187,18 @@ later): release 15 and earlier select with BOOT and ignore IO7. Its ELF is
 
 **Flash** (from `firmware/`, board on the UART port; confirm the port and
 MAC first and write the MAC in the table below). A new board is erased
-whole, so no factory test app, settings or elements survive. The Mac's SSH
-gate has no `erase-flash`, so for now plug gift units into devbox's USB for
-this step ([Board on the Mac](#board-on-the-mac-macsh)):
+whole, so no factory test app, settings or elements survive. On the Mac
+([Board on the Mac](#board-on-the-mac-macsh)), `./mac.sh info` with
+`OVERHEAD_MAC` unset prints the MAC (and refuses, since it isn't the user's
+board), then:
+
+```sh
+python3 image_gate.py target/release/N.elf target/release/N.bin
+./mac.sh erase MAC
+OVERHEAD_MAC=MAC ./mac.sh flash target/release/N.elf target/gift/MAC.log 300
+```
+
+With the unit on devbox's USB instead:
 
 ```sh
 . "$HOME/export-esp.sh"
