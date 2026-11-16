@@ -27,11 +27,16 @@
 //! **Exchange.** `GetInfo` → `Info`. `Scan` → zero or more `Network`, then
 //! `ScanDone`. `Configure` → `Testing`, then `ConfigureResult`; on
 //! [`ConfigureResult::Saved`] the device leaves setup and restarts on the new
-//! settings. The device answers requests one at a time, in order; a client
-//! waits for each answer before sending the next.
+//! settings. `TestWifi` (version 2) → `Testing`, then `TestResult`: the
+//! device tries the network and leaves it, storing nothing. The device
+//! answers requests one at a time, in order; a client waits for each answer
+//! before sending the next.
+//!
+//! **Versions.** 1: `GetInfo`, `Scan`, `Configure`. 2: `TestWifi`,
+//! `TestResult`, [`ConfigureResult::Joined`] and `Info.last_test`.
 
 /// This protocol version.
-pub const VERSION: u8 = 1;
+pub const VERSION: u8 = 2;
 /// Largest frame either side sends (iOS's usual ATT MTU is 185).
 pub const MAX_FRAME: usize = 180;
 
@@ -94,12 +99,14 @@ mod ty {
     pub const GET_INFO: u8 = 0x01;
     pub const SCAN: u8 = 0x02;
     pub const CONFIGURE: u8 = 0x03;
+    pub const TEST_WIFI: u8 = 0x04;
     pub const INFO: u8 = 0x81;
     pub const NETWORK: u8 = 0x82;
     pub const SCAN_DONE: u8 = 0x83;
     pub const TESTING: u8 = 0x84;
     pub const CONFIGURE_RESULT: u8 = 0x85;
     pub const ERROR: u8 = 0x86;
+    pub const TEST_RESULT: u8 = 0x87;
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -107,6 +114,8 @@ pub enum Request<'a> {
     GetInfo,
     Scan,
     Configure(Configure<'a>),
+    /// Version 2: try a network without saving anything.
+    TestWifi(TestWifi<'a>),
 }
 
 impl Request<'_> {
@@ -115,7 +124,31 @@ impl Request<'_> {
             Request::GetInfo => ty::GET_INFO,
             Request::Scan => ty::SCAN,
             Request::Configure(_) => ty::CONFIGURE,
+            Request::TestWifi(_) => ty::TEST_WIFI,
         }
+    }
+}
+
+/// A network to try (version 2). Payload: SSID, passphrase.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TestWifi<'a> {
+    pub ssid: &'a str,
+    pub passphrase: &'a str,
+}
+
+impl TestWifi<'_> {
+    /// [`Configure::check`]'s SSID and passphrase rules.
+    pub fn check(&self) -> Result<(), ConfigureResult> {
+        let (s, p) = (self.ssid.as_bytes(), self.passphrase.as_bytes());
+        if s.is_empty() || s.len() > SSID_MAX {
+            return Err(ConfigureResult::InvalidSsid);
+        }
+        let pass_ok =
+            (8..=63).contains(&p.len()) || (p.len() == 64 && p.iter().all(u8::is_ascii_hexdigit));
+        if !pass_ok {
+            return Err(ConfigureResult::InvalidPassphrase);
+        }
+        Ok(())
     }
 }
 
@@ -137,15 +170,11 @@ impl Configure<'_> {
     /// 64 hex digits; latitude −90..=90, longitude −180..=180, altitude
     /// −500..=9000 m, all finite. A client should check before sending.
     pub fn check(&self) -> Result<(), ConfigureResult> {
-        let (s, p) = (self.ssid.as_bytes(), self.passphrase.as_bytes());
-        if s.is_empty() || s.len() > SSID_MAX {
-            return Err(ConfigureResult::InvalidSsid);
+        TestWifi {
+            ssid: self.ssid,
+            passphrase: self.passphrase,
         }
-        let pass_ok =
-            (8..=63).contains(&p.len()) || (p.len() == 64 && p.iter().all(u8::is_ascii_hexdigit));
-        if !pass_ok {
-            return Err(ConfigureResult::InvalidPassphrase);
-        }
+        .check()?;
         let in_range = |v: f64, lo: f64, hi: f64| v.is_finite() && (lo..=hi).contains(&v);
         if !in_range(self.lat_deg, -90.0, 90.0)
             || !in_range(self.lon_deg, -180.0, 180.0)
@@ -170,6 +199,9 @@ pub enum Response<'a> {
     /// The device is trying the new network (it can take ~20 s).
     Testing,
     ConfigureResult(ConfigureResult),
+    /// Version 2, answering `TestWifi`: [`ConfigureResult::Joined`] when the
+    /// network worked, otherwise why not. Nothing is stored either way.
+    TestResult(ConfigureResult),
     /// `request_type` is the type byte of the request it answers (0 when the
     /// frame was too short to have one).
     Error {
@@ -183,7 +215,8 @@ pub enum Response<'a> {
 /// successful element fetch (Unix seconds, 0 = none) i64, last build that
 /// failed its health check (0 = none) u32, result of this setup window's
 /// last `Configure` u8 (0xFF = none: a client that lost the link during
-/// `Testing` reconnects and reads it here).
+/// `Testing` reconnects and reads it here), and (version 2) of its last
+/// `TestWifi` u8 (0xFF = none; absent from a version 1 device, read as none).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Info<'a> {
     pub build: u32,
@@ -197,6 +230,7 @@ pub struct Info<'a> {
     pub last_fetch_unix_s: i64,
     pub failed_build: u32,
     pub last_result: Option<ConfigureResult>,
+    pub last_test: Option<ConfigureResult>,
 }
 
 impl Info<'_> {
@@ -275,6 +309,9 @@ byte_enum!(
         JoinFailed = 7,
         /// The test passed but the settings could not be written.
         SaveFailed = 8,
+        /// Version 2, `TestWifi` only: joined and got an address; nothing
+        /// was stored.
+        Joined = 9,
     }
 );
 
@@ -387,6 +424,19 @@ impl<'a> Reader<'a> {
     fn f64(&mut self) -> Result<f64, DecodeError> {
         Ok(f64::from_le_bytes(self.array()?))
     }
+    /// An optional result byte (0xFF = none); an absent byte (an older
+    /// sender) is none too.
+    fn result_opt(&mut self, appended: bool) -> Result<Option<ConfigureResult>, DecodeError> {
+        if appended && self.b.is_empty() {
+            return Ok(None);
+        }
+        match self.u8()? {
+            0xFF => Ok(None),
+            b => ConfigureResult::from_byte(b)
+                .map(Some)
+                .ok_or(DecodeError::BadValue),
+        }
+    }
     fn enum_byte<T>(&mut self, f: fn(u8) -> Option<T>) -> Result<T, DecodeError> {
         f(self.u8()?).ok_or(DecodeError::BadValue)
     }
@@ -409,12 +459,19 @@ pub fn type_of(frame: &[u8]) -> u8 {
 
 pub fn encode_request(r: &Request, buf: &mut [u8]) -> Result<usize, EncodeError> {
     let mut w = Writer::new(buf, r.type_byte())?;
-    if let Request::Configure(c) = r {
-        w.str(c.ssid, SSID_MAX)?;
-        w.str(c.passphrase, PASSPHRASE_MAX)?;
-        w.bytes(&c.lat_deg.to_le_bytes())?;
-        w.bytes(&c.lon_deg.to_le_bytes())?;
-        w.bytes(&c.alt_m.to_le_bytes())?;
+    match r {
+        Request::Configure(c) => {
+            w.str(c.ssid, SSID_MAX)?;
+            w.str(c.passphrase, PASSPHRASE_MAX)?;
+            w.bytes(&c.lat_deg.to_le_bytes())?;
+            w.bytes(&c.lon_deg.to_le_bytes())?;
+            w.bytes(&c.alt_m.to_le_bytes())?;
+        }
+        Request::TestWifi(t) => {
+            w.str(t.ssid, SSID_MAX)?;
+            w.str(t.passphrase, PASSPHRASE_MAX)?;
+        }
+        Request::GetInfo | Request::Scan => {}
     }
     Ok(w.len)
 }
@@ -431,6 +488,10 @@ pub fn decode_request(frame: &[u8]) -> Result<Frame<Request<'_>>, DecodeError> {
             lon_deg: r.f64()?,
             alt_m: r.f64()?,
         }),
+        ty::TEST_WIFI => Request::TestWifi(TestWifi {
+            ssid: r.str(SSID_MAX)?,
+            passphrase: r.str(PASSPHRASE_MAX)?,
+        }),
         t => return Err(DecodeError::UnknownType(t)),
     };
     Ok(Frame { version, message })
@@ -444,6 +505,7 @@ pub fn encode_response(r: &Response, buf: &mut [u8]) -> Result<usize, EncodeErro
         Response::Testing => ty::TESTING,
         Response::ConfigureResult(_) => ty::CONFIGURE_RESULT,
         Response::Error { .. } => ty::ERROR,
+        Response::TestResult(_) => ty::TEST_RESULT,
     };
     let mut w = Writer::new(buf, ty)?;
     match r {
@@ -458,6 +520,7 @@ pub fn encode_response(r: &Response, buf: &mut [u8]) -> Result<usize, EncodeErro
             w.bytes(&i.last_fetch_unix_s.to_le_bytes())?;
             w.bytes(&i.failed_build.to_le_bytes())?;
             w.u8(i.last_result.map_or(0xFF, ConfigureResult::byte))?;
+            w.u8(i.last_test.map_or(0xFF, ConfigureResult::byte))?;
         }
         Response::Network(n) => {
             w.bytes(&n.rssi_dbm.to_le_bytes())?;
@@ -469,7 +532,7 @@ pub fn encode_response(r: &Response, buf: &mut [u8]) -> Result<usize, EncodeErro
             w.u8(u8::from(*ok))?;
         }
         Response::Testing => {}
-        Response::ConfigureResult(c) => w.u8(c.byte())?,
+        Response::ConfigureResult(c) | Response::TestResult(c) => w.u8(c.byte())?,
         Response::Error { code, request_type } => {
             w.u8(code.byte())?;
             w.u8(*request_type)?;
@@ -491,10 +554,8 @@ pub fn decode_response(frame: &[u8]) -> Result<Frame<Response<'_>>, DecodeError>
             ssid: r.str(SSID_MAX)?,
             last_fetch_unix_s: i64::from_le_bytes(r.array()?),
             failed_build: u32::from_le_bytes(r.array()?),
-            last_result: match r.u8()? {
-                0xFF => None,
-                b => Some(ConfigureResult::from_byte(b).ok_or(DecodeError::BadValue)?),
-            },
+            last_result: r.result_opt(false)?,
+            last_test: r.result_opt(true)?,
         }),
         ty::NETWORK => Response::Network(Network {
             rssi_dbm: i8::from_le_bytes(r.array()?),
@@ -507,6 +568,7 @@ pub fn decode_response(frame: &[u8]) -> Result<Frame<Response<'_>>, DecodeError>
         },
         ty::TESTING => Response::Testing,
         ty::CONFIGURE_RESULT => Response::ConfigureResult(r.enum_byte(ConfigureResult::from_byte)?),
+        ty::TEST_RESULT => Response::TestResult(r.enum_byte(ConfigureResult::from_byte)?),
         ty::ERROR => Response::Error {
             code: r.enum_byte(ErrorCode::from_byte)?,
             request_type: r.u8()?,

@@ -179,6 +179,7 @@ enum Show {
     Testing(Wifi),
     Failed(Wifi, ConfigureResult),
     Saved(Wifi),
+    Joined(Wifi),
 }
 
 static SHOW: Mutex<CriticalSectionRawMutex, Cell<Show>> = Mutex::new(Cell::new(Show::Waiting));
@@ -221,6 +222,7 @@ async fn panel_task(
                     why: setup_policy::failure_phrase(r),
                 }),
                 Show::Saved(w) => panel.show(&SetupScreen::Saved { ssid: w.ssid() }),
+                Show::Joined(w) => panel.show(&SetupScreen::Joined { ssid: w.ssid() }),
             }
         } else {
             panel.tick();
@@ -284,6 +286,8 @@ struct Device {
     cache_at_us: Option<u64>,
     /// This window's last `Configure` result, for a client that lost the link.
     last_result: Option<ConfigureResult>,
+    /// This window's last `TestWifi` result, likewise.
+    last_test: Option<ConfigureResult>,
 }
 
 impl Device {
@@ -314,6 +318,7 @@ impl Device {
             last_fetch_unix_s: last_fetch.unwrap_or(0),
             failed_build: s.failed_build.unwrap_or(0),
             last_result: self.last_result,
+            last_test: self.last_test,
         }
     }
 
@@ -458,6 +463,7 @@ pub async fn run(
         cache_ok: false,
         cache_at_us: None,
         last_result: None,
+        last_test: None,
     };
     ble::serve(bt, name, mac, device, configured).await
 }
@@ -845,6 +851,28 @@ mod ble {
                     ota::reset();
                 }
                 show(Show::Failed(wifi, result));
+            }
+            Request::TestWifi(t) => {
+                // The passphrase is never printed.
+                println!("SETUP request test_wifi");
+                let wifi = match setup_policy::accept_test(&t) {
+                    Ok(w) => w,
+                    Err(r) => {
+                        println!("SETUP test_wifi_refused {r:?}");
+                        notify(server, conn, &Response::TestResult(r)).await;
+                        return;
+                    }
+                };
+                notify(server, conn, &Response::Testing).await;
+                show(Show::Testing(wifi));
+                let result = setup_policy::test_only(device.test(&wifi).await);
+                device.last_test = Some(result);
+                notify(server, conn, &Response::TestResult(result)).await;
+                show(if result == ConfigureResult::Joined {
+                    Show::Joined(wifi)
+                } else {
+                    Show::Failed(wifi, result)
+                });
             }
         }
     }

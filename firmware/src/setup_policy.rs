@@ -3,7 +3,7 @@
 //! settings (0084), and when setup gives up and runs on what is stored. The
 //! target side (`setup_mode`) owns the radio, BLE and panel.
 use crate::settings_store::{Settings, Site, Wifi};
-use overhead_setup::{Configure, ConfigureResult, Security, SetupReason};
+use overhead_setup::{Configure, ConfigureResult, Security, SetupReason, TestWifi};
 
 /// Held this long at boot: setup.
 pub const SETUP_HOLD_MS: u64 = 3_000;
@@ -89,6 +89,21 @@ pub fn accept(c: &Configure) -> Result<(Wifi, Site), ConfigureResult> {
         return Err(ConfigureResult::InvalidSite);
     }
     Ok((wifi, site))
+}
+
+/// Checks a `TestWifi` like a `Configure`'s network.
+pub fn accept_test(t: &TestWifi) -> Result<Wifi, ConfigureResult> {
+    t.check()?;
+    Wifi::new(t.ssid, t.passphrase).ok_or(ConfigureResult::InvalidPassphrase)
+}
+
+/// A test join's result as `TestWifi` reports it: the join's `Saved` (it
+/// worked) is `Joined`, as nothing is stored.
+pub fn test_only(join: ConfigureResult) -> ConfigureResult {
+    match join {
+        ConfigureResult::Saved => ConfigureResult::Joined,
+        r => r,
+    }
 }
 
 /// The record to save after a successful test: the new network and site,
@@ -237,6 +252,7 @@ pub fn failure_phrase(r: ConfigureResult) -> &'static str {
         ConfigureResult::NoAddress => "no address from the router",
         ConfigureResult::JoinFailed => "could not join",
         ConfigureResult::SaveFailed => "could not save",
+        ConfigureResult::Joined => "joined",
     }
 }
 
@@ -350,6 +366,28 @@ mod tests {
             };
             assert_eq!(accept(&c).map(|_| ()), Err(want));
         }
+    }
+
+    #[test]
+    fn test_wifi_is_checked_and_never_reports_saved() {
+        let ok = TestWifi {
+            ssid: "new",
+            passphrase: "correct horse",
+        };
+        assert_eq!(accept_test(&ok).unwrap().ssid(), "new");
+        let short = TestWifi {
+            passphrase: "short",
+            ..ok
+        };
+        assert_eq!(
+            accept_test(&short).map(|_| ()),
+            Err(ConfigureResult::InvalidPassphrase)
+        );
+        assert_eq!(test_only(ConfigureResult::Saved), ConfigureResult::Joined);
+        assert_eq!(
+            test_only(ConfigureResult::WrongPassphrase),
+            ConfigureResult::WrongPassphrase
+        );
     }
 
     #[test]

@@ -31,17 +31,23 @@ const INFO: Info = Info {
     last_fetch_unix_s: 1_794_000_000,
     failed_build: 0,
     last_result: Some(ConfigureResult::WrongPassphrase),
+    last_test: Some(ConfigureResult::Joined),
+};
+
+const TEST_WIFI: TestWifi = TestWifi {
+    ssid: "home",
+    passphrase: "password1",
 };
 
 /// Reference bytes for the iOS app's tests: change only with a new version.
 #[test]
 fn fixed_vectors() {
-    assert_eq!(&req(&Request::GetInfo).0[..2], &[0x01, 0x01]);
-    assert_eq!(&req(&Request::Scan).0[..2], &[0x01, 0x02]);
+    assert_eq!(&req(&Request::GetInfo).0[..2], &[0x02, 0x01]);
+    assert_eq!(&req(&Request::Scan).0[..2], &[0x02, 0x02]);
     let (b, n) = req(&Request::Configure(CONFIGURE));
     #[rustfmt::skip]
     let expected: &[u8] = &[
-        0x01, 0x03,
+        0x02, 0x03,
         4, b'h', b'o', b'm', b'e',
         9, b'p', b'a', b's', b's', b'w', b'o', b'r', b'd', b'1',
         0, 0, 0, 0, 0, 0xC0, 0x49, 0x40, // 51.5
@@ -49,11 +55,19 @@ fn fixed_vectors() {
         0, 0, 0, 0, 0, 0x80, 0x41, 0x40, // 35.0
     ];
     assert_eq!(&b[..n], expected);
+    let (b, n) = req(&Request::TestWifi(TEST_WIFI));
+    #[rustfmt::skip]
+    let expected: &[u8] = &[
+        0x02, 0x04,
+        4, b'h', b'o', b'm', b'e',
+        9, b'p', b'a', b's', b's', b'w', b'o', b'r', b'd', b'1',
+    ];
+    assert_eq!(&b[..n], expected);
 
     let (b, n) = resp(&Response::Info(INFO));
     #[rustfmt::skip]
     let expected: &[u8] = &[
-        0x01, 0x81,
+        0x02, 0x81,
         12, 0, 0, 0,
         11, b'0', b'.', b'1', b'.', b'1', b'2', b'-', b'b', b'e', b't', b'a',
         1,
@@ -64,6 +78,7 @@ fn fixed_vectors() {
         0x80, 0x44, 0xEE, 0x6A, 0, 0, 0, 0, // 1_794_000_000
         0, 0, 0, 0,
         5, // last result: WrongPassphrase (0xFF: none)
+        9, // last test: Joined (0xFF: none)
     ];
     assert_eq!(&b[..n], expected);
 
@@ -73,19 +88,21 @@ fn fixed_vectors() {
         ssid: "home",
     });
     let (b, n) = resp(&network);
-    assert_eq!(&b[..n], &[0x01, 0x82, 0xC3, 0, 4, b'h', b'o', b'm', b'e']);
+    assert_eq!(&b[..n], &[0x02, 0x82, 0xC3, 0, 4, b'h', b'o', b'm', b'e']);
     let (b, n) = resp(&Response::ScanDone { count: 3, ok: true });
-    assert_eq!(&b[..n], &[0x01, 0x83, 3, 1]);
+    assert_eq!(&b[..n], &[0x02, 0x83, 3, 1]);
     let (b, n) = resp(&Response::Testing);
-    assert_eq!(&b[..n], &[0x01, 0x84]);
+    assert_eq!(&b[..n], &[0x02, 0x84]);
     let (b, n) = resp(&Response::ConfigureResult(ConfigureResult::WrongPassphrase));
-    assert_eq!(&b[..n], &[0x01, 0x85, 5]);
+    assert_eq!(&b[..n], &[0x02, 0x85, 5]);
+    let (b, n) = resp(&Response::TestResult(ConfigureResult::Joined));
+    assert_eq!(&b[..n], &[0x02, 0x87, 9]);
     let error = Response::Error {
         code: ErrorCode::UnknownType,
         request_type: 0x09,
     };
     let (b, n) = resp(&error);
-    assert_eq!(&b[..n], &[0x01, 0x86, 2, 0x09]);
+    assert_eq!(&b[..n], &[0x02, 0x86, 2, 0x09]);
 }
 
 #[test]
@@ -94,6 +111,7 @@ fn every_message_round_trips() {
         Request::GetInfo,
         Request::Scan,
         Request::Configure(CONFIGURE),
+        Request::TestWifi(TEST_WIFI),
     ] {
         let (b, n) = req(&r);
         let f = decode_request(&b[..n]).unwrap();
@@ -112,6 +130,7 @@ fn every_message_round_trips() {
         },
         Response::Testing,
         Response::ConfigureResult(ConfigureResult::Saved),
+        Response::TestResult(ConfigureResult::WrongPassphrase),
         Response::Error {
             code: ErrorCode::Malformed,
             request_type: 0x02,
@@ -202,41 +221,72 @@ fn malformed_responses_are_refused() {
     );
 }
 
-/// A newer client (version 2, appended fields, new types) against this
+/// A newer client (version 3, appended fields, new types) against this
 /// device, and a newer device's responses against this client.
 #[test]
 fn newer_peers_keep_working() {
     let (mut b, n) = req(&Request::Configure(CONFIGURE));
-    b[0] = 2;
+    b[0] = 3;
     b[n..n + 4].copy_from_slice(&[0xAA, 0xBB, 0xCC, 0xDD]);
     let f = decode_request(&b[..n + 4]).unwrap();
-    assert_eq!(f.version, 2);
+    assert_eq!(f.version, 3);
     assert_eq!(f.message, Request::Configure(CONFIGURE));
     assert_eq!(
-        decode_request(&[2, 0x01, 7, 7]).unwrap().message,
+        decode_request(&[3, 0x01, 7, 7]).unwrap().message,
         Request::GetInfo
     );
 
-    let unknown = decode_request(&[2, 0x10, 1, 2, 3]).unwrap_err();
+    let unknown = decode_request(&[3, 0x10, 1, 2, 3]).unwrap_err();
     assert_eq!(unknown, DecodeError::UnknownType(0x10));
     assert_eq!(unknown.code(), ErrorCode::UnknownType);
 
     let (mut b, n) = resp(&Response::Info(INFO));
-    b[0] = 2;
+    b[0] = 3;
     b[n] = 0x42;
     let f = decode_response(&b[..n + 1]).unwrap();
-    assert_eq!((f.version, f.message), (2, Response::Info(INFO)));
+    assert_eq!((f.version, f.message), (3, Response::Info(INFO)));
     // No result yet encodes as 0xFF.
     let none = Info {
         last_result: None,
+        last_test: None,
         ..INFO
     };
     let (b, n) = resp(&Response::Info(none));
-    assert_eq!(b[n - 1], 0xFF);
+    assert_eq!(&b[n - 2..n], &[0xFF, 0xFF]);
     assert_eq!(
         decode_response(&b[..n]).unwrap().message,
         Response::Info(none)
     );
+}
+
+/// A version 1 device: no `last_test` byte, no `TestWifi`.
+#[test]
+fn older_devices_keep_working() {
+    let (mut b, n) = resp(&Response::Info(INFO));
+    b[0] = 1;
+    let f = decode_response(&b[..n - 1]).unwrap();
+    let want = Info {
+        last_test: None,
+        ..INFO
+    };
+    assert_eq!((f.version, f.message), (1, Response::Info(want)));
+    // A cut inside the version 1 fields is still truncated.
+    assert_eq!(decode_response(&b[..n - 2]), Err(DecodeError::Truncated));
+    assert_eq!(
+        decode_response(&[1, 0x86, 2, 0x04]).unwrap().message,
+        Response::Error {
+            code: ErrorCode::UnknownType,
+            request_type: 0x04
+        }
+    );
+}
+
+#[test]
+fn test_wifi_check_matches_configure() {
+    assert_eq!(TEST_WIFI.check(), Ok(()));
+    let t = |ssid, passphrase| TestWifi { ssid, passphrase }.check();
+    assert_eq!(t("", "password1"), Err(ConfigureResult::InvalidSsid));
+    assert_eq!(t("home", "short"), Err(ConfigureResult::InvalidPassphrase));
 }
 
 #[test]

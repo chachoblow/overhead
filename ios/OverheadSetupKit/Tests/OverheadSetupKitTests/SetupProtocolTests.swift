@@ -11,10 +11,12 @@ let info = Info(
     build: 12, version: "0.1.12-beta", channel: .beta,
     mac: [0x80, 0x45, 0x6b, 0x2a, 0x45, 0x08],
     flags: Info.wifiStored | Info.siteStored, reason: .button, ssid: "home",
-    lastFetchUnixS: 1_794_000_000, failedBuild: 0, lastResult: .wrongPassphrase)
+    lastFetchUnixS: 1_794_000_000, failedBuild: 0, lastResult: .wrongPassphrase, lastTest: .joined)
+
+let testWifi = TestWifi(ssid: "home", passphrase: "password1")
 
 let infoBytes: [UInt8] = [
-    0x01, 0x81,
+    0x02, 0x81,
     12, 0, 0, 0,
     11] + Array("0.1.12-beta".utf8) + [
     1,
@@ -25,36 +27,42 @@ let infoBytes: [UInt8] = [
     0x80, 0x44, 0xEE, 0x6A, 0, 0, 0, 0,
     0, 0, 0, 0,
     5,
+    9,
 ]
 
 func decode(_ b: [UInt8]) throws -> Frame<Response> { try Response.decode(Data(b)) }
 
 @Test func requestVectors() throws {
-    #expect(try [UInt8](Request.getInfo.encode()) == [0x01, 0x01])
-    #expect(try [UInt8](Request.scan.encode()) == [0x01, 0x02])
-    let expected: [UInt8] = [0x01, 0x03, 4] + Array("home".utf8) + [9] + Array("password1".utf8) + [
+    #expect(try [UInt8](Request.getInfo.encode()) == [0x02, 0x01])
+    #expect(try [UInt8](Request.scan.encode()) == [0x02, 0x02])
+    let expected: [UInt8] = [0x02, 0x03, 4] + Array("home".utf8) + [9] + Array("password1".utf8) + [
         0, 0, 0, 0, 0, 0xC0, 0x49, 0x40,
         0, 0, 0, 0, 0, 0, 0xC0, 0xBF,
         0, 0, 0, 0, 0, 0x80, 0x41, 0x40,
     ]
     #expect(try [UInt8](Request.configure(configure).encode()) == expected)
+    #expect(try [UInt8](Request.testWifi(testWifi).encode())
+        == [0x02, 0x04, 4] + Array("home".utf8) + [9] + Array("password1".utf8))
 }
 
 @Test func responseVectors() throws {
-    #expect(try decode(infoBytes) == Frame(version: 1, message: .info(info)))
-    #expect(try decode([0x01, 0x82, 0xC3, 0, 4] + Array("home".utf8)).message
+    #expect(try decode(infoBytes) == Frame(version: 2, message: .info(info)))
+    #expect(try decode([0x02, 0x82, 0xC3, 0, 4] + Array("home".utf8)).message
         == .network(Network(rssiDbm: -61, security: .personal, ssid: "home")))
-    #expect(try decode([0x01, 0x83, 3, 1]).message == .scanDone(count: 3, ok: true))
-    #expect(try decode([0x01, 0x84]).message == .testing)
-    #expect(try decode([0x01, 0x85, 5]).message == .configureResult(.wrongPassphrase))
-    #expect(try decode([0x01, 0x86, 2, 0x09]).message == .error(code: .unknownType, requestType: 0x09))
+    #expect(try decode([0x02, 0x83, 3, 1]).message == .scanDone(count: 3, ok: true))
+    #expect(try decode([0x02, 0x84]).message == .testing)
+    #expect(try decode([0x02, 0x85, 5]).message == .configureResult(.wrongPassphrase))
+    #expect(try decode([0x02, 0x87, 9]).message == .testResult(.joined))
+    #expect(try decode([0x02, 0x86, 2, 0x09]).message == .error(code: .unknownType, requestType: 0x09))
 }
 
 @Test func infoWithoutResult() throws {
     var b = infoBytes
+    b[b.count - 2] = 0xFF
     b[b.count - 1] = 0xFF
     var none = info
     none.lastResult = nil
+    none.lastTest = nil
     #expect(try decode(b).message == .info(none))
     #expect(info.macString == "80:45:6B:2A:45:08")
 }
@@ -65,8 +73,9 @@ func decode(_ b: [UInt8]) throws -> Frame<Response> { try Response.decode(Data(b
     #expect(throws: DecodeError.unknownType(0x01)) { try decode([1, 0x01]) }
     #expect(throws: DecodeError.version) { try decode([0, 0x84]) }
     #expect(throws: DecodeError.truncated) { try decode([1]) }
-    // Every cut of an Info frame is truncated, never a partial message.
-    for cut in 2..<infoBytes.count {
+    // Every cut inside an Info frame's version 1 fields is truncated, never a
+    // partial message (only the appended `lastTest` may be absent).
+    for cut in 2..<infoBytes.count - 1 {
         #expect(throws: DecodeError.truncated) { try decode(Array(infoBytes[..<cut])) }
     }
     // Bad UTF-8 in a network's SSID.
@@ -77,13 +86,29 @@ func decode(_ b: [UInt8]) throws -> Frame<Response> { try Response.decode(Data(b
     }
 }
 
-/// A newer device (version 2, appended fields) against this client.
+/// A newer device (version 3, appended fields) against this client.
 @Test func newerDeviceKeepsWorking() throws {
     var b = infoBytes
-    b[0] = 2
+    b[0] = 3
     b.append(0x42)
-    #expect(try decode(b) == Frame(version: 2, message: .info(info)))
-    #expect(try decode([2, 0x84, 7, 7]).message == .testing)
+    #expect(try decode(b) == Frame(version: 3, message: .info(info)))
+    #expect(try decode([3, 0x84, 7, 7]).message == .testing)
+}
+
+/// A version 1 device: `Info` without `lastTest`, and `testWifi` refused.
+@Test func olderDeviceKeepsWorking() throws {
+    var b = Array(infoBytes.dropLast())
+    b[0] = 1
+    var want = info
+    want.lastTest = nil
+    #expect(try decode(b) == Frame(version: 1, message: .info(want)))
+    #expect(try decode([1, 0x86, 2, 0x04]).message == .error(code: .unknownType, requestType: 0x04))
+}
+
+@Test func testWifiCheckMatchesConfigure() {
+    #expect(testWifi.check() == nil)
+    #expect(TestWifi(ssid: "", passphrase: "password1").check() == .invalidSsid)
+    #expect(TestWifi(ssid: "home", passphrase: "short").check() == .invalidPassphrase)
 }
 
 @Test func longStringsAreRefused() throws {

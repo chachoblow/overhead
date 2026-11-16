@@ -33,7 +33,7 @@ mod linux {
         },
     };
     use futures::{Stream, StreamExt, pin_mut};
-    use overhead_setup::{self as proto, Configure, Request, Response};
+    use overhead_setup::{self as proto, Configure, Request, Response, TestWifi};
     use std::{
         collections::HashMap,
         path::{Path, PathBuf},
@@ -53,6 +53,8 @@ commands:
   configure --wifi-env FILE --site-env FILE [--passphrase P]
                                Configure from firmware/.wifi.env/.site.env
                                (--passphrase overrides, e.g. a wrong one)
+  test-wifi --wifi-env FILE [--passphrase P]
+                               TestWifi (protocol 2): try the network, save nothing
   raw HEX                      send one frame, print the answers for 5 s
 Without --passkey/--passkey-log the passkey is read from stdin.";
 
@@ -76,6 +78,10 @@ Without --passkey/--passkey-log the passkey is read from stdin.";
             lat: f64,
             lon: f64,
             alt: f64,
+        },
+        TestWifi {
+            ssid: String,
+            passphrase: String,
         },
         Raw(Vec<u8>),
     }
@@ -158,6 +164,26 @@ Without --passkey/--passkey-log the passkey is read from stdin.";
                         .get("SITE_ALT_M")
                         .filter(|v| !v.is_empty())
                         .map_or(Ok(0.0), |v| v.parse())?,
+                }
+            }
+            Some("test-wifi") => {
+                let (mut wifi, mut pass) = (None, None);
+                while let Some(a) = w.next() {
+                    let v = w.next().ok_or_else(|| format!("{a} needs a value"))?;
+                    match a.as_str() {
+                        "--wifi-env" => wifi = Some(env_file(Path::new(&v))?),
+                        "--passphrase" => pass = Some(v),
+                        _ => return Err(format!("unknown test-wifi option {a}").into()),
+                    }
+                }
+                let wifi = wifi.ok_or("test-wifi needs --wifi-env")?;
+                let get = |k: &str| wifi.get(k).cloned().ok_or_else(|| format!("missing {k}"));
+                Command::TestWifi {
+                    ssid: get("SSID")?,
+                    passphrase: match pass {
+                        Some(p) => p,
+                        None => get("PASSWORD")?,
+                    },
                 }
             }
             _ => return Err(USAGE.into()),
@@ -312,7 +338,8 @@ Without --passkey/--passkey-log the passkey is read from stdin.";
         match r {
             Response::Info(i) => format!(
                 "INFO build={} version={} channel={:?} mac={} flags=0b{:02b} reason={:?} \
-                 ssid_stored={} last_fetch_unix_s={} failed_build={} last_result={:?}",
+                 ssid_stored={} last_fetch_unix_s={} failed_build={} last_result={:?} \
+                 last_test={:?}",
                 i.build,
                 i.version,
                 i.channel,
@@ -326,7 +353,8 @@ Without --passkey/--passkey-log the passkey is read from stdin.";
                 !i.ssid.is_empty(),
                 i.last_fetch_unix_s,
                 i.failed_build,
-                i.last_result
+                i.last_result,
+                i.last_test
             ),
             Response::Network(n) => {
                 format!(
@@ -337,6 +365,7 @@ Without --passkey/--passkey-log the passkey is read from stdin.";
             Response::ScanDone { count, ok } => format!("SCAN_DONE count={count} ok={ok}"),
             Response::Testing => "TESTING".into(),
             Response::ConfigureResult(c) => format!("CONFIGURE_RESULT {c:?}"),
+            Response::TestResult(c) => format!("TEST_RESULT {c:?}"),
             Response::Error { code, request_type } => {
                 format!("ERROR code={code:?} request_type=0x{request_type:02x}")
             }
@@ -350,6 +379,7 @@ Without --passkey/--passkey-log the passkey is read from stdin.";
             Response::Info(_) => request_type == 0x01,
             Response::ScanDone { .. } => request_type == 0x02,
             Response::ConfigureResult(_) => request_type == 0x03,
+            Response::TestResult(_) => request_type == 0x04,
             _ => false,
         }
     }
@@ -440,6 +470,14 @@ Without --passkey/--passkey-log the passkey is read from stdin.";
                     ssid.len()
                 );
                 (encode(&Request::Configure(c), &mut buf)?, 90)
+            }
+            Command::TestWifi { ssid, passphrase } => {
+                println!(
+                    "TEST_WIFI ssid_len={} (ssid and passphrase not printed)",
+                    ssid.len()
+                );
+                let t = TestWifi { ssid, passphrase };
+                (encode(&Request::TestWifi(t), &mut buf)?, 90)
             }
             Command::Raw(bytes) => (bytes.clone(), 5),
         };

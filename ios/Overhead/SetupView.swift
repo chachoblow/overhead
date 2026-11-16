@@ -13,10 +13,13 @@ struct SetupView: View {
     @State private var networks: [Network] = []
     @State private var scanOK = true
     @State private var scanning = false
+    /// The chosen network: set when its password sheet closes on Join.
     @State private var ssid = ""
     @State private var otherNetwork = false
     @State private var passphrase = ""
-    @State private var showPassphrase = false
+    /// The network whose password sheet is open.
+    @State private var joining: JoinTarget?
+    @State private var joinPhase: JoinPhase = .idle
     @State private var manualLocation = false
     @State private var manualSite = ""
     @State private var formError: String?
@@ -47,6 +50,16 @@ struct SetupView: View {
         .sheet(item: Binding(get: { job.map(JobBox.init) }, set: { job = $0?.job })) { box in
             JobSheet(job: box.job, onDone: { done(box.job) })
                 .interactiveDismissDisabled(box.job == .testing || box.job == .reconnecting)
+        }
+        .sheet(item: $joining) { target in
+            PasswordSheet(
+                target: target,
+                initialPassphrase: target.ssid == ssid && target.other == otherNetwork ? passphrase : "",
+                phase: joinPhase,
+                checksNow: central.canTestWifi,
+                onJoin: { t in Task { await tryNetwork(t, other: target.other) } },
+                onCancel: { joining = nil })
+            .interactiveDismissDisabled(joinPhase.busy)
         }
     }
 
@@ -111,8 +124,7 @@ struct SetupView: View {
                 }
                 ForEach(networks, id: \.self) { n in
                     Button {
-                        ssid = n.ssid
-                        otherNetwork = false
+                        open(JoinTarget(ssid: n.ssid, other: false))
                     } label: {
                         HStack {
                             Image(systemName: "checkmark")
@@ -133,35 +145,12 @@ struct SetupView: View {
                     .disabled(!n.security.supported || n.ssid.isEmpty)
                 }
                 Button {
-                    otherNetwork = true
-                    ssid = ""
+                    open(JoinTarget(ssid: otherNetwork ? ssid : "", other: true))
                 } label: {
                     HStack {
                         Image(systemName: "checkmark").opacity(otherNetwork ? 1 : 0)
-                        Text("Other network…").foregroundStyle(.primary)
+                        Text(otherNetwork ? ssid : "Other network…").foregroundStyle(.primary)
                     }
-                }
-                if otherNetwork {
-                    TextField("Network name", text: $ssid)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                }
-                HStack {
-                    Group {
-                        if showPassphrase {
-                            TextField("Password", text: $passphrase)
-                        } else {
-                            SecureField("Password", text: $passphrase)
-                        }
-                    }
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    Button {
-                        showPassphrase.toggle()
-                    } label: {
-                        Image(systemName: showPassphrase ? "eye.slash" : "eye")
-                    }
-                    .buttonStyle(.borderless)
                 }
                 Button("Scan Again") { Task { await scan() } }
                     .disabled(scanning)
@@ -220,6 +209,75 @@ struct SetupView: View {
             Text("Couldn't get a location (\(why)).").foregroundStyle(.secondary)
             Button("Try Again") { location.request() }
         }
+    }
+
+    private func open(_ target: JoinTarget) {
+        joinPhase = .idle
+        joining = target
+    }
+
+    /// The password sheet's Join: the device tries the network (version 2
+    /// devices); on `joined` the sheet closes and the network is chosen.
+    /// Older devices only check it when saving.
+    private func tryNetwork(_ t: TestWifi, other: Bool) async {
+        if let bad = t.check() {
+            joinPhase = .failed(bad.message)
+            return
+        }
+        guard central.canTestWifi else {
+            choose(t, other: other)
+            return
+        }
+        joinPhase = .testing
+        do {
+            switch try await central.testWifi(t) {
+            case .result(.joined):
+                choose(t, other: other)
+            case let .result(r):
+                joinPhase = .failed(r.message)
+            case .lostWhileTesting:
+                await recoverTest(t, other: other)
+            }
+        } catch {
+            joinPhase = .failed(error.localizedDescription)
+        }
+    }
+
+    /// The link dropped while the device tried the network: it stays in
+    /// setup, so reconnect (pairing again) and read the result it kept.
+    private func recoverTest(_ t: TestWifi, other: Bool) async {
+        joinPhase = .reconnecting
+        guard await central.waitForAdvertising(device.id, since: Date(), timeout: 60) else {
+            lostDevice("The Overhead stopped answering. Hold its knob while powering it on to open setup again.")
+            return
+        }
+        do {
+            try await central.connect(device.id)
+            let i = try await central.getInfo()
+            info = i
+            switch i.lastTest {
+            case .joined?: choose(t, other: other)
+            case let r?: joinPhase = .failed(r.message)
+            case nil: joinPhase = .failed("The Overhead has no result for that attempt. Try again.")
+            }
+        } catch {
+            lostDevice(error.localizedDescription)
+        }
+    }
+
+    private func lostDevice(_ why: String) {
+        joining = nil
+        joinPhase = .idle
+        info = nil
+        connectError = why
+    }
+
+    private func choose(_ t: TestWifi, other: Bool) {
+        ssid = t.ssid
+        passphrase = t.passphrase
+        otherNetwork = other
+        joinPhase = .idle
+        joining = nil
     }
 
     private func scan() async {
@@ -304,6 +362,128 @@ struct SetupView: View {
         default:
             break
         }
+    }
+}
+
+/// A network whose password sheet is open; `other`: typed, not scanned.
+struct JoinTarget: Identifiable, Equatable {
+    var ssid: String
+    var other: Bool
+    var id: String { "\(other) \(ssid)" }
+}
+
+enum JoinPhase: Equatable {
+    case idle
+    case testing
+    case reconnecting
+    case failed(String)
+
+    var busy: Bool { self == .testing || self == .reconnecting }
+}
+
+/// Asks for a network's password; Join has the Overhead try it.
+private struct PasswordSheet: View {
+    let target: JoinTarget
+    let phase: JoinPhase
+    let checksNow: Bool
+    let onJoin: (TestWifi) -> Void
+    let onCancel: () -> Void
+
+    @State private var name: String
+    @State private var passphrase: String
+    @State private var reveal = false
+    @FocusState private var focus: Field?
+
+    private enum Field { case name, passphrase }
+
+    init(
+        target: JoinTarget, initialPassphrase: String, phase: JoinPhase, checksNow: Bool,
+        onJoin: @escaping (TestWifi) -> Void, onCancel: @escaping () -> Void
+    ) {
+        self.target = target
+        self.phase = phase
+        self.checksNow = checksNow
+        self.onJoin = onJoin
+        self.onCancel = onCancel
+        _name = State(initialValue: target.ssid)
+        _passphrase = State(initialValue: initialPassphrase)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    if target.other {
+                        TextField("Network name", text: $name)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .focused($focus, equals: .name)
+                            .submitLabel(.next)
+                            .onSubmit { focus = .passphrase }
+                    }
+                    HStack {
+                        Group {
+                            if reveal {
+                                TextField("Password", text: $passphrase)
+                            } else {
+                                SecureField("Password", text: $passphrase)
+                            }
+                        }
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .focused($focus, equals: .passphrase)
+                        .submitLabel(.join)
+                        .onSubmit(join)
+                        Button {
+                            reveal.toggle()
+                        } label: {
+                            Image(systemName: reveal ? "eye.slash" : "eye")
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                } footer: {
+                    footer
+                }
+                .disabled(phase.busy)
+            }
+            .navigationTitle(target.other ? "Other Network" : target.ssid)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", action: onCancel).disabled(phase.busy)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    if phase.busy {
+                        ProgressView()
+                    } else {
+                        Button("Join", action: join).disabled(name.isEmpty || passphrase.isEmpty)
+                    }
+                }
+            }
+            .onAppear { focus = target.other && name.isEmpty ? .name : .passphrase }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    @ViewBuilder
+    private var footer: some View {
+        switch phase {
+        case .idle:
+            if !checksNow {
+                Text("This Overhead checks the password when you save.")
+            }
+        case .testing:
+            Text("The Overhead is trying the network. This takes up to 20 seconds.")
+        case .reconnecting:
+            Text("The connection dropped while the Overhead tried the network. If your iPhone asks, enter the new code from its display.")
+        case let .failed(why):
+            Text(why).foregroundStyle(.red)
+        }
+    }
+
+    private func join() {
+        guard !phase.busy, !name.isEmpty, !passphrase.isEmpty else { return }
+        onJoin(TestWifi(ssid: name, passphrase: passphrase))
     }
 }
 

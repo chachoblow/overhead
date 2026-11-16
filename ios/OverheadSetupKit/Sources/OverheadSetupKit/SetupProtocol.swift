@@ -1,16 +1,22 @@
 import Foundation
 
 /// The BLE setup protocol of
-/// [0087](../../../../docs/decisions/0087-ios-setup-app-over-ble.md), version 1.
+/// [0087](../../../../docs/decisions/0087-ios-setup-app-over-ble.md), version 2.
 ///
 /// A Swift mirror of the Rust `setup/` crate (`overhead-setup`), which owns the
 /// contract: a frame is `version u8, type u8, payload` in one ATT value;
 /// integers and `f64` little-endian; strings a `u8` byte length then UTF-8.
 /// Fields are only appended, so readers ignore trailing bytes. The tests check
 /// this file against that crate's fixed byte vectors.
+///
+/// Versions: 1 has `getInfo`, `scan`, `configure`; 2 adds `testWifi`,
+/// `testResult`, `ConfigureResult.joined` and `Info.lastTest`. Offer only what
+/// the device's version (its `Info` frame's) has.
 public enum SetupProtocol {
     /// This protocol version.
-    public static let version: UInt8 = 1
+    public static let version: UInt8 = 2
+    /// The first version with `testWifi`.
+    public static let testWifiVersion: UInt8 = 2
     /// Largest frame either side sends; needs an ATT MTU of `maxFrame + 3`.
     public static let maxFrame = 180
 
@@ -32,12 +38,14 @@ enum MessageType {
     static let getInfo: UInt8 = 0x01
     static let scan: UInt8 = 0x02
     static let configure: UInt8 = 0x03
+    static let testWifi: UInt8 = 0x04
     static let info: UInt8 = 0x81
     static let network: UInt8 = 0x82
     static let scanDone: UInt8 = 0x83
     static let testing: UInt8 = 0x84
     static let configureResult: UInt8 = 0x85
     static let error: UInt8 = 0x86
+    static let testResult: UInt8 = 0x87
 }
 
 /// Update channel (0085).
@@ -84,6 +92,8 @@ public enum ConfigureResult: UInt8, Sendable {
     case joinFailed = 7
     /// The test passed but the settings could not be written.
     case saveFailed = 8
+    /// Version 2, `testWifi` only: joined and got an address; nothing stored.
+    case joined = 9
 }
 
 public enum ErrorCode: UInt8, Sendable {
@@ -117,14 +127,8 @@ public struct Configure: Equatable, Sendable {
     /// −90...90, longitude −180...180, altitude −500...9000 m, all finite.
     /// `nil` when the device would accept these settings.
     public func check() -> ConfigureResult? {
-        let s = Array(ssid.utf8), p = Array(passphrase.utf8)
-        if s.isEmpty || s.count > SetupProtocol.ssidMax {
-            return .invalidSsid
-        }
-        let passOK = (8...63).contains(p.count)
-            || (p.count == 64 && p.allSatisfy { $0.isASCIIHexDigit })
-        if !passOK {
-            return .invalidPassphrase
+        if let bad = TestWifi(ssid: ssid, passphrase: passphrase).check() {
+            return bad
         }
         func inRange(_ v: Double, _ lo: Double, _ hi: Double) -> Bool {
             v.isFinite && (lo...hi).contains(v)
@@ -136,16 +140,41 @@ public struct Configure: Equatable, Sendable {
     }
 }
 
+/// A network to try without saving (version 2): SSID, passphrase.
+public struct TestWifi: Equatable, Sendable {
+    public var ssid: String
+    public var passphrase: String
+
+    public init(ssid: String, passphrase: String) {
+        self.ssid = ssid
+        self.passphrase = passphrase
+    }
+
+    /// `Configure.check`'s SSID and passphrase rules; `nil` when accepted.
+    public func check() -> ConfigureResult? {
+        let s = Array(ssid.utf8), p = Array(passphrase.utf8)
+        if s.isEmpty || s.count > SetupProtocol.ssidMax {
+            return .invalidSsid
+        }
+        let passOK = (8...63).contains(p.count)
+            || (p.count == 64 && p.allSatisfy { $0.isASCIIHexDigit })
+        return passOK ? nil : .invalidPassphrase
+    }
+}
+
 public enum Request: Equatable, Sendable {
     case getInfo
     case scan
     case configure(Configure)
+    /// Version 2.
+    case testWifi(TestWifi)
 
     public var typeByte: UInt8 {
         switch self {
         case .getInfo: MessageType.getInfo
         case .scan: MessageType.scan
         case .configure: MessageType.configure
+        case .testWifi: MessageType.testWifi
         }
     }
 }
@@ -170,11 +199,13 @@ public struct Info: Equatable, Sendable {
     public var failedBuild: UInt32
     /// This setup window's last `Configure` result.
     public var lastResult: ConfigureResult?
+    /// This setup window's last `TestWifi` result (version 2; `nil` from 1).
+    public var lastTest: ConfigureResult?
 
     public init(
         build: UInt32, version: String, channel: Channel, mac: [UInt8], flags: UInt8,
         reason: SetupReason, ssid: String, lastFetchUnixS: Int64, failedBuild: UInt32,
-        lastResult: ConfigureResult?
+        lastResult: ConfigureResult?, lastTest: ConfigureResult? = nil
     ) {
         self.build = build
         self.version = version
@@ -186,6 +217,7 @@ public struct Info: Equatable, Sendable {
         self.lastFetchUnixS = lastFetchUnixS
         self.failedBuild = failedBuild
         self.lastResult = lastResult
+        self.lastTest = lastTest
     }
 
     public var wifiStored: Bool { flags & Self.wifiStored != 0 }
@@ -215,6 +247,9 @@ public enum Response: Equatable, Sendable {
     /// The device is trying the new network (it can take ~20 s).
     case testing
     case configureResult(ConfigureResult)
+    /// Version 2, answering `testWifi`: `.joined`, or why the network failed.
+    /// Nothing is stored either way.
+    case testResult(ConfigureResult)
     /// `requestType` is the type byte of the request it answers.
     case error(code: ErrorCode, requestType: UInt8)
 }
@@ -291,6 +326,16 @@ private struct Reader {
         return s
     }
 
+    /// An optional result byte (0xFF = none); with `appended`, an absent byte
+    /// (an older sender) is none too.
+    mutating func resultOpt(appended: Bool) throws -> ConfigureResult? {
+        if appended && bytes.isEmpty { return nil }
+        let b = try u8()
+        if b == 0xFF { return nil }
+        guard let v = ConfigureResult(rawValue: b) else { throw DecodeError.badValue }
+        return v
+    }
+
     mutating func enumByte<T: RawRepresentable>(_: T.Type) throws -> T where T.RawValue == UInt8 {
         guard let v = T(rawValue: try u8()) else { throw DecodeError.badValue }
         return v
@@ -301,12 +346,18 @@ extension Request {
     /// The request as one frame.
     public func encode() throws -> Data {
         var w = Writer(type: typeByte)
-        if case let .configure(c) = self {
+        switch self {
+        case let .configure(c):
             try w.string(c.ssid, max: SetupProtocol.ssidMax)
             try w.string(c.passphrase, max: SetupProtocol.passphraseMax)
             try w.f64(c.latDeg)
             try w.f64(c.lonDeg)
             try w.f64(c.altM)
+        case let .testWifi(t):
+            try w.string(t.ssid, max: SetupProtocol.ssidMax)
+            try w.string(t.passphrase, max: SetupProtocol.passphraseMax)
+        case .getInfo, .scan:
+            break
         }
         return Data(w.bytes)
     }
@@ -331,19 +382,12 @@ extension Response {
             let ssid = try r.string(max: SetupProtocol.ssidMax)
             let lastFetch = try r.le(Int64.self)
             let failed = try r.le(UInt32.self)
-            let last = try r.u8()
-            let lastResult: ConfigureResult?
-            if last == 0xFF {
-                lastResult = nil
-            } else if let v = ConfigureResult(rawValue: last) {
-                lastResult = v
-            } else {
-                throw DecodeError.badValue
-            }
+            let lastResult = try r.resultOpt(appended: false)
+            let lastTest = try r.resultOpt(appended: true)
             message = .info(Info(
                 build: build, version: version, channel: channel, mac: mac, flags: flags,
                 reason: reason, ssid: ssid, lastFetchUnixS: lastFetch, failedBuild: failed,
-                lastResult: lastResult))
+                lastResult: lastResult, lastTest: lastTest))
         case MessageType.network:
             let rssi = Int8(bitPattern: try r.u8())
             let security = try r.enumByte(Security.self)
@@ -357,6 +401,8 @@ extension Response {
             message = .testing
         case MessageType.configureResult:
             message = .configureResult(try r.enumByte(ConfigureResult.self))
+        case MessageType.testResult:
+            message = .testResult(try r.enumByte(ConfigureResult.self))
         case MessageType.error:
             let code = try r.enumByte(ErrorCode.self)
             message = .error(code: code, requestType: try r.u8())

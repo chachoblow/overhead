@@ -13,6 +13,7 @@ extension ConfigureResult {
         case .noAddress: "The Overhead joined the network but got no address from it (DHCP)."
         case .joinFailed: "The Overhead couldn't join the network."
         case .saveFailed: "The network worked, but the settings couldn't be saved. Try again."
+        case .joined: "The Overhead joined the network."
         }
     }
 }

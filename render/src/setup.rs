@@ -52,6 +52,8 @@ pub enum SetupScreen<'a> {
     Failed { ssid: &'a str, why: &'a str },
     /// Saved; restarting on the new settings.
     Saved { ssid: &'a str },
+    /// A test-only join worked; nothing is saved yet.
+    Joined { ssid: &'a str },
 }
 
 /// The info page (a short knob press while running).
@@ -179,6 +181,13 @@ pub fn draw_setup<D: DrawTarget<Color = BinaryColor>>(
             l.push_ssid(ssid);
             l.push(". Starting...");
             body(&mut d, &[l.as_str()])?;
+        }
+        SetupScreen::Joined { ssid } => {
+            title(&mut d, "NETWORK OK")?;
+            let mut l = Line::<64>::new();
+            l.push_ssid(ssid);
+            l.push(" works.");
+            body(&mut d, &[l.as_str(), "", "Finish in the app."])?;
         }
     }
     Ok(())
@@ -426,7 +435,7 @@ mod tests {
         }
     }
 
-    const SCREENS: [SetupScreen<'static>; 13] = [
+    const SCREENS: [SetupScreen<'static>; 14] = [
         SetupScreen::HoldForSetup,
         SetupScreen::HoldForReset,
         SetupScreen::Erasing,
@@ -459,6 +468,7 @@ mod tests {
             why: "wrong password",
         },
         SetupScreen::Saved { ssid: "home" },
+        SetupScreen::Joined { ssid: "home" },
     ];
 
     #[test]

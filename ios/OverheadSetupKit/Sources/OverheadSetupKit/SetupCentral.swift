@@ -40,11 +40,12 @@ public enum SetupError: LocalizedError, Equatable {
     }
 }
 
-/// What a `Configure` came to.
+/// What a `Configure` or `TestWifi` came to.
 public enum ConfigureOutcome: Equatable, Sendable {
     /// The device answered.
     case result(ConfigureResult)
-    /// The link dropped after `Testing`; read `Info.lastResult` after reconnecting.
+    /// The link dropped after `Testing`; read `Info.lastResult` (or, for a
+    /// test, `Info.lastTest`) after reconnecting.
     case lostWhileTesting
 }
 
@@ -68,6 +69,10 @@ public final class SetupCentral: NSObject {
     public private(set) var devices: [DiscoveredDevice] = []
     public private(set) var link: Link = .idle
     public private(set) var isScanning = false
+    /// The protocol version of the connected device's last `Info` (0 before one).
+    public private(set) var deviceVersion: UInt8 = 0
+    /// Whether the connected device can test a network without saving it.
+    public var canTestWifi: Bool { deviceVersion >= SetupProtocol.testWifiVersion }
 
     // Timeouts (seconds).
     static let connectTimeout = 12.0
@@ -97,6 +102,7 @@ public final class SetupCentral: NSObject {
     @ObservationIgnored private var tokens: [Op: Int] = [:]
     @ObservationIgnored private var nextToken = 0
     @ObservationIgnored private var inbox: [Response] = []
+    @ObservationIgnored private var inboxVersion: UInt8 = 0
 
     public override init() {
         super.init()
@@ -152,6 +158,7 @@ public final class SetupCentral: NSObject {
     public func connect(_ id: UUID) async throws {
         try await waitForPower()
         disconnect()
+        deviceVersion = 0
         let known = peripherals[id] ?? central.retrievePeripherals(withIdentifiers: [id]).first
         guard let p = known else { throw SetupError.connectFailed }
         peripherals[id] = p
@@ -229,7 +236,9 @@ public final class SetupCentral: NSObject {
     public func getInfo() async throws -> Info {
         try await send(.getInfo)
         switch try await nextResponse(timeout: Self.infoTimeout, what: "info") {
-        case let .info(i): return i
+        case let .info(i):
+            deviceVersion = inboxVersion
+            return i
         case let other: throw unexpected(other)
         }
     }
@@ -259,6 +268,25 @@ public final class SetupCentral: NSObject {
         do {
             switch try await nextResponse(timeout: Self.resultTimeout, what: "network test") {
             case let .configureResult(r): return .result(r)
+            case let other: throw unexpected(other)
+            }
+        } catch SetupError.linkLost {
+            return .lostWhileTesting
+        }
+    }
+
+    /// Asks the device to try a network without saving it (`canTestWifi`
+    /// devices only). `.joined` when it worked; nothing is stored either way.
+    public func testWifi(_ t: TestWifi) async throws -> ConfigureOutcome {
+        try await send(.testWifi(t))
+        switch try await nextResponse(timeout: Self.testingAckTimeout, what: "network test") {
+        case .testing: break
+        case let .testResult(r): return .result(r)
+        case let other: throw unexpected(other)
+        }
+        do {
+            switch try await nextResponse(timeout: Self.resultTimeout, what: "network test") {
+            case let .testResult(r): return .result(r)
             case let other: throw unexpected(other)
             }
         } catch SetupError.linkLost {
@@ -407,7 +435,9 @@ extension SetupCentral: CBPeripheralDelegate {
         guard characteristic.uuid == SetupCentral.responseChar, error == nil, let data = characteristic.value else { return }
         MainActor.assumeIsolated {
             do {
-                inbox.append(try Response.decode(data).message)
+                let frame = try Response.decode(data)
+                inboxVersion = frame.version
+                inbox.append(frame.message)
             } catch let DecodeError.unknownType(t) where t >= 0x80 {
                 return // A newer device's response type: ignored.
             } catch let e as DecodeError {
