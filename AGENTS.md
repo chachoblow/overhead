@@ -59,6 +59,8 @@ progress reports. Handoffs normally happen when a work item completes.
   The devbox host is headless: use `--snapshot` there, not the window.
 - Firmware build: `cd firmware && . "$HOME/export-esp.sh" && cargo build --release --locked`
 - UART port: `/dev/cu.usbserial-*` on macOS, `/dev/ttyUSB*` or `/dev/ttyACM*` on Linux.
+  The user's board is plugged into the Mac: from devbox, flash and capture with
+  `firmware/mac.sh` ([usage and limits](firmware/README.md#board-on-the-mac-macsh)).
   Commands in docs that name a macOS port are historical; substitute the verified port.
 - Firmware host tests (from repo root): `cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked`
 

@@ -524,4 +524,7 @@ $C --passkey-log $L raw 0101                            # one hex frame
 ```
 
 Needs `bluetooth.service` (devbox: `bluez`, see ~/code/devbox/README.md)
-and, on devbox, the AX200's antennas.
+and, on devbox, the AX200's antennas. The board must be within BLE range of
+devbox, wherever its USB is plugged in. With the board on the Mac, fill the
+passkey log with `firmware/mac.sh read SECS LOG &` (the log streams while it
+runs); untested this way.

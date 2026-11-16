@@ -2138,7 +2138,7 @@ signed for both channels when it goes to both):
 or GitHub. Losing both means no device can be updated without USB (a new key
 needs a USB flash of every unit).
 
-**USB recovery flash** (a unit that won't boot or update; keeps `settings`
+**USB recovery flash** (with the board on the Mac: `./mac.sh flash N.elf LOG`, the same command; a unit that won't boot or update; keeps `settings`
 and `elements`, so Wi-Fi, site and channel survive): with the board on the
 UART port, flash the newest published image's ELF exactly as the "USB flash"
 command above (bootloader, partition table, `--erase-parts otadata`, app in
@@ -2185,7 +2185,9 @@ later): release 15 and earlier select with BOOT and ignore IO7. Its ELF is
 
 **Flash** (from `firmware/`, board on the UART port; confirm the port and
 MAC first and write the MAC in the table below). A new board is erased
-whole, so no factory test app, settings or elements survive:
+whole, so no factory test app, settings or elements survive. The Mac's SSH
+gate has no `erase-flash`, so for now plug gift units into devbox's USB for
+this step ([Board on the Mac](#board-on-the-mac-macsh)):
 
 ```sh
 . "$HOME/export-esp.sh"
