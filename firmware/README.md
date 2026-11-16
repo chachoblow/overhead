@@ -1953,6 +1953,13 @@ host-tested), screens in `render/src/setup.rs`; the info page lives in
   it and presses are interrupt-captured.
 - **Leaves** by a software reset 3 s after `Saved`, or after 10 min with no
   client when settings exist.
+- **Tests without saving** (protocol 2, [0087 note](../docs/decisions/0087-ios-setup-app-over-ble.md#note--2026-11-16-protocol-2-tests-a-password-before-saving)):
+  `TestWifi` runs the same test join, logs `SETUP request test_wifi` and the
+  usual `SETUP test …` lines (`result=Saved` there is the join passing,
+  reported as `Joined`) and stays in setup. 2026-11-16, dev build
+  `0.1.15-wifitest` on the Mac's port with the user's iPhone: two wrong
+  passwords `WrongPassphrase` (4.9 s, 9.3 s), right ones joined (0.9 s,
+  10.7 s), no link drop (`target/wifitest-setup.log`).
 - Static heap is 96 KiB (was 128) so pairing's P-256 work fits the CPU0 stack.
 - `setup-test` (dev only) prints `SETUP_PASSKEY n` on UART for
   [`overhead-setup-client`](../tools/README.md#overhead-setup-client). Test

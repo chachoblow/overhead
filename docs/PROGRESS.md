@@ -730,3 +730,7 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - [0088](decisions/0088-selection-button-and-captured-knob-switch.md): satellites cycle with a button on IO7 (gift units don't expose BOOT); the knob switch keeps setup/factory reset and its info-page press is now interrupt-captured like selection.
 - User tap sessions on the board: IO7 cycled selection; a knob press during a 479 ms refresh stall was applied when the display resumed. Host tests 38, workspace tests 361.
 - PLAN M6 boxes ticked; gift-unit build and check sheet written in the firmware README (not yet exercised).
+
+## 2026-11-16 (setup app: test the password before saving)
+- User request: tapping a network opens a password sheet that closes only once the Overhead joined. Setup protocol 2 adds `TestWifi`/`TestResult`, `ConfigureResult::Joined` and `Info.last_test` ([0087 note](decisions/0087-ios-setup-app-over-ble.md#note--2026-11-16-protocol-2-tests-a-password-before-saving)); firmware, setup client, Swift kit and app updated; version 1 devices fall back to the check at Save.
+- Verified: workspace 363 tests, firmware host 38, `swift test` 9; dev image `0.1.15-wifitest` gated and flashed on the Mac; on the user's iPhone wrong passwords were refused, the right one joined, Save saved and the board tracked.

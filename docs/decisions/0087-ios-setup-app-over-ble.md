@@ -106,3 +106,24 @@ M7 item 3 done; usage in [ios/README](../../ios/README.md), evidence in the
   does only after `Saved`. Not yet seen on hardware.
 - **Location.** The phone's `ellipsoidalAltitude` (WGS-84, as `Configure`
   wants; 0 without a vertical fix); typed coordinates send altitude 0.
+
+## Note — 2026-11-16: protocol 2 tests a password before saving
+
+User request (2026-11-16): tapping a network opens a password sheet that
+closes only once the network works. Chosen over a sheet that only checks at
+Save, and over moving Location first so Join could be the save.
+- **Protocol version 2** (`setup/`): request `TestWifi` (0x04: SSID,
+  passphrase) → `Testing`, then `TestResult` (0x87, a `ConfigureResult`):
+  the device joins, waits for DHCP and leaves, storing nothing.
+  `ConfigureResult::Joined` (9) is its success, never sent for `Configure`.
+  `Info` appends `last_test` (0xFF none), which readers treat as none when
+  absent (a version 1 device), so a client that loses the link mid-test can
+  reconnect and read it, as with `last_result`. The Sharp shows `NETWORK OK`.
+- **Save still tests again**, then saves: the contract stays "a save always
+  follows a passing test". Skipping the second test was left open.
+- **Version 1 devices** (release 15 and earlier) refuse `TestWifi`
+  (`UnknownType`); the app reads the version from `Info` and, for them, Join
+  only closes the sheet and Save remains the only test.
+- On the board (dev build `0.1.15-wifitest`, user's iPhone): wrong passwords
+  refused in ~5–9 s (`FourWayHandshakeTimeout` → `WrongPassphrase`), the
+  right one joined in 1–11 s, the BLE link held through four tests.

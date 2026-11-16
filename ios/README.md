@@ -41,6 +41,11 @@ updates its Program License Agreement, signing fails until the user accepts it.
   once; subscribing to responses completes after pairing (2 min timeout).
   Connects retry 3 × 12 s.
 - No bonds: every connection pairs again with a new code.
+- Tapping a network opens a password sheet; Join sends `TestWifi` (protocol
+  2) and the sheet closes, checking the network, only on `joined`. A
+  version 1 device (release 15 and earlier) can't test: Join just closes the
+  sheet and Save is the test.
 - If the link drops after `Testing`, the app waits up to 60 s for the device
-  to advertise again, reconnects and reads `Info.last_result`. A device that
+  to advertise again, reconnects and reads `Info.last_result` (a test:
+  `Info.last_test`, and the sheet stays open). A device that
   never comes back has left setup, which it does only after saving.

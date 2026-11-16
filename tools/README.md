@@ -520,6 +520,8 @@ $C --passkey-log $L info
 $C --passkey-log $L scan
 $C --passkey-log $L configure --wifi-env firmware/.wifi.env \
   --site-env firmware/.site.env [--passphrase WRONG]   # SSID/PASSWORD, SITE_* keys
+$C --passkey-log $L test-wifi --wifi-env firmware/.wifi.env \
+  [--passphrase WRONG]                                  # protocol 2: try, save nothing
 $C --passkey-log $L raw 0101                            # one hex frame
 ```
 
