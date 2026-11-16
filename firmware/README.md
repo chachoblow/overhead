@@ -14,6 +14,26 @@ kernel workloads are host-tested and now have target captures. Additional distin
 populations and independent numerical checks have separate [frozen-suite evidence](../docs/evaluations/s3-m2.md).
 Whole-device peak-memory budgets and scheduling guarantees remain open.
 
+## Board on the Mac (`mac.sh`)
+
+Since 2026-11-16 the user's board is plugged into the MacBook
+(`/dev/cu.usbserial-21410`), not devbox. Build on devbox as usual, then flash
+and capture through `./mac.sh` (run `./mac.sh` for usage):
+`info` (port and MAC check), `read SECS LOG` (no reset), `monitor SECS LOG`
+(reset and capture) and `flash ELF LOG [SECS]`, which is the "USB flash"
+command [below](#device-application-0076) (bootloader, table, erased
+`otadata`, app in `ota_0`; settings and elements kept). `flash` refuses a
+board whose MAC isn't `OVERHEAD_MAC` (default the user's board) and checks the
+uploaded ELF's sha256. Run the image gate before flashing, as for USB.
+
+devbox's SSH key can only run the Mac's forced-command gate
+(`~/code/devbox/mac/overhead-gate`; why and how in the devbox README,
+2026-11-16), so commands on the Mac outside `mac.sh` don't work, and tools
+that call `espflash --port` themselves (`capture.py`, `drift_capture.py`, …)
+only work with a board on devbox's USB. Logs are host-timestamped on devbox,
+a few ms after the Mac reads them. Long captures need the Mac awake (the gate
+runs them under `caffeinate -i`, which doesn't survive a closed lid on battery).
+
 ## Frozen M2 harness and numerical checks
 
 The separate [frozen M2 harness](M2_CAPTURE.md) now implements the timed and
