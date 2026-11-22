@@ -3,8 +3,10 @@
 Date: 2026-11-22
 Status: accepted (user, 2026-11-22: replace the current wide view; new M8,
 done before finishing M7; release 16 waits for it and carries 0088 too;
-pills as on the board). Not yet implemented on `main`; tracked as
-[PLAN M8](../PLAN.md#m8--radar-revision).
+pills as on the board). The frame is implemented (`render/src/wide.rs`,
+`RadarApp::below_horizon_markers`, shading in the coast raster) and accepted
+on the panel 2026-11-22 (image `0.1.15-m8b`); trails and the selected orbit
+are [PLAN M8](../PLAN.md#m8--radar-revision)'s second item.
 
 ## Problem
 
@@ -41,7 +43,8 @@ circular comparison viewports and the debug page are unchanged.
   stressed" (DESIGN's observer-sky rule is amended accordingly); selection,
   arrows, counts and notices still consider only above-horizon objects.
 - **Selected satellite:** its own octagon with halo, drawn on top, plus a
-  pulsing ring (1.4 s cycle) and its full orbit (one period centred on now)
+  pulsing ring (1.4 s cycle, restarting with each new selection; user,
+  2026-11-22) and its full orbit (one period centred on now)
   as a solid line broken where the Earth hides it. No crosshair, no ID label
   (0034/0035 retired for the wide view); 0049's stable selection is kept.
 - **Motion cue:** short past-line trail behind each unselected above-horizon

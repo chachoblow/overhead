@@ -60,17 +60,19 @@ fn prepare(app: &RadarApp, layer: &mut CoastLayer) {
 }
 
 /// Exactness against the per-call candidate already measured on the S3:
-/// coast-only output must equal `candidate_draw`, frames must equal the shared
-/// candidate frame. Untimed; `reference` is overwritten.
+/// coast-only output must equal `candidate_draw` with 0089's shading, frames
+/// must equal the shared shaded candidate frame. Untimed; `reference` is
+/// overwritten.
 pub fn verify(screen: &Screen, reference: &mut Screen, app: &RadarApp, mode: Mode) {
     reference.clear_for_coast();
     match mode {
         Mode::CoastRaster | Mode::CoastCached => {
-            measurement::candidate_draw(reference, app.observer(), app.view(), ASSET).unwrap();
+            measurement::shaded_candidate_draw(reference, app.observer(), app.view(), ASSET)
+                .unwrap();
         }
         Mode::FrameRaster | Mode::FrameCached => {
-            assert!(measurement::frame_candidate(
-                reference, app, ASSET, false, false
+            assert!(measurement::frame_shaded_candidate(
+                reference, app, ASSET, false
             ));
         }
         Mode::Prepare | Mode::FrameOff => return,

@@ -48,3 +48,7 @@ cached coast 386–1,153 µs (passes the provisional 5 ms screen), one zoom-step
 raster 7,532–21,177 µs, preparation ~5 ms, zero heap, +10,952 B `.bss`. Output
 matches the candidate exactly. `CoastLayer::new` plus in-place `prepare_for`
 were added so long-lived storage avoids an 11 KB stack temporary.
+
+## Note — 2026-11-22: [0089](0089-full-width-radar-revision.md)
+
+0089 widens the cached raster to the full 400×240 radar (12,000 B) and thins it with 0089's sphere shading when it is rastered, once per lens.

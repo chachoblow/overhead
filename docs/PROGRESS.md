@@ -734,3 +734,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 ## 2026-11-16 (setup app: test the password before saving)
 - User request: tapping a network opens a password sheet that closes only once the Overhead joined. Setup protocol 2 adds `TestWifi`/`TestResult`, `ConfigureResult::Joined` and `Info.last_test` ([0087 note](decisions/0087-ios-setup-app-over-ble.md#note--2026-11-16-protocol-2-tests-a-password-before-saving)); firmware, setup client, Swift kit and app updated; version 1 devices fall back to the check at Save.
 - Verified: workspace 363 tests, firmware host 38, `swift test` 9; dev image `0.1.15-wifitest` gated and flashed on the Mac; on the user's iPhone wrong passwords were refused, the right one joined, Save saved and the board tracked.
+
+## 2026-11-22 (M8 item 1: full-width radar frame)
+- Decision 0089 and PLAN M8: the radar lab's Favourite C replaces the strip design; M8 goes before M7's remaining gift readiness, release 16 waits for it.
+- Implemented on `main`: `render/src/wide.rs` (pills, octagons, below-horizon diamonds with Earth occlusion, pulsing ring restarting per selection, haloed arrows, scale ruler), shading baked into the 400 px coast raster; strip/glyph/label code and the `sharp-profile`/`sharp-cache` diagnostics removed.
+- Verified: workspace 332 tests, clippy clean, firmware host tests (default 38, `device` 172, `sharp-replay` 85, `coast-representation-on` 43), device image gated and flashed; the user accepted `0.1.15-m8b` on the panel.

@@ -204,6 +204,53 @@ pub fn frame_candidate<D: DrawTarget<Color = BinaryColor, Error = core::convert:
     completed.get()
 }
 
+/// The candidate coastline with 0089's sphere shading for `view`: the
+/// reference the prepared, shaded layer must equal pixel for pixel.
+#[cfg(feature = "representation-measurement")]
+pub fn shaded_candidate_draw<
+    D: DrawTarget<Color = BinaryColor, Error = core::convert::Infallible>,
+>(
+    display: &mut D,
+    site: overhead_core::GeodeticPosition,
+    view: overhead_app::projection::View,
+    bytes: &[u8],
+) -> Result<RepresentationCounts, &'static str> {
+    let layout = Layout::wide();
+    let mut shaded = crate::wide::Shaded {
+        d: display,
+        levels: crate::wide::shade_levels(view.fov_deg(), f64::from(layout.radius())),
+        center: layout.center(),
+    };
+    candidate_draw(&mut shaded, site, view, bytes)
+}
+
+/// `frame_candidate` with the shaded candidate coastline (0089).
+#[cfg(feature = "representation-measurement")]
+pub fn frame_shaded_candidate<
+    D: DrawTarget<Color = BinaryColor, Error = core::convert::Infallible>,
+>(
+    display: &mut D,
+    app: &RadarApp,
+    bytes: &[u8],
+    warning: bool,
+) -> bool {
+    let completed = Cell::new(false);
+    draw_frame_with_coast(
+        display,
+        app,
+        Layout::wide(),
+        warning,
+        true,
+        |display, site, view, _| {
+            let ok = shaded_candidate_draw(display, site, view, bytes).is_ok();
+            completed.set(ok);
+            Ok(ok)
+        },
+    )
+    .unwrap();
+    completed.get()
+}
+
 /// Independent immediate-failure control without retaining either coast asset.
 #[cfg(feature = "representation-measurement")]
 pub fn candidate_failure_control<D: DrawTarget<Color = BinaryColor>>(

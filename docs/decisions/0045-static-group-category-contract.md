@@ -181,3 +181,7 @@ acceptance update changed docs only; no new Cargo checks/tests accompanied it.
 Wrap-up subsequently reran all Rust gates above and the documented headless review
 recipe, and rechecked preview parity, retained assets, local links and whitespace.
 No interactive, hardware, physical-display or target-cost validation was run.
+
+## Note — 2026-11-22: [0089](0089-full-width-radar-revision.md)
+
+0089 retires the category slot (already showing 0078 visibility); category still orders the 0077 object limit.

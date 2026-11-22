@@ -113,3 +113,7 @@ physically consistent readings. No temporary scripts or chat images are needed
 to recover the chosen direction. Earlier references and decisions remain as
 history; the evolving executable is still documented in
 [simulator usage](../../sim/README.md#static-elevation-glyph).
+
+## Note — 2026-11-22: [0089](0089-full-width-radar-revision.md)
+
+0089 retires the glyph strip; the wide view's readouts are text pills.

@@ -49,3 +49,7 @@ session (recorded 2026-10-17), the user confirmed having reviewed the existing
 
 Usage and reproducible comparisons live in the
 [simulator README](../../sim/README.md#label-zoom-visibility).
+
+## Note — 2026-11-22: [0089](0089-full-width-radar-revision.md)
+
+0089 retires the label (and so its zoom visibility); `LabelZoom` and the sim `--label-*` options are removed.

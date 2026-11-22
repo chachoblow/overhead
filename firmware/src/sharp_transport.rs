@@ -170,13 +170,15 @@ fn fixture_replay_transport_budget_and_panel_parity() {
         previous.copy_from_slice(&screen.pixels);
     }
     assert!(coast.error().is_none());
-    assert_eq!(rows, [240, 34, 30, 25, 23, 18, 22, 33]);
+    // 0089's frame (pulse ring, pills, halos) changes more rows per tick than
+    // the strip design did ([240, 34, 30, 25, 23, 18, 22, 33] before 0089).
+    assert_eq!(rows, [240, 54, 46, 34, 40, 45, 43, 52]);
     assert_eq!(
         rows[1..]
             .iter()
             .map(|&n| 2 + n * LINE_BYTES)
             .collect::<Vec<_>>(),
-        [1770, 1562, 1302, 1198, 938, 1146, 1718]
+        [2810, 2394, 1770, 2082, 2342, 2238, 2706]
     );
     std::println!(
         "TRANSPORT full_bytes={FULL_BYTES} full_wire_floor_us={}",

@@ -202,7 +202,9 @@ mod tests {
                         assert_eq!(transfer.kind, Kind::Full);
                     } else {
                         assert_eq!(transfer.kind, Kind::Lines);
-                        assert!((18..=34).contains(&count), "tick {tick}");
+                        // 0089's frame (pulse ring, pills, halos): 34-54 rows
+                        // per tick in this replay (18-34 before 0089).
+                        assert!((34..=54).contains(&count), "tick {tick}");
                     }
                     let mut full_chunks = Vec::new();
                     sharp_test::frame_pixels(phase, &screen.pixels, |part| {

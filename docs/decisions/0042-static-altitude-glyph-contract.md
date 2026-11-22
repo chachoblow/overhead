@@ -185,3 +185,7 @@ ID-hidden, no-selection and warning states. This does not approve further glyphs
 or establish physical-display legibility. No runtime change or new Cargo check/
 test run accompanied that confirmation. No interactive, physical-display or
 target-performance validation was performed.
+
+## Note — 2026-11-22: [0089](0089-full-width-radar-revision.md)
+
+0089 retires the altitude glyph; altitude is the `ALT` pill.

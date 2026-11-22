@@ -196,6 +196,11 @@ espflash flash --port <UART> --chip esp32s3 --flash-size 8mb \
 
 ## Sharp full-frame cost diagnostic (flashed; short UART capture)
 
+> **Retired by [0089](../docs/decisions/0089-full-width-radar-revision.md)
+> (2026-11-22):** this image measured the old glyph strip; its feature, binary
+> and source are removed. Build it from revision `4ac3778`. The evidence below
+> is historical.
+
 `overhead-s3-sharp-profile` (`--features sharp-profile`) is a **separate**
 opt-in image. It shows the same 5° accelerated ISS replay as v2 using the same
 2 MHz SPI settings. After each transferred frame, it measures one offscreen
@@ -322,6 +327,11 @@ espflash flash --port <UART> --chip esp32s3 --flash-size 8mb \
 
 ### Period-cache comparison v1 (flashed; short UART capture)
 
+> **Retired by [0089](../docs/decisions/0089-full-width-radar-revision.md)
+> (2026-11-22):** this image measured the old glyph strip; its feature, binary
+> and source are removed. Build it from revision `4ac3778`. The evidence below
+> is historical.
+
 `overhead-s3-sharp-cache` is a **separate opt-in image** using the same seven
 accelerated historical fixture times and 500 ms tick as the visually confirmed
 v3 diagnostic. It transfers only cached frames. After each transfer, it draws
@@ -371,7 +381,7 @@ espflash flash --port <UART> --chip esp32s3 --flash-size 8mb \
 
 `src/sharp_transport.rs` is compiled **only in firmware host tests** under
 `sharp-replay` (for example `cargo +stable test --manifest-path firmware/Cargo.toml
---lib --locked --features sharp-cache sharp_transport -- --nocapture` from the
+--lib --locked --features sharp-replay sharp_transport -- --nocapture` from the
 repo root). The candidate sender in `src/sharp_lines.rs` is available only to
 the separate `sharp-lines` image; the earlier flashed images send full frames.
 The [LS027B7DH01 datasheet](https://cdn-learn.adafruit.com/assets/assets/000/094/215/original/LS027B7DH01_Rev_Jun_2010.pdf)
@@ -1548,6 +1558,14 @@ each would cost a download and an interval) and the repeated-handshake rule;
 both stay host-tested in `element_refresh`.
 
 ## Device application (0076)
+
+Since [0089](../docs/decisions/0089-full-width-radar-revision.md) (M8) the
+device draws the full-width radar: left pills, octagon and below-horizon
+markers, pulsing selected ring, shaded coastline (12,000 B raster) and scale
+ruler; the period cache is gone. Accepted on the panel 2026-11-22 with dev
+image `0.1.15-m8b` (`target/m8b-8h.elf`, OVERHEAD_BUILD=15, beta, 8 h;
+`OTA boot … state=Valid`, first frame, no panic in `target/m8/flash2.log`).
+Frame time and heap are measured with M8's trails/orbit item.
 
 `--features device` builds `overhead-s3-device` (`src/device_main.rs`), the
 Overhead device app under [0076](../docs/decisions/0076-device-app-build.md):

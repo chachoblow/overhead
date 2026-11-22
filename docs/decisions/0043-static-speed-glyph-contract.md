@@ -150,3 +150,7 @@ No runtime change or new Cargo check/test run accompanied that confirmation.
 No interactive or physical-device validation was performed, and retained contract
 PNGs were not replaced with executable output. This acceptance does not authorize
 category, period or animation.
+
+## Note — 2026-11-22: [0089](0089-full-width-radar-revision.md)
+
+0089 retires the speed glyph; speed is the `SPD` pill.

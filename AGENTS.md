@@ -29,7 +29,7 @@ progress reports. Handoffs normally happen when a work item completes.
 - `app/` → `overhead-app`: no_std + alloc, clockless radar state, fixed-camera
   perspective projection, lens zoom and basic identification; no I/O or scheduling.
 - `render/` → `overhead-render`: no_std, embedded-graphics `BinaryColor`;
-  400×240 radar/readouts consuming shared app state.
+  400×240 radar/readouts consuming shared app state (wide view: `wide.rs`, 0089).
 - `sim/` → `overhead-sim`: real-data SDL2 replay, 400×240 at 2×, LcdWhite theme;
   explicit inputs and headless PNG snapshots. Usage in sim/README.md.
 - `tools/` → `overhead-tools`: headless tracking/catalogue tools, offline fixture generators,
@@ -62,7 +62,8 @@ progress reports. Handoffs normally happen when a work item completes.
   The user's board is plugged into the Mac: from devbox, flash and capture with
   `firmware/mac.sh` ([usage and limits](firmware/README.md#board-on-the-mac-macsh)).
   Commands in docs that name a macOS port are historical; substitute the verified port.
-- Firmware host tests (from repo root): `cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked`
+- Firmware host tests (from repo root): `cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked`;
+  add `--features device` for the device app's tests (most of them are feature-gated).
 
 Frozen M2 evidence gates require the pinned source revision, not the evolving
 workspace lockfile: follow docs/evaluations/s3-m2/README.md. Current simulator

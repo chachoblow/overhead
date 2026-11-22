@@ -174,3 +174,7 @@ This is separate from approval of the illustrative appearance and numeric scale.
 No runtime change or new Cargo check/test run accompanied that confirmation.
 Retained illustrations are not replaced by executable output. No interactive,
 physical-display, firmware or target-performance validation was performed.
+
+## Note — 2026-11-22: [0089](0089-full-width-radar-revision.md)
+
+0089 retires the period glyph and its cache; period is the `PER` pill.

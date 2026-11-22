@@ -49,3 +49,7 @@ rejected as strip space for no gain; inferring categories from names (e.g.
   visibility icon, computed independently from engine positions.
 - Shadow-edge timing can be off by seconds; twilight between −6° and darker
   is shown as dark sky.
+
+## Note — 2026-11-22: [0089](0089-full-width-radar-revision.md)
+
+0089 shows visibility as a pill word (`VISIBLE`, `SHADOW`, `DAYLIGHT`) under these rules instead of the pictogram.

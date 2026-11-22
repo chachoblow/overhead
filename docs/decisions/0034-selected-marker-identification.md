@@ -47,3 +47,7 @@ collision handling; implementation is not a claim of user visual approval.
 ## Follow-up — 2026-10-24
 
 [0061](0061-filled-arrows-id-backing-none-in-view.md): the ID now has a 1px white backing, at the user's choice.
+
+## Note — 2026-11-22: [0089](0089-full-width-radar-revision.md)
+
+0089 retires the marker-adjacent ID in the wide view; the NORAD ID and name are in the pills.

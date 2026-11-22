@@ -421,10 +421,12 @@ concern, and a recurrence on any board blocks gift readiness.
 The radar lab's Favourite C, as tweaked on the panel, replaces the wide view
 ([0089](decisions/0089-full-width-radar-revision.md)). Taken on before M7's
 remaining gift readiness (user, 2026-11-22); release 16 carries it with 0088.
-- [ ] **Full-width frame:** 400 px radar, left pills, octagon markers and
+- [x] **Full-width frame:** 400 px radar, left pills, octagon markers and
   below-horizon diamonds with halos, selected ring, sphere-shaded coastline,
   scale ruler, haloed arrows; the strip, glyph and ID-label code retired;
-  host tests and simulator snapshots; accepted on the panel.
+  host tests and simulator snapshots; accepted on the panel. Done 2026-11-22:
+  the user accepted dev image `0.1.15-m8b` on the panel after one tweak (the
+  pulse restarts with each new selection).
 - [ ] **Trails and selected orbit:** past-line trails and the selected orbit
   as presentation state outside the renderer, in the simulator and on the
   device, with frame time, heap and input latency measured on the S3;

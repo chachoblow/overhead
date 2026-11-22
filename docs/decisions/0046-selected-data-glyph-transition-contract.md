@@ -114,3 +114,7 @@ is claimed.
 Out of scope: category animation, marker slowdown or motion smoothing, a new
 selection policy, normal/debug access, prediction, fetching, scheduling,
 production limits, firmware, toolchain, frozen-M2 evidence or new dependencies.
+
+## Note — 2026-11-22: [0089](0089-full-width-radar-revision.md)
+
+0089 retires the glyph transitions (`presentation` module) with the strip.

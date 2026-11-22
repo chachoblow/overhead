@@ -36,3 +36,7 @@ search results are ready for device scheduling.
   Coastline source, mapping, raster rules and implementation have not been
   approved. This record does not close all secondary-information or empty-sky
   refinement, nor does it select production population/cadence.
+
+## Note — 2026-11-22: [0089](0089-full-width-radar-revision.md)
+
+0089 shows range in the `RNG` pill (user, 2026-11-22); display prediction stays deferred.

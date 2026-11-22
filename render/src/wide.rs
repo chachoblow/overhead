@@ -505,6 +505,39 @@ pub(crate) fn shade_levels(fov_deg: f64, radius_px: f64) -> [u8; SHADE_STEPS] {
     })
 }
 
+/// Drops On pixels the shading removes; Off pixels pass. Measurement only:
+/// production applies the shading to the cached coast raster instead.
+#[cfg(feature = "representation-measurement")]
+pub(crate) struct Shaded<'a, D> {
+    pub(crate) d: &'a mut D,
+    pub(crate) levels: [u8; SHADE_STEPS],
+    pub(crate) center: Point,
+}
+
+#[cfg(feature = "representation-measurement")]
+impl<D: DrawTarget<Color = BinaryColor>> Dimensions for Shaded<'_, D> {
+    fn bounding_box(&self) -> Rectangle {
+        self.d.bounding_box()
+    }
+}
+
+#[cfg(feature = "representation-measurement")]
+impl<D: DrawTarget<Color = BinaryColor>> DrawTarget for Shaded<'_, D> {
+    type Color = BinaryColor;
+    type Error = D::Error;
+    fn draw_iter<I: IntoIterator<Item = Pixel<BinaryColor>>>(
+        &mut self,
+        pixels: I,
+    ) -> Result<(), D::Error> {
+        let (levels, center) = (&self.levels, self.center);
+        self.d.draw_iter(
+            pixels
+                .into_iter()
+                .filter(|Pixel(p, c)| *c == BinaryColor::Off || shade_keeps(levels, center, *p)),
+        )
+    }
+}
+
 /// 8×8 ordered-dither thresholds 0..64.
 const BAYER8: [[u8; 8]; 8] = {
     let mut m = [[0u8; 8]; 8];

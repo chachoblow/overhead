@@ -161,3 +161,7 @@ in the simulator's
 [static elevation](../../sim/README.md#static-elevation-glyph) and
 [notice review](../../sim/README.md#notice-overlay-review) recipes. No interactive,
 physical-display or target-performance validation was performed.
+
+## Note — 2026-11-22: [0089](0089-full-width-radar-revision.md)
+
+0089 retires the elevation glyph; elevation is the `EL` pill.

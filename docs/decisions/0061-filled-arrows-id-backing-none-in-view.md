@@ -42,3 +42,7 @@ cross or a coincident marker no longer cross it. Unselected markers keep their
 unbacked 5px `+` (the user reviewed square, diamond and halo alternatives and
 kept the current markers). Square/circular diagnostics are unchanged. Other
 selected-marker behavior (0035, 0040, 0049) is unchanged.
+
+## Note — 2026-11-22: [0089](0089-full-width-radar-revision.md)
+
+0089 replaces the unselected and selected markers (octagons with cleared halos, pulsing ring) and drops the ID backing; filled arrows stay, now with a cleared halo, and `NONE IN VIEW` is unchanged.

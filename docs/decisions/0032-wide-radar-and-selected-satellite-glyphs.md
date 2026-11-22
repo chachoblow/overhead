@@ -84,3 +84,7 @@ other encodings. Preserve breathing room rather than adding data to fill space.
   Upcoming-pass lists are not desired. A selected-pass start/end/peak graphic
   remains deferred; existing forward pass search does not supply a peak/profile
   or recover the earlier start of an already-in-progress pass.
+
+## Note — 2026-11-22: [0089](0089-full-width-radar-revision.md)
+
+0089 replaces this wide layout (352×240 radar plus glyph strip) with a full-width radar and left pills; counts now show in the pills when nothing is selected.
