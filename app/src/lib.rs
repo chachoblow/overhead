@@ -427,6 +427,11 @@ impl RadarApp {
     pub fn earth_limb(&self) -> EarthLimb {
         self.camera.earth_limb(self.view)
     }
+    /// Fixed camera, for renderers that project extra points (radar-lab
+    /// board test: orbit line, trails, behind-Earth test).
+    pub fn camera(&self) -> &Camera {
+        &self.camera
+    }
     pub fn selected_id(&self) -> Option<u64> {
         self.selected
     }

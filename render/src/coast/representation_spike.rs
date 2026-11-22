@@ -223,8 +223,12 @@ fn clip_fast(a: [f32; 2], b: [f32; 2]) -> Option<([f32; 2], [f32; 2])> {
     ))
 }
 
+// Radar-lab board test: the full-width radar needs a 400 px raster.
+const HALF_W: f32 = if cfg!(feature = "fav-c") { 197.0 } else { 173.0 };
+const CENTER_X: i32 = if cfg!(feature = "fav-c") { 200 } else { 176 };
+
 fn flat(p: [[f32; 2]; 3]) -> bool {
-    let scale = [173.0, 117.0];
+    let scale = [HALF_W, 117.0];
     let delta: [f32; 2] = core::array::from_fn(|i| (p[2][i] - p[0][i]) * scale[i]);
     let control: [f32; 2] = core::array::from_fn(|i| (p[1][i] - p[0][i]) * scale[i]);
     let length2 = delta[0] * delta[0] + delta[1] * delta[1];
@@ -283,7 +287,7 @@ fn flatten<D: DrawTarget<Color = BinaryColor>>(
                 let pixel = |p: [f32; 2]| {
                     let round = |x: f32| (x + if x < 0.0 { -0.5 } else { 0.5 }) as i32;
                     Point::new(
-                        176 + round(p[0].clamp(-1.0, 1.0) * 173.0),
+                        CENTER_X + round(p[0].clamp(-1.0, 1.0) * HALF_W),
                         120 - round(p[1].clamp(-1.0, 1.0) * 117.0),
                     )
                 };

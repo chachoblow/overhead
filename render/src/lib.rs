@@ -21,6 +21,8 @@ use overhead_core::sgp4::chrono::Timelike;
 
 mod coast;
 pub mod debug;
+#[cfg(feature = "fav-c")]
+mod fav_c;
 mod glyphs;
 #[cfg(feature = "measurement")]
 pub mod measurement;
@@ -54,7 +56,8 @@ impl Layout {
     /// Opt-in 352x240 radar, five labelled selected fields and explicit notices.
     pub fn wide() -> Self {
         Self {
-            radar_width: 352,
+            // Radar-lab board test: Favourite C is a full-width radar.
+            radar_width: if cfg!(feature = "fav-c") { 400 } else { 352 },
             radar_height: 240,
         }
     }
@@ -258,6 +261,15 @@ fn draw_frame_cached<D: DrawTarget<Color = BinaryColor>>(
     coast: Option<&mut CoastLayer>,
     period_cache: Option<&mut PeriodCache>,
 ) -> Result<(), D::Error> {
+    #[cfg(feature = "fav-c")]
+    if app.view().viewport() == Viewport::Rectangle {
+        let mut scratch = fav_c::FavState::new();
+        let state = match period_cache {
+            Some(cache) => &mut cache.fav,
+            None => &mut scratch,
+        };
+        return fav_c::draw(display, app, layout, ingestion_warning, coast, state);
+    }
     draw_frame_with_coast_cached(
         display,
         app,

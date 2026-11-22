@@ -22,7 +22,7 @@ pub(crate) static ASSET: &[u8] =
 /// Packed pieces in the pinned asset; a different count is rejected.
 pub(crate) const PIECES: usize = 2031;
 const WORDS: usize = PIECES.div_ceil(32);
-const MASK_WIDTH: usize = 352;
+const MASK_WIDTH: usize = if cfg!(feature = "fav-c") { 400 } else { 352 };
 const MASK_HEIGHT: usize = 240;
 const MASK_BYTES: usize = MASK_WIDTH * MASK_HEIGHT / 8;
 

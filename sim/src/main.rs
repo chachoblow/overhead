@@ -51,7 +51,37 @@ fn run(config: Config) -> Result<(), String> {
     let coast = prepare_coast(&app, wide);
     let mut presentation =
         InteractivePresentation::new(config.view.viewport(), config.debug, coast);
-    if config.snapshot.is_some() {
+    if config.snapshot.is_some() && cfg!(feature = "fav-c") && wide {
+        // Radar-lab board test: replay the 4 minutes before the snapshot at
+        // 1 s steps (staggered, like the device) so trails and the selected
+        // orbit are filled, then draw the start UTC itself.
+        let mut cache = overhead_render::PeriodCache::new();
+        for back in (1..=240).rev() {
+            let t = config.start - overhead_core::sgp4::chrono::TimeDelta::seconds(back);
+            app.update_staggered(t, overhead_core::sgp4::chrono::TimeDelta::seconds(1))
+                .map_err(|e| e.to_string())?;
+            overhead_render::draw_cached(
+                &mut display,
+                &app,
+                config.layout,
+                ingestion_warning,
+                &mut presentation.coast,
+                &mut cache,
+            )
+            .map_err(|e| e.to_string())?;
+        }
+        app.update_staggered(config.start, overhead_core::sgp4::chrono::TimeDelta::seconds(1))
+            .map_err(|e| e.to_string())?;
+        overhead_render::draw_cached(
+            &mut display,
+            &app,
+            config.layout,
+            ingestion_warning,
+            &mut presentation.coast,
+            &mut cache,
+        )
+        .map_err(|e| e.to_string())?;
+    } else if config.snapshot.is_some() {
         overhead_render::draw(
             &mut display,
             &app,

@@ -66,6 +66,9 @@ pub struct PeriodCache {
     raster: Option<(u64, [u32; 23])>,
     #[cfg(test)]
     misses: usize,
+    /// Radar-lab board test state (orbit, trails, shading table).
+    #[cfg(feature = "fav-c")]
+    pub(crate) fav: crate::fav_c::FavState,
 }
 
 impl PeriodCache {
@@ -74,6 +77,8 @@ impl PeriodCache {
             raster: None,
             #[cfg(test)]
             misses: 0,
+            #[cfg(feature = "fav-c")]
+            fav: crate::fav_c::FavState::new(),
         }
     }
 

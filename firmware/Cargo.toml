@@ -79,6 +79,8 @@ setup-test = ["live-fetch-radar"]
 live-fetch-faults = ["live-fetch-radar"]
 # 0076: the device application. Same runtime as live-fetch-radar, event log only.
 device = ["live-fetch-radar"]
+# Throwaway board test of the radar lab's Favourite C (not for releases).
+fav-c = ["overhead-render/fav-c"]
 # Isolated rotary-encoder wiring check (PCNT on IO4/IO5, switch IO6); UART only.
 knob-test = ["esp-hal/unstable"]
 # Separately named pinned-OMM visibility diagnostic; original source path retained.

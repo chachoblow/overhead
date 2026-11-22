@@ -8,6 +8,8 @@ edition = "2024"
 measurement = []
 # Accepted host trial exposed only to the isolated target feasibility image.
 representation-measurement = ["measurement"]
+# Throwaway board test of the radar lab's Favourite C (branch radar-fav-c-board-test).
+fav-c = []
 
 [dependencies]
 embedded-graphics.workspace = true
