@@ -8,7 +8,7 @@ fetch runs under [0071](decisions/0071-https-element-fetch-first-slice.md),
 [0074](decisions/0074-live-utc-radar-on-fetched-elements.md) and
 [0075](decisions/0075-fetched-element-refresh-and-staleness.md); the device
 app build is [0076](decisions/0076-device-app-build.md). M7 giftable device
-(accepted 2026-11-08, [0083–0087](decisions/0083-flash-layout-for-updatable-devices.md)) is in progress: OTA, the BLE setup service and the iOS app done; gift readiness next.**
+(accepted 2026-11-08, [0083–0087](decisions/0083-flash-layout-for-updatable-devices.md)) is in progress: OTA, the BLE setup service and the iOS app done; gift readiness paused for M8 radar revision ([0089](decisions/0089-full-width-radar-revision.md)), current.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -416,6 +416,23 @@ isn't the user's tracks at its recipient's location and receives a signed
 `stable` release with no hands-on step, and the brick drill has passed on the
 user's board. M6's open items stay in M6; the 2026-11-06 `NO FRAME` remains a
 concern, and a recurrence on any board blocks gift readiness.
+
+## M8 — Radar revision
+The radar lab's Favourite C, as tweaked on the panel, replaces the wide view
+([0089](decisions/0089-full-width-radar-revision.md)). Taken on before M7's
+remaining gift readiness (user, 2026-11-22); release 16 carries it with 0088.
+- [ ] **Full-width frame:** 400 px radar, left pills, octagon markers and
+  below-horizon diamonds with halos, selected ring, sphere-shaded coastline,
+  scale ruler, haloed arrows; the strip, glyph and ID-label code retired;
+  host tests and simulator snapshots; accepted on the panel.
+- [ ] **Trails and selected orbit:** past-line trails and the selected orbit
+  as presentation state outside the renderer, in the simulator and on the
+  device, with frame time, heap and input latency measured on the S3;
+  accepted on the panel.
+
+**Done when:** the device app shows the revised radar, the user accepts it on
+the panel, its cost is measured within 0077/0088's limits, and release 16
+carries it.
 
 ## Boundaries
 Keep tuning inputs explicit; they need not be device settings. Defer uncertain

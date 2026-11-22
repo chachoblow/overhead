@@ -22,8 +22,7 @@ fn replay(mode: &str) -> (RadarApp, Layout) {
     let loaded = overhead_tools::catalogue::load(&config.manifest).unwrap();
     let mut app = RadarApp::new(loaded.catalogue, config.observer, config.view)
         .unwrap()
-        .with_group_categories(loaded.group_categories)
-        .with_label_zoom(config.label_zoom);
+        .with_group_categories(loaded.group_categories);
     app.update(config.start).unwrap();
     (app, config.layout)
 }
@@ -34,7 +33,6 @@ struct AppState {
     view: View,
     selected: Option<u64>,
     counts: Counts,
-    label_visible: bool,
     samples: Vec<(u64, Result<Sample, TrackingError>)>,
 }
 impl AppState {
@@ -44,7 +42,6 @@ impl AppState {
             view: app.view(),
             selected: app.selected_id(),
             counts: app.counts(),
-            label_visible: app.selected_label_visible(),
             samples: app
                 .objects()
                 .map(|(entry, sample)| (entry.elements().norad_id, sample.clone()))
@@ -68,18 +65,11 @@ fn frame(
     app: &RadarApp,
     layout: Layout,
     warning: bool,
-    ms: u64,
 ) -> Vec<BinaryColor> {
     let mut display = SimulatorDisplay::new(overhead_render::DISPLAY_SIZE);
     let state = AppState::new(app);
     presentation
-        .draw(
-            &mut display,
-            app,
-            layout,
-            warning,
-            Duration::from_millis(ms),
-        )
+        .draw(&mut display, app, layout, warning)
         .unwrap();
     assert_eq!(AppState::new(app), state);
     pixels(&display)
@@ -104,13 +94,13 @@ fn v_cycles_only_wide_presentation_without_mutating_app_or_repeating() {
             CoastLayer::prepare(app.observer()),
         );
         let expected = normal(&app, layout, true);
-        assert_eq!(frame(&mut presentation, &app, layout, true, 0), expected);
+        assert_eq!(frame(&mut presentation, &app, layout, true), expected);
         assert!(presentation.key(&mut app, Keycode::V, true));
         assert!(!presentation.debug);
         assert!(presentation.key(&mut app, Keycode::V, false));
         assert_eq!(presentation.debug, mode == "wide");
         assert_eq!(AppState::new(&app), state);
-        let shown = frame(&mut presentation, &app, layout, true, 50);
+        let shown = frame(&mut presentation, &app, layout, true);
         if mode == "wide" {
             assert_ne!(shown, expected);
             // Explicit debug start and toggled entry are the same current page.
@@ -119,7 +109,7 @@ fn v_cycles_only_wide_presentation_without_mutating_app_or_repeating() {
                 true,
                 CoastLayer::prepare(app.observer()),
             );
-            assert_eq!(frame(&mut startup, &app, layout, true, 0), shown);
+            assert_eq!(frame(&mut startup, &app, layout, true), shown);
         } else {
             assert_eq!(shown, expected);
         }
@@ -127,14 +117,14 @@ fn v_cycles_only_wide_presentation_without_mutating_app_or_repeating() {
         assert_eq!(presentation.debug, mode == "wide");
         presentation.key(&mut app, Keycode::V, false);
         assert!(!presentation.debug);
-        assert_eq!(frame(&mut presentation, &app, layout, true, 100), expected);
+        assert_eq!(frame(&mut presentation, &app, layout, true), expected);
         assert_eq!(AppState::new(&app), state);
         assert!(!presentation.key(&mut app, Keycode::Escape, false));
     }
 }
 
 #[test]
-fn debug_keeps_tab_zoom_and_replay_live_then_returns_static_without_queued_motion() {
+fn debug_keeps_tab_zoom_and_replay_live_then_returns_to_the_current_frame() {
     let (mut app, layout) = replay("wide");
     let mut presentation = InteractivePresentation::new(
         app.view().viewport(),
@@ -142,11 +132,8 @@ fn debug_keeps_tab_zoom_and_replay_live_then_returns_static_without_queued_motio
         CoastLayer::prepare(app.observer()),
     );
     let start = app.time().unwrap();
-    frame(&mut presentation, &app, layout, false, 0);
+    frame(&mut presentation, &app, layout, false);
     presentation.key(&mut app, Keycode::Tab, false);
-    // Enter debug during a real transition, rather than just from a static page.
-    let moving = frame(&mut presentation, &app, layout, false, 10);
-    assert_ne!(moving, normal(&app, layout, false));
     presentation.key(&mut app, Keycode::V, false);
     let old_id = app.selected_id();
     presentation.key(&mut app, Keycode::Tab, true);
@@ -160,12 +147,11 @@ fn debug_keeps_tab_zoom_and_replay_live_then_returns_static_without_queued_motio
     assert!((app.view().fov_deg() - original_fov).abs() < 1e-12);
     app.zoom(wheel_steps(2, MouseWheelDirection::Normal)); // Same mouse path as loop.
     assert!(app.view().fov_deg() < original_fov);
-    let old_debug = frame(&mut presentation, &app, layout, true, 50);
-    // Independent replay/presentation clocks deliberately advance by different
-    // amounts; debug must use current physical UTC, not animation time.
+    let old_debug = frame(&mut presentation, &app, layout, true);
+    // Debug uses the current physical UTC.
     app.update(replay_time(start, Duration::from_secs(30)).unwrap())
         .unwrap();
-    let current_debug = frame(&mut presentation, &app, layout, true, 100);
+    let current_debug = frame(&mut presentation, &app, layout, true);
     assert_ne!(old_debug, current_debug);
     let mut direct = SimulatorDisplay::new(overhead_render::DISPLAY_SIZE);
     overhead_render::debug::draw(&mut direct, &app, true).unwrap();
@@ -173,19 +159,9 @@ fn debug_keeps_tab_zoom_and_replay_live_then_returns_static_without_queued_motio
     let state = AppState::new(&app);
     presentation.key(&mut app, Keycode::V, false);
     assert_eq!(AppState::new(&app), state);
-    let returned = frame(&mut presentation, &app, layout, true, 110);
+    let returned = frame(&mut presentation, &app, layout, true);
     assert_eq!(returned, normal(&app, layout, true));
-    assert_eq!(frame(&mut presentation, &app, layout, true, 120), returned);
-    // New normal-view selections still animate; only hidden history was reset.
-    presentation.key(&mut app, Keycode::Tab, false);
-    assert_ne!(
-        frame(&mut presentation, &app, layout, true, 130),
-        normal(&app, layout, true)
-    );
-    assert_eq!(
-        frame(&mut presentation, &app, layout, true, 380),
-        normal(&app, layout, true)
-    );
+    assert_eq!(frame(&mut presentation, &app, layout, true), returned);
 }
 
 #[test]
@@ -244,11 +220,11 @@ fn failure_counts_causes_and_normal_notices_survive_debug_round_trips() {
             false,
             CoastLayer::prepare(app.observer()),
         );
-        assert_eq!(frame(&mut presentation, &app, layout, true, 0), expected);
+        assert_eq!(frame(&mut presentation, &app, layout, true), expected);
         presentation.key(&mut app, Keycode::V, false);
-        assert_ne!(frame(&mut presentation, &app, layout, true, 50), expected);
+        assert_ne!(frame(&mut presentation, &app, layout, true), expected);
         presentation.key(&mut app, Keycode::V, false);
-        assert_eq!(frame(&mut presentation, &app, layout, true, 100), expected);
+        assert_eq!(frame(&mut presentation, &app, layout, true), expected);
         assert_eq!(AppState::new(&app), state);
     }
 }
@@ -262,28 +238,28 @@ fn debug_empty_and_invalid_frames_recover_without_stale_normal_notices_or_fields
         true,
         CoastLayer::prepare(app.observer()),
     );
-    let selected = frame(&mut presentation, &app, layout, false, 0);
+    let selected = frame(&mut presentation, &app, layout, false);
     for _ in 0..64 {
         presentation.key(&mut app, Keycode::Up, false);
     }
     assert_eq!(app.counts().visible, 0);
     assert!(app.counts().above_horizon > 0);
     assert!(app.selected_id().is_some()); // Still tracked above the horizon.
-    let empty = frame(&mut presentation, &app, layout, true, 10);
+    let empty = frame(&mut presentation, &app, layout, true);
     assert_ne!(selected, empty);
     presentation.key(&mut app, Keycode::V, false);
     assert_eq!(
-        frame(&mut presentation, &app, layout, true, 20),
+        frame(&mut presentation, &app, layout, true),
         normal(&app, layout, true)
     );
     presentation.key(&mut app, Keycode::V, false);
     // NO FRAME is a renderer/app control, not a persistent host-clock screen.
     assert!(app.update(start.with_year(2101).unwrap()).is_err());
-    let invalid = frame(&mut presentation, &app, layout, true, 30);
+    let invalid = frame(&mut presentation, &app, layout, true);
     assert_ne!(empty, invalid);
     presentation.key(&mut app, Keycode::V, false);
     assert_eq!(
-        frame(&mut presentation, &app, layout, true, 40),
+        frame(&mut presentation, &app, layout, true),
         normal(&app, layout, true)
     );
     presentation.key(&mut app, Keycode::V, false);
@@ -292,18 +268,18 @@ fn debug_empty_and_invalid_frames_recover_without_stale_normal_notices_or_fields
         presentation.key(&mut app, Keycode::Down, false);
     }
     assert!(app.selected_id().is_some());
-    frame(&mut presentation, &app, layout, false, 50);
+    frame(&mut presentation, &app, layout, false);
     presentation.key(&mut app, Keycode::V, false);
     assert_eq!(
-        frame(&mut presentation, &app, layout, false, 60),
+        frame(&mut presentation, &app, layout, false),
         normal(&app, layout, false)
     );
-    // Even two toggles in a single event batch discard, rather than queue motion.
+    // Two toggles in a single event batch return to the current normal frame.
     presentation.key(&mut app, Keycode::V, false);
     presentation.key(&mut app, Keycode::Tab, false);
     presentation.key(&mut app, Keycode::V, false);
     assert_eq!(
-        frame(&mut presentation, &app, layout, false, 70),
+        frame(&mut presentation, &app, layout, false),
         normal(&app, layout, false)
     );
 }

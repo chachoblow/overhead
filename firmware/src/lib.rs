@@ -58,12 +58,8 @@ pub mod natural_audit;
 pub mod prepared_measurement;
 #[cfg(feature = "coast-representation")]
 pub mod representation_measurement;
-#[cfg(feature = "sharp-cache")]
-pub mod sharp_cache;
 #[cfg(feature = "sharp-lines")]
 pub mod sharp_lines;
-#[cfg(feature = "sharp-profile")]
-pub mod sharp_profile;
 #[cfg(feature = "sharp-test")]
 pub mod sharp_test;
 #[cfg(feature = "element-fetch")]

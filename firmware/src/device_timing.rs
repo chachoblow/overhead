@@ -675,15 +675,13 @@ mod tests {
         );
 
         let mut coast = overhead_render::CoastLayer::prepare(app.observer());
-        let mut period = overhead_render::PeriodCache::new();
         let mut screen = crate::coast_measurement::Screen::new();
-        overhead_render::draw_cached(
+        overhead_render::draw(
             &mut screen,
             &app,
             overhead_render::Layout::wide(),
             false,
             &mut coast,
-            &mut period,
         )
         .unwrap();
         let no_frame_pixels = screen.pixels;
@@ -713,13 +711,12 @@ mod tests {
         );
         app.update(epoch + overhead_core::sgp4::chrono::TimeDelta::seconds(10))
             .unwrap();
-        overhead_render::draw_cached(
+        overhead_render::draw(
             &mut screen,
             &app,
             overhead_render::Layout::wide(),
             false,
             &mut coast,
-            &mut period,
         )
         .unwrap();
         assert_ne!(screen.pixels, no_frame_pixels);
@@ -806,12 +803,11 @@ mod tests {
             coast_measurement::{Screen, app},
             sharp_lines::{Kind, LineSender},
         };
-        use overhead_render::{CoastLayer, Layout, PeriodCache, draw_cached};
+        use overhead_render::{CoastLayer, Layout};
 
         let mut app = app("iss-ground-20", 0.0, 0.0, 5.0);
         let epoch = app.time().unwrap();
         let mut coast = CoastLayer::prepare(app.observer());
-        let mut period = PeriodCache::new();
         let mut screen = Screen::new();
         let mut sender = LineSender::new();
         let mut lifecycle = TimeLossPreflight::new();
@@ -826,15 +822,7 @@ mod tests {
         assert_eq!(app.time(), None);
         assert_eq!(app.selected_id(), None);
         assert_eq!(app.objects().count(), 0);
-        draw_cached(
-            &mut screen,
-            &app,
-            Layout::wide(),
-            false,
-            &mut coast,
-            &mut period,
-        )
-        .unwrap();
+        overhead_render::draw(&mut screen, &app, Layout::wide(), false, &mut coast).unwrap();
         let cold_pixels = screen.pixels;
         let phase = lifecycle.next_phase();
         let sent = sender
@@ -862,15 +850,7 @@ mod tests {
             LifecycleAction::Scheduled(DiagnosticAction::Frame { full: false, .. })
         ));
         app.update(epoch).unwrap();
-        draw_cached(
-            &mut screen,
-            &app,
-            Layout::wide(),
-            false,
-            &mut coast,
-            &mut period,
-        )
-        .unwrap();
+        overhead_render::draw(&mut screen, &app, Layout::wide(), false, &mut coast).unwrap();
         assert_ne!(screen.pixels, cold_pixels);
         let phase = lifecycle.next_phase();
         let sent = sender
@@ -888,15 +868,7 @@ mod tests {
             lifecycle.next(&mut app, 8_640_000, true),
             LifecycleAction::RenderNoFrame
         );
-        draw_cached(
-            &mut screen,
-            &app,
-            Layout::wide(),
-            false,
-            &mut coast,
-            &mut period,
-        )
-        .unwrap();
+        overhead_render::draw(&mut screen, &app, Layout::wide(), false, &mut coast).unwrap();
         assert_eq!(screen.pixels, cold_pixels);
         let phase = lifecycle.next_phase();
         let mut writes = 0;
@@ -919,15 +891,7 @@ mod tests {
             LifecycleAction::RenderNoFrame
         );
         assert_eq!(app.time(), None);
-        draw_cached(
-            &mut screen,
-            &app,
-            Layout::wide(),
-            false,
-            &mut coast,
-            &mut period,
-        )
-        .unwrap();
+        overhead_render::draw(&mut screen, &app, Layout::wide(), false, &mut coast).unwrap();
         assert_eq!(screen.pixels, cold_pixels);
         let sent = sender
             .send(phase, &screen.pixels, true, |_| Ok::<_, ()>(()))
@@ -980,15 +944,7 @@ mod tests {
         app.update(epoch + overhead_core::sgp4::chrono::TimeDelta::seconds(17))
             .unwrap();
         assert!(app.selected().is_some());
-        draw_cached(
-            &mut screen,
-            &app,
-            Layout::wide(),
-            false,
-            &mut coast,
-            &mut period,
-        )
-        .unwrap();
+        overhead_render::draw(&mut screen, &app, Layout::wide(), false, &mut coast).unwrap();
         assert_ne!(screen.pixels, cold_pixels);
     }
 

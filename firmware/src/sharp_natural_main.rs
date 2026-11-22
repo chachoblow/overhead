@@ -14,7 +14,7 @@ use esp_hal::{
 };
 use esp_println::println;
 use overhead_core::sgp4::chrono::TimeDelta;
-use overhead_render::{CoastLayer, Layout, PeriodCache};
+use overhead_render::{CoastLayer, Layout};
 #[cfg(feature = "sharp-natural-audit")]
 use overhead_s3_benchmark::natural_audit::NaturalAudit;
 use overhead_s3_benchmark::{
@@ -28,7 +28,6 @@ esp_bootloader_esp_idf::esp_app_desc!();
 static mut SCREEN: Screen = Screen::new();
 static mut SENDER: LineSender = LineSender::new();
 static mut LAYER: MaybeUninit<CoastLayer> = MaybeUninit::uninit();
-static mut PERIOD: PeriodCache = PeriodCache::new();
 const HEAP_BYTES: usize = 64 * 1024;
 #[repr(C, align(16))]
 struct HeapStorage(MaybeUninit<[u8; HEAP_BYTES]>);
@@ -69,7 +68,6 @@ fn main() -> ! {
     let epoch_us = epoch.and_utc().timestamp_micros();
     let screen = unsafe { &mut *(&raw mut SCREEN) };
     let sender = unsafe { &mut *(&raw mut SENDER) };
-    let period = unsafe { &mut *(&raw mut PERIOD) };
     let coast = unsafe { (*(&raw mut LAYER)).write(CoastLayer::new()) };
     coast.prepare_for(app.observer());
     assert!(coast.error().is_none(), "coast preparation failed");
@@ -107,7 +105,7 @@ fn main() -> ! {
                     .expect("historical fixture sample");
                 let update_done_us = start.elapsed().as_micros();
                 screen.reset_counts();
-                overhead_render::draw_cached(screen, &app, Layout::wide(), false, coast, period)
+                overhead_render::draw(screen, &app, Layout::wide(), false, coast)
                     .expect("fixture render");
                 let render_done_us = start.elapsed().as_micros();
                 let phase = schedule.next_phase();

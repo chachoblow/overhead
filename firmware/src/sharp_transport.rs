@@ -125,11 +125,10 @@ fn partial_lines_preserve_pixels_and_vcom_on_empty_and_changed_rows() {
 #[test]
 fn fixture_replay_transport_budget_and_panel_parity() {
     use overhead_core::sgp4::chrono::TimeDelta;
-    use overhead_render::{CoastLayer, Layout, PeriodCache};
+    use overhead_render::{CoastLayer, Layout};
     let mut app = crate::coast_measurement::app("iss-ground-20", 0.0, 0.0, 5.0);
     let epoch = app.time().unwrap();
     let mut coast = CoastLayer::prepare(app.observer());
-    let mut cache = PeriodCache::new();
     let mut screen = crate::coast_measurement::Screen::new();
     let mut previous = [0_u8; FRAME_BYTES]; // white after the Sharp clear command
     let mut partial_panel = previous;
@@ -138,15 +137,7 @@ fn fixture_replay_transport_budget_and_panel_parity() {
     for tick in 0..21_u32 {
         let second = crate::sharp_test::replay_second(tick);
         app.update(epoch + TimeDelta::seconds(second)).unwrap();
-        overhead_render::draw_cached(
-            &mut screen,
-            &app,
-            Layout::wide(),
-            false,
-            &mut coast,
-            &mut cache,
-        )
-        .unwrap();
+        overhead_render::draw(&mut screen, &app, Layout::wide(), false, &mut coast).unwrap();
         let vcom = tick % 2 != 0;
         let all = full(vcom, &screen.pixels);
         assert_eq!(apply(&all, &mut full_panel, vcom), HEIGHT);

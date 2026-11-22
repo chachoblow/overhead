@@ -325,11 +325,11 @@ fn wide_snapshots_match_independent_geometry_at_multiple_times_and_zooms() {
                     let horizontal = look.range_km * look.elevation_rad.cos();
                     let azimuth = look.azimuth_rad.unwrap_or(0.0);
                     // Independent pixel focal length: same 117px vertical half-
-                    // extent as square, with the added horizontal area at 173px.
+                    // extent as square, with the full-width radar's 197px (0089).
                     let focal_length = 117.0 / (fov.to_radians() / 2.0).tan();
                     let x = horizontal * azimuth.sin() / depth * focal_length;
                     let y = horizontal * azimuth.cos() / depth * focal_length;
-                    if x.abs() <= 173.0 && y.abs() <= 117.0 {
+                    if x.abs() <= 197.0 && y.abs() <= 117.0 {
                         visible += 1;
                         // Snapshot selection is the first visible NORAD ID.
                         selected_elevation.get_or_insert(look.elevation_rad);
@@ -557,216 +557,80 @@ fn assert_snapshot_fields(
     visibility: Option<Visibility>,
 ) {
     use embedded_graphics::{
-        mono_font::{MonoTextStyle, ascii::FONT_6X10},
+        mono_font::{MonoTextStyle, iso_8859_1::FONT_6X10},
         pixelcolor::{BinaryColor, Rgb888},
         prelude::*,
-        text::Text,
+        text::{Baseline, Text},
     };
     use embedded_graphics_simulator::SimulatorDisplay;
     let image = SimulatorDisplay::<Rgb888>::load_png(scratch.0.join(path)).unwrap();
     let ink = Rgb888::new(32, 32, 32); // Existing LcdWhite theme, two states only.
     let paper = Rgb888::new(245, 245, 245);
+    let mut on = vec![[false; 400]; 240];
     for y in 0..240 {
         for x in 0..400 {
-            assert!([ink, paper].contains(&image.get_pixel(Point::new(x, y))));
+            let pixel = image.get_pixel(Point::new(x, y));
+            assert!([ink, paper].contains(&pixel));
+            on[y as usize][x as usize] = pixel == ink;
         }
     }
-    let mut reference = SimulatorDisplay::<BinaryColor>::new(Size::new(400, 240));
-    reference.clear(BinaryColor::Off).unwrap();
-    reference
-        .draw_iter((12..=227).map(|y| Pixel(Point::new(352, y), BinaryColor::On)))
-        .unwrap();
-    if let Some(visibility) = visibility {
-        Text::new(
-            "Vis",
-            Point::new(367, 17),
+    // 0089 pills: each expected value appears as ink-on-paper text in the
+    // left pill column, with its 6x10 cells exact (independent of pill layout).
+    let found = |text: &str| {
+        let mut glyphs = SimulatorDisplay::<BinaryColor>::new(Size::new(120, 10));
+        Text::with_baseline(
+            text,
+            Point::zero(),
             MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+            Baseline::Top,
         )
-        .draw(&mut reference)
+        .draw(&mut glyphs)
         .unwrap();
-        for y in 0..24 {
-            for x in 0..24 {
-                if visibility_reference_ink(visibility, x, y) {
-                    Pixel(Point::new(364 + x, 21 + y), BinaryColor::On)
-                        .draw(&mut reference)
-                        .unwrap();
-                }
-            }
-        }
-    }
-    if let Some(elevation) = elevation {
-        Text::new(
-            "Elev",
-            Point::new(364, 64),
-            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
-        )
-        .draw(&mut reference)
-        .unwrap();
-        // Physical elevation was calculated independently from the app above.
-        // This reference also avoids the renderer's octant table, integer
-        // angular clipping and Bresenham accumulator: classify a rounded-sqrt
-        // ring, choose its nearest polar angle, then round major-axis slopes.
-        let on_ring = |x: i32, y: i32| {
-            let minor = x.abs().min(y.abs());
-            let major = x.abs().max(y.abs());
-            minor <= 8 && major == f64::from(121 - minor * minor).sqrt().round() as i32
-        };
-        let (ex, ey) = (0..=11)
-            .flat_map(|x| (0..=11).map(move |y| (x, y)))
-            .filter(|&(x, y)| on_ring(x, y))
-            .min_by(|&(ax, ay), &(bx, by)| {
-                let a = f64::from(ay).atan2(f64::from(ax));
-                let b = f64::from(by).atan2(f64::from(bx));
-                (a - elevation)
-                    .abs()
-                    .total_cmp(&(b - elevation).abs())
-                    .then_with(|| a.total_cmp(&b))
+        let width = text.chars().count() as i32 * 6;
+        (0..170).any(|top| {
+            (0..140 - width).any(|left| {
+                (0..10).all(|y| {
+                    (0..width).all(|x| {
+                        on[(top + y) as usize][(left + x) as usize]
+                            == (glyphs.get_pixel(Point::new(x, y)) == BinaryColor::On)
+                    })
+                })
             })
-            .unwrap();
-        let angle = f64::from(ey).atan2(f64::from(ex));
-        for y in -11..=11 {
-            for x in -11..=11 {
-                let a = f64::from(y).atan2(f64::from(x));
-                let arc = on_ring(x, y) && !(a > 0.0 && a < angle);
-                let radial = ey > 0
-                    && ((y == 0 && (0..=11).contains(&x))
-                        || ((0..=ex).contains(&x)
-                            && (0..=ey).contains(&y)
-                            && if ex >= ey {
-                                y == (2 * x * ey + ex) / (2 * ex)
-                            } else {
-                                x == (2 * y * ex + ey) / (2 * ey)
-                            }));
-                if arc || radial {
-                    Pixel(Point::new(376 + x, 80 - y), BinaryColor::On)
-                        .draw(&mut reference)
-                        .unwrap();
-                }
-            }
-        }
+        })
+    };
+    let mut expected = Vec::new();
+    if let Some(elevation) = elevation {
+        expected.push(format!("{:>3}°", elevation.to_degrees().round() as i64));
     }
     if let Some(altitude) = altitude {
-        Text::new(
-            "Alt",
-            Point::new(367, 111),
-            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
-        )
-        .draw(&mut reference)
-        .unwrap();
-        // Independent inverse thresholds and rounded-sqrt classification,
-        // not the production log mapping or integer octant traversal.
-        let radius = (2..=8).fold(9, |radius, lower| {
-            let boundary = 400.0 * (101_f64.powf((8.5 - lower as f64) / 7.0) - 1.0);
-            if altitude > boundary {
-                radius.min(lower)
-            } else {
-                radius
-            }
-        });
-        for y in -11_i32..=11 {
-            for x in -11_i32..=11 {
-                let minor = x.abs().min(y.abs());
-                let major = x.abs().max(y.abs());
-                if [radius, 11].into_iter().any(|r| {
-                    minor <= r && major == f64::from(r * r - minor * minor).sqrt().round() as i32
-                }) {
-                    Pixel(Point::new(376 + x, 127 + y), BinaryColor::On)
-                        .draw(&mut reference)
-                        .unwrap();
-                }
-            }
-        }
+        expected.push(format!("{}km", altitude.round() as i64));
     }
     if let Some(speed) = speed {
-        Text::new(
-            "Spd",
-            Point::new(367, 158),
-            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
-        )
-        .draw(&mut reference)
-        .unwrap();
-        // Independent ring classification / nearest-angle choice, without the
-        // production octant traversal or km/s midpoint comparisons. Input is
-        // independently propagated TEME speed, not app state or screen motion.
-        let mut ring: Vec<_> = (-11_i32..=11)
-            .flat_map(|y| (-11_i32..=11).map(move |x| (x, y)))
-            .filter(|&(x, y)| {
-                let minor = x.abs().min(y.abs());
-                let major = x.abs().max(y.abs());
-                major == f64::from(121 - minor * minor).sqrt().round() as i32
-            })
-            .map(|(x, y)| {
-                (
-                    (x as f64)
-                        .atan2(-f64::from(y))
-                        .rem_euclid(std::f64::consts::TAU),
-                    x,
-                    y,
-                )
-            })
-            .collect();
-        ring.sort_by(|a, b| a.0.total_cmp(&b.0));
-        if speed > 0.0 {
-            let sweep = speed.clamp(0.0, 12.0) / 12.0 * std::f64::consts::TAU;
-            let endpoint = ring
-                .iter()
-                .min_by(|a, b| {
-                    (a.0 - sweep)
-                        .abs()
-                        .total_cmp(&(b.0 - sweep).abs())
-                        .then_with(|| a.0.total_cmp(&b.0))
-                })
-                .unwrap()
-                .0;
-            for (angle, x, y) in ring {
-                if angle <= endpoint {
-                    Pixel(Point::new(376 + x, 174 + y), BinaryColor::On)
-                        .draw(&mut reference)
-                        .unwrap();
-                }
-            }
-        }
+        expected.push(format!("{speed:.1}km/s"));
     }
     if let Some(period) = period {
-        Text::new(
-            "Per",
-            Point::new(367, 205),
-            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
-        )
-        .draw(&mut reference)
-        .unwrap();
-        // Element-derived input, independent of app state. Host math and
-        // absolute screen points rather than production libm/row bitsets.
-        let turns = 2.5 - 1.5 * (period.clamp(90.0, 1440.0) / 90.0).ln() / 16_f64.ln();
-        for step in 0..=4096 {
-            let u = step as f64 / 4096.0;
-            let r = 1.5 + 7.5 * u;
-            let a = -std::f64::consts::FRAC_PI_2 + std::f64::consts::TAU * turns * (u - 1.0);
-            Pixel(
-                Point::new(
-                    (376.0 + r * a.cos()).round() as i32,
-                    (220.0 + r * a.sin()).round() as i32,
-                ),
-                BinaryColor::On,
-            )
-            .draw(&mut reference)
-            .unwrap();
-        }
+        expected.push(if period < 1000.0 {
+            format!("{}m", period.round() as i64)
+        } else {
+            format!("{:.0}h", period / 60.0)
+        });
     }
-    for y in 0..240 {
-        for x in 352..400 {
-            let point = Point::new(x, y);
-            let expected = if reference.get_pixel(point) == BinaryColor::On {
-                ink
-            } else {
-                paper
-            };
-            assert_eq!(
-                image.get_pixel(point),
-                expected,
-                "strip pixel {point:?}, elevation={elevation:?}, altitude={altitude:?}, speed={speed:?}, period={period:?}"
-            );
-        }
+    if let Some(visibility) = visibility {
+        expected.push(
+            match visibility {
+                Visibility::Visible => "VISIBLE",
+                Visibility::Eclipsed => "SHADOW",
+                Visibility::Daylight => "DAYLIGHT",
+            }
+            .into(),
+        );
+    }
+    for text in &expected {
+        assert!(found(text), "pill {text:?} not found in {path}");
+    }
+    if elevation.is_none() {
+        // No selection: no field pills (the counts pills or nothing).
+        assert!(!found(" EL") && !found("ALT"));
     }
 }
 
@@ -795,37 +659,6 @@ fn expected_visibility(
         Visibility::Eclipsed
     } else {
         Visibility::Visible
-    }
-}
-
-// Review glyphs expressed as local geometry, independent of packed renderer masks.
-fn visibility_reference_ink(visibility: Visibility, x: i32, y: i32) -> bool {
-    let distance = f64::from(x - 12).hypot(f64::from(y - 12));
-    match visibility {
-        Visibility::Visible => {
-            let lid = |x: i32| (7.0 * (1.0 - (f64::from(x - 12) / 11.0).powi(2))).round() as i32;
-            if distance <= 3.5 {
-                return true;
-            }
-            if !(1..=23).contains(&x) {
-                return false;
-            }
-            let h = lid(x);
-            let low = if x == 1 || x == 23 {
-                0
-            } else {
-                lid(x - 1).min(lid(x + 1))
-            };
-            let dy = (y - 12).abs();
-            dy == h || (low + 1..=h).contains(&dy)
-        }
-        Visibility::Eclipsed => distance <= 10.5,
-        Visibility::Daylight => {
-            let (dx, dy) = (x - 12, y - 12);
-            (4.5..5.5).contains(&distance)
-                || ((dx == 0 || dy == 0) && (8..=11).contains(&(dx.abs() + dy.abs())))
-                || (dx.abs() == dy.abs() && (6..=7).contains(&dx.abs()))
-        }
     }
 }
 
@@ -870,95 +703,6 @@ fn assert_snapshot_notices(scratch: &Scratch, path: &str, lines: &[&str]) {
             };
             assert_eq!(image.get_pixel(point), expected, "notice pixel {point:?}");
         }
-    }
-    // Below the period slot there is no ink. Selected fields are checked
-    // separately, including alongside warnings.
-    for y in 233..240 {
-        for x in 352..400 {
-            let expected = if x == 352 && y <= 227 {
-                Rgb888::new(32, 32, 32)
-            } else {
-                Rgb888::new(245, 245, 245)
-            };
-            assert_eq!(image.get_pixel(Point::new(x, y)), expected);
-        }
-    }
-}
-
-#[test]
-fn wide_selected_label_uses_id_not_catalogue_name() {
-    // Real ISS orbit at its epoch, viewed from its subpoint. Only identity/name
-    // metadata varies; synthetic IDs are renderer checks, not new fixtures.
-    let scratch = Scratch::new();
-    let mut records: Value =
-        serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
-    let elements: Vec<overhead_core::OmmElements> =
-        serde_json::from_value(records.clone()).unwrap();
-    let satellite = overhead_core::Satellite::from_elements(elements[0].elements()).unwrap();
-    let time = satellite.epoch();
-    let observer =
-        overhead_core::ecef_to_geodetic(satellite.state_at(time).unwrap().to_ecef().unwrap())
-            .unwrap();
-    let utc = format!("{time}Z").replace(' ', "T");
-    let latitude = observer.latitude_rad.to_degrees().to_string();
-    let longitude = observer.longitude_rad.to_degrees().to_string();
-    let args = [
-        "catalogue.json",
-        &utc,
-        &latitude,
-        &longitude,
-        "0",
-        "--wide",
-        "--snapshot",
-        "label.png",
-    ];
-    let mut images = Vec::new();
-    for id in [25544, 38771, 100530, 1_234_567] {
-        records[0]["NORAD_CAT_ID"] = json!(id);
-        records[0]["OBJECT_NAME"] = json!("ISS (ZARYA)");
-        scratch.manifest(records.clone());
-        let report = success(scratch.run(&args));
-        assert!(report.contains("catalogue=1 sky=1 visible=1 failed=0 indicators=0"));
-        let image = scratch.png("label.png");
-        assert_eq!(success(scratch.run(&args)), report);
-        assert_eq!(scratch.png("label.png"), image);
-        // Even a misleading or unfamiliar full name cannot change the label.
-        records[0]["OBJECT_NAME"] = json!("UNFAMILIAR OBJECT");
-        scratch.manifest(records.clone());
-        assert_eq!(success(scratch.run(&args)), report);
-        assert_eq!(scratch.png("label.png"), image);
-        assert!(images.iter().all(|previous| previous != &image));
-        images.push(image);
-    }
-    // Exact boundaries and startup in the hysteresis interval. At an unchanged
-    // frame/lens, overriding thresholds changes only label presentation.
-    for (fov, hide, show) in [("60", "60", "50"), ("65", "65", "55"), ("70", "80", "60")] {
-        let mut configured = args.to_vec();
-        configured.extend(["--fov-deg", fov]);
-        let report = success(scratch.run(&configured));
-        let default = scratch.png("label.png");
-        configured.extend(["--label-hide-deg", hide, "--label-show-deg", show]);
-        assert_eq!(success(scratch.run(&configured)), report);
-        let overridden = scratch.png("label.png");
-        assert_ne!(overridden, default);
-        assert_eq!(success(scratch.run(&configured)), report);
-        assert_eq!(scratch.png("label.png"), overridden);
-    }
-    // At overview zoom, changing identity no longer changes the image: the
-    // label is absent even though the selected marker remains visible.
-    let mut overview = args.to_vec();
-    overview.extend(["--fov-deg", "100"]);
-    let mut previous = None;
-    for id in [25544, 100530] {
-        records[0]["NORAD_CAT_ID"] = json!(id);
-        scratch.manifest(records.clone());
-        let report = success(scratch.run(&overview));
-        assert!(report.contains("catalogue=1 sky=1 visible=1 failed=0 indicators=0"));
-        let image = scratch.png("label.png");
-        if let Some(previous) = previous {
-            assert_eq!(image, previous);
-        }
-        previous = Some(image);
     }
 }
 

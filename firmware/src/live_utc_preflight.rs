@@ -13,7 +13,7 @@ use crate::{
 };
 use overhead_app::RadarApp;
 use overhead_core::sgp4::chrono::{DateTime, NaiveDateTime};
-use overhead_render::{CoastLayer, Layout, PeriodCache, draw_cached};
+use overhead_render::{CoastLayer, Layout};
 
 const NONCE: u64 = 0x1234_5678_90ab_cdef;
 const NTP_OFFSET: i64 = 2_208_988_800;
@@ -180,7 +180,6 @@ struct Display {
     screen: Screen,
     sender: LineSender,
     coast: CoastLayer,
-    period: PeriodCache,
 }
 
 impl Display {
@@ -189,18 +188,16 @@ impl Display {
             screen: Screen::new(),
             sender: LineSender::new(),
             coast: CoastLayer::prepare(app.observer()),
-            period: PeriodCache::new(),
         }
     }
 
     fn draw(&mut self, app: &RadarApp) {
-        draw_cached(
+        overhead_render::draw(
             &mut self.screen,
             app,
             Layout::wide(),
             false,
             &mut self.coast,
-            &mut self.period,
         )
         .unwrap();
     }

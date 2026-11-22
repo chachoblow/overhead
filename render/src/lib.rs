@@ -2,10 +2,7 @@
 //! ownership; all readouts come from the app's true, timestamped frame.
 #![no_std]
 
-use core::{
-    fmt::{self, Write},
-    time::Duration,
-};
+use core::fmt::{self, Write};
 use embedded_graphics::{
     mono_font::{MonoTextStyle, ascii::FONT_6X10},
     pixelcolor::BinaryColor,
@@ -21,17 +18,17 @@ use overhead_core::sgp4::chrono::Timelike;
 
 mod coast;
 pub mod debug;
-mod glyphs;
 #[cfg(feature = "measurement")]
 pub mod measurement;
-pub mod presentation;
 pub mod setup;
-mod visibility;
+mod wide;
 
 pub use coast::CoastLayer;
-pub use glyphs::PeriodCache;
 
 pub const DISPLAY_SIZE: Size = Size::new(400, 240);
+/// Wide radar size (0089: the full display), shared with the coast raster.
+pub(crate) const WIDE_WIDTH: u32 = 400;
+pub(crate) const WIDE_HEIGHT: u32 = 240;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Layout {
@@ -51,11 +48,11 @@ impl Layout {
             radar_height: radar_size,
         })
     }
-    /// Opt-in 352x240 radar, five labelled selected fields and explicit notices.
+    /// 0089's full-width 400x240 radar with left pills and explicit notices.
     pub fn wide() -> Self {
         Self {
-            radar_width: 352,
-            radar_height: 240,
+            radar_width: WIDE_WIDTH,
+            radar_height: WIDE_HEIGHT,
         }
     }
     pub fn aspect_ratio(self) -> f64 {
@@ -104,29 +101,7 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
     ingestion_warning: bool,
     coast: &mut CoastLayer,
 ) -> Result<(), D::Error> {
-    draw_frame(display, app, layout, ingestion_warning, None, Some(coast))
-}
-
-/// Same pixels as `draw`, reusing the approved period raster when the mapped
-/// period is unchanged. Keep the cache in long-lived renderer storage, not app
-/// physical state. No other glyph, coast or framebuffer work is cached.
-pub fn draw_cached<D: DrawTarget<Color = BinaryColor>>(
-    display: &mut D,
-    app: &RadarApp,
-    layout: Layout,
-    ingestion_warning: bool,
-    coast: &mut CoastLayer,
-    period_cache: &mut PeriodCache,
-) -> Result<(), D::Error> {
-    draw_frame_cached(
-        display,
-        app,
-        layout,
-        ingestion_warning,
-        None,
-        Some(coast),
-        Some(period_cache),
-    )
+    draw_frame(display, app, layout, ingestion_warning, Some(coast))
 }
 
 /// Provisional full-screen loading frame shown while the observer's coastline
@@ -196,80 +171,24 @@ impl<const N: usize> core::fmt::Write for LineText<N> {
     }
 }
 
-/// Draw with explicit monotonic presentation time. Only the wide data glyphs
-/// transition; square diagnostics and all true-state readouts remain immediate.
-pub fn draw_at<D: DrawTarget<Color = BinaryColor>>(
-    display: &mut D,
-    app: &RadarApp,
-    layout: Layout,
-    ingestion_warning: bool,
-    presentation: &mut presentation::Presentation,
-    time: Duration,
-    coast: &mut CoastLayer,
-) -> Result<(), D::Error> {
-    let values =
-        (app.view().viewport() == Viewport::Rectangle).then(|| presentation.values(app, time));
-    draw_frame(display, app, layout, ingestion_warning, values, Some(coast))
-}
-
-/// Explicit-time counterpart to `draw_cached`; the exact current presentation
-/// turn count is the key, so intermediate animated spirals do not become stale.
-pub fn draw_at_cached<D: DrawTarget<Color = BinaryColor>>(
-    display: &mut D,
-    app: &RadarApp,
-    layout: Layout,
-    ingestion_warning: bool,
-    presentation: &mut presentation::Presentation,
-    time: Duration,
-    coast: &mut CoastLayer,
-    period_cache: &mut PeriodCache,
-) -> Result<(), D::Error> {
-    let values =
-        (app.view().viewport() == Viewport::Rectangle).then(|| presentation.values(app, time));
-    draw_frame_cached(
-        display,
-        app,
-        layout,
-        ingestion_warning,
-        values,
-        Some(coast),
-        Some(period_cache),
-    )
-}
-
 /// `coast: None` omits geography without a notice: test/measurement controls only.
 fn draw_frame<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
     app: &RadarApp,
     layout: Layout,
     ingestion_warning: bool,
-    values: Option<glyphs::Params>,
     coast: Option<&mut CoastLayer>,
 ) -> Result<(), D::Error> {
-    draw_frame_cached(display, app, layout, ingestion_warning, values, coast, None)
-}
-
-fn draw_frame_cached<D: DrawTarget<Color = BinaryColor>>(
-    display: &mut D,
-    app: &RadarApp,
-    layout: Layout,
-    ingestion_warning: bool,
-    values: Option<glyphs::Params>,
-    coast: Option<&mut CoastLayer>,
-    period_cache: Option<&mut PeriodCache>,
-) -> Result<(), D::Error> {
-    draw_frame_with_coast_cached(
+    draw_frame_with_coast(
         display,
         app,
         layout,
         ingestion_warning,
-        values,
         coast.is_some(),
         |display, observer, view, layout| match coast {
             Some(coast) => coast.draw(display, observer, view, layout),
             None => Ok(true),
         },
-        period_cache,
     )
 }
 
@@ -282,54 +201,23 @@ pub enum FrameStage {
     Clear,
     Coast,
     Earth,
+    /// Square/circle diagnostics only: centre cross and "N".
     Radar,
     Markers,
-    Label,
-    Category,
-    Glyphs,
+    /// Wide only from here: haloed off-screen arrows.
+    Arrows,
+    /// Scale ruler and pills.
+    Overlays,
     Status,
 }
 
-#[cfg(any(test, feature = "measurement"))]
 fn draw_frame_with_coast<'a, D, F>(
     display: &'a mut D,
     app: &RadarApp,
     layout: Layout,
     ingestion_warning: bool,
-    values: Option<glyphs::Params>,
     coast_enabled: bool,
     coast_draw: F,
-) -> Result<(), D::Error>
-where
-    D: DrawTarget<Color = BinaryColor>,
-    F: FnOnce(
-        &mut embedded_graphics::draw_target::Clipped<'a, D>,
-        overhead_core::GeodeticPosition,
-        overhead_app::projection::View,
-        Layout,
-    ) -> Result<bool, D::Error>,
-{
-    draw_frame_with_coast_cached(
-        display,
-        app,
-        layout,
-        ingestion_warning,
-        values,
-        coast_enabled,
-        coast_draw,
-        None,
-    )
-}
-
-fn draw_frame_with_coast_cached<'a, D, F>(
-    display: &'a mut D,
-    app: &RadarApp,
-    layout: Layout,
-    ingestion_warning: bool,
-    values: Option<glyphs::Params>,
-    coast_enabled: bool,
-    coast_draw: F,
-    period_cache: Option<&mut PeriodCache>,
 ) -> Result<(), D::Error>
 where
     D: DrawTarget<Color = BinaryColor>,
@@ -345,12 +233,9 @@ where
         app,
         layout,
         ingestion_warning,
-        values,
         coast_enabled,
         coast_draw,
         |_| {},
-        |_| {},
-        period_cache,
     )
 }
 
@@ -359,12 +244,9 @@ fn draw_frame_traced<'a, D, F>(
     app: &RadarApp,
     layout: Layout,
     ingestion_warning: bool,
-    values: Option<glyphs::Params>,
     coast_enabled: bool,
     coast_draw: F,
     mut trace: impl FnMut(FrameStage),
-    glyph_trace: impl FnMut(glyphs::GlyphStage),
-    period_cache: Option<&mut PeriodCache>,
 ) -> Result<(), D::Error>
 where
     D: DrawTarget<Color = BinaryColor>,
@@ -400,6 +282,12 @@ where
     }
     draw_earth(&mut display, app.earth_limb(), layout, viewport)?;
     trace(FrameStage::Earth);
+    if viewport == Viewport::Rectangle {
+        wide::draw_foreground(&mut display, app, layout, &mut trace)?;
+        draw_wide_status(&mut display, app, ingestion_warning, coast_error)?;
+        trace(FrameStage::Status);
+        return Ok(());
+    }
     Line::new(center - Point::new(3, 0), center + Point::new(3, 0))
         .into_styled(stroke)
         .draw(&mut display)?;
@@ -412,64 +300,18 @@ where
         MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
     )
     .draw(&mut display)?;
-
-    if viewport == Viewport::Rectangle {
-        for (_, indicator) in app.indicators() {
-            draw_indicator(&mut display, indicator, layout)?;
-        }
-    }
     trace(FrameStage::Radar);
-
-    let mut selected_marker = None;
-    let wide = viewport == Viewport::Rectangle;
     for (entry, _, point) in app.markers() {
-        let marker = layout.marker(point);
-        let id = entry.elements().norad_id;
-        let selected = app.selected_id() == Some(id);
-        // Wide view draws the selected marker last, so its backing and diamond
-        // sit above every other marker (0061 follow-up). Diagnostics unchanged.
-        if !(selected && wide) {
-            draw_marker(&mut display, marker, selected, layout, viewport)?;
-        }
-        if selected {
-            selected_marker = Some((id, marker));
-        }
-    }
-    if wide && let Some((_, marker)) = selected_marker {
-        draw_marker(&mut display, marker, true, layout, viewport)?;
+        let selected = app.selected_id() == Some(entry.elements().norad_id);
+        draw_marker(
+            &mut display,
+            layout.marker(point),
+            selected,
+            layout,
+            viewport,
+        )?;
     }
     trace(FrameStage::Markers);
-
-    if viewport == Viewport::Rectangle {
-        if let Some((id, marker)) = selected_marker.filter(|_| app.selected_label_visible()) {
-            draw_selected_label(&mut display, id, marker, layout)?;
-        }
-        trace(FrameStage::Label);
-        // The former category slot now shows visibility (0078); the stage
-        // keeps its name so historical traces read the same.
-        visibility::draw(&mut display, app.selected_visibility())?;
-        trace(FrameStage::Category);
-        if let Some(values) = values {
-            glyphs::draw_strip_params_traced(&mut display, values, glyph_trace, period_cache)?;
-        } else {
-            glyphs::draw_strip_traced(
-                &mut display,
-                app.selected()
-                    .map(|(_, sample)| sample.physical.look.elevation_rad),
-                app.selected()
-                    .map(|(_, sample)| sample.physical.geodetic.altitude_km),
-                app.selected()
-                    .map(|(_, sample)| sample.physical.teme_speed_km_s),
-                app.selected_period_minutes(),
-                glyph_trace,
-                period_cache,
-            )?;
-        }
-        trace(FrameStage::Glyphs);
-        draw_wide_status(&mut display, app, ingestion_warning, coast_error)?;
-        trace(FrameStage::Status);
-        return Ok(());
-    }
 
     let x = layout.radar_width as i32 + 10;
     let columns = (400 - x) as usize / 6;
@@ -606,20 +448,9 @@ fn draw_marker<D: DrawTarget<Color = BinaryColor>>(
     layout: Layout,
     viewport: Viewport,
 ) -> Result<(), D::Error> {
+    // Square/circle diagnostics only (the wide view draws 0089's octagons).
     // Clip every glyph pixel to the viewport, not just the center. A highlighted
     // edge marker must not spill into the information area.
-    if selected && viewport == Viewport::Rectangle {
-        // 0061 follow-up: clear a 1px diamond-shaped backing first, so scene ink
-        // (coast, limb, arrows, other markers) cannot cross the selected diamond.
-        let backing = (-4_i32..=4)
-            .flat_map(|y| (-4_i32..=4).map(move |x| (x, y)))
-            .filter_map(|(x, y)| {
-                let p = marker + Point::new(x, y);
-                (x.abs() + y.abs() <= 4 && layout.contains(p, viewport))
-                    .then_some(Pixel(p, BinaryColor::Off))
-            });
-        display.draw_iter(backing)?;
-    }
     let pixels = (-3_i32..=3)
         .flat_map(|y| (-3_i32..=3).map(move |x| (x, y)))
         .filter_map(|(x, y)| {
@@ -678,67 +509,6 @@ fn draw_indicator<D: DrawTarget<Color = BinaryColor>>(
                 .build(),
         )
         .draw(&mut clipped)?;
-    Ok(())
-}
-
-/// Familiar names are keyed by identity, never inferred from catalogue names.
-fn selected_label(id: u64) -> LineBuffer {
-    // A u64 needs at most 20 decimal digits; no five-/six-digit truncation.
-    let mut label = LineBuffer::new(20);
-    if id == 25544 {
-        let _ = label.write_str("ISS");
-    } else {
-        let _ = write!(label, "{id}");
-    }
-    label
-}
-
-fn selected_label_origin(marker: Point, size: Size, layout: Layout) -> Point {
-    let left = layout.center().x - layout.horizontal_radius();
-    let right = layout.center().x + layout.horizontal_radius();
-    let top = layout.center().y - layout.radius();
-    let bottom = layout.center().y + layout.radius();
-    let width = size.width as i32;
-    let height = size.height as i32;
-    // Two blank columns between the diamond's three-pixel extent and text.
-    // Even a full u64 label fits on one side in the wide radar.
-    let x = if marker.x + 6 + width - 1 <= right {
-        marker.x + 6
-    } else {
-        marker.x - 6 - width + 1
-    };
-    Point::new(
-        x.max(left),
-        (marker.y - height / 2).clamp(top, bottom - height + 1),
-    )
-}
-
-fn draw_selected_label<D: DrawTarget<Color = BinaryColor>>(
-    display: &mut D,
-    id: u64,
-    marker: Point,
-    layout: Layout,
-) -> Result<(), D::Error> {
-    let label = selected_label(id);
-    let text = Text::with_baseline(
-        label.as_str(),
-        Point::zero(),
-        MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
-        Baseline::Top,
-    );
-    let origin = selected_label_origin(marker, text.bounding_box().size, layout);
-    // 0061: a 1px white backing behind the text keeps it legible over coast,
-    // limb or arrows. It may cover scene pixels in that box only; still no
-    // collision search, leader line or displacement of markers/arrows.
-    let text = text.translate(origin);
-    let bounds = text.bounding_box();
-    Rectangle::new(
-        bounds.top_left - Point::new(1, 1),
-        bounds.size + Size::new(2, 2),
-    )
-    .into_styled(PrimitiveStyle::with_fill(BinaryColor::Off))
-    .draw(display)?;
-    text.draw(display)?;
     Ok(())
 }
 
@@ -850,9 +620,12 @@ impl<D: DrawTarget<Color = BinaryColor>> Panel<'_, D> {
     }
 }
 
+/// Truncating ASCII line of at most `limit` columns (`+` marks a cut), plus
+/// the degree sign, which takes one column and two bytes.
 struct LineBuffer {
     bytes: [u8; 40],
     len: usize,
+    columns: usize,
     limit: usize,
 }
 impl LineBuffer {
@@ -860,19 +633,32 @@ impl LineBuffer {
         Self {
             bytes: [0; 40],
             len: 0,
-            limit: limit.min(40),
+            columns: 0,
+            limit: limit.min(20),
         }
     }
     fn as_str(&self) -> &str {
         core::str::from_utf8(&self.bytes[..self.len]).unwrap_or("")
     }
+    fn columns(&self) -> usize {
+        self.columns
+    }
+    /// Append "°" (ISO 8859-1 fonts draw it) if a column is left.
+    fn push_degree(&mut self) {
+        if self.columns < self.limit {
+            self.bytes[self.len..self.len + 2].copy_from_slice("°".as_bytes());
+            self.len += 2;
+            self.columns += 1;
+        }
+    }
 }
 impl Write for LineBuffer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         for ch in s.chars() {
-            if self.len == self.limit {
-                if self.limit > 0 {
-                    self.bytes[self.limit - 1] = b'+';
+            if self.columns == self.limit {
+                // Only ASCII precedes a cut in practice; never split a degree sign.
+                if self.limit > 0 && self.bytes[self.len - 1].is_ascii() {
+                    self.bytes[self.len - 1] = b'+';
                 }
                 break;
             }
@@ -883,6 +669,7 @@ impl Write for LineBuffer {
                 b'?'
             };
             self.len += 1;
+            self.columns += 1;
         }
         Ok(())
     }
@@ -914,25 +701,6 @@ mod tests {
             layout,
             warning,
             &mut CoastLayer::prepare(app.observer()),
-        )
-    }
-    fn draw_at<D: DrawTarget<Color = BinaryColor>>(
-        display: &mut D,
-        app: &RadarApp,
-        layout: Layout,
-        warning: bool,
-        presentation: &mut presentation::Presentation,
-        time: Duration,
-    ) -> Result<(), D::Error> {
-        let mut coast = CoastLayer::prepare(app.observer());
-        super::draw_at(
-            display,
-            app,
-            layout,
-            warning,
-            presentation,
-            time,
-            &mut coast,
         )
     }
     struct Screen {
@@ -1240,7 +1008,7 @@ mod tests {
             // gain a rounded limb pixel when formerly outside geometry is admitted.
             for y in 3..=237 {
                 for x in 4..237 {
-                    assert_eq!(a.pixels[y][x], b.pixels[y][x + 56], "fov={fov} at {x},{y}");
+                    assert_eq!(a.pixels[y][x], b.pixels[y][x + 80], "fov={fov} at {x},{y}");
                 }
             }
             let ink = b.pixels.iter().flatten().filter(|&&on| on).count();
@@ -1293,1181 +1061,15 @@ mod tests {
                 }
             }
             if angle == 0 {
-                assert!(screen.pixels[120][346]); // Outward tip.
-                assert!(screen.pixels[118][341]); // Base corners.
-                assert!(screen.pixels[122][341]);
-                assert!(screen.pixels[120][343]); // Filled interior (0061).
+                assert!(screen.pixels[120][394]); // Outward tip.
+                assert!(screen.pixels[118][389]); // Base corners.
+                assert!(screen.pixels[122][389]);
+                assert!(screen.pixels[120][391]); // Filled interior (0061).
             }
             let expected = screen.pixels;
             draw_indicator(&mut screen, arrow, layout).unwrap();
             assert_eq!(screen.pixels, expected); // Exact overlaps are permitted.
         }
-    }
-
-    #[test]
-    fn selected_diamond_has_white_backing_and_unselected_markers_do_not() {
-        let layout = Layout::wide();
-        let marker = Point::new(176, 120);
-        for selected in [false, true] {
-            let mut screen = Screen {
-                pixels: [[true; 400]; 240],
-            };
-            draw_marker(&mut screen, marker, selected, layout, Viewport::Rectangle).unwrap();
-            for dy in -5_i32..=5 {
-                for dx in -5_i32..=5 {
-                    let d = dx.abs() + dy.abs();
-                    let on = screen.pixels[(120 + dy) as usize][(176 + dx) as usize];
-                    let expected = if selected {
-                        d > 4 || d == 3 || d == 0
-                    } else {
-                        true // No backing: the full-ink scene is untouched.
-                    };
-                    assert_eq!(on, expected, "selected={selected} ({dx}, {dy})");
-                }
-            }
-        }
-        // Square/circular diagnostics keep the unbacked diamond.
-        let mut square = Screen {
-            pixels: [[true; 400]; 240],
-        };
-        let diagnostic = Layout::new(240).unwrap();
-        draw_marker(
-            &mut square,
-            diagnostic.center(),
-            true,
-            diagnostic,
-            Viewport::Square,
-        )
-        .unwrap();
-        assert!(square.pixels.iter().flatten().all(|&on| on));
-        // Backing is clipped like the ink: nothing spills into the strip.
-        let mut screen = Screen {
-            pixels: [[true; 400]; 240],
-        };
-        draw_marker(
-            &mut screen,
-            Point::new(348, 120),
-            true,
-            layout,
-            Viewport::Rectangle,
-        )
-        .unwrap();
-        assert!((350..400).all(|x| screen.pixels[120][x]));
-    }
-
-    fn reference_elevation(elevation: f64) -> [[bool; 24]; 24] {
-        use std::collections::BTreeSet;
-        let mut pixels = [[false; 24]; 24];
-        if !elevation.is_finite() {
-            return pixels;
-        }
-        // Independent circle construction: nearest integer sqrt samples, not
-        // the production octant table. Reference lines use major-axis rounding,
-        // not the production Bresenham error accumulator.
-        let mut circle = BTreeSet::new();
-        for minor in 0..=8 {
-            let major = ((121 - minor * minor) as f64).sqrt().round() as i32;
-            for (x, y) in [(major, minor), (minor, major)] {
-                for sx in [-1, 1] {
-                    for sy in [-1, 1] {
-                        circle.insert((sx * x, sy * y));
-                    }
-                }
-            }
-        }
-        let elevation = elevation.clamp(0.0, core::f64::consts::FRAC_PI_2);
-        let &(ex, ey) = circle
-            .iter()
-            .filter(|&&(x, y)| x >= 0 && y >= 0)
-            .min_by(|&&(ax, ay), &&(bx, by)| {
-                let a = (ay as f64).atan2(ax as f64);
-                let b = (by as f64).atan2(bx as f64);
-                (a - elevation)
-                    .abs()
-                    .total_cmp(&(b - elevation).abs())
-                    .then_with(|| a.total_cmp(&b))
-            })
-            .unwrap();
-        let endpoint_angle = (ey as f64).atan2(ex as f64);
-        for (x, y) in circle {
-            let angle = (y as f64).atan2(x as f64);
-            if !(angle > 0.0 && angle < endpoint_angle) {
-                pixels[(12 - y) as usize][(12 + x) as usize] = true;
-            }
-        }
-        if ey != 0 {
-            for (x, y) in [(11, 0), (ex, ey)] {
-                for step in 0..=x.max(y) {
-                    let (u, v) = if x >= y {
-                        (step, (2 * step * y + x) / (2 * x))
-                    } else {
-                        ((2 * step * x + y) / (2 * y), step)
-                    };
-                    pixels[(12 - v) as usize][(12 + u) as usize] = true;
-                }
-            }
-        }
-        pixels
-    }
-
-    fn reference_speed(speed: f64) -> [[bool; 24]; 24] {
-        let mut pixels = [[false; 24]; 24];
-        if speed <= 0.0 {
-            return pixels;
-        }
-        // Independent rounded-sqrt circle and angular sort, not production's
-        // octant indexing or midpoint traversal. Display coordinates point down.
-        let mut ring: Vec<_> = (-11_i32..=11)
-            .flat_map(|y| (-11_i32..=11).map(move |x| (x, y)))
-            .filter(|&(x, y)| {
-                let minor = x.abs().min(y.abs());
-                let major = x.abs().max(y.abs());
-                major == f64::from(121 - minor * minor).sqrt().round() as i32
-            })
-            .map(|(x, y)| {
-                let a = (x as f64)
-                    .atan2(-f64::from(y))
-                    .rem_euclid(core::f64::consts::TAU);
-                (a, x, y)
-            })
-            .collect();
-        ring.sort_by(|a, b| a.0.total_cmp(&b.0));
-        let sweep = speed.clamp(0.0, 12.0) / 12.0 * core::f64::consts::TAU;
-        let endpoint = ring
-            .iter()
-            .min_by(|a, b| {
-                (a.0 - sweep)
-                    .abs()
-                    .total_cmp(&(b.0 - sweep).abs())
-                    .then_with(|| a.0.total_cmp(&b.0))
-            })
-            .unwrap()
-            .0;
-        for (angle, x, y) in ring {
-            if angle <= endpoint {
-                pixels[(12 + y) as usize][(12 + x) as usize] = true;
-            }
-        }
-        pixels
-    }
-
-    fn reference_period(minutes: f64) -> [[bool; 24]; 24] {
-        let mut pixels = [[false; 24]; 24];
-        let turns = 2.5 - 1.5 * (minutes.clamp(90.0, 1440.0) / 90.0).ln() / 16_f64.ln();
-        // Independent host trigonometry and direct screen raster, not the
-        // renderer's row bitset/local-coordinate helper or libm functions.
-        for step in 0..=4096 {
-            let fraction = step as f64 / 4096.0;
-            let radius = 1.5 + 7.5 * fraction;
-            let angle =
-                -core::f64::consts::FRAC_PI_2 + core::f64::consts::TAU * turns * (fraction - 1.0);
-            let x = (376.0 + radius * angle.cos()).round() as usize;
-            let y = (220.0 + radius * angle.sin()).round() as usize;
-            pixels[y - 209][x - 364] = true;
-        }
-        pixels
-    }
-
-    fn assert_strip_pixels(
-        screen: &Screen,
-        elevation: Option<f64>,
-        altitude: Option<f64>,
-        speed: Option<f64>,
-        period: Option<f64>,
-    ) {
-        let mut expected = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        for y in 12..=227 {
-            expected.pixels[y][352] = true;
-        }
-        if let Some(elevation) = elevation.filter(|e| e.is_finite()) {
-            Text::new(
-                "Elev",
-                Point::new(364, 64),
-                MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
-            )
-            .draw(&mut expected)
-            .unwrap();
-            for (row, pixels) in reference_elevation(elevation).iter().enumerate() {
-                expected.pixels[68 + row][364..388].copy_from_slice(pixels);
-            }
-        }
-        if let Some(altitude) = altitude.filter(|h| h.is_finite()) {
-            Text::new(
-                "Alt",
-                Point::new(367, 111),
-                MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
-            )
-            .draw(&mut expected)
-            .unwrap();
-            // Independent inverse thresholds, not the renderer's log mapping.
-            let radius = (2..=8).fold(9, |radius, lower| {
-                let boundary = 400.0 * (101_f64.powf((8.5 - lower as f64) / 7.0) - 1.0);
-                if altitude > boundary {
-                    radius.min(lower)
-                } else {
-                    radius
-                }
-            });
-            for y in -11_i32..=11 {
-                for x in -11_i32..=11 {
-                    let minor = x.abs().min(y.abs());
-                    let major = x.abs().max(y.abs());
-                    expected.pixels[(127 + y) as usize][(376 + x) as usize] =
-                        [radius, 11].into_iter().any(|r| {
-                            minor <= r
-                                && major == f64::from(r * r - minor * minor).sqrt().round() as i32
-                        });
-                }
-            }
-        }
-        if let Some(speed) = speed.filter(|s| s.is_finite()) {
-            Text::new(
-                "Spd",
-                Point::new(367, 158),
-                MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
-            )
-            .draw(&mut expected)
-            .unwrap();
-            for (row, pixels) in reference_speed(speed).iter().enumerate() {
-                expected.pixels[162 + row][364..388].copy_from_slice(pixels);
-            }
-        }
-        if let Some(period) = period.filter(|p| p.is_finite() && *p > 0.0) {
-            Text::new(
-                "Per",
-                Point::new(367, 205),
-                MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
-            )
-            .draw(&mut expected)
-            .unwrap();
-            for (row, pixels) in reference_period(period).iter().enumerate() {
-                expected.pixels[209 + row][364..388].copy_from_slice(pixels);
-            }
-        }
-        for y in 0..240 {
-            assert_eq!(
-                screen.pixels[y][352..],
-                expected.pixels[y][352..],
-                "strip row={y}, elevation={elevation:?}, altitude={altitude:?}, speed={speed:?}, period={period:?}"
-            );
-        }
-    }
-
-    fn assert_elevation_pixels(screen: &Screen, elevation: f64) {
-        assert_strip_pixels(screen, Some(elevation), None, None, None);
-    }
-
-    fn assert_selected_strip(screen: &Screen, app: &RadarApp) {
-        assert_visibility_pixels(screen, app.selected_visibility());
-        let mut without_category = Screen {
-            pixels: screen.pixels,
-        };
-        for row in &mut without_category.pixels[10..45] {
-            row[364..388].fill(false);
-        }
-        let selected = app.selected().map(|(_, s)| s.physical);
-        assert_strip_pixels(
-            &without_category,
-            selected.map(|s| s.look.elevation_rad),
-            selected.map(|s| s.geodetic.altitude_km),
-            selected.map(|s| s.teme_speed_km_s),
-            app.selected()
-                .map(|(entry, _)| 1440.0 / entry.elements().mean_motion),
-        );
-    }
-
-    fn assert_visibility_pixels(
-        screen: &Screen,
-        value: Option<overhead_app::visibility::Visibility>,
-    ) {
-        let mut expected = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        if let Some(value) = value {
-            Text::new(
-                "Vis",
-                Point::new(367, 17),
-                MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
-            )
-            .draw(&mut expected)
-            .unwrap();
-            for y in 0..24 {
-                for x in 0..24 {
-                    expected.pixels[21 + y][364 + x] =
-                        visibility::reference_ink(value, x as i32, y as i32);
-                }
-            }
-        }
-        for y in 10..45 {
-            assert_eq!(
-                screen.pixels[y][364..388],
-                expected.pixels[y][364..388],
-                "visibility {value:?} row {y}"
-            );
-        }
-    }
-
-    #[test]
-    fn visibility_exact_rasters_and_slot_isolation() {
-        use overhead_app::visibility::Visibility::*;
-        for value in [None, Some(Visible), Some(Eclipsed), Some(Daylight)] {
-            let mut screen = Screen {
-                pixels: [[false; 400]; 240],
-            };
-            visibility::draw(&mut screen, value).unwrap();
-            assert_visibility_pixels(&screen, value);
-            for y in 0..240 {
-                for x in 0..400 {
-                    if !(364..388).contains(&x) || !(10..45).contains(&y) {
-                        assert!(!screen.pixels[y][x]);
-                    }
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn roles_no_longer_change_any_pixel() {
-        use overhead_app::category::Category::*;
-        for viewport in [Viewport::Square, Viewport::Rectangle] {
-            let mut app = app_with_orbits(viewport, false, &[25544], 2.0);
-            let layout = if viewport == Viewport::Rectangle {
-                Layout::wide()
-            } else {
-                Layout::new(240).unwrap()
-            };
-            let mut screen = Screen {
-                pixels: [[false; 400]; 240],
-            };
-            draw(&mut screen, &app, layout, true).unwrap();
-            let baseline = screen.pixels;
-            if viewport == Viewport::Rectangle {
-                assert!(app.selected_visibility().is_some());
-                assert_selected_strip(&screen, &app);
-            }
-            for role in [Station, Navigation, Weather, Unknown] {
-                app = app.with_group_categories(std::vec![role]);
-                draw(&mut screen, &app, layout, true).unwrap();
-                assert_eq!(screen.pixels, baseline);
-            }
-        }
-    }
-
-    #[test]
-    fn circular_elevation_matches_reference_and_has_connected_monotonic_cutout() {
-        let circle = reference_elevation(0.0);
-        assert_eq!(circle.iter().flatten().filter(|&&p| p).count(), 64);
-        let mut previous = circle;
-        for degrees in 0..=90 {
-            let mut screen = Screen {
-                pixels: [[false; 400]; 240],
-            };
-            let elevation = (degrees as f64).to_radians();
-            glyphs::draw_strip(&mut screen, Some(elevation), None, None, None).unwrap();
-            assert_elevation_pixels(&screen, elevation);
-            assert!(
-                screen
-                    .pixels
-                    .iter()
-                    .all(|row| row[..352].iter().all(|&on| !on))
-            );
-            let mut glyph = [[false; 24]; 24];
-            for row in 0..24 {
-                glyph[row].copy_from_slice(&screen.pixels[68 + row][364..388]);
-                for col in 0..24 {
-                    if circle[row][col] && !previous[row][col] {
-                        assert!(
-                            !glyph[row][col],
-                            "removed arc restored at {degrees} degrees"
-                        );
-                    }
-                }
-            }
-            // Check 8-connectivity without assuming any particular traversal.
-            let mut visited = [[false; 24]; 24];
-            let mut pending = std::vec![(23_i32, 12_i32)];
-            while let Some((x, y)) = pending.pop() {
-                if !(0..24).contains(&x)
-                    || !(0..24).contains(&y)
-                    || visited[y as usize][x as usize]
-                    || !glyph[y as usize][x as usize]
-                {
-                    continue;
-                }
-                visited[y as usize][x as usize] = true;
-                for dy in -1..=1 {
-                    for dx in -1..=1 {
-                        pending.push((x + dx, y + dy));
-                    }
-                }
-            }
-            assert_eq!(visited, glyph, "disconnected outline at {degrees} degrees");
-            match degrees {
-                0 => assert!(!glyph[12][12]), // No radial at the zero endpoint.
-                45 => {
-                    assert!(glyph[4][20]); // Exact diagonal endpoint (8,8).
-                    for step in 0..=8 {
-                        assert!(glyph[12 - step][12 + step]);
-                    }
-                }
-                90 => {
-                    for step in 0..=11 {
-                        assert!(glyph[12 - step][12]);
-                    }
-                    assert!(!glyph[4][20]); // Open upper-right quadrant.
-                }
-                _ => {}
-            }
-            previous = glyph;
-        }
-    }
-
-    #[test]
-    fn elevation_saturates_finite_input_and_retains_only_separator_without_valid_input() {
-        for elevation in [
-            None,
-            Some(-f64::MAX),
-            Some(-0.0),
-            Some(f64::MAX),
-            Some(f64::NAN),
-            Some(f64::INFINITY),
-            Some(f64::NEG_INFINITY),
-        ] {
-            let mut screen = Screen {
-                pixels: [[false; 400]; 240],
-            };
-            glyphs::draw_strip(&mut screen, elevation, None, None, None).unwrap();
-            assert_strip_pixels(&screen, elevation, None, None, None);
-            assert!(
-                screen
-                    .pixels
-                    .iter()
-                    .all(|row| row[..352].iter().all(|&on| !on))
-            );
-            if elevation.is_none_or(|e| !e.is_finite()) {
-                assert_eq!(screen.pixels.iter().flatten().filter(|&&p| p).count(), 216);
-            }
-        }
-    }
-
-    #[test]
-    fn altitude_pixels_cover_every_size_and_invalidity_is_field_local() {
-        let mut screen = Screen {
-            pixels: [[true; 400]; 240],
-        };
-        for elevation in [Some(0.7), Some(f64::NAN), None] {
-            let mut baseline = Screen {
-                pixels: [[false; 400]; 240],
-            };
-            glyphs::draw_strip(&mut baseline, elevation, None, None, None).unwrap();
-            for altitude in [
-                Some(0.0),
-                Some(400.0),
-                Some(800.0),
-                Some(2_000.0),
-                Some(5_000.0),
-                Some(10_000.0),
-                Some(20_200.0),
-                Some(35_786.0),
-                Some(-f64::MAX),
-                Some(f64::MAX),
-                Some(f64::NAN),
-                Some(f64::INFINITY),
-                Some(f64::NEG_INFINITY),
-                None,
-            ] {
-                // As in draw(), clearing precedes each strip draw.
-                screen.clear(BinaryColor::Off).unwrap();
-                glyphs::draw_strip(&mut screen, elevation, altitude, None, None).unwrap();
-                assert_strip_pixels(&screen, elevation, altitude, None, None);
-                for y in 0..240 {
-                    for x in 0..400 {
-                        if !(364..388).contains(&x) || !(104..139).contains(&y) {
-                            assert_eq!(screen.pixels[y][x], baseline.pixels[y][x]);
-                        }
-                    }
-                }
-                if altitude.is_none_or(|h| !h.is_finite()) {
-                    assert_eq!(screen.pixels, baseline.pixels);
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn speed_pixels_are_field_local_and_clear_without_valid_input() {
-        let mut screen = Screen {
-            pixels: [[true; 400]; 240],
-        };
-        for (elevation, altitude) in [
-            (Some(0.7), Some(400.0)),
-            (Some(f64::NAN), Some(400.0)),
-            (Some(0.7), Some(f64::NAN)),
-            (None, None),
-        ] {
-            let mut baseline = Screen {
-                pixels: [[false; 400]; 240],
-            };
-            glyphs::draw_strip(&mut baseline, elevation, altitude, None, None).unwrap();
-            for speed in [
-                Some(-f64::MAX),
-                Some(-0.0),
-                Some(0.0),
-                Some(f64::from_bits(1)),
-                Some(3.0),
-                Some(3.1),
-                Some(3.9),
-                Some(6.0),
-                Some(7.7),
-                Some(9.0),
-                Some(11.99),
-                Some(12.0),
-                Some(f64::MAX),
-                Some(f64::NAN),
-                Some(f64::INFINITY),
-                Some(f64::NEG_INFINITY),
-                None,
-            ] {
-                screen.clear(BinaryColor::Off).unwrap();
-                glyphs::draw_strip(&mut screen, elevation, altitude, speed, None).unwrap();
-                assert_strip_pixels(&screen, elevation, altitude, speed, None);
-                for y in 0..240 {
-                    for x in 0..400 {
-                        if !(364..388).contains(&x) || !(151..186).contains(&y) {
-                            assert_eq!(screen.pixels[y][x], baseline.pixels[y][x]);
-                        }
-                    }
-                }
-                if speed.is_none_or(|s| !s.is_finite()) {
-                    assert_eq!(screen.pixels, baseline.pixels);
-                } else {
-                    // A zero reading still has its label, unlike invalid data.
-                    assert_ne!(screen.pixels, baseline.pixels);
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn period_pixels_are_field_local_with_explicit_invalid_suppression() {
-        for (elevation, altitude, speed) in [
-            (Some(0.7), Some(400.0), Some(7.7)),
-            (Some(f64::NAN), Some(400.0), Some(7.7)),
-            (Some(0.7), Some(f64::NAN), Some(7.7)),
-            (Some(0.7), Some(400.0), Some(f64::NAN)),
-            (None, None, None),
-        ] {
-            let mut baseline = Screen {
-                pixels: [[false; 400]; 240],
-            };
-            glyphs::draw_strip(&mut baseline, elevation, altitude, speed, None).unwrap();
-            for period in [
-                None,
-                Some(f64::NAN),
-                Some(f64::INFINITY),
-                Some(f64::NEG_INFINITY),
-                Some(-1.0),
-                Some(-0.0),
-                Some(0.0),
-                Some(f64::from_bits(1)),
-                Some(90.0),
-                Some(720.0),
-                Some(1440.0),
-                Some(f64::MAX),
-            ] {
-                let mut screen = Screen {
-                    pixels: [[false; 400]; 240],
-                };
-                glyphs::draw_strip(&mut screen, elevation, altitude, speed, period).unwrap();
-                assert_strip_pixels(&screen, elevation, altitude, speed, period);
-                for y in 0..240 {
-                    for x in 0..400 {
-                        if !(364..388).contains(&x) || !(198..233).contains(&y) {
-                            assert_eq!(screen.pixels[y][x], baseline.pixels[y][x]);
-                        }
-                    }
-                }
-                assert_eq!(
-                    screen.pixels == baseline.pixels,
-                    period.is_none_or(|p| !p.is_finite() || p <= 0.0)
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn period_raster_matches_independent_screen_reference_across_scale() {
-        for step in 0..=256 {
-            let period = 90.0 * 16_f64.powf(step as f64 / 256.0);
-            let mut screen = Screen {
-                pixels: [[false; 400]; 240],
-            };
-            glyphs::draw_strip(&mut screen, None, None, None, Some(period)).unwrap();
-            assert_strip_pixels(&screen, None, None, None, Some(period));
-        }
-    }
-
-    #[test]
-    fn speed_arc_matches_independent_pixels_and_grows_monotonically() {
-        let mut previous = [[false; 24]; 24];
-        for step in 0..=1200 {
-            let speed = step as f64 / 100.0;
-            let mut screen = Screen {
-                pixels: [[false; 400]; 240],
-            };
-            glyphs::draw_strip(&mut screen, None, None, Some(speed), None).unwrap();
-            let expected = reference_speed(speed);
-            for (row, pixels) in expected.iter().enumerate() {
-                assert_eq!(&screen.pixels[162 + row][364..388], pixels);
-                for (col, &on) in pixels.iter().enumerate() {
-                    assert!(!previous[row][col] || on);
-                }
-            }
-            assert!(!expected[12][12]); // No hub, spoke or fill.
-            previous = expected;
-        }
-        assert_eq!(previous.iter().flatten().filter(|&&p| p).count(), 64);
-    }
-
-    #[test]
-    fn selected_rasters_change_on_selection_but_period_is_constant_across_frames() {
-        // Synthetic eccentric orbits ensure both Tab and frame updates cross
-        // radius and speed-arc boundaries, unlike near-circular ISS samples.
-        let mut data: serde_json::Value =
-            serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
-        let mut builder = CatalogueBuilder::new();
-        for (record, motion) in [2.0, 1.0].into_iter().enumerate() {
-            data[0]["NORAD_CAT_ID"] = serde_json::json!(90_001 + record);
-            data[0]["MEAN_MOTION"] = serde_json::json!(motion);
-            data[0]["ECCENTRICITY"] = serde_json::json!(0.5);
-            data[0]["MEAN_ANOMALY"] = serde_json::json!(0.0);
-            let elements: Vec<OmmElements> = serde_json::from_value(data.clone()).unwrap();
-            builder.push(
-                RecordOrigin {
-                    group: record,
-                    record,
-                },
-                elements.into_iter().next().unwrap(),
-            );
-        }
-        let catalogue = builder.finish().unwrap();
-        let satellite = catalogue.entries()[0].satellite();
-        let time = satellite.epoch();
-        let mut observer =
-            ecef_to_geodetic(satellite.state_at(time).unwrap().to_ecef().unwrap()).unwrap();
-        observer.altitude_km = 0.0;
-        let mut app = RadarApp::new(
-            catalogue,
-            observer,
-            View::rectangular(100.0, Layout::wide().aspect_ratio()).unwrap(),
-        )
-        .unwrap();
-        app.update(time).unwrap();
-        assert_eq!(app.counts().visible, 2);
-        assert!(!app.selected_label_visible());
-        let samples: Vec<_> = app.objects().map(|(_, s)| s.clone()).collect();
-        let counts = app.counts();
-        let mut screen = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        assert_selected_strip(&screen, &app);
-        let altitude_pixels = |pixels: &[[bool; 400]; 240]| -> Vec<bool> {
-            pixels[115..139]
-                .iter()
-                .flat_map(|row| row[364..388].iter().copied())
-                .collect()
-        };
-        let speed_pixels = |pixels: &[[bool; 400]; 240]| -> Vec<bool> {
-            pixels[162..186]
-                .iter()
-                .flat_map(|row| row[364..388].iter().copied())
-                .collect()
-        };
-        let period_pixels = |pixels: &[[bool; 400]; 240]| -> Vec<bool> {
-            pixels[209..233]
-                .iter()
-                .flat_map(|row| row[364..388].iter().copied())
-                .collect()
-        };
-        app = app.with_group_categories(std::vec![
-            overhead_app::category::Category::Weather,
-            overhead_app::category::Category::Station
-        ]);
-        assert_eq!(
-            app.selected_category(),
-            Some(overhead_app::category::Category::Weather)
-        );
-        draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        let initial = screen.pixels;
-        assert_eq!(app.selected_period_minutes(), Some(720.0));
-        app.select_next();
-        assert_eq!(app.selected_id(), Some(90_002));
-        assert_eq!(
-            app.selected_category(),
-            Some(overhead_app::category::Category::Station)
-        );
-        assert_eq!(app.selected_period_minutes(), Some(1440.0));
-        draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        assert_selected_strip(&screen, &app);
-        assert_ne!(altitude_pixels(&screen.pixels), altitude_pixels(&initial));
-        assert_ne!(speed_pixels(&screen.pixels), speed_pixels(&initial));
-        assert_ne!(period_pixels(&screen.pixels), period_pixels(&initial));
-        assert_eq!(app.counts(), counts);
-        assert_eq!(
-            app.objects().map(|(_, s)| s.clone()).collect::<Vec<_>>(),
-            samples
-        );
-        app.select_next();
-        assert_eq!(app.selected_id(), Some(90_001));
-        draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        assert_eq!(screen.pixels, initial);
-        app.update(time + overhead_core::sgp4::chrono::Duration::minutes(30))
-            .unwrap();
-        assert_eq!(app.selected_id(), Some(90_001));
-        draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        assert_selected_strip(&screen, &app);
-        assert_ne!(altitude_pixels(&screen.pixels), altitude_pixels(&initial));
-        assert_ne!(speed_pixels(&screen.pixels), speed_pixels(&initial));
-        assert_eq!(period_pixels(&screen.pixels), period_pixels(&initial));
-        assert_eq!(app.selected_period_minutes(), Some(720.0));
-    }
-
-    #[test]
-    fn cached_period_matches_full_frame_across_motion_loss_and_recovery() {
-        let mut app = app_with_viewport(Viewport::Rectangle);
-        let mut reference = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        let mut cached = Screen {
-            pixels: [[true; 400]; 240],
-        };
-        let mut reference_coast = CoastLayer::prepare(app.observer());
-        let mut cached_coast = CoastLayer::prepare(app.observer());
-        let mut cache = PeriodCache::new();
-        let epoch = app.time().unwrap();
-        for offset in [0, 50, 100, 150, 0] {
-            app.update(epoch + overhead_core::sgp4::chrono::Duration::seconds(offset))
-                .unwrap();
-            super::draw(
-                &mut reference,
-                &app,
-                Layout::wide(),
-                false,
-                &mut reference_coast,
-            )
-            .unwrap();
-            super::draw_cached(
-                &mut cached,
-                &app,
-                Layout::wide(),
-                false,
-                &mut cached_coast,
-                &mut cache,
-            )
-            .unwrap();
-            assert_eq!(cached.pixels, reference.pixels, "offset {offset}");
-        }
-        assert_eq!(cache.miss_count(), 1);
-        // Lost selection must not retain an old glyph; recovery may reuse it.
-        let invalid = overhead_core::sgp4::chrono::NaiveDate::from_ymd_opt(2101, 1, 1)
-            .unwrap()
-            .and_hms_opt(0, 0, 0)
-            .unwrap();
-        assert!(app.update(invalid).is_err());
-        for layout in [Layout::wide(), Layout::new(240).unwrap()] {
-            super::draw(&mut reference, &app, layout, true, &mut reference_coast).unwrap();
-            super::draw_cached(
-                &mut cached,
-                &app,
-                layout,
-                true,
-                &mut cached_coast,
-                &mut cache,
-            )
-            .unwrap();
-            assert_eq!(cached.pixels, reference.pixels);
-        }
-        assert_eq!(cache.miss_count(), 1);
-        app.update(epoch).unwrap();
-        super::draw(
-            &mut reference,
-            &app,
-            Layout::wide(),
-            false,
-            &mut reference_coast,
-        )
-        .unwrap();
-        super::draw_cached(
-            &mut cached,
-            &app,
-            Layout::wide(),
-            false,
-            &mut cached_coast,
-            &mut cache,
-        )
-        .unwrap();
-        assert_eq!(cached.pixels, reference.pixels);
-        assert_eq!(cache.miss_count(), 1);
-    }
-
-    #[test]
-    fn animated_period_cache_matches_unmodified_draw_on_reselection() {
-        // Two valid periods force an animated intermediate turn count and a
-        // distinct final raster; cache must never replace true app readouts.
-        let mut data: serde_json::Value =
-            serde_json::from_str(include_str!("../../core/tests/fixtures/iss-25544.json")).unwrap();
-        let mut builder = CatalogueBuilder::new();
-        for (record, motion) in [2.0, 1.0].into_iter().enumerate() {
-            data[0]["NORAD_CAT_ID"] = serde_json::json!(90_001 + record);
-            data[0]["MEAN_MOTION"] = serde_json::json!(motion);
-            data[0]["ECCENTRICITY"] = serde_json::json!(0.5);
-            data[0]["MEAN_ANOMALY"] = serde_json::json!(0.0);
-            let elements: Vec<OmmElements> = serde_json::from_value(data.clone()).unwrap();
-            builder.push(
-                RecordOrigin {
-                    group: record,
-                    record,
-                },
-                elements.into_iter().next().unwrap(),
-            );
-        }
-        let catalogue = builder.finish().unwrap();
-        let satellite = catalogue.entries()[0].satellite();
-        let epoch = satellite.epoch();
-        let mut observer =
-            ecef_to_geodetic(satellite.state_at(epoch).unwrap().to_ecef().unwrap()).unwrap();
-        observer.altitude_km = 0.0;
-        let mut app = RadarApp::new(
-            catalogue,
-            observer,
-            View::rectangular(100.0, Layout::wide().aspect_ratio()).unwrap(),
-        )
-        .unwrap();
-        app.update(epoch).unwrap();
-        assert_eq!(app.counts().visible, 2);
-        let mut reference = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        let mut cached = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        let mut reference_coast = CoastLayer::prepare(app.observer());
-        let mut cached_coast = CoastLayer::prepare(app.observer());
-        let mut reference_state = presentation::Presentation::new();
-        let mut cached_state = presentation::Presentation::new();
-        let mut cache = PeriodCache::new();
-        for millis in [0, 125, 250, 251, 375, 501, 600] {
-            if millis == 251 {
-                app.select_next();
-                assert_eq!(app.selected_period_minutes(), Some(1440.0));
-            }
-            super::draw_at(
-                &mut reference,
-                &app,
-                Layout::wide(),
-                false,
-                &mut reference_state,
-                Duration::from_millis(millis),
-                &mut reference_coast,
-            )
-            .unwrap();
-            super::draw_at_cached(
-                &mut cached,
-                &app,
-                Layout::wide(),
-                false,
-                &mut cached_state,
-                Duration::from_millis(millis),
-                &mut cached_coast,
-                &mut cache,
-            )
-            .unwrap();
-            assert_eq!(cached.pixels, reference.pixels, "millis {millis}");
-        }
-        assert!(cache.miss_count() >= 3, "intermediate period needs a miss");
-    }
-
-    #[test]
-    fn animated_wide_glyphs_preserve_static_endpoints_radar_category_and_truth() {
-        use core::time::Duration;
-        let mut app = app_with_orbits(Viewport::Rectangle, false, &[25544, 100530], 2.0)
-            .with_group_categories(std::vec![
-                overhead_app::category::Category::Station,
-                overhead_app::category::Category::Navigation,
-            ]);
-        let layout = Layout::wide();
-        let mut state = presentation::Presentation::new();
-        let mut screen = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        let mut static_screen = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        let original: Vec<_> = app.objects().map(|(_, s)| s.clone()).collect();
-        let counts = app.counts();
-        draw_at(&mut screen, &app, layout, true, &mut state, Duration::ZERO).unwrap();
-        draw(&mut static_screen, &app, layout, true).unwrap();
-        assert_eq!(screen.pixels, static_screen.pixels);
-        app.select_next();
-        assert_eq!(app.selected_id(), Some(100530));
-        draw(&mut static_screen, &app, layout, true).unwrap();
-        for millis in [0, 125, 250] {
-            draw_at(
-                &mut screen,
-                &app,
-                layout,
-                true,
-                &mut state,
-                Duration::from_millis(millis),
-            )
-            .unwrap();
-            if millis == 0 {
-                assert_ne!(screen.pixels, static_screen.pixels);
-            }
-            for y in 0..240 {
-                for x in 0..400 {
-                    // Only four data slots may differ from the same-frame static scene.
-                    if !(364..388).contains(&x) || !(57..233).contains(&y) || millis == 250 {
-                        assert_eq!(
-                            screen.pixels[y][x], static_screen.pixels[y][x],
-                            "at {x},{y}"
-                        );
-                    }
-                }
-            }
-        }
-        assert_eq!(
-            app.objects().map(|(_, s)| s.clone()).collect::<Vec<_>>(),
-            original
-        );
-        assert_eq!(app.counts(), counts);
-        app.zoom(64); // Clipped B remains selected without a new transition.
-        assert_eq!(app.selected_id(), Some(100530));
-        draw_at(
-            &mut screen,
-            &app,
-            layout,
-            true,
-            &mut state,
-            Duration::from_millis(250),
-        )
-        .unwrap();
-        draw(&mut static_screen, &app, layout, true).unwrap();
-        assert_eq!(screen.pixels, static_screen.pixels);
-        app.select_next(); // Tab chooses visible A and starts a new transition.
-        assert_eq!(app.selected_id(), Some(25544));
-        draw_at(
-            &mut screen,
-            &app,
-            layout,
-            true,
-            &mut state,
-            Duration::from_millis(251),
-        )
-        .unwrap();
-        draw(&mut static_screen, &app, layout, true).unwrap();
-        assert_ne!(screen.pixels, static_screen.pixels);
-        draw_at(
-            &mut screen,
-            &app,
-            layout,
-            true,
-            &mut state,
-            Duration::from_millis(501),
-        )
-        .unwrap();
-        assert_eq!(screen.pixels, static_screen.pixels);
-        let old_time = app.time().unwrap();
-        let invalid = overhead_core::sgp4::chrono::NaiveDate::from_ymd_opt(2101, 1, 1)
-            .unwrap()
-            .and_hms_opt(0, 0, 0)
-            .unwrap();
-        assert!(app.update(invalid).is_err());
-        assert_eq!(app.selected_id(), None);
-        draw_at(
-            &mut screen,
-            &app,
-            layout,
-            true,
-            &mut state,
-            Duration::from_millis(502),
-        )
-        .unwrap();
-        draw(&mut static_screen, &app, layout, true).unwrap();
-        assert_eq!(screen.pixels, static_screen.pixels);
-        app.update(old_time).unwrap();
-        draw_at(
-            &mut screen,
-            &app,
-            layout,
-            true,
-            &mut state,
-            Duration::from_millis(503),
-        )
-        .unwrap();
-        draw(&mut static_screen, &app, layout, true).unwrap();
-        assert_eq!(screen.pixels, static_screen.pixels);
-    }
-
-    #[test]
-    fn square_draw_at_matches_static_diagnostics() {
-        use core::time::Duration;
-        let app = app_with_viewport(Viewport::Square);
-        let layout = Layout::new(240).unwrap();
-        let mut a = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        let mut b = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        let mut state = presentation::Presentation::new();
-        draw(&mut a, &app, layout, true).unwrap();
-        draw_at(
-            &mut b,
-            &app,
-            layout,
-            true,
-            &mut state,
-            Duration::from_millis(125),
-        )
-        .unwrap();
-        assert_eq!(a.pixels, b.pixels);
-    }
-
-    #[test]
-    fn selected_fields_follow_true_frames_and_clear_without_selection() {
-        let mut app = app_with_orbits(Viewport::Rectangle, false, &[25544, 100530], 2.0)
-            .with_group_categories(std::vec![overhead_app::category::Category::Station]);
-        assert_eq!(app.counts().visible, 2);
-        let mut screen = Screen {
-            pixels: [[true; 400]; 240],
-        };
-        let time = app.time().unwrap();
-        let samples: Vec<_> = app.objects().map(|(_, s)| s.clone()).collect();
-        let mut previous = None;
-        for id in [25544, 100530, 25544] {
-            assert_eq!(app.selected_id(), Some(id));
-            let elevation = app.selected().unwrap().1.physical.look.elevation_rad;
-            draw(&mut screen, &app, Layout::wide(), false).unwrap();
-            assert_selected_strip(&screen, &app);
-            if let Some(previous) = previous {
-                assert_ne!(elevation, previous);
-            }
-            previous = Some(elevation);
-            app.select_next();
-        }
-        assert_eq!(
-            app.objects().map(|(_, s)| s.clone()).collect::<Vec<_>>(),
-            samples
-        );
-        app.update(time + overhead_core::sgp4::chrono::Duration::seconds(30))
-            .unwrap();
-        draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        let elevation = app.selected().unwrap().1.physical.look.elevation_rad;
-        assert_ne!(Some(elevation), previous);
-        assert_selected_strip(&screen, &app);
-
-        // Tight zoom removes both markers, not the current true-state strip.
-        let selected = app.selected_id();
-        app.zoom(64);
-        assert_eq!(app.counts().visible, 0);
-        assert_eq!(app.selected_id(), selected);
-        draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        assert_selected_strip(&screen, &app);
-        app.zoom(-64);
-        assert!(app.selected().is_some());
-        assert!(!app.selected_label_visible());
-        draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        assert_selected_strip(&screen, &app);
-        assert!(screen.pixels[80][387]); // All five fields are independent of the ID gate.
-        assert!(screen.pixels[127][387]);
-        assert!(screen.pixels[163][376]); // Speed's top pixel survives the ID gate.
-
-        let invalid = overhead_core::sgp4::chrono::NaiveDate::from_ymd_opt(2101, 1, 1)
-            .unwrap()
-            .and_hms_opt(0, 0, 0)
-            .unwrap();
-        assert!(app.update(invalid).is_err());
-        draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        assert_selected_strip(&screen, &app);
-        app.update(time).unwrap();
-        draw(&mut screen, &app, Layout::wide(), false).unwrap();
-        assert_selected_strip(&screen, &app);
-        assert!(screen.pixels[80][387]);
-        assert!(screen.pixels[127][387]);
-    }
-
-    #[test]
-    fn selected_fields_clear_on_actual_propagation_failure_and_recover() {
-        use overhead_core::sgp4::{Elements, chrono::Duration};
-        // Existing Vallado failure control: valid at +20 min, fails at +25.
-        // Place the observer under the valid sample so the former selection is
-        // demonstrably visible, rather than merely losing an off-screen object.
-        let elements = Elements::from_tle(
-            None,
-            b"1 33333U 05037B   05333.02012661  .25992681  00000-0  24476-3 0  1532",
-            b"2 33333  96.4736 157.9986 9950000 244.0492 110.6523  4.00004038 10700",
-        )
-        .unwrap();
-        let epoch = elements.datetime;
-        let checked: OmmElements =
-            serde_json::from_str(&serde_json::to_string(&elements).unwrap()).unwrap();
-        let mut builder = CatalogueBuilder::new();
-        builder.push(
-            RecordOrigin {
-                group: 0,
-                record: 0,
-            },
-            checked,
-        );
-        let catalogue = builder.finish().unwrap();
-        let time = epoch + Duration::minutes(20);
-        let mut observer = ecef_to_geodetic(
-            catalogue.entries()[0]
-                .satellite()
-                .state_at(time)
-                .unwrap()
-                .to_ecef()
-                .unwrap(),
-        )
-        .unwrap();
-        observer.altitude_km = 0.0;
-        let layout = Layout::wide();
-        let mut app = RadarApp::new(
-            catalogue,
-            observer,
-            View::rectangular(20.0, layout.aspect_ratio()).unwrap(),
-        )
-        .unwrap();
-        app.update(time).unwrap();
-        assert_eq!(app.selected_id(), Some(33333));
-        let counts = app.counts();
-        let physical = app.selected().unwrap().1.physical;
-        let mut screen = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        draw(&mut screen, &app, layout, false).unwrap();
-        assert_selected_strip(&screen, &app);
-        let healthy = screen.pixels;
-        assert_eq!(app.counts(), counts);
-        assert_eq!(app.selected().unwrap().1.physical, physical);
-
-        app.update(epoch + Duration::minutes(25)).unwrap();
-        assert_eq!(app.counts().failed, 1);
-        assert_eq!(app.selected_id(), None);
-        draw(&mut screen, &app, layout, false).unwrap();
-        assert_selected_strip(&screen, &app);
-        assert_wide_notice(&app, false, &["NO MARKERS", "TRACK ERROR"]);
-
-        app.update(time).unwrap();
-        draw(&mut screen, &app, layout, false).unwrap();
-        assert_eq!(screen.pixels, healthy);
-        assert_eq!(app.selected_id(), Some(33333));
-        assert_eq!(app.counts(), counts);
-        assert_eq!(app.selected().unwrap().1.physical, physical);
     }
 
     fn assert_wide_notice(app: &RadarApp, warning: bool, lines: &[&str]) {
@@ -2481,7 +1083,6 @@ mod tests {
         let mut reference = Screen {
             pixels: [[false; 400]; 240],
         };
-        assert_selected_strip(&screen, app);
         if !lines.is_empty() {
             let top = 213 - (lines.len() - 1) * 13;
             let right = 10 + lines.iter().map(|line| line.len()).max().unwrap() * 6 + 4;
@@ -2882,281 +1483,6 @@ mod tests {
     }
 
     #[test]
-    fn selected_identity_is_bare_complete_and_only_25544_is_iss() {
-        for (id, expected) in [
-            (25544, "ISS"),
-            (38771, "38771"),
-            (100530, "100530"),
-            (1_234_567, "1234567"),
-            (0, "0"),
-            (u64::MAX, "18446744073709551615"),
-        ] {
-            assert_eq!(selected_label(id).as_str(), expected);
-        }
-    }
-
-    #[test]
-    fn selected_label_fits_edges_corners_and_full_id_without_clipping() {
-        let layout = Layout::wide();
-        for id in [25544, 38771, 100530, 1_234_567, u64::MAX] {
-            let label = selected_label(id);
-            let text = Text::with_baseline(
-                label.as_str(),
-                Point::zero(),
-                MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
-                Baseline::Top,
-            );
-            let size = text.bounding_box().size;
-            // Every integer x tests both sides of the flip threshold; y includes
-            // all edges/corners and the vertically centered interior.
-            for x in 3..=349 {
-                for y in [3, 7, 120, 233, 237] {
-                    let marker = Point::new(x, y);
-                    let origin = selected_label_origin(marker, size, layout);
-                    let bounds = Rectangle::new(origin, size);
-                    assert!(layout.contains(origin, Viewport::Rectangle));
-                    assert!(layout.contains(bounds.bottom_right().unwrap(), Viewport::Rectangle));
-                    if x + 6 + size.width as i32 - 1 <= 349 {
-                        assert_eq!(origin.x, x + 6);
-                    } else {
-                        assert_eq!(bounds.bottom_right().unwrap().x, x - 6);
-                    }
-                    assert_eq!(origin.y, (y - 5).clamp(3, 228));
-                    // Compare with un-clipped reference text to detect lost
-                    // characters, not merely out-of-bounds pixels.
-                    let mut actual = Screen {
-                        pixels: [[false; 400]; 240],
-                    };
-                    draw_selected_label(&mut actual, id, marker, layout).unwrap();
-                    let mut expected = Screen {
-                        pixels: [[false; 400]; 240],
-                    };
-                    text.translate(origin).draw(&mut expected).unwrap();
-                    assert_eq!(actual.pixels, expected.pixels);
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn selected_label_has_white_backing_over_scene_graphics() {
-        let layout = Layout::wide();
-        let mut scene = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        // Put an arrow and another marker directly under the label footprint.
-        let marker = Point::new(300, 120);
-        draw_marker(
-            &mut scene,
-            Point::new(312, 120),
-            false,
-            layout,
-            Viewport::Rectangle,
-        )
-        .unwrap();
-        let arrow = EdgeIndicator {
-            edge: ViewPoint {
-                east: 1.0,
-                north: 0.0,
-            },
-            direction: ViewPoint {
-                east: 1.0,
-                north: 0.0,
-            },
-        };
-        draw_indicator(&mut scene, arrow, layout).unwrap();
-        let before = scene.pixels;
-        let mut ink = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        draw_selected_label(&mut ink, 1_234_567, marker, layout).unwrap();
-        draw_selected_label(&mut scene, 1_234_567, marker, layout).unwrap();
-        // Text ink bounds plus 1px is the only region the label may change:
-        // inside it, exactly the text; outside, the scene is untouched.
-        let lit: Vec<_> = (0..240)
-            .flat_map(|y| (0..400).map(move |x| (x, y)))
-            .filter(|&(x, y)| ink.pixels[y][x])
-            .collect();
-        let origin = selected_label_origin(marker, Size::new(42, 10), layout);
-        let (x0, y0) = (origin.x as usize - 1, origin.y as usize - 1);
-        let (x1, y1) = (x0 + 44, y0 + 12);
-        assert!(
-            lit.iter()
-                .all(|&(x, y)| (x0..x1).contains(&x) && (y0..y1).contains(&y))
-        );
-        let mut covered = false;
-        for (y, row) in before.iter().enumerate() {
-            for (x, &was_on) in row.iter().enumerate() {
-                if (x0..x1).contains(&x) && (y0..y1).contains(&y) {
-                    assert_eq!(scene.pixels[y][x], ink.pixels[y][x]);
-                    covered |= was_on && !ink.pixels[y][x];
-                } else {
-                    assert_eq!(scene.pixels[y][x], was_on);
-                }
-            }
-        }
-        assert!(covered, "fixture never placed scene ink under the label");
-    }
-
-    #[test]
-    fn wide_label_follows_selection_and_clears_on_reselection_and_missing_frame() {
-        let layout = Layout::wide();
-        let mut app = app_with_ids(Viewport::Rectangle, false, &[25544, 100530]);
-        let samples: Vec<_> = app.objects().map(|(_, s)| s.clone()).collect();
-        let counts = app.counts();
-        let mut screen = Screen {
-            pixels: [[true; 400]; 240],
-        };
-        // Compare label pixels without the independent geography background.
-        draw_frame(&mut screen, &app, layout, false, None, None).unwrap();
-        let iss = screen.pixels;
-        app.select_next();
-        assert_eq!(app.selected_id(), Some(100530));
-        draw_frame(&mut screen, &app, layout, false, None, None).unwrap();
-        assert_ne!(screen.pixels, iss);
-        let mut label_reference = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        Text::with_baseline(
-            "100530",
-            Point::new(182, 115),
-            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
-            Baseline::Top,
-        )
-        .draw(&mut label_reference)
-        .unwrap();
-        for (y, row) in screen.pixels.iter().enumerate() {
-            for (x, &pixel) in row.iter().enumerate() {
-                if (182..218).contains(&x) && (115..125).contains(&y) {
-                    assert_eq!(pixel, label_reference.pixels[y][x]);
-                } else {
-                    assert_eq!(pixel, iss[y][x]); // Only the selected label changes.
-                }
-            }
-        }
-        let mut fresh = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        draw_frame(&mut fresh, &app, layout, false, None, None).unwrap();
-        assert_eq!(screen.pixels, fresh.pixels);
-        assert_eq!(app.counts(), counts);
-        assert_eq!(
-            app.objects().map(|(_, s)| s.clone()).collect::<Vec<_>>(),
-            samples
-        );
-        app.select_next();
-        draw_frame(&mut screen, &app, layout, false, None, None).unwrap();
-        assert_eq!(screen.pixels, iss);
-
-        let invalid = overhead_core::sgp4::chrono::NaiveDate::from_ymd_opt(2101, 1, 1)
-            .unwrap()
-            .and_hms_opt(0, 0, 0)
-            .unwrap();
-        assert!(app.update(invalid).is_err());
-        draw_frame(&mut screen, &app, layout, false, None, None).unwrap();
-        draw_frame(&mut fresh, &app, layout, false, None, None).unwrap();
-        assert_eq!(screen.pixels, fresh.pixels);
-        assert_eq!(app.selected_id(), None);
-        let label_origin = selected_label_origin(layout.center(), Size::new(18, 10), layout);
-        assert!(
-            screen.pixels[label_origin.y as usize..(label_origin.y + 10) as usize]
-                .iter()
-                .all(
-                    |row| row[label_origin.x as usize..(label_origin.x + 36) as usize]
-                        .iter()
-                        .all(|&on| !on)
-                )
-        );
-    }
-
-    #[test]
-    fn zooming_selected_marker_offscreen_keeps_strip_without_labelling_arrow() {
-        let layout = Layout::wide();
-        let mut app = app_with_viewport(Viewport::Rectangle);
-        let later = app.time().unwrap() + overhead_core::sgp4::chrono::Duration::seconds(30);
-        app.update(later).unwrap();
-        assert_eq!(app.selected_id(), Some(25544));
-        let mut screen = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        draw(&mut screen, &app, layout, false).unwrap();
-        let before = screen.pixels;
-        app.zoom(64);
-        assert_eq!(app.selected_id(), Some(25544));
-        assert_eq!(app.counts().visible, 0);
-        assert_eq!(app.indicators().count(), 1);
-        draw(&mut screen, &app, layout, false).unwrap();
-        assert_selected_strip(&screen, &app);
-        assert_ne!(screen.pixels, before);
-        let mut fresh = Screen {
-            pixels: [[false; 400]; 240],
-        };
-        draw(&mut fresh, &app, layout, false).unwrap();
-        assert_eq!(screen.pixels, fresh.pixels);
-        app.zoom(-64);
-        assert_eq!(app.selected_id(), Some(25544));
-        draw(&mut screen, &app, layout, false).unwrap();
-        draw(&mut fresh, &app, layout, false).unwrap();
-        assert_eq!(screen.pixels, fresh.pixels);
-    }
-
-    #[test]
-    fn hiding_label_changes_only_text_not_diamond_scene_or_diagnostics() {
-        use overhead_app::identification::LabelZoom;
-        for viewport in [
-            Viewport::Rectangle,
-            Viewport::Square,
-            Viewport::Circle,
-            Viewport::BorderlessCircle,
-        ] {
-            let layout = if viewport == Viewport::Rectangle {
-                Layout::wide()
-            } else {
-                Layout::new(240).unwrap()
-            };
-            let app = app_with_failure(viewport, true);
-            let selected = app.selected_id();
-            let physical = app.selected().unwrap().1.physical;
-            let counts = app.counts();
-            let mut screen = Screen {
-                pixels: [[false; 400]; 240],
-            };
-            draw(&mut screen, &app, layout, true).unwrap();
-            let labelled = screen.pixels;
-            // Same lens, frame, markers, warnings and selection; only the label
-            // gate changes. This also verifies constructor configuration.
-            let app = app.with_label_zoom(LabelZoom::new(10.0, 15.0).unwrap());
-            assert!(!app.selected_label_visible());
-            draw(&mut screen, &app, layout, true).unwrap();
-            assert_eq!(app.selected_id(), selected);
-            assert_eq!(app.selected().unwrap().1.physical, physical);
-            assert_eq!(app.counts(), counts);
-            let marker = layout.marker(app.markers().next().unwrap().2);
-            let mut diamond = Screen {
-                pixels: [[false; 400]; 240],
-            };
-            draw_marker(&mut diamond, marker, true, layout, viewport).unwrap();
-            for (y, row) in diamond.pixels.iter().enumerate() {
-                for (x, &on) in row.iter().enumerate() {
-                    if on {
-                        assert!(screen.pixels[y][x]);
-                    }
-                }
-            }
-            if viewport == Viewport::Rectangle {
-                assert_ne!(screen.pixels, labelled);
-                let mut fresh = Screen {
-                    pixels: [[false; 400]; 240],
-                };
-                draw(&mut fresh, &app, layout, true).unwrap();
-                assert_eq!(screen.pixels, fresh.pixels); // No stale text.
-                draw_selected_label(&mut screen, selected.unwrap(), marker, layout).unwrap();
-            }
-            assert_eq!(screen.pixels, labelled);
-        }
-    }
-
-    #[test]
     fn baseline_radar_has_no_marker_adjacent_identity() {
         for viewport in [
             Viewport::Circle,
@@ -3213,8 +1539,8 @@ mod tests {
                     pixels: [[false; 400]; 240],
                 };
                 let mut layer = CoastLayer::prepare(app.observer());
-                draw_frame(&mut coast, &app, layout, warning, None, Some(&mut layer)).unwrap();
-                draw_frame(&mut control, &app, layout, warning, None, None).unwrap();
+                draw_frame(&mut coast, &app, layout, warning, Some(&mut layer)).unwrap();
+                draw_frame(&mut control, &app, layout, warning, None).unwrap();
                 // Geographic ink may add to the background, but may not erase
                 // existing marker, limb, strip or notice ink. Compare complete
                 // frames; the earlier control isolates coast without CLI flags.
@@ -3259,7 +1585,7 @@ mod tests {
             pixels: [[false; 400]; 240],
         };
         draw(&mut with_coast, &app, layout, false).unwrap();
-        draw_frame(&mut without, &app, layout, false, None, None).unwrap();
+        draw_frame(&mut without, &app, layout, false, None).unwrap();
         // The chosen test observer is not guaranteed coastal: prove geographic
         // ink independently at the actual SF shore, not via a satellite fixture.
         let observer = GeodeticPosition {
@@ -3322,18 +1648,172 @@ mod tests {
         ] {
             let app = app_with_viewport(viewport);
             let square = Layout::new(240).unwrap();
-            draw_frame(
-                &mut with_coast,
-                &app,
-                square,
-                false,
-                None,
-                Some(&mut invalid),
-            )
-            .unwrap();
-            draw_frame(&mut without, &app, square, false, None, None).unwrap();
+            draw_frame(&mut with_coast, &app, square, false, Some(&mut invalid)).unwrap();
+            draw_frame(&mut without, &app, square, false, None).unwrap();
             assert_eq!(with_coast.pixels, without.pixels);
         }
+    }
+
+    fn wide_screen(app: &RadarApp) -> Screen {
+        let mut screen = Screen {
+            pixels: [[true; 400]; 240],
+        };
+        draw(&mut screen, app, Layout::wide(), false).unwrap();
+        screen
+    }
+
+    fn halo_of(shape: &[(i32, i32)]) -> Vec<(i32, i32)> {
+        let mut halo = Vec::new();
+        for (x, y) in shape {
+            for j in -1..=1 {
+                for i in -1..=1 {
+                    let p = (x + i, y + j);
+                    if !shape.contains(&p) && !halo.contains(&p) {
+                        halo.push(p);
+                    }
+                }
+            }
+        }
+        halo
+    }
+
+    #[test]
+    fn selected_octagon_has_cleared_halo_and_pulsing_ring() {
+        let app = app_with_viewport(Viewport::Rectangle);
+        let (_, _, point) = app.markers().next().unwrap();
+        assert_eq!(app.selected_id(), Some(25544));
+        let at = Layout::wide().marker(point);
+        let screen = wide_screen(&app);
+        let ink = |(x, y): (i32, i32)| screen.pixels[(at.y + y) as usize][(at.x + x) as usize];
+        let octagon: Vec<_> = wide::octagon().collect();
+        assert!(octagon.iter().all(|&p| ink(p)));
+        assert!(halo_of(&octagon).iter().all(|&p| !ink(p)));
+        // The ring for this frame's phase, the only ink 5-14 px out besides
+        // coastline and limb, which it is drawn over.
+        let phase = wide::pulse_phase(app.time());
+        let r = 6.0 + phase * 7.0;
+        let n = libm::ceil(r * 6.3).max(12.0) as usize;
+        let dash = if phase > 0.6 { 2 } else { 1 };
+        for k in (0..n).step_by(dash) {
+            let (s, c) = libm::sincos(k as f64 / n as f64 * core::f64::consts::TAU);
+            let p = (
+                libm::floor(r * c + 0.5) as i32,
+                libm::floor(r * s + 0.5) as i32,
+            );
+            assert!(ink(p), "ring point {p:?} r={r}");
+        }
+    }
+
+    #[test]
+    fn below_horizon_group_members_are_hollow_diamonds_and_never_selected() {
+        // ISS copies around the orbit: some above, some below the horizon.
+        let mut app = app_with_orbits(
+            Viewport::Rectangle,
+            false,
+            &[25544, 1, 2, 3, 4, 5, 6, 7],
+            45.0,
+        );
+        app.zoom(-64);
+        let below: Vec<_> = app
+            .below_horizon_markers()
+            .map(|(e, _, v)| (e.elements().norad_id, v))
+            .collect();
+        assert!(!below.is_empty() && app.markers().count() > 0);
+        let screen = wide_screen(&app);
+        let mut intact = 0;
+        for (id, v) in &below {
+            assert_ne!(app.selected_id(), Some(*id));
+            let at = Layout::wide().marker(*v);
+            let ink = |(x, y): (i32, i32)| screen.pixels[(at.y + y) as usize][(at.x + x) as usize];
+            let hollow = wide::DIAMOND5.iter().all(|&p| ink(p)) && !ink((0, 0));
+            intact += usize::from(hollow && halo_of(&wide::DIAMOND5).iter().all(|&p| !ink(p)));
+        }
+        assert!(intact > 0);
+        // Not counted, no arrows.
+        let counts = app.counts();
+        assert_eq!(counts.above_horizon, app.markers().count());
+        assert!(
+            app.indicators()
+                .all(|(e, _)| below.iter().all(|(id, _)| *id != e.elements().norad_id))
+        );
+    }
+
+    #[test]
+    fn pills_show_selected_truth_or_counts_and_nothing_without_a_frame() {
+        let app = app_with_viewport(Viewport::Rectangle);
+        let (rows, gaps) = wide::pill_rows(&app);
+        let labels: Vec<_> = rows
+            .iter()
+            .flatten()
+            .map(|p| p.label.unwrap_or(""))
+            .collect();
+        assert_eq!(
+            &labels[..8],
+            ["", "", "EL", "AZ", "ALT", "RNG", "SPD", "PER"]
+        );
+        assert_eq!(gaps, [1, 3, 5, 7]);
+        let value = |i: usize| rows[i].as_ref().unwrap().value.as_str();
+        let (_, sample) = app.selected().unwrap();
+        assert_eq!(value(0), "25544");
+        assert_eq!(value(1), "ISS ZARYA");
+        assert!(value(2).ends_with('°'));
+        assert_eq!(
+            value(5),
+            std::format!("{}km", libm::round(sample.physical.look.range_km) as i64)
+        );
+        // Drawn: the first pill's outline and its value text, label sides inverted.
+        let screen = wide_screen(&app);
+        assert!(screen.pixels[4][6] && !screen.pixels[4][4] && screen.pixels[6][4]);
+        let mut text = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        Text::with_baseline(
+            "25544",
+            Point::new(9, 6),
+            MonoTextStyle::new(&FONT_6X10, BinaryColor::On),
+            Baseline::Top,
+        )
+        .draw(&mut text)
+        .unwrap();
+        for y in 6..16 {
+            for x in 9..39 {
+                assert_eq!(screen.pixels[y][x], text.pixels[y][x], "{x},{y}");
+            }
+        }
+        let (el, split) = wide::pill_box(rows[2].as_ref().unwrap(), 0);
+        assert!(el.size.width > 30 && split == 4 + 2 * 6 + 7);
+
+        // Nothing selectable in view: counts instead.
+        let mut empty = app_with_viewport(Viewport::Rectangle);
+        empty.zoom(64);
+        if empty.selected_id().is_none() {
+            let (rows, _) = wide::pill_rows(&empty);
+            assert_eq!(rows[0].as_ref().unwrap().value.as_str(), "NO SEL");
+        }
+        // No frame: no pills and no ruler, only the notice.
+        empty.invalidate_frame();
+        assert!(wide::pill_rows(&empty).0.iter().all(Option::is_none));
+        let screen = wide_screen(&empty);
+        for y in 0..40 {
+            assert!(screen.pixels[y][..100].iter().all(|&p| !p));
+        }
+        for y in 200..240 {
+            assert!(screen.pixels[y][300..].iter().all(|&p| !p));
+        }
+    }
+
+    #[test]
+    fn scale_ruler_sits_bottom_right_on_a_cleared_backing() {
+        let app = app_with_viewport(Viewport::Rectangle);
+        let screen = wide_screen(&app);
+        // "km" ends 4 px from the right edge; the bar is the base row + 3.
+        let row = &screen.pixels[240 - 11 + 3];
+        let first = row.iter().position(|&p| p).unwrap();
+        let last = row.iter().rposition(|&p| p).unwrap();
+        assert!(first > 250 && last < 390, "{first}..{last}");
+        assert!(row[first..=last].iter().all(|&p| p));
+        // Cleared backing above the bar between labels.
+        assert!(!screen.pixels[240 - 11 - 15][first + 1]);
     }
 
     #[test]
@@ -3463,7 +1943,6 @@ mod tests {
                     &app,
                     layout,
                     warning,
-                    None,
                     true,
                     |display, observer, view, layout| {
                         let drawn = layer.draw(display, observer, view, layout)?;
@@ -3477,7 +1956,7 @@ mod tests {
                 let mut expected = Screen {
                     pixels: [[false; 400]; 240],
                 };
-                draw_frame(&mut expected, &app, layout, warning, None, None).unwrap();
+                draw_frame(&mut expected, &app, layout, warning, None).unwrap();
                 let counts = app.counts();
                 draw_wide_notices(
                     &mut expected,

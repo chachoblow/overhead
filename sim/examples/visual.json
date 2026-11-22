@@ -1,0 +1,8 @@
+{
+  "groups": [
+    {
+      "name": "visual",
+      "path": "../../firmware/fixtures/celestrak-visual-20261103.json"
+    }
+  ]
+}

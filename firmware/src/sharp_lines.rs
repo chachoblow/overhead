@@ -144,7 +144,7 @@ mod tests {
     extern crate std;
     use super::*;
     use overhead_core::sgp4::chrono::TimeDelta;
-    use overhead_render::{CoastLayer, Layout, PeriodCache};
+    use overhead_render::{CoastLayer, Layout};
     use std::vec::Vec;
 
     fn collect(
@@ -169,7 +169,6 @@ mod tests {
         let mut app = crate::coast_measurement::app("iss-ground-20", 0.0, 0.0, 5.0);
         let epoch = app.time().unwrap();
         let mut coast = CoastLayer::prepare(app.observer());
-        let mut period = PeriodCache::new();
         let mut screen = crate::coast_measurement::Screen::new();
         let mut sender = LineSender::new();
         let mut partial_panel = [0_u8; FRAME_BYTES];
@@ -193,15 +192,8 @@ mod tests {
                 }
                 Step::Frame { second, force_full } => {
                     app.update(epoch + TimeDelta::seconds(second)).unwrap();
-                    overhead_render::draw_cached(
-                        &mut screen,
-                        &app,
-                        Layout::wide(),
-                        false,
-                        &mut coast,
-                        &mut period,
-                    )
-                    .unwrap();
+                    overhead_render::draw(&mut screen, &app, Layout::wide(), false, &mut coast)
+                        .unwrap();
                     let (transfer, chunks) =
                         collect(&mut sender, phase, &screen.pixels, force_full);
                     let count = crate::sharp_transport::apply(&chunks, &mut partial_panel, phase);

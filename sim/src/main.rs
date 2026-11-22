@@ -7,7 +7,7 @@ use embedded_graphics_simulator::{
     sdl2::{Keycode, MouseWheelDirection},
 };
 use overhead_app::{RadarApp, projection::Viewport};
-use overhead_render::{CoastLayer, Layout, presentation::Presentation};
+use overhead_render::{CoastLayer, Layout};
 use std::{
     env,
     process::ExitCode,
@@ -21,8 +21,7 @@ fn run(config: Config) -> Result<(), String> {
     let ingestion_warning = !loaded.diagnostics.is_empty();
     let mut app = RadarApp::new(loaded.catalogue, config.observer, config.view)
         .map_err(|e| e.to_string())?
-        .with_group_categories(loaded.group_categories)
-        .with_label_zoom(config.label_zoom);
+        .with_group_categories(loaded.group_categories);
     app.update(config.start).map_err(|e| e.to_string())?;
     let mut previous_failures = Vec::new();
     report_failures(&app, &mut previous_failures);
@@ -51,28 +50,9 @@ fn run(config: Config) -> Result<(), String> {
     let coast = prepare_coast(&app, wide);
     let mut presentation =
         InteractivePresentation::new(config.view.viewport(), config.debug, coast);
-    if config.snapshot.is_some() {
-        overhead_render::draw(
-            &mut display,
-            &app,
-            config.layout,
-            ingestion_warning,
-            &mut presentation.coast,
-        )
+    presentation
+        .draw(&mut display, &app, config.layout, ingestion_warning)
         .map_err(|e| e.to_string())?;
-    } else {
-        // Normal startup primes the glyph timeline before input, so even a Tab
-        // on the first cycle has an endpoint. Debug starts without glyph history.
-        presentation
-            .draw(
-                &mut display,
-                &app,
-                config.layout,
-                ingestion_warning,
-                Duration::ZERO,
-            )
-            .map_err(|e| e.to_string())?;
-    }
     if let Some(path) = config.snapshot {
         display
             .to_rgb_output_image(
@@ -135,13 +115,7 @@ fn run(config: Config) -> Result<(), String> {
             .map_err(|e| e.to_string())?;
         report_failures(&app, &mut previous_failures);
         presentation
-            .draw(
-                &mut display,
-                &app,
-                config.layout,
-                ingestion_warning,
-                elapsed,
-            )
+            .draw(&mut display, &app, config.layout, ingestion_warning)
             .map_err(|e| e.to_string())?;
     }
 }
@@ -163,13 +137,11 @@ fn prepare_coast(app: &RadarApp, wide: bool) -> CoastLayer {
     coast
 }
 
-/// Host-only presentation choice. Toggling never mutates app geometry or truth;
-/// discard hidden glyph history so returning normal starts at current endpoints.
+/// Host-only presentation choice. Toggling never mutates app geometry or truth.
 /// The coast layer belongs to the fixed observer and survives every toggle.
 struct InteractivePresentation {
     wide: bool,
     debug: bool,
-    glyphs: Presentation,
     coast: CoastLayer,
 }
 
@@ -179,7 +151,6 @@ impl InteractivePresentation {
         Self {
             wide,
             debug: wide && debug,
-            glyphs: Presentation::new(),
             coast,
         }
     }
@@ -192,10 +163,7 @@ impl InteractivePresentation {
             Keycode::Up => app.zoom(1),
             Keycode::Down => app.zoom(-1),
             Keycode::Tab if !repeat => app.select_next(),
-            Keycode::V if self.wide && !repeat => {
-                self.debug = !self.debug;
-                self.glyphs = Presentation::new();
-            }
+            Keycode::V if self.wide && !repeat => self.debug = !self.debug,
             _ => {}
         }
         true
@@ -207,20 +175,11 @@ impl InteractivePresentation {
         app: &RadarApp,
         layout: Layout,
         ingestion_warning: bool,
-        elapsed: Duration,
     ) -> Result<(), D::Error> {
         if self.debug {
             overhead_render::debug::draw(display, app, ingestion_warning)
         } else {
-            overhead_render::draw_at(
-                display,
-                app,
-                layout,
-                ingestion_warning,
-                &mut self.glyphs,
-                elapsed,
-                &mut self.coast,
-            )
+            overhead_render::draw(display, app, layout, ingestion_warning, &mut self.coast)
         }
     }
 }

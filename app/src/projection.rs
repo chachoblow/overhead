@@ -80,6 +80,8 @@ pub struct Camera {
     east: Vector,
     north: Vector,
     up: Vector,
+    /// Camera position (ECEF km), for the Earth-occlusion test.
+    position: Vector,
     limb: EarthLimb,
 }
 
@@ -101,8 +103,33 @@ impl Camera {
             east,
             north,
             up,
+            position,
             limb,
         })
+    }
+
+    /// Whether the WGS-84 ellipsoid lies between the camera and `target`
+    /// (0089: below-horizon markers are drawn only where the camera sees
+    /// them). A target on or inside the surface counts as hidden; a
+    /// nonfinite one too, so it is never drawn.
+    pub fn hidden_by_earth(&self, target: EcefPosition) -> bool {
+        let scale = |v: Vector| [v[0] / EARTH_A_KM, v[1] / EARTH_A_KM, v[2] / EARTH_B_KM];
+        let c = scale(self.position);
+        let t = scale(target.km());
+        let d: Vector = core::array::from_fn(|i| t[i] - c[i]);
+        // |c + s d|^2 = 1 for s in (0, 1) means the segment enters the Earth.
+        let a = dot(d, d);
+        let b = 2.0 * dot(c, d);
+        let cc = dot(c, c) - 1.0;
+        if !(a.is_finite() && b.is_finite() && cc.is_finite()) || dot(t, t) <= 1.0 {
+            return true;
+        }
+        let disc = b * b - 4.0 * a * cc;
+        if disc < 0.0 || a == 0.0 {
+            return false;
+        }
+        let near = (-b - libm::sqrt(disc)) / (2.0 * a);
+        near > 0.0 && near < 1.0
     }
 
     /// Actual ECEF position, not a geodetic footprint. Clipping is deferred to
@@ -293,9 +320,6 @@ impl View {
     pub fn viewport(self) -> Viewport {
         self.viewport
     }
-    pub(crate) fn vertical_half_span(self) -> f64 {
-        self.half_span
-    }
     pub fn fov_deg(self) -> f64 {
         (2.0 * libm::atan(self.half_span)).to_degrees()
     }
@@ -387,6 +411,27 @@ mod tests {
         EcefPosition::from_km(core::array::from_fn(|i| {
             camera.observer[i] + east * camera.east[i] + north * camera.north[i] + up * camera.up[i]
         }))
+    }
+
+    #[test]
+    fn earth_hides_only_what_lies_behind_it() {
+        for site in [
+            geo(40.0, -105.0, 1.6),
+            geo(0.0, 180.0, 0.0),
+            geo(-89.0, 10.0, 0.0),
+        ] {
+            let camera = Camera::new(site).unwrap();
+            // Above the observer, and just past its horizon on the near side.
+            assert!(!camera.hidden_by_earth(target(&camera, 0.0, 0.0, 400.0)));
+            assert!(!camera.hidden_by_earth(target(&camera, 3000.0, 0.0, -200.0)));
+            // Straight through the Earth from the observer: antipodal side.
+            assert!(camera.hidden_by_earth(target(&camera, 0.0, 0.0, -2.0 * 6378.0 - 500.0)));
+            // Under the surface, at the observer, or nonfinite.
+            assert!(camera.hidden_by_earth(target(&camera, 0.0, 0.0, -100.0)));
+            assert!(camera.hidden_by_earth(EcefPosition::from_km([f64::NAN; 3])));
+            // Far to the side, beyond the limb as seen from the camera.
+            assert!(!camera.hidden_by_earth(target(&camera, 20_000.0, 0.0, -6378.0)));
+        }
     }
 
     #[test]

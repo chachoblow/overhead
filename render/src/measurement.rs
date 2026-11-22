@@ -8,7 +8,7 @@ use overhead_app::RadarApp;
 
 use crate::{DISPLAY_SIZE, Layout, coast, draw_frame_traced, draw_frame_with_coast};
 
-pub use crate::{FrameStage as Stage, glyphs::GlyphStage};
+pub use crate::FrameStage as Stage;
 
 /// Trace cumulative stage boundaries in the actual coast-free compositor.
 /// The callback must be cheap and must not draw or log; sample time there and
@@ -20,29 +20,14 @@ pub fn frame_off_traced<D: DrawTarget<Color = BinaryColor>>(
     warning: bool,
     trace: impl FnMut(Stage),
 ) -> Result<(), D::Error> {
-    frame_off_fields_traced(display, app, warning, trace, |_| {})
-}
-
-/// In addition to frame stages, timestamp the separator and four static fields.
-/// Both callbacks run within the same coast-free draw and must not do I/O.
-pub fn frame_off_fields_traced<D: DrawTarget<Color = BinaryColor>>(
-    display: &mut D,
-    app: &RadarApp,
-    warning: bool,
-    trace: impl FnMut(Stage),
-    glyph_trace: impl FnMut(GlyphStage),
-) -> Result<(), D::Error> {
     draw_frame_traced(
         display,
         app,
         Layout::wide(),
         warning,
-        None,
         false,
         |_, _, _, _| Ok(true),
         trace,
-        glyph_trace,
-        None,
     )
 }
 
@@ -72,7 +57,6 @@ pub fn frame_off<D: DrawTarget<Color = BinaryColor>>(
         app,
         Layout::wide(),
         warning,
-        None,
         false,
         |_, _, _, _| Ok(true),
     )
@@ -91,7 +75,6 @@ pub fn frame_on<D: DrawTarget<Color = BinaryColor>>(
         app,
         Layout::wide(),
         warning,
-        None,
         true,
         |display, observer, view, layout| {
             let result = coast::draw(display, observer, view, layout, coast::ASSET)?;
@@ -109,15 +92,9 @@ pub fn frame_failure_control<D: DrawTarget<Color = BinaryColor>>(
     app: &RadarApp,
     warning: bool,
 ) -> Result<(), D::Error> {
-    draw_frame_with_coast(
-        display,
-        app,
-        Layout::wide(),
-        warning,
-        None,
-        true,
-        |_, _, _, _| Ok(false),
-    )
+    draw_frame_with_coast(display, app, Layout::wide(), warning, true, |_, _, _, _| {
+        Ok(false)
+    })
 }
 
 /// Trigger after at least one actual coast On write and after at least 20,000
@@ -134,7 +111,6 @@ pub fn frame_late_failure<D: DrawTarget<Color = BinaryColor>>(
         app,
         Layout::wide(),
         warning,
-        None,
         true,
         |display, observer, view, layout| {
             let ink = Cell::new(false);
@@ -216,7 +192,6 @@ pub fn frame_candidate<D: DrawTarget<Color = BinaryColor, Error = core::convert:
         app,
         Layout::wide(),
         warning,
-        None,
         true,
         |display, site, view, _| {
             let ok = candidate_draw(display, site, view, bytes)
@@ -236,15 +211,9 @@ pub fn candidate_failure_control<D: DrawTarget<Color = BinaryColor>>(
     app: &RadarApp,
     warning: bool,
 ) -> Result<(), D::Error> {
-    draw_frame_with_coast(
-        display,
-        app,
-        Layout::wide(),
-        warning,
-        None,
-        true,
-        |_, _, _, _| Ok(false),
-    )
+    draw_frame_with_coast(display, app, Layout::wide(), warning, true, |_, _, _, _| {
+        Ok(false)
+    })
 }
 
 #[cfg(test)]
@@ -359,42 +328,21 @@ mod tests {
                 let mut actual = Screen([[false; 400]; 240]);
                 frame_off(&mut actual, &app, warning).unwrap();
                 let mut expected = Screen([[false; 400]; 240]);
-                crate::draw_frame(&mut expected, &app, Layout::wide(), warning, None, None)
-                    .unwrap();
+                crate::draw_frame(&mut expected, &app, Layout::wide(), warning, None).unwrap();
                 assert_eq!(actual.0, expected.0);
                 let mut traced = Screen([[true; 400]; 240]);
                 let mut stages = Vec::new();
-                let mut glyph_stages = Vec::new();
-                frame_off_fields_traced(
-                    &mut traced,
-                    &app,
-                    warning,
-                    |stage| stages.push(stage),
-                    |stage| glyph_stages.push(stage),
-                )
-                .unwrap();
+                frame_off_traced(&mut traced, &app, warning, |stage| stages.push(stage)).unwrap();
                 assert_eq!(traced.0, expected.0);
-                assert_eq!(
-                    glyph_stages,
-                    [
-                        GlyphStage::Separator,
-                        GlyphStage::Elevation,
-                        GlyphStage::Altitude,
-                        GlyphStage::Speed,
-                        GlyphStage::Period,
-                    ]
-                );
                 assert_eq!(
                     stages,
                     [
                         Stage::Clear,
                         Stage::Coast,
                         Stage::Earth,
-                        Stage::Radar,
                         Stage::Markers,
-                        Stage::Label,
-                        Stage::Category,
-                        Stage::Glyphs,
+                        Stage::Arrows,
+                        Stage::Overlays,
                         Stage::Status,
                     ]
                 );

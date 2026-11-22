@@ -223,8 +223,14 @@ fn clip_fast(a: [f32; 2], b: [f32; 2]) -> Option<([f32; 2], [f32; 2])> {
     ))
 }
 
+/// Wide-radar pixel mapping: centre and radii as in `Layout::wide()`.
+const CENTER_X: i32 = crate::WIDE_WIDTH as i32 / 2;
+const CENTER_Y: i32 = crate::WIDE_HEIGHT as i32 / 2;
+const HALF_X: f32 = (crate::WIDE_WIDTH as i32 / 2 - 3) as f32;
+const HALF_Y: f32 = (crate::WIDE_HEIGHT as i32 / 2 - 3) as f32;
+
 fn flat(p: [[f32; 2]; 3]) -> bool {
-    let scale = [173.0, 117.0];
+    let scale = [HALF_X, HALF_Y];
     let delta: [f32; 2] = core::array::from_fn(|i| (p[2][i] - p[0][i]) * scale[i]);
     let control: [f32; 2] = core::array::from_fn(|i| (p[1][i] - p[0][i]) * scale[i]);
     let length2 = delta[0] * delta[0] + delta[1] * delta[1];
@@ -283,8 +289,8 @@ fn flatten<D: DrawTarget<Color = BinaryColor>>(
                 let pixel = |p: [f32; 2]| {
                     let round = |x: f32| (x + if x < 0.0 { -0.5 } else { 0.5 }) as i32;
                     Point::new(
-                        176 + round(p[0].clamp(-1.0, 1.0) * 173.0),
-                        120 - round(p[1].clamp(-1.0, 1.0) * 117.0),
+                        CENTER_X + round(p[0].clamp(-1.0, 1.0) * HALF_X),
+                        CENTER_Y - round(p[1].clamp(-1.0, 1.0) * HALF_Y),
                     )
                 };
                 counts.strokes += 1;

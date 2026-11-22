@@ -27,7 +27,7 @@ use esp_radio::wifi::{
     sta::StationConfig,
 };
 use overhead_core::sgp4::chrono::DateTime;
-use overhead_render::{CoastLayer, Layout, PeriodCache};
+use overhead_render::{CoastLayer, Layout};
 use overhead_s3_benchmark::{
     coast_measurement::Screen,
     device_timing::{DiagnosticAction, LifecycleAction},
@@ -58,7 +58,6 @@ static TX_BUF: StaticCell<[u8; 512]> = StaticCell::new();
 static mut SCREEN: Screen = Screen::new();
 static mut SENDER: LineSender = LineSender::new();
 static mut LAYER: MaybeUninit<CoastLayer> = MaybeUninit::uninit();
-static mut PERIOD: PeriodCache = PeriodCache::new();
 
 fn uptime_us() -> u64 {
     Instant::now().duration_since_epoch().as_micros()
@@ -145,7 +144,6 @@ async fn display(mut spi: Spi<'static, esp_hal::Blocking>, mut cs: Output<'stati
     let mut app = diagnostic_app();
     let screen = unsafe { &mut *(&raw mut SCREEN) };
     let sender = unsafe { &mut *(&raw mut SENDER) };
-    let period = unsafe { &mut *(&raw mut PERIOD) };
     let coast = unsafe { (*(&raw mut LAYER)).write(CoastLayer::new()) };
     // SAFETY: this task alone owns these statics and SPI; the network side
     // sends Copy events over EVENTS and never touches render/app/panel state.
@@ -163,7 +161,7 @@ async fn display(mut spi: Spi<'static, esp_hal::Blocking>, mut cs: Output<'stati
         let now = uptime_us();
         match gate.next(&mut app, now, retained) {
             LifecycleAction::RenderNoFrame => {
-                overhead_render::draw_cached(screen, &app, Layout::wide(), false, coast, period)
+                overhead_render::draw(screen, &app, Layout::wide(), false, coast)
                     .expect("NO FRAME render");
                 let phase = gate.next_phase();
                 cs.set_high();
@@ -184,7 +182,7 @@ async fn display(mut spi: Spi<'static, esp_hal::Blocking>, mut cs: Output<'stati
                     .expect("gate checked UTC")
                     .naive_utc();
                 app.update(utc).expect("checked ISS sample");
-                overhead_render::draw_cached(screen, &app, Layout::wide(), false, coast, period)
+                overhead_render::draw(screen, &app, Layout::wide(), false, coast)
                     .expect("ISS render");
                 let phase = gate.next_phase();
                 cs.set_high();

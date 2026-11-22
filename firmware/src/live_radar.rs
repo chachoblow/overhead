@@ -105,7 +105,7 @@ use overhead_core::{
     catalogue::Catalogue,
     sgp4::chrono::{DateTime, NaiveDateTime, TimeDelta},
 };
-use overhead_render::{CoastLayer, Layout, PeriodCache, setup::InfoPage};
+use overhead_render::{CoastLayer, Layout, setup::InfoPage};
 use static_cell::{ConstStaticCell, StaticCell};
 
 /// What the runtime prints over UART (0076). Blocking prints sit in the
@@ -302,7 +302,6 @@ static TLS_TRNG: StaticCell<Trng> = StaticCell::new();
 static mut SCREEN: Screen = Screen::new();
 static mut SENDER: LineSender = LineSender::new();
 static mut LAYER: MaybeUninit<CoastLayer> = MaybeUninit::uninit();
-static mut PERIOD: PeriodCache = PeriodCache::new();
 // ~8 KiB of histograms; static so it never sits on the CPU0 stack.
 static mut FRAME_STATS: FrameStats = FrameStats::new();
 /// `FRAME_BOOT` (since-boot per-cause totals) every this many 10 s windows.
@@ -1288,7 +1287,6 @@ async fn display(
     let mut had_catalogue = false;
     let screen = unsafe { &mut *(&raw mut SCREEN) };
     let sender = unsafe { &mut *(&raw mut SENDER) };
-    let period = unsafe { &mut *(&raw mut PERIOD) };
     let cadence = unsafe { &mut *(&raw mut FRAME_STATS) };
     let (mut windows, mut window_started) = (0u32, uptime_us());
     let mut last_selected = None;
@@ -1464,14 +1462,9 @@ async fn display(
                 match (updating, page.as_ref()) {
                     (Some(pct), _) => overhead_render::draw_updating(screen, pct),
                     (None, Some(p)) => overhead_render::setup::draw_info(screen, p),
-                    (None, None) => overhead_render::draw_cached(
-                        screen,
-                        &app,
-                        Layout::wide(),
-                        false,
-                        coast,
-                        period,
-                    ),
+                    (None, None) => {
+                        overhead_render::draw(screen, &app, Layout::wide(), false, coast)
+                    }
                 }
                 .expect("NO FRAME render");
                 let phase = gate.next_phase();
@@ -1502,14 +1495,9 @@ async fn display(
                 match (updating, page.as_ref()) {
                     (Some(pct), _) => overhead_render::draw_updating(screen, pct),
                     (None, Some(p)) => overhead_render::setup::draw_info(screen, p),
-                    (None, None) => overhead_render::draw_cached(
-                        screen,
-                        &app,
-                        Layout::wide(),
-                        false,
-                        coast,
-                        period,
-                    ),
+                    (None, None) => {
+                        overhead_render::draw(screen, &app, Layout::wide(), false, coast)
+                    }
                 }
                 .expect("radar render");
                 let phase = gate.next_phase();
@@ -1589,9 +1577,7 @@ async fn display(
         if info_changed && retained && !sent && updating.is_none() {
             match page.as_ref() {
                 Some(p) => overhead_render::setup::draw_info(screen, p),
-                None => {
-                    overhead_render::draw_cached(screen, &app, Layout::wide(), false, coast, period)
-                }
+                None => overhead_render::draw(screen, &app, Layout::wide(), false, coast),
             }
             .expect("info render");
             let phase = gate.next_phase();

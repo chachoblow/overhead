@@ -27,10 +27,6 @@ sharp-boot-cycle = ["sharp-radar"]
 sharp-boot-capture = ["sharp-boot-cycle", "esp-hal/unstable", "dep:critical-section"]
 # Separate deterministic short-loop radar replay; does not replace the static image.
 sharp-replay = ["sharp-radar"]
-# Separate display-cost diagnostic; shares the accepted replay, never frozen images.
-sharp-profile = ["sharp-replay"]
-# Opt-in period-cache comparison, separate from the visually accepted v3 image.
-sharp-cache = ["sharp-replay"]
 # Separate selective-line transport diagnostic; not the accepted cache image.
 sharp-lines = ["sharp-replay"]
 # Separate natural-speed historical fixture experiment; never the live app.
@@ -212,20 +208,6 @@ bench = false
 name = "overhead-s3-sharp-replay"
 path = "src/sharp_replay_main.rs"
 required-features = ["sharp-replay"]
-test = false
-bench = false
-
-[[bin]]
-name = "overhead-s3-sharp-profile"
-path = "src/sharp_profile_main.rs"
-required-features = ["sharp-profile"]
-test = false
-bench = false
-
-[[bin]]
-name = "overhead-s3-sharp-cache"
-path = "src/sharp_cache_main.rs"
-required-features = ["sharp-cache"]
 test = false
 bench = false
 

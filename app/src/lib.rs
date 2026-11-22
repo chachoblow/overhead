@@ -15,10 +15,8 @@ use overhead_core::{
 };
 pub mod category;
 use category::Category;
-pub mod identification;
 pub mod projection;
 pub mod visibility;
-use identification::LabelZoom;
 use projection::{
     Camera, CameraError, CameraPoint, EarthLimb, EdgeIndicator, View, ViewPoint, Viewport,
 };
@@ -126,8 +124,6 @@ pub struct RadarApp {
     /// Entries the limit dropped from the current catalogue.
     dropped: usize,
     selected: Option<u64>,
-    label_zoom: LabelZoom,
-    label_visible: bool,
     freshness: Option<Freshness>,
     /// UTC at which the loaded catalogue was fetched, if it was.
     fetched_at: Option<NaiveDateTime>,
@@ -153,7 +149,6 @@ impl RadarApp {
     /// counts report an empty load and no horizon claim is possible.
     pub fn awaiting_catalogue(observer: GeodeticPosition, view: View) -> Result<Self, CameraError> {
         let camera = Camera::new(observer)?;
-        let label_zoom = LabelZoom::default();
         Ok(Self {
             catalogue: None,
             group_categories: Vec::new(),
@@ -167,15 +162,13 @@ impl RadarApp {
             object_limit: None,
             dropped: 0,
             selected: None,
-            label_zoom,
-            label_visible: label_zoom.initially_visible(view),
             freshness: None,
             fetched_at: None,
             newest_epoch: None,
         })
     }
 
-    /// Replace the whole catalogue, keeping observer, view, roles and label
+    /// Replace the whole catalogue, keeping observer, view and role
     /// state. A current frame is recomputed at its own UTC so no sample from
     /// the previous catalogue survives. The selected ID is kept only if the new
     /// catalogue still tracks it under the usual rules (0049); otherwise
@@ -269,20 +262,6 @@ impl RadarApp {
             self.selected()?.0.groups(),
             &self.group_categories,
         ))
-    }
-
-    /// Configure label zoom policy, resetting its history using the current lens.
-    /// Intended for construction; it never changes selection or physical state.
-    pub fn with_label_zoom(mut self, policy: LabelZoom) -> Self {
-        self.label_zoom = policy;
-        self.label_visible = policy.initially_visible(self.view);
-        self
-    }
-
-    /// Presentation-only gate for the wide renderer. The selected diamond and
-    /// baseline diagnostics do not use this gate.
-    pub fn selected_label_visible(&self) -> bool {
-        self.label_visible && self.selected.is_some()
     }
 
     /// Discard tracking when UTC is no longer trusted, without inventing an
@@ -445,6 +424,21 @@ impl RadarApp {
         })
     }
 
+    /// 0089: the group's objects below the observer's horizon that the camera
+    /// can see (not behind the Earth), at their viewport point. Context only:
+    /// never selectable, no arrows and not part of `counts`.
+    pub fn below_horizon_markers(
+        &self,
+    ) -> impl Iterator<Item = (&CatalogueEntry, &Sample, ViewPoint)> {
+        self.objects().filter_map(|(entry, result)| {
+            let sample = result.as_ref().ok()?;
+            if sample.above_horizon() || self.camera.hidden_by_earth(sample.physical.ecef) {
+                return None;
+            }
+            Some((entry, sample, self.view.locate(sample.camera)?))
+        })
+    }
+
     /// One candidate per eligible off-screen object, even if arrows overlap.
     /// Indicators are not visible markers and do not participate in selection.
     pub fn indicators(&self) -> impl Iterator<Item = (&CatalogueEntry, EdgeIndicator)> {
@@ -503,7 +497,6 @@ impl RadarApp {
     }
 
     fn after_zoom(&mut self) {
-        self.label_visible = self.label_zoom.after_zoom(self.view, self.label_visible);
         self.reconcile_selection();
     }
 
@@ -641,7 +634,7 @@ mod tests {
     }
 
     #[test]
-    fn category_follows_selection_not_frame_motion_zoom_or_label_visibility() {
+    fn category_follows_selection_not_frame_motion_or_zoom() {
         let mut app = app().with_group_categories(alloc::vec![Category::Station]);
         let time = app.entries()[0].satellite().epoch();
         assert_eq!(app.selected_category(), None);
@@ -654,7 +647,6 @@ mod tests {
         assert_eq!(app.samples, samples);
         assert_eq!(app.counts(), counts);
         app.zoom(-100);
-        assert!(!app.selected_label_visible());
         assert_eq!(app.selected_category(), Some(Category::Navigation));
         app.update(time + Duration::seconds(30)).unwrap();
         assert_eq!(app.selected_category(), Some(Category::Navigation));
@@ -700,6 +692,43 @@ mod tests {
             .unwrap()
             .and_hms_opt(2, 0, 0)
             .unwrap()
+    }
+
+    #[test]
+    fn below_horizon_markers_are_visible_group_members_only() {
+        let mut app = visual_app();
+        app.update(visual_time()).unwrap();
+        let below: Vec<u64> = app
+            .below_horizon_markers()
+            .map(|(e, _, _)| e.elements().norad_id)
+            .collect();
+        let counts = app.counts();
+        // A whole-Earth view of a ~160-object group shows many below-horizon
+        // objects, yet the Earth hides some of them.
+        let all_below = app
+            .objects()
+            .filter(|(_, r)| r.as_ref().is_ok_and(|s| !s.above_horizon()))
+            .count();
+        assert!(below.len() > 10, "{}", below.len());
+        assert!(below.len() < all_below, "{} of {all_below}", below.len());
+        for (entry, sample, _) in app.below_horizon_markers() {
+            assert!(!sample.above_horizon());
+            assert!(!app.camera.hidden_by_earth(sample.physical.ecef));
+            assert!(
+                app.markers()
+                    .all(|(e, _, _)| e.elements().norad_id != entry.elements().norad_id)
+            );
+        }
+        // Never selected, never counted, never an arrow.
+        for _ in 0..counts.visible + 1 {
+            app.select_next();
+            assert!(app.selected_id().is_none_or(|id| !below.contains(&id)));
+        }
+        assert_eq!(app.counts(), counts);
+        assert!(
+            app.indicators()
+                .all(|(e, _)| !below.contains(&e.elements().norad_id))
+        );
     }
 
     #[test]
@@ -1427,46 +1456,6 @@ mod tests {
         assert!(app.update(invalid).is_err());
         assert_eq!(app.indicators().count(), 0);
         assert_eq!(app.selected_id(), None);
-    }
-
-    #[test]
-    fn label_zoom_history_survives_frames_selection_and_missing_data() {
-        let mut app = app();
-        let time = app.entries()[0].satellite().epoch();
-        app.update(time).unwrap();
-        let samples = app.samples.clone();
-        let counts = app.counts();
-        let selected = app.selected_id();
-        assert!(app.selected_label_visible());
-        app.zoom(-64);
-        assert!(!app.selected_label_visible());
-        assert_eq!(app.selected_id(), selected);
-        assert_eq!(app.counts(), counts);
-        assert_eq!(app.samples, samples);
-        // From 100 degrees, three zoom-in steps reach the hysteresis interval.
-        app.zoom(3);
-        assert!((60.0..70.0).contains(&app.view().fov_deg()));
-        assert!(!app.selected_label_visible());
-        app.select_next();
-        app.update(time).unwrap();
-        app.zoom(0);
-        assert!(!app.selected_label_visible());
-        let invalid = NaiveDate::from_ymd_opt(2101, 1, 1)
-            .unwrap()
-            .and_hms_opt(0, 0, 0)
-            .unwrap();
-        assert!(app.update(invalid).is_err());
-        app.update(time).unwrap();
-        assert!(!app.selected_label_visible());
-        assert_eq!(app.selected_id(), selected);
-        app.zoom(1);
-        assert!(app.view().fov_deg() <= 60.0);
-        assert!(app.selected_label_visible());
-        app.zoom(-1);
-        assert!((60.0..70.0).contains(&app.view().fov_deg()));
-        assert!(app.selected_label_visible());
-        assert_eq!(app.samples, samples);
-        assert_eq!(app.counts(), counts);
     }
 
     #[test]

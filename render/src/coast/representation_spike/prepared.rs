@@ -7,7 +7,8 @@
 //! per-piece arithmetic as `candidate_draw`, skipping only pieces that the
 //! candidate would classify as wholly hidden. No heap and no retained curves.
 //!
-//! Decision 0059 adds one cached 352x240 1-bit raster of the current view.
+//! Decision 0059 adds one cached 1-bit raster of the current view, the full
+//! 400x240 wide radar since 0089, with 0089's sphere shading baked in.
 //! The coastline depends only on observer and lens, so frames with an unchanged
 //! view copy cached pixels; zoom (or a failed raster) triggers a fresh raster.
 //! A raster that fails part-way never reaches the display. This does not claim
@@ -22,13 +23,13 @@ pub(crate) static ASSET: &[u8] =
 /// Packed pieces in the pinned asset; a different count is rejected.
 pub(crate) const PIECES: usize = 2031;
 const WORDS: usize = PIECES.div_ceil(32);
-const MASK_WIDTH: usize = 352;
-const MASK_HEIGHT: usize = 240;
+const MASK_WIDTH: usize = crate::WIDE_WIDTH as usize;
+const MASK_HEIGHT: usize = crate::WIDE_HEIGHT as usize;
 const MASK_BYTES: usize = MASK_WIDTH * MASK_HEIGHT / 8;
 
 /// Observer-keyed coastline geography for the wide view. Preparation failure is
 /// retained explicitly so the frame shows `COAST ERROR` rather than an empty sea.
-/// About 11 KB, dominated by the current-view raster: keep it in long-lived
+/// About 12 KB, dominated by the current-view raster: keep it in long-lived
 /// storage (static or owning struct), not a transient stack frame.
 pub struct CoastLayer {
     state: Result<Prepared, &'static str>,
@@ -62,6 +63,27 @@ impl Mask {
                     Point::new((n % MASK_WIDTH) as i32, (n / MASK_WIDTH) as i32)
                 })
         })
+    }
+}
+
+impl Mask {
+    /// 0089: thin the coastline beyond the 1,000 km sky ring (lens-only, so
+    /// once per raster, never per frame).
+    fn shade(&mut self, fov_deg: f64, layout: Layout) {
+        let levels = crate::wide::shade_levels(fov_deg, f64::from(layout.radius()));
+        let center = layout.center();
+        for (i, byte) in self.bits.iter_mut().enumerate() {
+            if *byte == 0 {
+                continue;
+            }
+            for bit in 0..8 {
+                let n = i * 8 + bit;
+                let p = Point::new((n % MASK_WIDTH) as i32, (n / MASK_WIDTH) as i32);
+                if *byte & (1 << bit) != 0 && !crate::wide::shade_keeps(&levels, center, p) {
+                    *byte &= !(1 << bit);
+                }
+            }
+        }
     }
 }
 
@@ -143,7 +165,7 @@ impl CoastLayer {
     }
 
     /// Force the next draw to raster afresh (measurement of a zoom step).
-    #[cfg(any(test, feature = "measurement"))]
+    #[cfg(feature = "measurement")]
     pub(crate) fn invalidate(&mut self) {
         self.cached = None;
     }
@@ -161,7 +183,7 @@ impl CoastLayer {
         let Ok(prepared) = &self.state else {
             return Ok(false);
         };
-        // The flattening raster is fixed to the 352x240 wide radar.
+        // The flattening raster is fixed to the wide radar.
         if prepared.site != observer
             || (layout.radar_width, layout.radar_height) != (MASK_WIDTH as u32, MASK_HEIGHT as u32)
         {
@@ -179,6 +201,7 @@ impl CoastLayer {
                 self.mask.clear();
                 return Ok(false);
             }
+            self.mask.shade(view.fov_deg(), layout);
             self.cached = Some(view);
         }
         target.draw_iter(self.mask.lit().map(|p| Pixel(p, BinaryColor::On)))?;
@@ -281,6 +304,51 @@ mod tests {
         View::rectangular(fov, Layout::wide().aspect_ratio()).unwrap()
     }
 
+    /// The unshaded candidate raster with 0089's sphere shading applied.
+    fn shaded(mut pixels: [[u8; 400]; 240], fov: f64) -> [[u8; 400]; 240] {
+        let layout = Layout::wide();
+        let levels = crate::wide::shade_levels(fov, f64::from(layout.radius()));
+        for (y, row) in pixels.iter_mut().enumerate() {
+            for (x, p) in row.iter_mut().enumerate() {
+                let at = Point::new(x as i32, y as i32);
+                if *p != 0 && !crate::wide::shade_keeps(&levels, layout.center(), at) {
+                    *p = 0;
+                }
+            }
+        }
+        pixels
+    }
+
+    #[test]
+    fn shading_only_thins_the_coast_beyond_the_sky_ring() {
+        let site = work_review::cases()[0].1;
+        let mut layer = CoastLayer::prepare(site);
+        for fov in [0.1, 20.0, 100.0] {
+            let mut full = Screen::new();
+            let mut drawn = Screen::new();
+            candidate_draw(&mut full, site, wide(fov), ASSET).unwrap();
+            assert!(
+                layer
+                    .draw(&mut drawn, site, wide(fov), Layout::wide())
+                    .unwrap()
+            );
+            let count = |s: &[[u8; 400]; 240]| s.iter().flatten().filter(|&&p| p != 0).count();
+            // Never adds ink; a tight lens sits wholly inside the ring.
+            assert!(
+                full.pixels
+                    .iter()
+                    .flatten()
+                    .zip(drawn.pixels.iter().flatten())
+                    .all(|(f, d)| *d == 0 || *f != 0)
+            );
+            if fov < 1.0 {
+                assert_eq!(drawn.pixels, full.pixels);
+            } else {
+                assert!(count(&drawn.pixels) < count(&full.pixels), "fov={fov}");
+            }
+        }
+    }
+
     #[test]
     fn embedded_asset_is_the_regenerated_candidate() {
         assert_eq!(packing::prepare().bytes, ASSET);
@@ -303,7 +371,7 @@ mod tests {
                 let mut reused = Screen::new();
                 candidate_draw(&mut fresh, site, wide(fov), ASSET).unwrap();
                 assert!(layer.draw(&mut reused, site, wide(fov), layout).unwrap());
-                assert_eq!(fresh.pixels, reused.pixels, "fov={fov}");
+                assert_eq!(shaded(fresh.pixels, fov), reused.pixels, "fov={fov}");
             }
         }
     }
@@ -358,7 +426,7 @@ mod tests {
         let direct = |fov: f64| {
             let mut screen = Screen::new();
             candidate_draw(&mut screen, site, wide(fov), ASSET).unwrap();
-            screen.pixels
+            shaded(screen.pixels, fov)
         };
         for (fov, rasters) in [
             (20.0, 1),
@@ -408,7 +476,7 @@ mod tests {
         let mut reused = Screen::new();
         candidate_draw(&mut fresh, other, wide(20.0), ASSET).unwrap();
         assert!(layer.draw(&mut reused, other, wide(20.0), layout).unwrap());
-        assert_eq!(fresh.pixels, reused.pixels);
+        assert_eq!(shaded(fresh.pixels, 20.0), reused.pixels);
     }
 
     #[test]
