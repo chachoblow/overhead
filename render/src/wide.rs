@@ -17,7 +17,7 @@ use overhead_app::{
     projection::{CAMERA_HEIGHT_KM, ViewPoint},
     visibility::Visibility,
 };
-use overhead_core::sgp4::chrono::{NaiveDateTime, Timelike};
+use overhead_core::sgp4::chrono::NaiveDateTime;
 
 use crate::{FrameStage, Layout, LineBuffer};
 
@@ -175,7 +175,7 @@ pub(crate) fn draw_foreground<D: DrawTarget<Color = BinaryColor>>(
     // The selected octagon goes on top of every other marker.
     if let Some(at) = selected_at {
         ink.haloed(at, octagon())?;
-        let phase = pulse_phase(app.time());
+        let phase = pulse_phase(app.time(), app.selected_since());
         ink.circle(at, 6.0 + phase * 7.0, if phase > 0.6 { 2 } else { 0 })?;
     }
     trace(FrameStage::Markers);
@@ -207,12 +207,14 @@ pub(crate) fn draw_foreground<D: DrawTarget<Color = BinaryColor>>(
     Ok(())
 }
 
-/// Phase in [0, 1) of the 1.4 s pulse, from the frame's own UTC.
-pub(crate) fn pulse_phase(time: Option<NaiveDateTime>) -> f64 {
-    let Some(t) = time else { return 0.0 };
-    let ms =
-        u64::from(t.num_seconds_from_midnight()) * 1000 + u64::from(t.nanosecond() / 1_000_000);
-    (ms % PULSE_MS) as f64 / PULSE_MS as f64
+/// Phase in [0, 1) of the 1.4 s pulse, counted from when the selection
+/// began, so every new selection starts with the smallest ring.
+pub(crate) fn pulse_phase(time: Option<NaiveDateTime>, since: Option<NaiveDateTime>) -> f64 {
+    let (Some(t), Some(since)) = (time, since) else {
+        return 0.0;
+    };
+    let ms = (t - since).num_milliseconds().rem_euclid(PULSE_MS as i64);
+    ms as f64 / PULSE_MS as f64
 }
 
 // ---------------------------------------------------------------- ruler
@@ -554,17 +556,21 @@ mod tests {
     }
 
     #[test]
-    fn pulse_follows_frame_time() {
+    fn pulse_counts_from_the_selection() {
         let t = |ms: u32| {
             NaiveDate::from_ymd_opt(2026, 11, 22)
                 .unwrap()
                 .and_hms_milli_opt(0, 0, ms / 1000, ms % 1000)
                 .unwrap()
         };
-        assert_eq!(pulse_phase(None), 0.0);
-        assert_eq!(pulse_phase(Some(t(0))), 0.0);
-        assert_eq!(pulse_phase(Some(t(700))), 0.5);
-        assert_eq!(pulse_phase(Some(t(1400))), 0.0);
+        let since = Some(t(300));
+        assert_eq!(pulse_phase(None, since), 0.0);
+        assert_eq!(pulse_phase(Some(t(300)), None), 0.0);
+        assert_eq!(pulse_phase(Some(t(300)), since), 0.0);
+        assert_eq!(pulse_phase(Some(t(1000)), since), 0.5);
+        assert_eq!(pulse_phase(Some(t(1700)), since), 0.0);
+        // A frame earlier than the selection (clock stepped back) stays in range.
+        assert!((0.0..1.0).contains(&pulse_phase(Some(t(0)), since)));
     }
 
     #[test]

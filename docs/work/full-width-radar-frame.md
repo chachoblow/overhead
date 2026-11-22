@@ -54,7 +54,9 @@ Trails and the selected orbit are item 2.
   `render/src/fav_c.rs`.
 - Sphere shading depends only on lens and layout, so it is applied when the
   coast raster (0059) is built: zero per-frame cost.
-- Pulse phase comes from the frame's app time, as on the board.
+- Pulse phase counts from the selection's start (`RadarApp::selected_since`,
+  frame UTC when the ID last changed), so each new selection pulses from the
+  smallest ring (user, 2026-11-22: it carried over between satellites).
 
 ## Verification
 - 2026-11-22: `cargo check --workspace` ok; `cargo test --workspace` 331
@@ -71,6 +73,10 @@ Trails and the selected orbit are item 2.
   loaded, `RADAR first_frame`, no panic. Frame time not in the device log
   (event log only); measured with item 2's diagnostic build. Restore the board test with `target/favc2-8h.elf`, or the
   0088 inputs build with `target/inputs-8h.elf`.
+
+- 2026-11-22: tweak 1 (pulse restarts per selection): 332 tests pass,
+  clippy clean; `target/m8b-8h.elf` (`0.1.15-m8b`, ELF sha256 `a8adcd30…`)
+  gated and flashed (`target/m8/flash2.log`: `Valid`, first frame, no panic).
 
 ## Open questions
 - Frame cost of the new frame on the S3: measured in item 2 (with trails

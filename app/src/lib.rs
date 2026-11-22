@@ -124,6 +124,9 @@ pub struct RadarApp {
     /// Entries the limit dropped from the current catalogue.
     dropped: usize,
     selected: Option<u64>,
+    /// Frame UTC at which the current selection began (0089: the selected
+    /// marker's pulse restarts on every new selection).
+    selected_since: Option<NaiveDateTime>,
     freshness: Option<Freshness>,
     /// UTC at which the loaded catalogue was fetched, if it was.
     fetched_at: Option<NaiveDateTime>,
@@ -162,6 +165,7 @@ impl RadarApp {
             object_limit: None,
             dropped: 0,
             selected: None,
+            selected_since: None,
             freshness: None,
             fetched_at: None,
             newest_epoch: None,
@@ -203,7 +207,7 @@ impl RadarApp {
             None => {
                 self.samples.clear();
                 self.sampled_at.clear();
-                self.selected = None;
+                self.set_selected(None);
             }
         }
     }
@@ -271,7 +275,7 @@ impl RadarApp {
         self.time = None;
         self.samples.clear();
         self.sampled_at.clear();
-        self.selected = None;
+        self.set_selected(None);
     }
 
     /// Validate UTC and apply expiry before any sample is computed.
@@ -289,7 +293,7 @@ impl RadarApp {
             self.fetched_at = None;
             self.newest_epoch = None;
             self.dropped = 0;
-            self.selected = None;
+            self.set_selected(None);
             self.samples.clear();
             self.sampled_at.clear();
         }
@@ -518,8 +522,21 @@ impl RadarApp {
                 .markers()
                 .next()
                 .map(|(entry, _, _)| entry.elements().norad_id);
-            self.selected = first;
+            self.set_selected(first);
         }
+    }
+
+    /// Change the selection, restarting its timestamp only when the ID changes.
+    fn set_selected(&mut self, id: Option<u64>) {
+        if id != self.selected {
+            self.selected = id;
+            self.selected_since = id.and(self.time);
+        }
+    }
+
+    /// Frame UTC at which the current selection began; presentation only.
+    pub fn selected_since(&self) -> Option<NaiveDateTime> {
+        self.selected_since
     }
 
     /// Tab always chooses an in-view marker; with none, wide selection persists.
@@ -530,7 +547,7 @@ impl RadarApp {
             .find(|id| self.selected.is_none_or(|selected| *id > selected))
             .or_else(|| self.markers().next().map(|(e, _, _)| e.elements().norad_id));
         if next.is_some() || self.view.viewport() != Viewport::Rectangle {
-            self.selected = next;
+            self.set_selected(next);
         }
     }
 }
@@ -692,6 +709,27 @@ mod tests {
             .unwrap()
             .and_hms_opt(2, 0, 0)
             .unwrap()
+    }
+
+    #[test]
+    fn selection_start_restarts_only_when_the_id_changes() {
+        let mut app = visual_app();
+        let time = visual_time();
+        app.update(time).unwrap();
+        let first = app.selected_id();
+        assert!(first.is_some());
+        assert_eq!(app.selected_since(), Some(time));
+        // Same selection across later frames keeps its start.
+        let later = time + TimeDelta::seconds(3);
+        app.update(later).unwrap();
+        assert_eq!(app.selected_id(), first);
+        assert_eq!(app.selected_since(), Some(time));
+        // A new selection starts at the current frame.
+        app.select_next();
+        assert_ne!(app.selected_id(), first);
+        assert_eq!(app.selected_since(), Some(later));
+        app.invalidate_frame();
+        assert_eq!(app.selected_since(), None);
     }
 
     #[test]

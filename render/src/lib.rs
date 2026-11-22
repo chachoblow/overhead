@@ -1690,7 +1690,7 @@ mod tests {
         assert!(halo_of(&octagon).iter().all(|&p| !ink(p)));
         // The ring for this frame's phase, the only ink 5-14 px out besides
         // coastline and limb, which it is drawn over.
-        let phase = wide::pulse_phase(app.time());
+        let phase = wide::pulse_phase(app.time(), app.selected_since());
         let r = 6.0 + phase * 7.0;
         let n = libm::ceil(r * 6.3).max(12.0) as usize;
         let dash = if phase > 0.6 { 2 } else { 1 };
@@ -1713,22 +1713,35 @@ mod tests {
             &[25544, 1, 2, 3, 4, 5, 6, 7],
             45.0,
         );
-        app.zoom(-64);
+        app.zoom(-2);
         let below: Vec<_> = app
             .below_horizon_markers()
             .map(|(e, _, v)| (e.elements().norad_id, v))
             .collect();
         assert!(!below.is_empty() && app.markers().count() > 0);
         let screen = wide_screen(&app);
+        let markers: Vec<_> = app
+            .markers()
+            .map(|(_, _, v)| Layout::wide().marker(v))
+            .collect();
         let mut intact = 0;
+        let mut clear = 0;
         for (id, v) in &below {
             assert_ne!(app.selected_id(), Some(*id));
             let at = Layout::wide().marker(*v);
+            // Judge only diamonds clear of octagons and the selected ring.
+            if markers
+                .iter()
+                .any(|m| (m.x - at.x).abs() < 18 && (m.y - at.y).abs() < 18)
+            {
+                continue;
+            }
+            clear += 1;
             let ink = |(x, y): (i32, i32)| screen.pixels[(at.y + y) as usize][(at.x + x) as usize];
             let hollow = wide::DIAMOND5.iter().all(|&p| ink(p)) && !ink((0, 0));
             intact += usize::from(hollow && halo_of(&wide::DIAMOND5).iter().all(|&p| !ink(p)));
         }
-        assert!(intact > 0);
+        assert!(clear > 0 && intact == clear, "{intact} of {clear}");
         // Not counted, no arrows.
         let counts = app.counts();
         assert_eq!(counts.above_horizon, app.markers().count());
