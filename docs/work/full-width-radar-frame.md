@@ -1,5 +1,5 @@
 # Full-width radar frame (0089, without trails and orbit)
-Status: active
+Status: blocked: user looks at the panel (m8a image) and accepts or names tweaks
 Started: 2026-11-22. Scope: PLAN M8 item 1; decision [0089](../decisions/0089-full-width-radar-revision.md)
 
 ## Outcome
@@ -32,7 +32,8 @@ Trails and the selected orbit are item 2.
 ## Human gates
 - Scope, old design, release, pills: asked and answered 2026-11-22 (new M8
   now; replace; release 16 waits and carries 0088; pills as on the board).
-- Snapshot review and panel acceptance: at the end.
+- Panel acceptance (replaces a separate snapshot review; the panel is the
+  real output): asked 2026-11-22.
 
 ## Plan
 - [x] App: `Camera::hidden_by_earth` (ellipsoid), `RadarApp::below_horizon_markers`;
@@ -63,4 +64,14 @@ Trails and the selected orbit are item 2.
   sharp-natural, sharp-replay, live-utc-radar, live-utc-fresh-iss,
   coast-prepared, coast-representation images ok.
 
+- 2026-11-22: board image `firmware/target/m8a-8h.elf` (`0.1.15-m8a`,
+  OVERHEAD_BUILD=15, beta, dev-settings, 8 h; ELF sha256 `bb65847a…`), image
+  gate passed. Flashed via `mac.sh` 2026-11-22 (`target/m8/flash1.log`):
+  `OTA boot build=15 version=0.1.15-m8a … state=Valid`, stored elements
+  loaded, `RADAR first_frame`, no panic. Frame time not in the device log
+  (event log only); measured with item 2's diagnostic build. Restore the board test with `target/favc2-8h.elf`, or the
+  0088 inputs build with `target/inputs-8h.elf`.
+
 ## Open questions
+- Frame cost of the new frame on the S3: measured in item 2 (with trails
+  and orbit, which add the real cost), not separately here.
