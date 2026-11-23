@@ -31,6 +31,33 @@ impl Kiss {
     }
 }
 
+/// One asked server's answer within a poll.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Answer {
+    NoReply,
+    Kiss([u8; 4]),
+    /// A matched reply that gave no in-budget observation: unsynchronized,
+    /// leap pending, screened out or over the budget (0090).
+    Unusable,
+    /// A matched reply with an in-budget observation.
+    Usable,
+}
+
+/// What the poll does after an [`Answer`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Step {
+    /// Ask the next due server, if any.
+    NextServer,
+    /// Kissed: the next due server, after logging how this one backs off.
+    Kissed {
+        kiss: Kiss,
+        code: [u8; 4],
+        wait_s: u64,
+    },
+    /// The poll has its observation.
+    Done,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct Server {
     interval_s: u64,
@@ -102,6 +129,30 @@ impl<const N: usize> Policy<N> {
         };
         s.next_s = now_s.saturating_add(wait);
         (kiss, wait)
+    }
+
+    /// Records server `i`'s answer at `now_s` (0080) and says whether the
+    /// poll goes on. Only a usable reply ends it; no reply, a KoD or an
+    /// unusable matched reply falls through to the next due server (0090).
+    pub fn answer(&mut self, i: usize, now_s: u64, answer: Answer) -> Step {
+        match answer {
+            Answer::NoReply => {
+                self.no_reply(i, now_s);
+                Step::NextServer
+            }
+            Answer::Kiss(code) => {
+                let (kiss, wait_s) = self.kiss(i, now_s, code);
+                Step::Kissed { kiss, code, wait_s }
+            }
+            Answer::Unusable => {
+                self.replied(i, now_s);
+                Step::NextServer
+            }
+            Answer::Usable => {
+                self.replied(i, now_s);
+                Step::Done
+            }
+        }
     }
 }
 
@@ -176,6 +227,54 @@ mod tests {
         assert_eq!(p.interval_s(0), 128);
         p.replied(0, 228);
         assert_eq!(p.interval_s(0), POLL_S);
+    }
+
+    /// One poll as the device runs it: due servers in order until `Done`.
+    /// Returns which servers were asked.
+    fn poll(p: &mut Policy<2>, now: u64, answers: [Answer; 2]) -> [bool; 2] {
+        let mut asked = [false; 2];
+        for (i, a) in answers.into_iter().enumerate() {
+            if !p.due(i, now) {
+                continue;
+            }
+            asked[i] = true;
+            if p.answer(i, now, a) == Step::Done {
+                break;
+            }
+        }
+        asked
+    }
+
+    #[test]
+    fn only_a_usable_reply_ends_the_poll() {
+        use Answer::*;
+        for first in [NoReply, Kiss(*b"RATE"), Kiss(*b"DENY"), Unusable] {
+            let mut p = Policy::<2>::new(DENY_BLOCK_S);
+            assert_eq!(poll(&mut p, 0, [first, Usable]), [true, true], "{first:?}");
+        }
+        let mut p = Policy::<2>::new(DENY_BLOCK_S);
+        assert_eq!(poll(&mut p, 0, [Usable, Usable]), [true, false]);
+        // Each server keeps its own rate: neither is asked before it is due.
+        let mut p = Policy::<2>::new(DENY_BLOCK_S);
+        assert_eq!(poll(&mut p, 0, [Unusable, Usable]), [true, true]);
+        assert_eq!(poll(&mut p, 30, [Unusable, Usable]), [false, false]);
+        assert_eq!(poll(&mut p, POLL_S, [Unusable, Usable]), [true, true]);
+    }
+
+    #[test]
+    fn an_unusable_reply_counts_as_a_reply_for_backoff() {
+        let mut p = Policy::<2>::new(DENY_BLOCK_S);
+        p.kiss(0, 0, *b"RATE");
+        assert_eq!(p.answer(0, 128, Answer::Unusable), Step::NextServer);
+        assert_eq!(p.interval_s(0), POLL_S);
+        assert_eq!(
+            p.answer(1, 0, Answer::Kiss(*b"RATE")),
+            Step::Kissed {
+                kiss: Kiss::Rate,
+                code: *b"RATE",
+                wait_s: 128
+            }
+        );
     }
 
     #[test]

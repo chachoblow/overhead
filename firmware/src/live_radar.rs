@@ -57,7 +57,7 @@ use crate::{
     ota_health::Check,
     settings_store, setup_policy,
     sharp_lines::{Kind, LineSender},
-    sntp_policy::{self, Kiss, Policy},
+    sntp_policy::{self, Answer, Kiss, Policy, Step},
     sntp_screen::{self, ScreenedObservation, SntpOutcome, SntpRequest},
     stack_watermark, tls_dates,
     utc_trust::{PROTOTYPE_DRIFT_PPM, UtcTrustPreflight},
@@ -804,28 +804,35 @@ pub async fn run(spawner: Spawner, p: Peripherals, log: Log, banner: &str) -> ! 
             if !policy.due(i, asked) {
                 continue;
             }
-            match query(stack, &mut socket, trng, i, server, seq).await {
-                QueryResult::NoReply => policy.no_reply(i, asked),
-                QueryResult::KissOfDeath(code) => {
-                    let (kiss, wait) = policy.kiss(i, asked, code);
+            let answer = match query(stack, &mut socket, trng, i, server, seq).await {
+                QueryResult::NoReply => Answer::NoReply,
+                QueryResult::KissOfDeath(code) => Answer::Kiss(code),
+                QueryResult::Reply(o) => match o.filter(|o| o.uncertainty_us < UTC_BUDGET_US) {
+                    Some(o) => {
+                        observation = Some(o);
+                        Answer::Usable
+                    }
+                    None => Answer::Unusable,
+                },
+            };
+            match policy.answer(i, asked, answer) {
+                Step::Done => break,
+                Step::Kissed { kiss, code, wait_s } => {
                     let action = match kiss {
                         Kiss::Rate => "backoff",
                         Kiss::Deny => "block",
                     };
                     println!(
-                        "SNTP KoD server={server} code={} action={action} next_in_s={wait} \
+                        "SNTP KoD server={server} code={} action={action} next_in_s={wait_s} \
                          interval_s={} uptime_s={asked}",
                         core::str::from_utf8(&code).unwrap_or("?"),
                         policy.interval_s(i)
                     );
                 }
-                QueryResult::Reply(o) => {
-                    policy.replied(i, asked);
-                    observation = o.filter(|o| o.uncertainty_us < UTC_BUDGET_US);
-                    break;
-                }
+                Step::NextServer => {}
             }
-            // No reply or a KoD: the next server, if due (0080 item 2).
+            // Anything but a usable reply: the next server, if due (0080
+            // item 2, widened by 0090 to unusable matched replies).
         }
         if let Some(o) = observation {
             // 0082: date fetches by the tighter of the two, like the gate.

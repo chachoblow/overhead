@@ -55,3 +55,10 @@ before. Evidence and the fault-build switches (`FAULT_KOD`,
 The observation that dates fetches is the tighter of the stored one and a
 new reply ([0082](0082-keep-the-tighter-utc-anchor.md)), not simply the
 newest.
+
+## Note — 2026-11-23: fallback also after an unusable reply
+
+Item 2 is widened by [0090](0090-sntp-falls-back-after-an-unusable-reply.md):
+a matched reply that gives no usable observation (unsynchronized, leap
+pending, screened out or over the budget) also falls through to the next
+due server.
