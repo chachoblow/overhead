@@ -108,8 +108,10 @@ elevation threshold, independent of zoom
   the horizon, then sphere shading to 12.5% at the limb; solid outline.
 - **Overlays:** haloed filled arrows ([0061](decisions/0061-filled-arrows-id-backing-none-in-view.md));
   km scale ruler bottom right on a light rounded backing.
-- **Planned ([PLAN M8](PLAN.md#m8--radar-revision)):** short past-line trails
-  behind unselected markers and the selected satellite's full orbit line.
+- **Motion:** a four-step past-line trail behind each unselected marker
+  (step spacing scales with the lens) and the selected satellite's orbit over
+  one period as a solid line broken where the Earth hides it
+  ([0089 note](decisions/0089-full-width-radar-revision.md#note--2026-11-23-trails-and-selected-orbit)).
 
 The earlier glyph strip (0038–0046, 0078's pictogram) and marker-adjacent ID
 (0034/0035) are retired; their decisions keep the history.

@@ -6,7 +6,7 @@ done before finishing M7; release 16 waits for it and carries 0088 too;
 pills as on the board). The frame is implemented (`render/src/wide.rs`,
 `RadarApp::below_horizon_markers`, shading in the coast raster) and accepted
 on the panel 2026-11-22 (image `0.1.15-m8b`); trails and the selected orbit
-are [PLAN M8](../PLAN.md#m8--radar-revision)'s second item.
+followed and were accepted 2026-11-23 (image `0.1.15-m8c`, note below).
 
 ## Problem
 
@@ -77,3 +77,29 @@ Recorded in the `radar-lab` README ("Ideas tried and set aside"); notably the
 crosshair on the selected satellite (tried twice on the panel), solid or ring
 below-horizon markers, night dither under the octagons, and pass-progress
 pills (0077 defers pass prediction).
+
+## Note — 2026-11-23: trails and selected orbit
+
+Implemented as `overhead_app::motion::Motion`, owned by the host beside the
+app and drawn by `render::draw_with_motion`; it answers only for the frame
+UTC, catalogue generation and selection it last followed, so nothing stale is
+drawn.
+
+- **Trail step:** `clamp(60 s · tan(fov/2) / tan 10°, 1 s, 900 s)` (the lab's
+  `trailDt`): 1 min at 20°, ~3.3 min at the device's 60°, 405 s at 100°.
+  Full length (four steps) is shown from the start, not the board test's
+  240 s cap; trails grow in over that span after a boot.
+- **Trail history:** the app's own samples, each with its sample UTC, in two
+  rings (20 s × 14, 120 s × 16) reaching the 100° lens's 27 min; linear
+  interpolation is under a pixel at every lens. ~480 B per object in PSRAM.
+- **Orbit:** 161 TEME points at fixed time slots one period wide, filled
+  nearest-now first at 4 propagations a frame on the device (~2 s), then
+  rolled one slot per 1/160 period; turned to the Earth's orientation and
+  re-projected 20 points per frame.
+- **Frame cost (S3, `live-fetch-radar`):** item 1's frame had fallen to
+  14 Hz; byte-wide fills, occlusion cached with each sample, cached
+  trail/orbit camera points, span halos and f32 line math restored 20 Hz
+  (idle p50 41, p99.9 51 ms). Selection frames 93–98 ms (was ~165 ms); knob
+  frames 159–163 ms (was ~86 ms: the full-width coast re-raster ~45 ms and an
+  all-rows panel send ~52 ms), which the user found fine on the panel.
+  Evidence: [firmware README](../../firmware/README.md#device-application-0076).

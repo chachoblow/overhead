@@ -35,6 +35,8 @@ that call `espflash --port` themselves (`capture.py`, `drift_capture.py`, …)
 only work with a board on devbox's USB. Logs are host-timestamped on devbox,
 a few ms after the Mac reads them. Long captures need the Mac awake (the gate
 runs them under `caffeinate -i`, which doesn't survive a closed lid on battery).
+On 2026-11-22 `read` returned only garbled bytes (6 KB in 15 min) while
+`monitor` worked; use `monitor` (it resets the board) when `read` looks wrong.
 
 ## Frozen M2 harness and numerical checks
 
@@ -1565,7 +1567,27 @@ markers, pulsing selected ring, shaded coastline (12,000 B raster) and scale
 ruler; the period cache is gone. Accepted on the panel 2026-11-22 with dev
 image `0.1.15-m8b` (`target/m8b-8h.elf`, OVERHEAD_BUILD=15, beta, 8 h;
 `OTA boot … state=Valid`, first frame, no panic in `target/m8/flash2.log`).
-Frame time and heap are measured with M8's trails/orbit item.
+Trails and the selected orbit followed (`0.1.15-m8c`, `target/m8c/m8c-8h.elf`,
+accepted on the panel 2026-11-23; [0089 note](../docs/decisions/0089-full-width-radar-revision.md#note--2026-11-23-trails-and-selected-orbit)).
+`live-fetch-radar` adds `motion_max_us= orbit_points= trails=` to
+`INPUT_CAPTURE_STATS` and a per-window `RENDER_STAGES_MAX_US` line (longest
+time to each `FrameStage` boundary, then `send_partial_max_us`).
+
+**On-board evidence, 2026-11-22/23** (Mac `/dev/cu.usbserial-21410`, later
+`-110`, MAC checked, every image gated; logs `target/m8c/`, local):
+
+| Run | Result |
+|---|---|
+| Item 1 frame, no motion (`base-run1.log`) | 14 Hz, idle work max ~70 ms, update ~22 ms |
+| Motion, before fixes (`diag-run1.log`, `diag2-run1.log`) | 11.4 Hz, ~86 ms; stage maxima clear 14.6, markers 17.8, motion 13–15, overlays 9.4 ms |
+| After fixes, 30 min (`diag5-review2.log`) | 20 Hz: idle 22,999 frames / 4 skipped, p50 41, p99.9 51 ms; heap 504 KB (PSRAM 460 KB, internal 44.7 KB used, 127 KB free); no panic |
+| User at the panel (`diag5-review3.log`) | 10 IO7 presses (applied next loop, ~5 ms), select frames 93–98 ms; 42 knob lines, knob frames 159–163 ms (coast re-raster ~45 + all-rows send ~52 ms); the user accepted it |
+| Device image `0.1.15-m8c` (`m8c-flash.log`) | `OTA boot … state=Valid`, `STORE loaded`, first frame, no panic |
+
+The fixes: `coast_measurement::Screen` fills byte-wide (`fill_solid`, counters
+still per pixel), `Sample::hidden_by_earth` cached at sampling, trail and orbit
+camera points cached in `Motion`, marker halos and pill fills as spans, f32
+line clipping and ring trig.
 
 `--features device` builds `overhead-s3-device` (`src/device_main.rs`), the
 Overhead device app under [0076](../docs/decisions/0076-device-app-build.md):

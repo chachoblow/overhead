@@ -739,3 +739,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Decision 0089 and PLAN M8: the radar lab's Favourite C replaces the strip design; M8 goes before M7's remaining gift readiness, release 16 waits for it.
 - Implemented on `main`: `render/src/wide.rs` (pills, octagons, below-horizon diamonds with Earth occlusion, pulsing ring restarting per selection, haloed arrows, scale ruler), shading baked into the 400 px coast raster; strip/glyph/label code and the `sharp-profile`/`sharp-cache` diagnostics removed.
 - Verified: workspace 332 tests, clippy clean, firmware host tests (default 38, `device` 172, `sharp-replay` 85, `coast-representation-on` 43), device image gated and flashed; the user accepted `0.1.15-m8b` on the panel.
+
+## 2026-11-22/23 (M8 item 2: trails and selected orbit)
+- `overhead_app::motion::Motion` (host-owned presentation state): four-step lens-scaled trails from the app's own samples and the selected one-period orbit (4 propagations a frame on the device); `render::draw_with_motion`; the simulator warms up 30 min of history.
+- Measured on the S3: item 1's frame had dropped to 14 Hz (11 Hz with motion); byte-wide fills, cached occlusion and camera points, span halos and f32 line math restored 20 Hz (idle p50 41, p99.9 51 ms). Selection frames 93–98 ms, knob frames 159–163 ms; heap 504 KB, mostly PSRAM.
+- Verified: workspace 343 tests, clippy clean, firmware host tests (default 38, `device` 173, `sharp-replay` 86, `coast-representation-on` 44), snapshots pixel-identical across the optimisations; the user accepted diagnostic `0.1.15-m8c-diag5` at the panel (10 presses, knob turns); device image `0.1.15-m8c` gated, flashed, booted `Valid`.

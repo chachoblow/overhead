@@ -427,10 +427,13 @@ remaining gift readiness (user, 2026-11-22); release 16 carries it with 0088.
   host tests and simulator snapshots; accepted on the panel. Done 2026-11-22:
   the user accepted dev image `0.1.15-m8b` on the panel after one tweak (the
   pulse restarts with each new selection).
-- [ ] **Trails and selected orbit:** past-line trails and the selected orbit
+- [x] **Trails and selected orbit:** past-line trails and the selected orbit
   as presentation state outside the renderer, in the simulator and on the
   device, with frame time, heap and input latency measured on the S3;
-  accepted on the panel.
+  accepted on the panel. Done 2026-11-23: `overhead_app::motion`, frame back
+  to 20 Hz, the user accepted dev image `0.1.15-m8c`
+  ([0089 note](decisions/0089-full-width-radar-revision.md#note--2026-11-23-trails-and-selected-orbit)).
+  Left for M8: release 16.
 
 **Done when:** the device app shows the revised radar, the user accepts it on
 the panel, its cost is measured within 0077/0088's limits, and release 16
