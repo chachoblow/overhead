@@ -67,6 +67,13 @@ part of this item (PLAN M8 done-when). No toolchain change.
     3.4–4.5k, markers 4.8–6.1k, overlays 6.7–8k, send ~6.8k; update
     21–24k, motion update ≤3k; heap_now ~472 KB (PSRAM ~427 KB, internal
     ~45 KB), no panic (`diag5-run1.log`).
+  - diag5 30 min after reset (2026-11-23 01:04–01:34 UTC, no user input;
+    `diag5-review2.log`): FRAME_BOOT idle 22,999 frames / 4 skipped, p50 41,
+    p99 46, p99.9 51 ms (pre-M8: 41/45 p50/p99.9); 3 automatic selection
+    changes 56–59 ms, no skips (pre-M8 select ~165 ms); full resend p50 88;
+    heap_now 504 KB with full trail history (PSRAM 460 KB, internal 44.7 KB
+    used / 127 KB free); no panic. `mac.sh read` returned garbage bytes
+    (6 KB/15 min) on this board state; `monitor` works.
 - 2026-11-22: `cargo check --workspace` ok; `cargo test --workspace` 341
   passed; clippy clean (app/render/sim, render representation-measurement);
   firmware host tests default 38, `device` 172 passed.
