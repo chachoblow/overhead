@@ -133,3 +133,14 @@ Save, and over moving Location first so Join could be the save.
 [0091](0091-setup-idle-counts-requests-not-links.md) amends "after 10 min
 with no client": the clock now runs from the last answered request, link or
 no link, and an unpaired link is dropped after 60 s.
+
+## Note — 2026-11-23: new enum values follow the client's version
+
+From the full code review: both decoders (`setup/`, `OverheadSetupKit`)
+reject an enum byte they don't know, which fails the whole message, and the
+device updates itself (0085) while a recipient's app may not. So a value
+added to an existing enum field in protocol version N is sent only in answer
+to a request whose frame version is N or later; older clients get the
+closest older value. Version 2's `Joined` already met this (it answers only
+`TestWifi`). Tolerant decoders (an unknown case) were the alternative; they
+would need an app round on the Mac, best before the App Store submission.

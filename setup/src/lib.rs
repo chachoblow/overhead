@@ -21,8 +21,13 @@
 //! The device answers a request type it doesn't know with
 //! [`Response::Error`] ([`ErrorCode::UnknownType`]); the client reads the
 //! device's version from [`Info`] and offers only what that version has, and
-//! ignores response types it doesn't know. An incompatible change gets a new
-//! service UUID, never a reuse of these.
+//! ignores response types it doesn't know. A reader rejects an enum byte it
+//! doesn't know, so a value added in version N is sent only in answer to a
+//! request whose frame version is N or later; an older client gets the
+//! closest older value (a new kind of network as `Security::Unsupported`, for
+//! example). [`ConfigureResult::Joined`] follows this by answering only
+//! `TestWifi`. An incompatible change gets a new service UUID, never a reuse
+//! of these.
 //!
 //! **Exchange.** `GetInfo` → `Info`. `Scan` → zero or more `Network`, then
 //! `ScanDone`. `Configure` → `Testing`, then `ConfigureResult`; on
