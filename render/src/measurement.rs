@@ -27,6 +27,7 @@ pub fn frame_off_traced<D: DrawTarget<Color = BinaryColor>>(
         warning,
         false,
         |_, _, _, _| Ok(true),
+        None,
         trace,
     )
 }

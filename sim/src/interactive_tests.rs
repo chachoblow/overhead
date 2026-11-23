@@ -69,7 +69,13 @@ fn frame(
     let mut display = SimulatorDisplay::new(overhead_render::DISPLAY_SIZE);
     let state = AppState::new(app);
     presentation
-        .draw(&mut display, app, layout, warning)
+        .draw(
+            &mut display,
+            app,
+            &overhead_app::motion::Motion::new(),
+            layout,
+            warning,
+        )
         .unwrap();
     assert_eq!(AppState::new(app), state);
     pixels(&display)

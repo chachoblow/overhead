@@ -6,7 +6,8 @@ use embedded_graphics_simulator::{
     BinaryColorTheme, OutputSettingsBuilder, SimulatorDisplay, SimulatorEvent, Window,
     sdl2::{Keycode, MouseWheelDirection},
 };
-use overhead_app::{RadarApp, projection::Viewport};
+use overhead_app::{RadarApp, motion::Motion, projection::Viewport};
+use overhead_core::sgp4::chrono::{NaiveDateTime, TimeDelta};
 use overhead_render::{CoastLayer, Layout};
 use std::{
     env,
@@ -22,7 +23,13 @@ fn run(config: Config) -> Result<(), String> {
     let mut app = RadarApp::new(loaded.catalogue, config.observer, config.view)
         .map_err(|e| e.to_string())?
         .with_group_categories(loaded.group_categories);
+    let wide = config.view.viewport() == Viewport::Rectangle;
+    let mut motion = Motion::new();
+    if wide {
+        warm_up(&mut app, &mut motion, config.start)?;
+    }
     app.update(config.start).map_err(|e| e.to_string())?;
+    motion.update(&app, usize::MAX);
     let mut previous_failures = Vec::new();
     report_failures(&app, &mut previous_failures);
     eprintln!(
@@ -33,7 +40,6 @@ fn run(config: Config) -> Result<(), String> {
         config.observer.altitude_km
     );
     let mut display = SimulatorDisplay::<BinaryColor>::new(overhead_render::DISPLAY_SIZE);
-    let wide = config.view.viewport() == Viewport::Rectangle;
     let settings = OutputSettingsBuilder::new()
         .theme(BinaryColorTheme::LcdWhite)
         .scale(2)
@@ -51,7 +57,13 @@ fn run(config: Config) -> Result<(), String> {
     let mut presentation =
         InteractivePresentation::new(config.view.viewport(), config.debug, coast);
     presentation
-        .draw(&mut display, &app, config.layout, ingestion_warning)
+        .draw(
+            &mut display,
+            &app,
+            &motion,
+            config.layout,
+            ingestion_warning,
+        )
         .map_err(|e| e.to_string())?;
     if let Some(path) = config.snapshot {
         display
@@ -113,11 +125,35 @@ fn run(config: Config) -> Result<(), String> {
         let elapsed = started.elapsed();
         app.update(replay_time(config.start, elapsed)?)
             .map_err(|e| e.to_string())?;
+        motion.update(&app, usize::MAX);
         report_failures(&app, &mut previous_failures);
         presentation
-            .draw(&mut display, &app, config.layout, ingestion_warning)
+            .draw(
+                &mut display,
+                &app,
+                &motion,
+                config.layout,
+                ingestion_warning,
+            )
             .map_err(|e| e.to_string())?;
     }
+}
+
+/// Wide replay starts with the trail history a device would have after
+/// running for half an hour (the widest lens's trail is 27 min): frames every
+/// 10 s over the 30 min before `start`. The frame is then invalidated so the
+/// start frame acquires its selection afresh, as without the warm-up. Host
+/// only; the device builds its history as it runs.
+fn warm_up(app: &mut RadarApp, motion: &mut Motion, start: NaiveDateTime) -> Result<(), String> {
+    let step = TimeDelta::seconds(10);
+    let mut t = start - TimeDelta::minutes(30);
+    while t < start {
+        app.update(t).map_err(|e| e.to_string())?;
+        motion.update(app, 0);
+        t += step;
+    }
+    app.invalidate_frame();
+    Ok(())
 }
 
 /// One-time preparation for the replay's fixed observer. Square diagnostics
@@ -173,13 +209,21 @@ impl InteractivePresentation {
         &mut self,
         display: &mut D,
         app: &RadarApp,
+        motion: &Motion,
         layout: Layout,
         ingestion_warning: bool,
     ) -> Result<(), D::Error> {
         if self.debug {
             overhead_render::debug::draw(display, app, ingestion_warning)
         } else {
-            overhead_render::draw(display, app, layout, ingestion_warning, &mut self.coast)
+            overhead_render::draw_with_motion(
+                display,
+                app,
+                layout,
+                ingestion_warning,
+                &mut self.coast,
+                motion,
+            )
         }
     }
 }

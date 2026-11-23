@@ -12,6 +12,7 @@ use embedded_graphics::{
 };
 use overhead_app::{
     RadarApp,
+    motion::Motion,
     projection::{EarthLimb, EdgeIndicator, ViewPoint, Viewport},
 };
 use overhead_core::sgp4::chrono::Timelike;
@@ -79,6 +80,14 @@ impl Layout {
             }
         }
     }
+    /// Unrounded pixel position of a (possibly off-screen) viewport point.
+    fn pixel(self, p: ViewPoint) -> (f64, f64) {
+        let c = self.center();
+        (
+            f64::from(c.x) + p.east * f64::from(self.horizontal_radius()),
+            f64::from(c.y) - p.north * f64::from(self.radius()),
+        )
+    }
     fn marker(self, p: ViewPoint) -> Point {
         let round = |v: f64| (v + if v < 0.0 { -0.5 } else { 0.5 }) as i32;
         self.center()
@@ -102,6 +111,52 @@ pub fn draw<D: DrawTarget<Color = BinaryColor>>(
     coast: &mut CoastLayer,
 ) -> Result<(), D::Error> {
     draw_frame(display, app, layout, ingestion_warning, Some(coast))
+}
+
+/// [`draw`] plus 0089's motion cues from host-owned presentation state: the
+/// selected orbit and trails behind unselected markers. `motion` that does not
+/// follow this frame (UTC, catalogue, selection) draws neither.
+pub fn draw_with_motion<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    app: &RadarApp,
+    layout: Layout,
+    ingestion_warning: bool,
+    coast: &mut CoastLayer,
+    motion: &Motion,
+) -> Result<(), D::Error> {
+    draw_with_motion_traced(
+        display,
+        app,
+        layout,
+        ingestion_warning,
+        coast,
+        motion,
+        |_| {},
+    )
+}
+
+/// [`draw_with_motion`] reporting each [`FrameStage`] boundary, for the
+/// device diagnostic's per-stage frame cost. The callback must not draw.
+#[doc(hidden)]
+pub fn draw_with_motion_traced<D: DrawTarget<Color = BinaryColor>>(
+    display: &mut D,
+    app: &RadarApp,
+    layout: Layout,
+    ingestion_warning: bool,
+    coast: &mut CoastLayer,
+    motion: &Motion,
+    trace: impl FnMut(FrameStage),
+) -> Result<(), D::Error> {
+    draw_frame_traced(
+        display,
+        app,
+        layout,
+        ingestion_warning,
+        true,
+        |display, observer, view, layout| coast.draw(display, observer, view, layout),
+        Some(motion),
+        trace,
+    )
 }
 
 /// Provisional full-screen loading frame shown while the observer's coastline
@@ -201,6 +256,8 @@ pub enum FrameStage {
     Clear,
     Coast,
     Earth,
+    /// Wide only: selected orbit and trails (0089), when motion is supplied.
+    Motion,
     /// Square/circle diagnostics only: centre cross and "N".
     Radar,
     Markers,
@@ -235,10 +292,13 @@ where
         ingestion_warning,
         coast_enabled,
         coast_draw,
+        None,
         |_| {},
     )
 }
 
+// Internal compositor; the public wrappers fix most of these arguments.
+#[allow(clippy::too_many_arguments)]
 fn draw_frame_traced<'a, D, F>(
     display: &'a mut D,
     app: &RadarApp,
@@ -246,6 +306,7 @@ fn draw_frame_traced<'a, D, F>(
     ingestion_warning: bool,
     coast_enabled: bool,
     coast_draw: F,
+    motion: Option<&Motion>,
     mut trace: impl FnMut(FrameStage),
 ) -> Result<(), D::Error>
 where
@@ -283,7 +344,7 @@ where
     draw_earth(&mut display, app.earth_limb(), layout, viewport)?;
     trace(FrameStage::Earth);
     if viewport == Viewport::Rectangle {
-        wide::draw_foreground(&mut display, app, layout, &mut trace)?;
+        wide::draw_foreground(&mut display, app, layout, motion, &mut trace)?;
         draw_wide_status(&mut display, app, ingestion_warning, coast_error)?;
         trace(FrameStage::Status);
         return Ok(());
@@ -795,6 +856,71 @@ mod tests {
         app.update(time).unwrap();
         app
     }
+    #[test]
+    fn motion_adds_orbit_and_trails_only_for_its_own_frame() {
+        use overhead_app::motion::Motion;
+        use overhead_core::sgp4::chrono::TimeDelta;
+        let mut app = app_with_orbits(Viewport::Rectangle, false, &[1, 2, 3], 3.0);
+        let start = app.time().unwrap();
+        let mut motion = Motion::new();
+        // Overhead at `start`; history from the four minutes before it.
+        let mut t = start - TimeDelta::minutes(5);
+        while t <= start {
+            app.update(t).unwrap();
+            motion.update(&app, usize::MAX);
+            t += TimeDelta::seconds(5);
+        }
+        let t = start;
+        assert!(motion.trails(&app).count() > 0);
+        assert!(motion.orbit_complete(&app));
+        let mut coast = CoastLayer::prepare(app.observer());
+        let mut plain = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        super::draw(&mut plain, &app, Layout::wide(), false, &mut coast).unwrap();
+        let mut moving = Screen {
+            pixels: [[false; 400]; 240],
+        };
+        draw_with_motion(
+            &mut moving,
+            &app,
+            Layout::wide(),
+            false,
+            &mut coast,
+            &motion,
+        )
+        .unwrap();
+        let on = |s: &Screen| s.pixels.iter().flatten().filter(|p| **p).count();
+        // Motion cues only add ink under everything else.
+        for (a, b) in plain
+            .pixels
+            .iter()
+            .flatten()
+            .zip(moving.pixels.iter().flatten())
+        {
+            assert!(!*a || *b);
+        }
+        assert!(
+            on(&moving) > on(&plain) + 50,
+            "{} vs {}",
+            on(&moving),
+            on(&plain)
+        );
+        // A frame the state has not followed draws neither.
+        app.update(t + TimeDelta::seconds(1)).unwrap();
+        super::draw(&mut plain, &app, Layout::wide(), false, &mut coast).unwrap();
+        draw_with_motion(
+            &mut moving,
+            &app,
+            Layout::wide(),
+            false,
+            &mut coast,
+            &motion,
+        )
+        .unwrap();
+        assert_eq!(plain.pixels, moving.pixels);
+    }
+
     #[test]
     fn real_frame_fits_both_layouts_and_is_reproducible() {
         let app = app();

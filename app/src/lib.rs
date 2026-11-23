@@ -15,6 +15,7 @@ use overhead_core::{
 };
 pub mod category;
 use category::Category;
+pub mod motion;
 pub mod projection;
 pub mod visibility;
 use projection::{
@@ -56,6 +57,10 @@ pub struct PhysicalState {
 pub struct Sample {
     pub physical: PhysicalState,
     pub camera: CameraPoint,
+    /// Whether the Earth lies between the fixed camera and the object
+    /// (0089's below-horizon context). Cached with the sample: the test is
+    /// soft-float work the S3 could not repeat for every object each frame.
+    pub hidden_by_earth: bool,
 }
 
 impl Sample {
@@ -132,6 +137,9 @@ pub struct RadarApp {
     fetched_at: Option<NaiveDateTime>,
     /// Newest element epoch of the loaded catalogue, for expiry.
     newest_epoch: Option<NaiveDateTime>,
+    /// Bumped whenever the catalogue is replaced or unloaded, so presentation
+    /// state indexed by entry ([`motion`]) can tell it no longer applies.
+    generation: u64,
 }
 
 impl RadarApp {
@@ -169,6 +177,7 @@ impl RadarApp {
             freshness: None,
             fetched_at: None,
             newest_epoch: None,
+            generation: 0,
         })
     }
 
@@ -198,6 +207,7 @@ impl RadarApp {
         };
         self.newest_epoch = newest_epoch(&catalogue);
         self.catalogue = Some(catalogue);
+        self.generation += 1;
         self.fetched_at = fetched_at;
         match self.time {
             // Already validated when the frame was made.
@@ -290,6 +300,7 @@ impl RadarApp {
             // Expired elements are unloaded rather than shown as current; only
             // a new load brings markers back.
             self.catalogue = None;
+            self.generation += 1;
             self.fetched_at = None;
             self.newest_epoch = None;
             self.dropped = 0;
@@ -410,6 +421,21 @@ impl RadarApp {
     pub fn earth_limb(&self) -> EarthLimb {
         self.camera.earth_limb(self.view)
     }
+    /// The fixed camera, for presentation geometry beyond the current samples
+    /// (trails, the selected orbit).
+    pub fn camera(&self) -> &Camera {
+        &self.camera
+    }
+    /// UTC of each entry's sample, in [`Self::objects`] order (staggered
+    /// frames leave unselected entries up to the window older).
+    pub fn sample_times(&self) -> &[NaiveDateTime] {
+        &self.sampled_at
+    }
+    /// Changes whenever the catalogue is replaced or unloaded; entry indices
+    /// from an earlier generation do not apply.
+    pub fn catalogue_generation(&self) -> u64 {
+        self.generation
+    }
     pub fn selected_id(&self) -> Option<u64> {
         self.selected
     }
@@ -436,7 +462,7 @@ impl RadarApp {
     ) -> impl Iterator<Item = (&CatalogueEntry, &Sample, ViewPoint)> {
         self.objects().filter_map(|(entry, result)| {
             let sample = result.as_ref().ok()?;
-            if sample.above_horizon() || self.camera.hidden_by_earth(sample.physical.ecef) {
+            if sample.above_horizon() || sample.hidden_by_earth {
                 return None;
             }
             Some((entry, sample, self.view.locate(sample.camera)?))
@@ -581,6 +607,7 @@ fn sample(
     let ecef = state.to_ecef().map_err(TrackingError::Coordinates)?;
     let geodetic = ecef_to_geodetic(ecef).map_err(TrackingError::Coordinates)?;
     let look = ecef_to_look_angles(ecef, observer).map_err(TrackingError::Observation)?;
+    let hidden_by_earth = camera.hidden_by_earth(ecef);
     let camera = camera.project(ecef).map_err(TrackingError::Coordinates)?;
     Ok(Sample {
         physical: PhysicalState {
@@ -590,6 +617,7 @@ fn sample(
             teme_speed_km_s: teme_speed(state.velocity()),
         },
         camera,
+        hidden_by_earth,
     })
 }
 
@@ -751,6 +779,7 @@ mod tests {
         assert!(below.len() < all_below, "{} of {all_below}", below.len());
         for (entry, sample, _) in app.below_horizon_markers() {
             assert!(!sample.above_horizon());
+            assert!(!sample.hidden_by_earth);
             assert!(!app.camera.hidden_by_earth(sample.physical.ecef));
             assert!(
                 app.markers()

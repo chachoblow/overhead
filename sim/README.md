@@ -293,6 +293,15 @@ satellites keep the square baseline's pixel magnification.
   only: never selected, counted or given arrows.
 - **Selected:** its octagon on top and a ring pulsing outward over 1.4 s,
   counted from when that satellite was selected (`RadarApp::selected_since`).
+- **Selected orbit:** one period centred on now, solid, broken where the
+  Earth hides it (the inertial orbit turned to the Earth's orientation at the
+  frame, so it passes through the selected marker).
+- **Trails:** four straight steps behind each unselected in-view
+  above-horizon marker, `clamp(60 s × tan(fov/2) / tan 10°, 1 s, 900 s)` per
+  step (1 min at 20°, ~3.3 min at the device's 60°), cut where the Earth hides
+  a past point. Both come from `overhead_app::motion::Motion`, kept beside the
+  app; the replay first runs 30 min of 10 s frames before the start so trails
+  are full at the first frame (a device grows them as it runs).
 - **Pills** (top left): NORAD ID, name (9 characters), EL, AZ, ALT, RNG, SPD,
   PER and the visibility word, all true state; `NO SEL` / `SKY` / `VIEW` when
   nothing is selected; none without a frame.

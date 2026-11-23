@@ -1,19 +1,22 @@
 //! The full-width wide radar of decision 0089 (the radar lab's Favourite C,
 //! as tweaked on the panel): left pills, 7 px octagon markers and 5 px hollow
 //! below-horizon diamonds with 1 px cleared halos, the selected octagon with a
-//! pulsing ring, haloed off-screen arrows and a km scale ruler. The coastline's
-//! sphere shading is baked into the coast raster ([`shade_levels`]). Heap-free.
+//! pulsing ring, haloed off-screen arrows and a km scale ruler, plus the
+//! selected orbit and marker trails when the host supplies their
+//! [`Motion`] state. The coastline's sphere shading is baked into the coast
+//! raster ([`shade_levels`]). Heap-free.
 use core::fmt::Write;
 
 use embedded_graphics::{
     mono_font::{MonoTextStyle, iso_8859_1::FONT_6X10},
     pixelcolor::BinaryColor,
     prelude::*,
-    primitives::Rectangle,
+    primitives::{Line, PrimitiveStyle, Rectangle},
     text::{Baseline, Text},
 };
 use overhead_app::{
     RadarApp,
+    motion::Motion,
     projection::{CAMERA_HEIGHT_KM, ViewPoint},
     visibility::Visibility,
 };
@@ -30,6 +33,12 @@ pub(crate) fn octagon() -> impl Iterator<Item = (i32, i32)> + Clone {
         .flat_map(|y| (-3..=3).map(move |x| (x, y)))
         .filter(|(x, y): &(i32, i32)| x.abs() + y.abs() <= 4)
 }
+
+/// Row half-widths of the octagon's 3×3 dilation, top to bottom (it is
+/// symmetric and convex per row, so each row is one span).
+pub(crate) const HALO_OCTAGON: [i32; 9] = [2, 3, 4, 4, 4, 4, 4, 3, 2];
+/// The same for [`DIAMOND5`]: the hollow diamond's halo is solid.
+pub(crate) const HALO_DIAMOND5: [i32; 7] = [1, 2, 3, 3, 3, 2, 1];
 
 /// 5 px hollow diamond for below-horizon group members.
 pub(crate) const DIAMOND5: [(i32, i32); 8] = [
@@ -67,20 +76,33 @@ impl<D: DrawTarget<Color = BinaryColor>> Ink<'_, D> {
         self.d
             .draw_iter(shape.map(|(x, y)| Pixel(at + Point::new(x, y), color)))
     }
-    /// The shape after its 1 px cleared halo (a 3×3 dilation set Off).
+    /// Horizontal run of pixels as one fill (byte-wide on the device).
+    fn span(&mut self, x0: i32, x1: i32, y: i32, on: bool) -> Result<(), D::Error> {
+        if x1 < x0 {
+            return Ok(());
+        }
+        self.d.fill_solid(
+            &Rectangle::new(Point::new(x0, y), Size::new((x1 - x0 + 1) as u32, 1)),
+            BinaryColor::from(on),
+        )
+    }
+    /// A marker after its 1 px cleared halo: `halo` gives, per row from the
+    /// top, the half-width of the shape's 3×3 dilation ([`HALO_OCTAGON`],
+    /// [`HALO_DIAMOND5`]), cleared as spans rather than ~9 writes per pixel.
     fn haloed(
         &mut self,
         at: Point,
-        shape: impl Iterator<Item = (i32, i32)> + Clone,
+        halo: &[i32],
+        shape: impl Iterator<Item = (i32, i32)>,
     ) -> Result<(), D::Error> {
-        let halo = shape
-            .clone()
-            .flat_map(|(x, y)| (-1..=1).flat_map(move |j| (-1..=1).map(move |i| (x + i, y + j))));
-        self.pixels(at, halo, false)?;
+        let top = at.y - (halo.len() as i32 - 1) / 2;
+        for (j, &hw) in halo.iter().enumerate() {
+            self.span(at.x - hw, at.x + hw, top + j as i32, false)?;
+        }
         self.pixels(at, shape, true)
     }
     fn hline(&mut self, x0: i32, x1: i32, y: i32, on: bool) -> Result<(), D::Error> {
-        self.pixels(Point::zero(), (x0..=x1).map(|x| (x, y)), on)
+        self.span(x0, x1, y, on)
     }
     fn vline(&mut self, x: i32, y0: i32, y1: i32, on: bool) -> Result<(), D::Error> {
         self.pixels(Point::zero(), (y0..=y1).map(|y| (x, y)), on)
@@ -88,11 +110,25 @@ impl<D: DrawTarget<Color = BinaryColor>> Ink<'_, D> {
     /// Ring of radius `r` sampled by angle; `dash` keeps every dash-th point.
     fn circle(&mut self, c: Point, r: f64, dash: usize) -> Result<(), D::Error> {
         let n = libm::ceil(r * 6.3).max(12.0) as usize;
+        // f32 trig: the S3 has a single-precision FPU, f64 is soft-float.
         let points = (0..n).filter(|k| dash == 0 || k % dash == 0).map(|k| {
-            let (s, co) = libm::sincos(k as f64 / n as f64 * core::f64::consts::TAU);
-            (rnd(r * co), rnd(r * s))
+            let (s, co) = libm::sincosf(k as f32 / n as f32 * core::f32::consts::TAU);
+            (rnd(r * f64::from(co)), rnd(r * f64::from(s)))
         });
         self.pixels(c, points, true)
+    }
+    /// 1 px On line between pixel positions, clipped to just outside the
+    /// display first so far off-screen orbit points cost nothing extra.
+    fn line(&mut self, a: (f64, f64), b: (f64, f64)) -> Result<(), D::Error> {
+        // f32 clipping: pixel precision needs no more, and the S3 has no f64 FPU.
+        let f = |p: (f64, f64)| (p.0 as f32, p.1 as f32);
+        let Some((a, b)) = clip(f(a), f(b)) else {
+            return Ok(());
+        };
+        let r = |v: f32| libm::floorf(v + 0.5) as i32;
+        Line::new(Point::new(r(a.0), r(a.1)), Point::new(r(b.0), r(b.1)))
+            .into_styled(PrimitiveStyle::with_stroke(BinaryColor::On, 1))
+            .draw(self.d)
     }
     fn text(&mut self, x: i32, y: i32, s: &str, on: bool) -> Result<(), D::Error> {
         Text::with_baseline(
@@ -105,7 +141,8 @@ impl<D: DrawTarget<Color = BinaryColor>> Ink<'_, D> {
         Ok(())
     }
     /// Fill with the pills' 2 px corner cut; `on(x)` picks the colour by column.
-    fn rounded_fill(&mut self, r: Rectangle, on: impl Fn(i32) -> bool) -> Result<(), D::Error> {
+    /// Columns left of `split` On, the rest Off.
+    fn rounded_fill(&mut self, r: Rectangle, split: i32) -> Result<(), D::Error> {
         let (x, y) = (r.top_left.x, r.top_left.y);
         let (w, h) = (r.size.width as i32, r.size.height as i32);
         for j in 0..h {
@@ -114,9 +151,9 @@ impl<D: DrawTarget<Color = BinaryColor>> Ink<'_, D> {
                 1 => 1,
                 _ => 0,
             };
-            let row = (x + inset..x + w - inset)
-                .map(|k| Pixel(Point::new(k, y + j), BinaryColor::from(on(k))));
-            self.d.draw_iter(row)?;
+            let (x0, x1) = (x + inset, x + w - inset - 1);
+            self.span(x0, x1.min(split.saturating_sub(1)), y + j, true)?;
+            self.span(x0.max(split), x1, y + j, false)?;
         }
         Ok(())
     }
@@ -151,17 +188,86 @@ impl<D: DrawTarget<Color = BinaryColor>> DrawTarget for Shifted<'_, D> {
     }
 }
 
+/// Liang–Barsky clip of segment `a`–`b` to a box 2 px beyond the display.
+pub(crate) fn clip(a: (f32, f32), b: (f32, f32)) -> Option<((f32, f32), (f32, f32))> {
+    let (lo, hi) = (
+        (-2.0, -2.0),
+        (
+            crate::WIDE_WIDTH as f32 + 1.0,
+            crate::WIDE_HEIGHT as f32 + 1.0,
+        ),
+    );
+    let (dx, dy) = (b.0 - a.0, b.1 - a.1);
+    let (mut t0, mut t1) = (0.0f32, 1.0f32);
+    for (p, q) in [
+        (-dx, a.0 - lo.0),
+        (dx, hi.0 - a.0),
+        (-dy, a.1 - lo.1),
+        (dy, hi.1 - a.1),
+    ] {
+        if !(p.is_finite() && q.is_finite()) {
+            return None;
+        }
+        if p == 0.0 {
+            if q < 0.0 {
+                return None;
+            }
+        } else {
+            let r = q / p;
+            if p < 0.0 {
+                t0 = t0.max(r);
+            } else {
+                t1 = t1.min(r);
+            }
+        }
+    }
+    (t0 <= t1).then_some((
+        (a.0 + t0 * dx, a.1 + t0 * dy),
+        (a.0 + t1 * dx, a.1 + t1 * dy),
+    ))
+}
+
+/// 0089's motion cues: the selected orbit (broken where the state has no
+/// point), then trails behind unselected markers. Drawn under every marker,
+/// so the markers' halos clear around them.
+fn draw_motion<D: DrawTarget<Color = BinaryColor>>(
+    ink: &mut Ink<'_, D>,
+    app: &RadarApp,
+    layout: Layout,
+    motion: &Motion,
+) -> Result<(), D::Error> {
+    let mut previous = None;
+    for point in motion.orbit(app) {
+        let here = point.map(|v| layout.pixel(v));
+        if let (Some(a), Some(b)) = (previous, here) {
+            ink.line(a, b)?;
+        }
+        previous = here;
+    }
+    for trail in motion.trails(app) {
+        for pair in trail.points().windows(2) {
+            ink.line(layout.pixel(pair[0]), layout.pixel(pair[1]))?;
+        }
+    }
+    Ok(())
+}
+
 /// Everything above the coastline and Earth outline, in 0089's order.
 pub(crate) fn draw_foreground<D: DrawTarget<Color = BinaryColor>>(
     display: &mut D,
     app: &RadarApp,
     layout: Layout,
+    motion: Option<&Motion>,
     trace: &mut impl FnMut(FrameStage),
 ) -> Result<(), D::Error> {
     let mut ink = Ink { d: display };
+    if let Some(motion) = motion {
+        draw_motion(&mut ink, app, layout, motion)?;
+        trace(FrameStage::Motion);
+    }
     let point = |v: ViewPoint| layout.marker(v);
     for (_, _, v) in app.below_horizon_markers() {
-        ink.haloed(point(v), DIAMOND5.into_iter())?;
+        ink.haloed(point(v), &HALO_DIAMOND5, DIAMOND5.into_iter())?;
     }
     let selected = app.selected_id();
     let mut selected_at = None;
@@ -169,12 +275,12 @@ pub(crate) fn draw_foreground<D: DrawTarget<Color = BinaryColor>>(
         if Some(entry.elements().norad_id) == selected {
             selected_at = Some(point(v));
         } else {
-            ink.haloed(point(v), octagon())?;
+            ink.haloed(point(v), &HALO_OCTAGON, octagon())?;
         }
     }
     // The selected octagon goes on top of every other marker.
     if let Some(at) = selected_at {
-        ink.haloed(at, octagon())?;
+        ink.haloed(at, &HALO_OCTAGON, octagon())?;
         let phase = pulse_phase(app.time(), app.selected_since());
         ink.circle(at, 6.0 + phase * 7.0, if phase > 0.6 { 2 } else { 0 })?;
     }
@@ -276,7 +382,7 @@ fn scale_ruler<D: DrawTarget<Color = BinaryColor>>(
             Point::new(x0 - 8, base - 16),
             Size::new((bar + last_half + 2 + 12 + 13) as u32, 23),
         ),
-        |_| false,
+        i32::MIN,
     )?;
     ink.hline(x0, x0 + bar, base + 3, true)?;
     for (k, label) in labels.iter().enumerate() {
@@ -433,7 +539,7 @@ fn pills<D: DrawTarget<Color = BinaryColor>>(
         let Some(pill) = pill else { break };
         let (r, split) = pill_box(pill, y);
         let (x, w, h) = (r.top_left.x, r.size.width as i32, PILL_HEIGHT);
-        ink.rounded_fill(r, |k| k < split)?;
+        ink.rounded_fill(r, split)?;
         // Outline with the 2 px corner cut.
         ink.hline(x + 2, x + w - 3, y, true)?;
         ink.hline(x + 2, x + w - 3, y + h - 1, true)?;
@@ -574,6 +680,38 @@ mod tests {
     extern crate std;
     use super::*;
     use overhead_core::sgp4::chrono::NaiveDate;
+
+    #[test]
+    fn lines_clip_to_just_beyond_the_display() {
+        let inside = ((10.0, 10.0), (20.0, 30.0));
+        assert_eq!(clip(inside.0, inside.1), Some(inside));
+        // A far orbit point is cut at the box edge.
+        let ((x0, y0), (x1, y1)) = clip((200.0, 120.0), (1e7, 120.0)).unwrap();
+        assert_eq!((x0, y0, y1), (200.0, 120.0, 120.0));
+        assert!((x1 - 401.0).abs() < 1e-3);
+        // Wholly outside, or not finite: nothing to draw.
+        assert_eq!(clip((-50.0, -50.0), (500.0, -10.0)), None);
+        assert_eq!(clip((0.0, 0.0), (f32::NAN, 0.0)), None);
+        assert_eq!(clip((0.0, 0.0), (f32::INFINITY, 0.0)), None);
+    }
+
+    #[test]
+    fn halo_spans_are_the_shapes_dilations() {
+        fn check(shape: &[(i32, i32)], halo: &[i32]) {
+            let r = (halo.len() as i32 - 1) / 2;
+            for y in -r - 1..=r + 1 {
+                for x in -r - 1..=r + 1 {
+                    let dilated = shape
+                        .iter()
+                        .any(|&(sx, sy)| (sx - x).abs() <= 1 && (sy - y).abs() <= 1);
+                    let spanned = (-r..=r).contains(&y) && x.abs() <= halo[(y + r) as usize];
+                    assert_eq!(dilated, spanned, "({x}, {y})");
+                }
+            }
+        }
+        check(&octagon().collect::<std::vec::Vec<_>>(), &HALO_OCTAGON);
+        check(&DIAMOND5, &HALO_DIAMOND5);
+    }
 
     #[test]
     fn marker_shapes() {

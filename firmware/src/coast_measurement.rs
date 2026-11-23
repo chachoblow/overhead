@@ -1,7 +1,7 @@
 //! Opt-in 1-bit RAM-target fixture for the isolated coastline measurement.
 //! No display transfer, scheduling or shipping catalogue capacity is implied.
 use core::convert::Infallible;
-use embedded_graphics::{pixelcolor::BinaryColor, prelude::*};
+use embedded_graphics::{pixelcolor::BinaryColor, prelude::*, primitives::Rectangle};
 use overhead_app::{RadarApp, projection::View};
 use overhead_core::{
     GeodeticPosition, OmmElements,
@@ -201,6 +201,40 @@ impl DrawTarget for Screen {
         }
         Ok(())
     }
+    /// Byte-wide fill: the per-pixel default made the frame clear ~15 ms on
+    /// the S3. Counters are charged per pixel, exactly as before.
+    fn fill_solid(&mut self, area: &Rectangle, color: BinaryColor) -> Result<(), Self::Error> {
+        let area = area.intersection(&self.bounding_box());
+        let Some(bottom_right) = area.bottom_right() else {
+            return Ok(());
+        };
+        let (x0, x1) = (area.top_left.x as usize, bottom_right.x as usize);
+        let on = color == BinaryColor::On;
+        let count = area.size.width * area.size.height;
+        self.writes += count;
+        if on {
+            self.on_writes += count;
+        }
+        for y in area.top_left.y as usize..=bottom_right.y as usize {
+            let row = &mut self.pixels[y * 50..y * 50 + 50];
+            let mut x = x0;
+            while x <= x1 {
+                if x % 8 == 0 && x + 7 <= x1 {
+                    row[x / 8] = if on { 0xFF } else { 0 };
+                    x += 8;
+                } else {
+                    let bit = 1 << (x % 8);
+                    if on {
+                        row[x / 8] |= bit;
+                    } else {
+                        row[x / 8] &= !bit;
+                    }
+                    x += 1;
+                }
+            }
+        }
+        Ok(())
+    }
 }
 
 /// This separate entry point lets the coast-off image reference only the
@@ -239,6 +273,30 @@ pub fn verify_late(screen: &Screen, reference: &mut Screen, app: &RadarApp, warn
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn fill_matches_per_pixel_writes() {
+        let areas = [
+            Rectangle::new(Point::new(0, 0), Size::new(400, 240)),
+            Rectangle::new(Point::new(3, 5), Size::new(21, 4)),
+            Rectangle::new(Point::new(8, 0), Size::new(8, 1)),
+            Rectangle::new(Point::new(390, 230), Size::new(30, 30)),
+            Rectangle::new(Point::new(-5, -5), Size::new(10, 10)),
+            Rectangle::new(Point::new(10, 10), Size::new(0, 5)),
+        ];
+        for color in [BinaryColor::On, BinaryColor::Off] {
+            for area in areas {
+                let (mut fast, mut slow) = (Screen::new(), Screen::new());
+                fast.pixels.fill(0x5A);
+                slow.pixels.fill(0x5A);
+                fast.fill_solid(&area, color).unwrap();
+                let clipped = area.intersection(&slow.bounding_box());
+                slow.draw_iter(clipped.points().map(|p| Pixel(p, color)))
+                    .unwrap();
+                assert_eq!(fast.pixels, slow.pixels, "{area:?} {color:?}");
+                assert_eq!((fast.writes, fast.on_writes), (slow.writes, slow.on_writes));
+            }
+        }
+    }
     #[test]
     fn all_cases_are_bounded_and_failure_is_detectable() {
         let (mut selected, mut empty) = (0, 0);

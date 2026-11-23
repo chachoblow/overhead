@@ -99,7 +99,7 @@ use mbedtls_rs::{
     Certificate, ClientSessionConfig, Session, SessionConfig, Tls, TlsVersion, X509, io,
     io::Write as _,
 };
-use overhead_app::{Freshness, RadarApp, projection::View};
+use overhead_app::{Freshness, RadarApp, motion::Motion, projection::View};
 use overhead_core::{
     GeodeticPosition,
     catalogue::Catalogue,
@@ -160,6 +160,10 @@ const HEAP_SIZE: usize = 96 * 1024;
 const OBJECT_LIMIT: usize = 256;
 /// 0077: oldest an unselected object's marker may be.
 const STAGGER: TimeDelta = TimeDelta::seconds(1);
+/// 0089: most selected-orbit propagations per frame (~2.2 ms each from
+/// PSRAM), so a new selection's 161 points fill in ~2 s; afterwards the orbit
+/// rolls one point per 1/160 period.
+const ORBIT_BUDGET: usize = 4;
 /// Sectigo Public Server Authentication Root R46 and USERTrust RSA
 /// Certification Authority (0071), NUL-terminated for MbedTLS PEM parsing.
 const ROOTS: &str = concat!(include_str!("../certs/celestrak-roots.pem"), "\0");
@@ -1280,8 +1284,15 @@ async fn display(
         .expect("observer camera")
         .with_object_limit(OBJECT_LIMIT)
         .with_freshness(Freshness::DEVICE);
-    // Longest staggered update per stats window, and since boot (0077).
+    // 0089 trails and selected orbit: presentation state beside the app.
+    let mut motion = Motion::new();
+    // Longest staggered update per stats window, and since boot (0077); then
+    // the longest motion update and its orbit propagations, per window.
     let (mut update_max_us, mut update_boot_max_us) = (0u64, 0u64);
+    let (mut motion_max_us, mut orbit_points) = (0u64, 0usize);
+    // Longest radar render stage per window, by `FrameStage` (diagnostic).
+    let mut stage_max_us = [0u64; 9];
+    let mut send_max_us = 0u64;
     let mut loads = 0u32;
     let mut was_stale = false;
     let mut had_catalogue = false;
@@ -1435,11 +1446,13 @@ async fn display(
             diag!(
                 "INPUT_CAPTURE_STATS samples={} max_gap_us={} loop_max_us={loop_max_us} \
                  update_max_us={update_max_us} update_boot_max_us={update_boot_max_us} \
-                 oldest_ms={oldest_ms} catalogue={} sky={} view={} stale={} heap_now={} \
+                 motion_max_us={motion_max_us} orbit_points={orbit_points} \
+                 trails={} oldest_ms={oldest_ms} catalogue={} sky={} view={} stale={} heap_now={} \
                  internal_used={internal} internal_free={internal_free} psram_used={psram} \
                  selected={:?}",
                 stats.samples,
                 stats.max_gap_us,
+                motion.trails(&app).count(),
                 c.catalogue,
                 c.above_horizon,
                 c.visible,
@@ -1449,6 +1462,12 @@ async fn display(
             );
             loop_max_us = 0;
             update_max_us = 0;
+            (motion_max_us, orbit_points) = (0, 0);
+            diag!(
+                "RENDER_STAGES_MAX_US clear,coast,earth,motion,radar,markers,arrows,overlays,status={stage_max_us:?} send_partial_max_us={send_max_us}"
+            );
+            stage_max_us = [0; 9];
+            send_max_us = 0;
             last_stats = now;
             print_frame_window(cadence, now - window_started);
             window_started = now;
@@ -1462,9 +1481,14 @@ async fn display(
                 match (updating, page.as_ref()) {
                     (Some(pct), _) => overhead_render::draw_updating(screen, pct),
                     (None, Some(p)) => overhead_render::setup::draw_info(screen, p),
-                    (None, None) => {
-                        overhead_render::draw(screen, &app, Layout::wide(), false, coast)
-                    }
+                    (None, None) => overhead_render::draw_with_motion(
+                        screen,
+                        &app,
+                        Layout::wide(),
+                        false,
+                        coast,
+                        &motion,
+                    ),
                 }
                 .expect("NO FRAME render");
                 let phase = gate.next_phase();
@@ -1492,18 +1516,40 @@ async fn display(
                 let took = uptime_us() - started;
                 update_max_us = update_max_us.max(took);
                 update_boot_max_us = update_boot_max_us.max(took);
+                let motion_started = uptime_us();
+                orbit_points += motion.update(&app, ORBIT_BUDGET);
+                motion_max_us = motion_max_us.max(uptime_us() - motion_started);
                 match (updating, page.as_ref()) {
                     (Some(pct), _) => overhead_render::draw_updating(screen, pct),
                     (None, Some(p)) => overhead_render::setup::draw_info(screen, p),
                     (None, None) => {
-                        overhead_render::draw(screen, &app, Layout::wide(), false, coast)
+                        // Diagnostic: longest time to each stage boundary.
+                        let mut last = uptime_us();
+                        overhead_render::draw_with_motion_traced(
+                            screen,
+                            &app,
+                            Layout::wide(),
+                            false,
+                            coast,
+                            &motion,
+                            |stage| {
+                                let now = uptime_us();
+                                let k = stage as usize;
+                                stage_max_us[k] = stage_max_us[k].max(now - last);
+                                last = now;
+                            },
+                        )
                     }
                 }
                 .expect("radar render");
                 let phase = gate.next_phase();
+                let send_started = uptime_us();
                 cs.set_high();
                 let result = sender.send(phase, &screen.pixels, full, |part| spi.write(part));
                 cs.set_low();
+                if !full {
+                    send_max_us = send_max_us.max(uptime_us() - send_started);
+                }
                 let transfer = match result {
                     Ok(transfer) => transfer,
                     Err(_) => {
@@ -1577,7 +1623,14 @@ async fn display(
         if info_changed && retained && !sent && updating.is_none() {
             match page.as_ref() {
                 Some(p) => overhead_render::setup::draw_info(screen, p),
-                None => overhead_render::draw(screen, &app, Layout::wide(), false, coast),
+                None => overhead_render::draw_with_motion(
+                    screen,
+                    &app,
+                    Layout::wide(),
+                    false,
+                    coast,
+                    &motion,
+                ),
             }
             .expect("info render");
             let phase = gate.next_phase();
