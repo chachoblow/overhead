@@ -636,7 +636,9 @@ signed for both channels when it goes to both):
    same count); SSID, password, latitude and longitude must be `0`.
 3. **Hand over:** `sha256sum N.bin`; the key holder copies it to the Mac and
    checks the hash.
-4. **Sign on the Mac:** `sign KEY beta N 0.1.N N.bin OUT`, and for `stable`
+4. **Sign on the Mac:** `git pull` first (from release 16 `sign` refuses an
+   image whose `overhead-build:` marker is missing or isn't N; an older
+   checkout signs without checking). `sign KEY beta N 0.1.N N.bin OUT`, and for `stable`
    `sign KEY stable N 0.1.N N.bin OUT` into the same `OUT`; `verify` each
    manifest (the Mac shell is zsh: wrap the cargo command in a function, not
    a `$R` string, and keep `#` comments out of pasted lines). Copy `OUT`
