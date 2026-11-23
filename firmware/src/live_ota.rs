@@ -75,7 +75,8 @@ const IDLE_S: u32 = 120;
 /// Roots for the Pages and raw GitHub hosts (0085).
 const OTA_ROOTS: &str = concat!(include_str!("../certs/ota-roots.pem"), "\0");
 const TIMEOUT: Wait = Wait::from_secs(30);
-/// An image read may stall this long between chunks before it is abandoned.
+/// Whole image download, abandoned after this long (a stall between chunks
+/// is caught sooner by the socket's 20 s timeout).
 const IMAGE_TIMEOUT: Wait = Wait::from_secs(600);
 const MAX_MANIFEST: usize = 2 * 1024;
 const SECTOR: usize = element_store::SECTOR as usize;
@@ -333,6 +334,13 @@ impl Ota {
             Verdict::Waiting => {}
             Verdict::Healthy => {
                 let ok = self.mark(flash, otadata::state::VALID);
+                if !ok {
+                    // Still on probation: the next reset would roll back,
+                    // so keep `pending_build` (that rollback then records
+                    // it) and retry on the next poll.
+                    println!("OTA_HEALTH valid_write_failed build={BUILD}; retrying");
+                    return;
+                }
                 self.health = None;
                 self.boot = Boot::Normal;
                 self.settings.pending_build = None;
@@ -475,8 +483,14 @@ impl Ota {
             println!("OTA_INSTALL refused=no_otadata");
             return;
         };
+        // Without a saved `pending_build` a rollback could not record the
+        // failure and the same build would install again every check.
         self.settings.pending_build = Some(m.build);
-        self.save(flash);
+        if !self.save(flash) {
+            self.settings.pending_build = None;
+            println!("OTA_INSTALL refused=pending_save_failed");
+            return;
+        }
         let (sector, e) = otadata::activate(read_entries(flash, at), target);
         let ok = write_entry(flash, at, sector, e).is_ok();
         println!(
