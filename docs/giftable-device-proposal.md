@@ -79,7 +79,7 @@ were weighed and kept only as the USB recovery path.
 - **BLE + Wi-Fi coexistence spike (2026-11-08, board).** The `ble-spike`
   feature adds a trouble-host =0.7.0 GATT peripheral (esp-radio `ble` + `coex`)
   to the `live-fetch-radar` diagnostic; evidence in the
-  [firmware README](../firmware/README.md#ble-coexistence-spike).
+  [firmware diagnostics](evaluations/firmware-diagnostics.md#ble-coexistence-spike).
   - Static RAM: BLE adds about 33 KB (mostly controller code in the shared
     D/IRAM), so the 160 KiB static internal heap no longer links. The
     bootloader-reclaimed `dram2` region (72 KiB, unused by every image so far)

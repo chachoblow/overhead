@@ -253,7 +253,7 @@ separately agreed margin, and the host clock's own offset must be logged.
 
 **Drift result (2026-10-26).** The capture above ran for ~3 h: the S3 timer
 measured **≈+1.2 ppm** versus UTC, resolved only to a few ppm because the
-host reference wandered (see [firmware README](../firmware/README.md#s3-clock-drift-capture-flashed-3-hour-uart-run)).
+host reference wandered (see [firmware diagnostics](evaluations/firmware-diagnostics.md#s3-clock-drift-capture-flashed-3-hour-uart-run)).
 One board, room temperature, three hours: an observation, not a bound. A
 [0065](decisions/0065-prototype-drift-bound-and-holdover.md) sets the prototype
 `D = 20 ppm` and `H = 3,600 s`, with margin for temperature, aging and reference

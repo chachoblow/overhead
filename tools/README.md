@@ -112,8 +112,8 @@ They are not inferred from file metadata or used to select elements.
 
 ### Display categories
 
-Since [0078](../docs/decisions/0078-visibility-glyph.md) roles no longer appear on
-screen (the slot shows visibility); they still load as below and rank
+Roles no longer appear on screen (since [0078](../docs/decisions/0078-visibility-glyph.md),
+and the glyph strip is gone since 0089); they still load as below and rank
 [0077](../docs/decisions/0077-m2-operating-budget-visual-group.md)'s object limit.
 
 A group may optionally declare `"category": "station"`, `"navigation"` or
@@ -135,8 +135,8 @@ per-ID override mechanism is introduced.
 `sim/examples/weather-gps.json` declares Weather/Navigation;
 `tools/examples/catalogue.json` declares Station for its ISS-only input. The
 mixed historical demo pool intentionally has no role. Existing manifests work
-unchanged, displaying Unknown for successful selected entries in wide view.
-[Executable review](../sim/README.md#static-category-glyph) covers all four icons.
+unchanged. The retired category icons' review recipe is in the simulator README
+at revision `4ac3778`.
 
 ### Report and failures
 

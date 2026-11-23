@@ -85,8 +85,7 @@ its silhouette. The circular comparison mode draws a separate outer ring.
 At terrestrial sites Earth spans roughly 45% of the viewport width at the default
 20°, 14% at 60°, and 6.6% at 100° (about 15 pixels at the default layout).
 At tight zoom the limb can leave the view entirely.
-The opt-in wide comparison now draws coastline strokes; square/circular modes have
-none. There is no filled occlusion mask. `FOV ... DEG` is a lens angle,
+`--wide` draws coastline; square/circular modes have none. There is no filled occlusion mask. `FOV ... DEG` is a lens angle,
 **not surface, map or slant distance**.
 
 Only satellites above the true local geometric horizon are eligible for markers,
@@ -133,8 +132,7 @@ Press `v` to return to radar, and again to inspect debug. Tab and wheel/up/down
 continue changing the underlying wide view while debug is open. Replay never
 pauses or switches to wall-clock UTC; toggling does not change geometry, counts,
 selection or physical samples. Returning discards no history
-and draws current static endpoints; subsequent normal-view selection changes
-animate as before. Normal notices remain condition-driven and cannot be dismissed
+and draws the current frame. Normal notices remain condition-driven and cannot be dismissed
 by visiting debug. Square and circular comparisons ignore `v`.
 
 The fixed text page shows replay UTC, vertical FOV, separate catalogue/sky/view/

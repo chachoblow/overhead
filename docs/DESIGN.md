@@ -155,7 +155,7 @@ notices that follow their underlying conditions rather than expiring:
 `NO MARKERS`, `NO FRAME`, `TRACK ERROR` and `INGEST WARN`. Healthy selected views
 have no notice ink. [0040](decisions/0040-white-backed-bottom-left-notice-contract.md)
 gives them a small borderless white backing that may visually cover markers
-(including the selected diamond), IDs, arrows or Earth within its bounds without
+(including the selected one), arrows or Earth within its bounds without
 changing eligibility, counts, physical state or selection.
 [0048](decisions/0048-refined-empty-view-notices.md) refines the wide empty view:
 `NONE IN VIEW` (0061's wording; originally `SKY OUTSIDE VIEW`) when there are
@@ -176,7 +176,8 @@ production population/cadence choices are outside this slice. No radio
 information or battery indicator.
 
 ## Controls
-- Simulator: continuous zoom via scroll wheel and up/down arrows.
+- Simulator: stepped zoom (wheel, up/down), Tab selection and `v` debug;
+  [simulator controls](../sim/README.md#controls-and-view).
 - Intended device ([0060](decisions/0060-defer-timing-to-physical-prototype.md)):
   a button cycles through satellites and a knob zooms continuously; zoom presets
   remain a fallback if the knob proves infeasible.

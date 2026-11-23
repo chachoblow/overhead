@@ -56,5 +56,5 @@ app, renderer, selective sender and timing preflight: cold boot, valid frame,
 time loss, failed `NO FRAME` transfer and retry, independent COM/full-data
 reminders while UTC is absent, and new-UTC recovery. These prove command-side
 rules and framebuffer intent only, not physical panel timing or service.
-[firmware usage](../../firmware/README.md#utcframe-scheduling-preflight-host-only)
+[firmware usage](../evaluations/firmware-diagnostics.md#utcframe-scheduling-preflight-host-only)
 records the test command and limitations.

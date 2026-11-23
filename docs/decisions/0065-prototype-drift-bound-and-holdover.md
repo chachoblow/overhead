@@ -21,7 +21,7 @@ trust after ~3,500 s; `H` binds only for unusually accurate syncs.
 ## Why
 
 A 3-hour UART capture measured the board's timer at ≈+1.2 ppm versus UTC
-([evidence](../../firmware/README.md#s3-clock-drift-capture-flashed-3-hour-uart-run)),
+([evidence](../evaluations/firmware-diagnostics.md#s3-clock-drift-capture-flashed-3-hour-uart-run)),
 resolved only to a few ppm because the host reference wandered. 20 ppm adds
 margin for temperature, voltage, aging and that reference error, and is twice
 Espressif's ±10 ppm crystal recommendation. An hour comfortably exceeds a

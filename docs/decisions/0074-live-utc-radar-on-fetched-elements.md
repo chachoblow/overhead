@@ -7,7 +7,7 @@ handling out of scope). Resolves [0073](0073-diagnostic-fetch-without-certificat
 condition for fetched data reaching the radar. Builds on
 [0071](0071-https-element-fetch-first-slice.md) and [0067](0067-opt-in-live-utc-iss-radar-scope.md).
 Done 2026-11-01: two on-board fetches with dates checked and a user-observed
-pass with visible BOOT cycling ([evidence](../../firmware/README.md#live-utc-radar-on-fetched-stations-flashed-uart-captures)).
+pass with visible BOOT cycling ([evidence](../evaluations/firmware-diagnostics.md#live-utc-radar-on-fetched-stations-flashed-uart-captures)).
 
 ## Decision
 1. **Image.** A separate opt-in `live-fetch-radar` image composes 0071's one
@@ -48,4 +48,4 @@ A CelesTrak move to TLS 1.3 makes this image fail closed until certificate
 access changes. Root validity becomes a host-test maintenance item. Each boot
 still costs one CelesTrak request. Persistence, refresh, stale-element policy
 and frame cadence remain open; frame cost at 60° is near the 50 ms grid.
-Evidence and limits: [firmware README](../../firmware/README.md#live-utc-radar-on-fetched-stations-flashed-uart-captures).
+Evidence and limits: [firmware diagnostics](../evaluations/firmware-diagnostics.md#live-utc-radar-on-fetched-stations-flashed-uart-captures).

@@ -21,7 +21,7 @@ this experiment rather than bypassing rate/deny through fallback. A failed SPI
 transaction halts the diagnostic with panel state unknown, not a recovery claim.
 
 The user approved fixture-only scope before implementation and separately
-approved the first exact-gated flash. [Firmware usage and evidence](../../firmware/README.md#live-utc-iss-radar-candidate-flashed-bounded-uart-capture)
+approved the first exact-gated flash. [Firmware usage and evidence](../evaluations/firmware-diagnostics.md#live-utc-iss-radar-candidate-flashed-bounded-uart-capture)
 record the implementation, capture and limits.
 
 ## Why and boundaries

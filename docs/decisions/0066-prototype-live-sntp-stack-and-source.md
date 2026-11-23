@@ -26,7 +26,7 @@ such an ELF. Provisioning for the handheld device is a separate future choice.
 ## Why
 
 The approach was proven on target: a one-hour live run
-([evidence](../../firmware/README.md#live-sntp-source-evidence-flashed-1-hour-uart-run))
+([evidence](../evaluations/firmware-diagnostics.md#live-sntp-source-evidence-flashed-1-hour-uart-run))
 accepted every reply with initial uncertainty 21–58 ms (median 28 ms), and every
 consecutive pair agreed within its combined bound. That makes the ≤100 ms target
 plausible with 0065's 20 ppm / 3,600 s, in this home-network setting.

@@ -35,7 +35,7 @@ after the BLE spike).
 GPS removes the setup step a recipient is most likely to get wrong, and BLE
 avoids captive-portal failures (iOS's mini-browser closing, phones leaving a
 network without internet, the access point changing channel when the station
-joins). The 2026-11-08 [spike](../../firmware/README.md#ble-coexistence-spike)
+joins). The 2026-11-08 [spike](../evaluations/firmware-diagnostics.md#ble-coexistence-spike)
 showed BLE and Wi-Fi fit together: ~33 KB statics and 35 KB heap, internal free
 ≥116 KB through a TLS fetch with the `dram2` region added, an iPhone wrote and
 read, frames and knob unaffected. Rejected: a served page as primary (above),

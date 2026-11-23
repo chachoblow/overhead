@@ -44,7 +44,7 @@ for `core/tests/fixtures/iss-25544.json` or any frozen M2 input.
 - Consumer: only the separately named `overhead-s3-live-utc-fresh-iss` diagnostic and its host preflight. The existing `overhead-s3-live-utc-radar` still uses the old fixture. The new target image neither fetches nor refreshes this data.
 
 This is a **dated visibility experiment**, not a lasting claim of current ISS
-accuracy. The [firmware guide](../README.md#pinned-omm-live-utc-marker-diagnostic-flashed-no-visual-observation)
+accuracy. The [firmware diagnostics](../../docs/evaluations/firmware-diagnostics.md#pinned-omm-live-utc-marker-diagnostic-flashed-no-visual-observation)
 records host, build and bounded UART evidence; recheck input age and an upcoming in-view
 window before any proposed physical capture. Never refresh this file silently
 or treat a newly fetched response as the same image. No production data-age,

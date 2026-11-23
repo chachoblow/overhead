@@ -28,7 +28,7 @@ rule, not a new BOOT behavior.
 
 A GPIO-independent input filter and selection composition are host-tested in
 [`button_input`](../../firmware/src/button_input.rs). Two separate opt-in S3
-experiments are documented in the [firmware README](../../firmware/README.md#historical-multi-marker-boot-cycle-diagnostic-flashed-short-uart-capture):
+experiments are documented in the [firmware diagnostics](../evaluations/firmware-diagnostics.md#historical-multi-marker-boot-cycle-diagnostic-flashed-short-uart-capture):
 active-low BOOT/GPIO0 with pull-up and **provisional** 20 ms press/release
 qualification; a fixed historical multi-marker scene recorded two advancing
 selected IDs on UART, both visually confirmed by the user. This does not adopt
