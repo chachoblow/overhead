@@ -8,7 +8,7 @@ fetch runs under [0071](decisions/0071-https-element-fetch-first-slice.md),
 [0074](decisions/0074-live-utc-radar-on-fetched-elements.md) and
 [0075](decisions/0075-fetched-element-refresh-and-staleness.md); the device
 app build is [0076](decisions/0076-device-app-build.md). M7 giftable device
-(accepted 2026-11-08, [0083–0087](decisions/0083-flash-layout-for-updatable-devices.md)) is in progress: OTA, the BLE setup service and the iOS app done; gift readiness paused for M8 radar revision ([0089](decisions/0089-full-width-radar-revision.md)), current.**
+(accepted 2026-11-08, [0083–0087](decisions/0083-flash-layout-for-updatable-devices.md)) is current: OTA, the BLE setup service and the iOS app done; gift readiness resumes after M8 radar revision ([0089](decisions/0089-full-width-radar-revision.md)), complete 2026-11-23 with release 16.**
 Engine-first correctness remains the foundation
 ([0005](decisions/0005-engine-first-implementation.md)); visual iteration now informs
 remaining product budgets under [0021](decisions/0021-radar-first-iteration-on-verified-engine.md).
@@ -268,7 +268,11 @@ remaining gift readiness (user, 2026-11-22); release 16 carries it with 0088.
   accepted on the panel. Done 2026-11-23: `overhead_app::motion`, frame back
   to 20 Hz, the user accepted dev image `0.1.15-m8c`
   ([0089 note](decisions/0089-full-width-radar-revision.md#note--2026-11-23-trails-and-selected-orbit)).
-  Left for M8: release 16.
+- [x] **Release 16:** done 2026-11-23: `0.1.16` signed for `beta` and
+  `stable`, published, and installed over the air on the user's board
+  ([evidence](../firmware/README.md#release-and-recovery-checklist)).
+
+**M8 complete (2026-11-23).** M7 gift readiness resumes.
 
 **Done when:** the device app shows the revised radar, the user accepts it on
 the panel, its cost is measured within 0077/0088's limits, and release 16

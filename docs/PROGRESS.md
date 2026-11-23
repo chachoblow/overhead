@@ -749,3 +749,8 @@ Append-only. Newest entry at the bottom. 3–5 lines per session.
 - Audited the docs against code, builds and tests; fixed drift left by 0089 (period cache, glyph transitions, category slot and icons), a stale `test-wifi` claim, the hard-coded Mac port and the superseded 0004 location note.
 - Moved the M2–M6 per-image diagnostics and the BLE spike from `firmware/README.md` (2,494 → ~960 lines) to `docs/evaluations/firmware-diagnostics.md`, rewriting links in decisions, proposals and PROGRESS (links only); summarized PLAN's finished milestones (449 → 284 lines); deleted two unlinked superseded docs.
 - Verified: whitespace and local links/anchors (4 old HANDOFF anchors in PROGRESS remain broken), hash-pinned frozen docs untouched; docs only, no Rust rerun after edits.
+
+## 2026-11-23 (release 16: M8 complete)
+- Release 16 (`0.1.16`: 0088, setup protocol 2, 0089 with trails/orbit, the 2026-11-23 review fixes) built on devbox at `4af1896` and gated; the first image with the `overhead-build:` marker, signed by the marker-checking `sign` on the user's Mac for `beta` and `stable`; `pages` `8b83ddc`.
+- The user's board installed it over the air at its 17:54 UTC refresh, from dev image `0.1.15-m8c`: build 16 in `ota_1`, `Valid`, `beta`. PLAN M8 checked off; M7 gift readiness resumes.
+- Verified: `verify` on devbox for the signed output and for the live manifests and image; info page and a reset capture on the board. Not captured: the install's own log lines (`mac.sh read` garbled at the wrong baud, likely the gate's separate `stty`/`cat`; Mac dock didn't enumerate the board, direct USB did; both noted in the firmware README). No code changed, so no Rust checks rerun.

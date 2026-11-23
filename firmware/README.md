@@ -39,8 +39,19 @@ that call `espflash --port` themselves (`capture.py`, `drift_capture.py`, …)
 only work with a board on devbox's USB. Logs are host-timestamped on devbox,
 a few ms after the Mac reads them. Long captures need the Mac awake (the gate
 runs them under `caffeinate -i`, which doesn't survive a closed lid on battery).
-On 2026-11-22 `read` returned only garbled bytes (6 KB in 15 min) while
-`monitor` worked; use `monitor` (it resets the board) when `read` looks wrong.
+`read` returns garbled bytes (2026-11-22: 6 KB in 15 min; 2026-11-23: 310 B
+over a release-16 install), while `monitor` works. Likely cause: the gate runs
+`stty -f PORT` and then a separate `cat PORT`, and macOS can reset the speed
+between the two opens (on the Mac itself, `(stty 115200 raw -echo -hupcl;
+exec cat) < /dev/cu.usbserial-N` holds one fd for both); a fix
+is a gate change on the Mac, ask first. Until then use `monitor`, which resets
+the board: never during an OTA probation (a reset there rolls back and marks
+the build failed); after an update, check the info page first (one knob press
+shows `Version … (build N)`).
+Through the user's Anker dock the CP2102N sometimes doesn't enumerate (no
+`cu.usbserial-*`, as at bring-up and again 2026-11-23 on two dock ports);
+plugged straight into the MacBook it appeared at once (`cu.usbserial-10`).
+Replugging the dock's own cable, or restarting the Mac, has been the fix.
 
 ## Historical diagnostics
 Per-image diagnostic evidence from M2 to M6 (Sharp bring-up, frame cost and
@@ -677,6 +688,8 @@ host-timestamped capture `target/soak/soak72.log`, 72 h from 11-11 03:05 UTC):
 | Release 15 (`0.1.15`, same firmware as 14) | built at `d7e8f03`, gate pass, personal-data check 0 (2-digit altitude matches by chance, 42× in 14.bin too), user-signed for `beta` and `stable` into one `OUT`, verified on devbox against `release_keys.rs`; `pages` `71303d8`; live manifests and image served and verified ~1 min after push |
 | OTA install mid-soak (11-12 07:51 UTC, ~29 h in) | `offer=Install`, `OTA_INSTALL done ms=51111`, build 15 in slot 1 `PendingVerify`, Wi-Fi 2 s, `VALID` 13 s, channel `beta`, settings intact |
 | USB recovery flash (11-14 03:07 UTC) | `target/release/15.elf` with the command above: build 15 in `ota_0`, `state=Valid`, `channel=beta`, Wi-Fi 2 s from saved settings, stored elements loaded, first frame (`target/soak/recovery15.log`) |
+| Release 16 (`0.1.16`: 0088, setup protocol 2, 0089 with trails/orbit, 2026-11-23 review fixes) | built at `4af1896`, `--features device` only, 2,113,200 B (67% of a slot), gate pass, one `overhead-build:16` marker, personal-data check 0 (2-digit altitude 40× by chance, 41× in 15.bin); first release signed by the marker-checking `sign`, for `beta` and `stable` into one `OUT`; verified on devbox and again from `overhead.wesklein.com` (served by ~10 min after push); `pages` `8b83ddc` |
+| OTA install of 16 (11-23, refresh at 17:54 UTC) | board on `0.1.15-m8c` (build 15, `ota_0`) took it at its 8 h refresh with no help; the `read` capture of the install was garbled (above), so `OTA_CHECK`/`OTA_INSTALL`/`OTA_HEALTH` lines are not recorded. User saw build 16 on the info page; a reset afterwards: `OTA boot build=16 version=0.1.16 slot=Some(1) state=Valid … channel=beta failed_build=None`, stored elements of 17:54:01Z loaded, Wi-Fi 2 s, first frame (`target/r16/boot16.log`) |
 
 Not shown: a board on `stable` installing a release (gift units), recovery
 of a board with an empty store.
