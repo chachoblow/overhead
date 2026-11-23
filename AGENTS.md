@@ -1,7 +1,6 @@
 # Overhead
 
-Rust workspace for a handheld satellite radar. Hardware and interface intent
-live in docs/DESIGN.md.
+Rust workspace for a handheld satellite radar.
 
 ## Start here
 0. docs/work/ — if it holds a file, that work item is in flight: read it
@@ -54,14 +53,17 @@ progress reports. Handoffs normally happen when a work item completes.
 ## Commands
 - Check: `cargo check --workspace`
 - Test: `cargo test --workspace`
-- Simulator: `cargo run -p overhead-sim -- --demo` (historical replay; opens an SDL2 window; needs SDL2: Homebrew
-  on macOS with the linker path in .cargo/config.toml, `libsdl2-dev` on Linux).
-  The devbox host is headless: use `--snapshot` there, not the window.
+- Simulator on devbox (headless): `cargo run -p overhead-sim -- --demo --snapshot <out.png>`
+  (historical replay; needs `libsdl2-dev`). Without `--snapshot` it opens an SDL2
+  window (Mac: Homebrew SDL2, linker path in .cargo/config.toml).
 - Firmware build: `cd firmware && . "$HOME/export-esp.sh" && cargo build --release --locked`
-- UART port: `/dev/cu.usbserial-*` on macOS, `/dev/ttyUSB*` or `/dev/ttyACM*` on Linux.
-  The user's board is plugged into the Mac: from devbox, flash and capture with
-  `firmware/mac.sh` ([usage and limits](firmware/README.md#board-on-the-mac-macsh)).
-  Commands in docs that name a macOS port are historical; substitute the verified port.
+  builds the benchmarks; the device app needs `--bin overhead-s3-device --features device`
+  (plus `dev-settings` locally) and the env exports in firmware/README.md
+  ("Signed OTA and rollback").
+- The user's board is plugged into the Mac: from devbox, flash and capture with
+  `firmware/mac.sh` ([usage and limits](firmware/README.md#board-on-the-mac-macsh)),
+  which finds the port itself. Doc commands naming `/dev/ttyUSB*` apply only with
+  the board back on devbox; on the Mac directly the port is `/dev/cu.usbserial-*`.
 - Firmware host tests (from repo root): `cargo +stable test --manifest-path firmware/Cargo.toml --lib --locked`;
   add `--features device` for the device app's tests (most of them are feature-gated).
 
