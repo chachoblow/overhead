@@ -7,7 +7,8 @@
 //! BLE never shares the radio with a refresh. It ends in a reset: after a
 //! save (into the normal run on the new settings, which prepares the
 //! coastline for the new site), or, with settings stored, after
-//! `SETUP_IDLE_S` without an app (to retry the stored network).
+//! `SETUP_IDLE_S` without an answered request, link or no link (0091), to
+//! retry the stored network.
 use super::{EspFlash, RESOURCES, SCREEN, SENDER, net, ota, uptime_us};
 use crate::{
     element_store,
@@ -52,6 +53,20 @@ pub fn take_join_timeout() -> bool {
         core::ptr::write_volatile(&raw mut REQUEST, 0);
         v == setup_policy::JOIN_TIMEOUT_FLAG
     }
+}
+
+fn now_s() -> u64 {
+    uptime_us() / 1_000_000
+}
+
+/// 0091: settings are stored and no request was answered for
+/// `SETUP_IDLE_S`: restart on them.
+fn idle_restart() -> ! {
+    println!(
+        "SETUP idle_timeout after_s={}; restarting on the stored settings",
+        setup_policy::SETUP_IDLE_S
+    );
+    ota::reset()
 }
 
 /// The stored network did not join in time: restart into setup.
@@ -564,15 +579,10 @@ mod ble {
         }))
         .expect("GATT server");
         let _ = join(run_host(runner), async {
-            let mut idle_since = uptime_us();
+            let mut idle = setup_policy::Idle::new(configured, now_s());
             loop {
-                let idle_s = (uptime_us() - idle_since) / 1_000_000;
-                if configured && idle_s >= setup_policy::SETUP_IDLE_S {
-                    println!(
-                        "SETUP idle_timeout after_s={}; restarting on the stored settings",
-                        setup_policy::SETUP_IDLE_S
-                    );
-                    ota::reset();
+                if idle.restart_in_s(now_s()) == Some(0) {
+                    idle_restart();
                 }
                 // Scan while no app is connected (advertising pauses for it).
                 if device
@@ -582,8 +592,8 @@ mod ble {
                     device.refresh().await;
                 }
                 let mut wait_s = setup_policy::RESCAN_S;
-                if configured {
-                    wait_s = wait_s.min(setup_policy::SETUP_IDLE_S.saturating_sub(idle_s));
+                if let Some(r) = idle.restart_in_s(now_s()) {
+                    wait_s = wait_s.min(r);
                 }
                 let accepted = match with_timeout(
                     Wait::from_secs(wait_s.max(1)),
@@ -598,9 +608,8 @@ mod ble {
                     Ok(conn) => {
                         CONNECTED.store(true, Ordering::Relaxed);
                         println!("SETUP ble_connected internal_free={}", internal_free());
-                        session(&stack, &server, &conn, &mut device).await;
+                        session(&stack, &server, &conn, &mut device, &mut idle).await;
                         CONNECTED.store(false, Ordering::Relaxed);
-                        idle_since = uptime_us();
                         show(Show::Waiting);
                     }
                     Err(e) => {
@@ -681,6 +690,7 @@ mod ble {
         server: &Server<'_>,
         conn: &GattConnection<'_, '_, DefaultPacketPool>,
         device: &mut Device,
+        idle: &mut setup_policy::Idle,
     ) {
         // A Wi-Fi scan or join takes the shared radio for long stretches;
         // BlueZ's default 420 ms supervision timeout drops the link then.
@@ -709,14 +719,41 @@ mod ble {
             println!("SETUP request_security_failed {e:?}");
         }
         let request = server.setup.request.handle;
+        // 0091: an unpaired link is dropped after `PAIR_TIMEOUT_S`, and a
+        // configured window restarts after `SETUP_IDLE_S` without a request
+        // even while a link is held.
+        let mut pairing_since = Some(now_s());
         let reason = loop {
-            match conn.next().await {
+            let event = match idle.session_expiry(now_s(), pairing_since) {
+                None => conn.next().await,
+                Some((wait_s, why)) => {
+                    use embassy_futures::select::{Either, select};
+                    match select(conn.next(), Timer::after(Wait::from_secs(wait_s))).await {
+                        Either::First(event) => event,
+                        Either::Second(()) => match why {
+                            setup_policy::Expiry::Restart => idle_restart(),
+                            setup_policy::Expiry::Disconnect => {
+                                println!(
+                                    "SETUP pairing_timeout after_s={}; disconnecting",
+                                    setup_policy::PAIR_TIMEOUT_S
+                                );
+                                conn.raw().disconnect();
+                                // Only the disconnect (or the restart) is left.
+                                pairing_since = None;
+                                continue;
+                            }
+                        },
+                    }
+                }
+            };
+            match event {
                 GattConnectionEvent::Disconnected { reason } => break reason,
                 GattConnectionEvent::PassKeyDisplay(key) => {
                     #[cfg(feature = "setup-test")]
                     println!("SETUP_PASSKEY {key}");
                     println!("SETUP passkey_shown");
                     show(Show::Passkey(key.value()));
+                    pairing_since = Some(now_s());
                 }
                 GattConnectionEvent::PairingComplete {
                     security_level,
@@ -728,6 +765,7 @@ mod ble {
                         internal_free()
                     );
                     show(Show::Paired);
+                    pairing_since = None;
                     if let Some(p) = device.painted.take() {
                         // SAFETY: same CPU0 stack and boot as the paint.
                         let w = unsafe { p.scan() };
@@ -773,6 +811,7 @@ mod ble {
                     }
                     if let Some(n) = len {
                         handle(server, conn, device, &frame[..n]).await;
+                        idle.answered(now_s());
                     }
                 }
                 _ => {}

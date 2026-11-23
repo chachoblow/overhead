@@ -454,8 +454,11 @@ host-tested), screens in `render/src/setup.rs`; the info page lives in
   press while tracking shows the info page for 30 s; since
   [0088](#selection-button-and-captured-knob-switch-0088) each press toggles
   it and presses are interrupt-captured.
-- **Leaves** by a software reset 3 s after `Saved`, or after 10 min with no
-  client when settings exist.
+- **Leaves** by a software reset 3 s after `Saved`, or, when settings exist,
+  after 10 min without an answered request, even with a phone connected
+  (`SETUP idle_timeout`, [0091](../docs/decisions/0091-setup-idle-counts-requests-not-links.md)).
+  A link not paired 60 s after connecting or its last passkey is dropped
+  (`SETUP pairing_timeout`).
 - **Tests without saving** (protocol 2, [0087 note](../docs/decisions/0087-ios-setup-app-over-ble.md#note--2026-11-16-protocol-2-tests-a-password-before-saving)):
   `TestWifi` runs the same test join, logs `SETUP request test_wifi` and the
   usual `SETUP test …` lines (`result=Saved` there is the join passing,

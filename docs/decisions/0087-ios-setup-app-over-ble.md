@@ -127,3 +127,9 @@ Save, and over moving Location first so Join could be the save.
 - On the board (dev build `0.1.15-wifitest`, user's iPhone): wrong passwords
   refused in ~5–9 s (`FourWayHandshakeTimeout` → `WrongPassphrase`), the
   right one joined in 1–11 s, the BLE link held through four tests.
+
+## Note — 2026-11-23: idle time counts requests
+
+[0091](0091-setup-idle-counts-requests-not-links.md) amends "after 10 min
+with no client": the clock now runs from the last answered request, link or
+no link, and an unpaired link is dropped after 60 s.

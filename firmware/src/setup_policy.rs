@@ -16,6 +16,78 @@ pub const JOIN_TIMEOUT_S: u64 = 5 * 60;
 /// into the normal run (a router slower than the device after a power cut
 /// must not strand it in setup).
 pub const SETUP_IDLE_S: u64 = 10 * 60;
+/// A link that has not paired this long after connecting, or after its last
+/// passkey was shown, is dropped (0091).
+pub const PAIR_TIMEOUT_S: u64 = 60;
+
+/// What ends a setup session early (0091).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Expiry {
+    /// Drop the link: it has not paired in time.
+    Disconnect,
+    /// Restart on the stored settings: no request answered for
+    /// [`SETUP_IDLE_S`].
+    Restart,
+}
+
+/// The window's idle clock (0091): time since the window opened or a request
+/// was last answered. A link, connected or dropped, does not reset it, so a
+/// phone that holds or repeats a link without asking anything cannot keep a
+/// configured device in setup. A request being handled is not idle: the
+/// caller answers it before the clock is checked again.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Idle {
+    configured: bool,
+    since_s: u64,
+}
+
+impl Idle {
+    /// `configured`: settings are stored, so idling ends the window.
+    pub const fn new(configured: bool, now_s: u64) -> Self {
+        Self {
+            configured,
+            since_s: now_s,
+        }
+    }
+
+    /// A request was answered at `now_s`.
+    pub fn answered(&mut self, now_s: u64) {
+        self.since_s = self.since_s.max(now_s);
+    }
+
+    /// Seconds from `now_s` until the window restarts (0 once due); `None`
+    /// without stored settings, where setup waits for as long as it takes.
+    pub fn restart_in_s(&self, now_s: u64) -> Option<u64> {
+        self.configured.then(|| {
+            self.since_s
+                .saturating_add(SETUP_IDLE_S)
+                .saturating_sub(now_s)
+        })
+    }
+
+    /// Within a session: the next expiry and the seconds from `now_s` until
+    /// it (0 once due). `pairing_since_s` is when the link connected or last
+    /// showed a passkey; `None` once paired.
+    pub fn session_expiry(
+        &self,
+        now_s: u64,
+        pairing_since_s: Option<u64>,
+    ) -> Option<(u64, Expiry)> {
+        let pair = pairing_since_s.map(|t| {
+            (
+                t.saturating_add(PAIR_TIMEOUT_S).saturating_sub(now_s),
+                Expiry::Disconnect,
+            )
+        });
+        let restart = self.restart_in_s(now_s).map(|s| (s, Expiry::Restart));
+        match (pair, restart) {
+            // The restart wins a tie: it ends the link too.
+            (Some(p), Some(r)) => Some(if p.0 < r.0 { p } else { r }),
+            (p, r) => p.or(r),
+        }
+    }
+}
+
 /// Networks sent per scan, strongest first.
 pub const SCAN_MAX: usize = 20;
 /// While no app is connected the device rescans this often, so a `Scan` is
@@ -278,6 +350,70 @@ mod tests {
                 alt_m: 20.0,
             }),
         }
+    }
+
+    #[test]
+    fn an_unconfigured_window_never_restarts() {
+        let idle = Idle::new(false, 0);
+        assert_eq!(idle.restart_in_s(10 * SETUP_IDLE_S), None);
+        assert_eq!(idle.session_expiry(0, None), None);
+        // An unpaired link is still dropped.
+        assert_eq!(
+            idle.session_expiry(30, Some(0)),
+            Some((30, Expiry::Disconnect))
+        );
+    }
+
+    #[test]
+    fn only_answered_requests_reset_the_idle_clock() {
+        let mut idle = Idle::new(true, 100);
+        assert_eq!(idle.restart_in_s(100), Some(SETUP_IDLE_S));
+        assert_eq!(idle.restart_in_s(100 + SETUP_IDLE_S), Some(0));
+        assert_eq!(idle.restart_in_s(u64::MAX), Some(0));
+        idle.answered(400);
+        assert_eq!(idle.restart_in_s(400), Some(SETUP_IDLE_S));
+        // An earlier time never moves it back.
+        idle.answered(200);
+        assert_eq!(idle.restart_in_s(400), Some(SETUP_IDLE_S));
+    }
+
+    #[test]
+    fn a_link_held_without_requests_restarts_a_configured_window() {
+        // Paired at once, then silent: the restart still comes.
+        let idle = Idle::new(true, 0);
+        assert_eq!(
+            idle.session_expiry(SETUP_IDLE_S - 5, None),
+            Some((5, Expiry::Restart))
+        );
+        // Unpaired links are dropped first, and dropping them does not
+        // reset the clock: repeated links end at the same restart.
+        for connected in [0, 100, SETUP_IDLE_S - 30] {
+            let (wait, why) = idle.session_expiry(connected, Some(connected)).unwrap();
+            if connected + PAIR_TIMEOUT_S < SETUP_IDLE_S {
+                assert_eq!((wait, why), (PAIR_TIMEOUT_S, Expiry::Disconnect));
+            } else {
+                assert_eq!((wait, why), (30, Expiry::Restart));
+            }
+        }
+        // A tie goes to the restart.
+        let tie = SETUP_IDLE_S - PAIR_TIMEOUT_S;
+        assert_eq!(
+            idle.session_expiry(tie, Some(tie)),
+            Some((PAIR_TIMEOUT_S, Expiry::Restart))
+        );
+    }
+
+    #[test]
+    fn a_new_passkey_restarts_the_pairing_time() {
+        let idle = Idle::new(false, 0);
+        assert_eq!(
+            idle.session_expiry(50, Some(40)),
+            Some((50, Expiry::Disconnect))
+        );
+        assert_eq!(
+            idle.session_expiry(200, Some(0)),
+            Some((0, Expiry::Disconnect))
+        );
     }
 
     #[test]
