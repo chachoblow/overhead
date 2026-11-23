@@ -1,5 +1,5 @@
 # Release 16 is published and installed over the air
-Status: blocked: user signs 16.bin on the Mac (beta + stable) and copies OUT back
+Status: blocked: board not on the Mac's USB; needed to capture the OTA install
 Started: 2026-11-23. Scope: PLAN M8, last box (release 16); decisions
 [0085](../decisions/0085-signed-updates-and-release-keys.md),
 [0088](../decisions/0088-selection-button-and-captured-knob-switch.md),
@@ -32,8 +32,8 @@ Review fixes ship host-tested; board drills for them stay open risks.
 
 ## Plan
 - [x] Build 16 on devbox, save-image, gate, personal-data check, sha256.
-- [ ] Hand over to the user for signing.
-- [ ] Verify manifests on devbox; publish to `pages`; verify live.
+- [x] Hand over to the user for signing.
+- [x] Verify manifests on devbox; publish to `pages`; verify live.
 - [ ] Watch the board take 16 at its next 8 h refresh (`mac.sh read`).
 - [ ] Docs: README evidence, PLAN, HANDOFF, PROGRESS; delete this file.
 
@@ -46,6 +46,10 @@ Review fixes ship host-tested; board drills for them stay open risks.
 - `image_gate.py` exit 0; ELF sha256 `cc07a819…5ace2`.
 - Marker: one `overhead-build:16` in 16.bin.
 - Personal data: SSID 0, password 0, lat 0, lon 0; 2-digit altitude 40 (41 in 15.bin, chance).
+- User signed beta + stable on the Mac; `out16/` on devbox: image hash matches, `verify` ok for both (build 16, length, sha256, marker 16).
+- `pages` `8b83ddc` (fast-forward from `71303d8`), pushed 14:36 UTC.
+- Live (overhead.wesklein.com) served build 16 by 14:36 UTC; fetched beta/stable manifests and images/16.bin, `verify` ok for both.
 - 16.bin sha256 `752f1bf019e3d980db62d38b37b0e0e9e031dd9f1619ef53463c9705127d7a94`.
 
 ## Open questions
+- 14:3x UTC: `mac.sh` found no serial port on the Mac (board unplugged?). Needed for the OTA capture.
