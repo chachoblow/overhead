@@ -305,3 +305,37 @@ fn cached_trails_match_fresh_ones_and_follow_a_zoom_before_drawing() {
     motion.update(&app, 0);
     assert_eq!(motion.trails(&app).collect::<Vec<_>>(), zoomed);
 }
+
+/// The device draws NO DATA frames before the first catalogue arrives (and
+/// after a stored one expires at boot): motion must follow them, not panic.
+#[test]
+fn frames_without_a_catalogue_are_followed() {
+    let observer = GeodeticPosition {
+        latitude_rad: 40f64.to_radians(),
+        longitude_rad: (-105f64).to_radians(),
+        altitude_km: 1.6,
+    };
+    let view = View::rectangular(20.0, 400.0 / 240.0).unwrap();
+    let mut app = RadarApp::awaiting_catalogue(observer, view).unwrap();
+    let mut motion = Motion::new();
+    let t = run(
+        &mut app,
+        &mut motion,
+        start(),
+        TimeDelta::minutes(5),
+        TimeDelta::seconds(10),
+    );
+    assert_eq!(motion.trails(&app).count(), 0);
+    assert_eq!(motion.orbit(&app).count(), 0);
+    // A catalogue arriving later starts trails as usual.
+    app.load_catalogue(visual());
+    let end = run(
+        &mut app,
+        &mut motion,
+        t + TimeDelta::seconds(10),
+        TimeDelta::minutes(5),
+        TimeDelta::seconds(10),
+    );
+    assert_eq!(app.time(), Some(end));
+    assert!(motion.trails(&app).count() > 0);
+}

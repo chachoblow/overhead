@@ -100,7 +100,9 @@ impl Tier {
             }
         }
         let n = app.samples.len();
-        if self.points.len() != self.len * n {
+        // `bases` too: with no entries `points` is legitimately empty, but
+        // the snapshot still needs its slots (a frame before any catalogue).
+        if self.bases.len() != self.len || self.points.len() != self.len * n {
             self.bases = alloc::vec![now; self.len];
             self.points = alloc::vec![
                 Point {
