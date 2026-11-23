@@ -8,7 +8,9 @@ use std::{
     process::ExitCode,
 };
 
-use overhead_update::{Channel, Manifest, hex, parse_hex, public_key, sha256, sign, to_json};
+use overhead_update::{
+    Channel, Manifest, MarkerError, find_build, hex, parse_hex, public_key, sha256, sign, to_json,
+};
 
 const USAGE: &str = "Usage:
   overhead-release keygen KEY_FILE
@@ -18,10 +20,11 @@ const USAGE: &str = "Usage:
   overhead-release sign KEY_FILE CHANNEL BUILD VERSION IMAGE.bin OUT_DIR [MIN_SETTINGS]
       Copy IMAGE.bin to OUT_DIR/ota/images/BUILD.bin and write the signed
       OUT_DIR/ota/CHANNEL/manifest.json. CHANNEL is stable or beta; BUILD
-      must be the build number compiled into the image (OVERHEAD_BUILD).
-      MIN_SETTINGS defaults to 1.
+      must be the build number compiled into the image (OVERHEAD_BUILD),
+      which the image's build marker must name. MIN_SETTINGS defaults to 1.
   overhead-release verify MANIFEST.json PUBLIC_HEX [IMAGE.bin]
-      Check the signature (and the image's length and SHA-256).";
+      Check the signature (and the image's length, SHA-256 and build
+      marker; images before release 16 have no marker).";
 
 fn main() -> ExitCode {
     let args: Vec<String> = env::args().skip(1).collect();
@@ -89,6 +92,20 @@ fn sign_release(
     let build: u32 = build.parse().map_err(|_| "BUILD must be a u32")?;
     let min_settings: u32 = min.parse().map_err(|_| "MIN_SETTINGS must be a u32")?;
     let bytes = fs::read(image).map_err(|e| format!("{image}: {e}"))?;
+    // A build the image wasn't compiled as installs everywhere and then
+    // reads as a rollback (`ota_health::on_boot`), burning the number.
+    match find_build(&bytes) {
+        Ok(b) if b == build => {}
+        Ok(b) => {
+            return Err(format!(
+                "{image} was built as {b}, not {build} (OVERHEAD_BUILD)"
+            ));
+        }
+        Err(MarkerError::Missing) => return Err(format!("{image} has no build marker")),
+        Err(MarkerError::Conflicting) => {
+            return Err(format!("{image} has conflicting build markers"));
+        }
+    }
     let length = u32::try_from(bytes.len()).map_err(|_| "image too large")?;
     let m = Manifest {
         channel,
@@ -134,6 +151,21 @@ fn verify(manifest: &str, public: &str, image: Option<&str>) -> Result<(), Strin
             .and_then(|()| check.finish())
             .map_err(|e| format!("image refused: {e:?}"))?;
         println!("ok: image length and sha256 match");
+        match find_build(&bytes) {
+            Ok(b) if b == m.build => println!("ok: image build marker {b}"),
+            Ok(b) => {
+                return Err(format!(
+                    "image refused: built as {b}, manifest says {}",
+                    m.build
+                ));
+            }
+            Err(MarkerError::Missing) => {
+                println!("note: image has no build marker (before release 16)")
+            }
+            Err(MarkerError::Conflicting) => {
+                return Err("image refused: conflicting build markers".into());
+            }
+        }
     }
     Ok(())
 }

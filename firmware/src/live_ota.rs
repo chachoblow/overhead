@@ -39,6 +39,12 @@ use overhead_update::{self as update, Channel, ImageCheck, Manifest, Offer, Runn
 /// Build number compiled in by the release build (`OVERHEAD_BUILD`); 0 for
 /// developer builds, so any signed release is newer.
 pub const BUILD: u32 = parse_u32(option_env!("OVERHEAD_BUILD"));
+/// `overhead-build:BUILD` in the image, so `overhead-release sign` refuses a
+/// manifest whose build differs from the one compiled in (a mismatch would
+/// install everywhere and then read as a rollback). Referenced at boot so
+/// the linker keeps it.
+#[used]
+static BUILD_MARKER: [u8; update::BUILD_MARKER_LEN] = update::build_marker(BUILD);
 pub const VERSION: &str = match option_env!("OVERHEAD_VERSION") {
     Some(v) => v,
     None => "dev",
@@ -241,6 +247,7 @@ impl Ota {
             (Some((_, e)), Some(b)) if e.slot() == b => slot_state(e.state),
             _ => SlotState::Undefined,
         };
+        core::hint::black_box(&BUILD_MARKER);
         let (boot, c) = ota_health::on_boot(BUILD, state, &mut settings);
         changed |= c;
         changed |= seed_dev_settings(&mut settings);

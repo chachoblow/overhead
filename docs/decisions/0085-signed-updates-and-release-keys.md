@@ -92,3 +92,16 @@ recovery.
   `stable` (including a factory-reset one) failed its health check and
   rolled back. Every release that changes `stable` keeps it present.
 - Release and recovery steps: [firmware README checklist](../../firmware/README.md#release-and-recovery-checklist).
+
+## Note — 2026-11-23: the signer checks the image's build
+
+From the full code review: nothing checked that a manifest's `build` is the
+`OVERHEAD_BUILD` compiled into its image. A mismatch installs on every
+device, which then reads its own boot as a rollback (`ota_health::on_boot`:
+`pending_build` ≠ the running build), records the build as failed, skips
+the health check and returns to the old slot at the next reset; the number
+is spent. Since release 16 the image carries `overhead-build:N`
+(`overhead_update::build_marker`, kept by `live_ota`), and
+`overhead-release sign` refuses an image whose marker is missing or names
+another build; `verify` with an image checks it as well. The manifest format
+and devices in the field are unchanged.

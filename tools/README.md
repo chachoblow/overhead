@@ -500,7 +500,11 @@ cargo run -q -p overhead-tools --bin overhead-release -- \
 the public key for `firmware/src/release_keys.rs`. `sign` copies the image to
 `OUT/ota/images/BUILD.bin` and writes `OUT/ota/CHANNEL/manifest.json`, then
 checks it with the device's own verification. BUILD must equal the image's
-`OVERHEAD_BUILD`. Release steps: [firmware README](../firmware/README.md#signed-ota-and-rollback-00830086).
+`OVERHEAD_BUILD`: since release 16 the firmware embeds `overhead-build:N`
+and `sign` refuses an image whose marker is missing or names another build
+(a mismatch would install on every device and then read as a rollback,
+burning the number). `verify` with an image checks the marker too, and only
+notes its absence (images before 16). Release steps: [firmware README](../firmware/README.md#signed-ota-and-rollback-00830086).
 
 ## `overhead-setup-client`
 

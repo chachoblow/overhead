@@ -309,6 +309,78 @@ impl ImageCheck {
     }
 }
 
+/// Start of the build marker the firmware embeds, so `overhead-release` can
+/// check a manifest's build against the image it signs: the prefix, the
+/// decimal build number and at least one NUL.
+pub const BUILD_MARKER_PREFIX: &[u8] = b"overhead-build:";
+/// [`build_marker`]'s length: the prefix, up to 10 digits, NUL padding.
+pub const BUILD_MARKER_LEN: usize = BUILD_MARKER_PREFIX.len() + 10 + 1;
+
+/// The marker for `build`, NUL-padded to [`BUILD_MARKER_LEN`].
+pub const fn build_marker(build: u32) -> [u8; BUILD_MARKER_LEN] {
+    let mut out = [0u8; BUILD_MARKER_LEN];
+    let p = BUILD_MARKER_PREFIX;
+    let mut i = 0;
+    while i < p.len() {
+        out[i] = p[i];
+        i += 1;
+    }
+    let mut digits = [0u8; 10];
+    let (mut n, mut d) = (build, 0);
+    loop {
+        digits[d] = b'0' + (n % 10) as u8;
+        d += 1;
+        n /= 10;
+        if n == 0 {
+            break;
+        }
+    }
+    while d > 0 {
+        d -= 1;
+        out[i] = digits[d];
+        i += 1;
+    }
+    out
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MarkerError {
+    /// No marker: an image from before the marker, or not this firmware.
+    Missing,
+    /// More than one marker with different build numbers.
+    Conflicting,
+}
+
+/// The build number an image's marker names. Only the prefix followed by
+/// 1–10 digits and a NUL counts; the same number repeated is accepted.
+pub fn find_build(image: &[u8]) -> Result<u32, MarkerError> {
+    let p = BUILD_MARKER_PREFIX;
+    let mut found: Option<u32> = None;
+    let mut at = 0;
+    while let Some(off) = image[at..].windows(p.len()).position(|w| w == p) {
+        let start = at + off + p.len();
+        at = at + off + 1;
+        let digits = image[start..]
+            .iter()
+            .take_while(|b| b.is_ascii_digit())
+            .count();
+        if !(1..=10).contains(&digits) || image.get(start + digits) != Some(&0) {
+            continue;
+        }
+        let Some(n) = core::str::from_utf8(&image[start..start + digits])
+            .ok()
+            .and_then(|s| s.parse::<u32>().ok())
+        else {
+            continue;
+        };
+        match found {
+            Some(f) if f != n => return Err(MarkerError::Conflicting),
+            _ => found = Some(n),
+        }
+    }
+    found.ok_or(MarkerError::Missing)
+}
+
 /// SHA-256 of a whole buffer (host tools and tests).
 pub fn sha256(data: &[u8]) -> [u8; 32] {
     Sha256::digest(data).into()
@@ -371,6 +443,43 @@ mod tests {
 
     const SECRET: [u8; 32] = [7; 32];
     const OTHER: [u8; 32] = [9; 32];
+
+    #[test]
+    fn build_markers_round_trip_inside_an_image() {
+        for build in [0, 7, 16, 1_000, u32::MAX] {
+            let mut image = alloc::vec![0xAAu8; 40];
+            image.extend_from_slice(&build_marker(build));
+            image.extend_from_slice(b"123 trailing");
+            assert_eq!(find_build(&image), Ok(build), "{build}");
+        }
+        assert_eq!(&build_marker(16)[..18], b"overhead-build:16\0");
+        assert_eq!(
+            &build_marker(u32::MAX)[..26],
+            b"overhead-build:4294967295\0"
+        );
+    }
+
+    #[test]
+    fn missing_malformed_and_conflicting_markers() {
+        assert_eq!(find_build(b""), Err(MarkerError::Missing));
+        assert_eq!(find_build(b"no marker here"), Err(MarkerError::Missing));
+        // A bare prefix, no digits, no NUL or too many digits do not count.
+        for bad in [
+            &b"overhead-build:\0"[..],
+            b"overhead-build:12",
+            b"overhead-build:12x\0",
+            b"overhead-build:12345678901\0",
+            b"overhead-build:99999999999\0",
+        ] {
+            assert_eq!(find_build(bad), Err(MarkerError::Missing), "{bad:?}");
+        }
+        let mut two = build_marker(16).to_vec();
+        two.extend_from_slice(b"overhead-build:");
+        two.extend_from_slice(&build_marker(16));
+        assert_eq!(find_build(&two), Ok(16));
+        two.extend_from_slice(&build_marker(17));
+        assert_eq!(find_build(&two), Err(MarkerError::Conflicting));
+    }
 
     fn manifest() -> Manifest {
         Manifest {
