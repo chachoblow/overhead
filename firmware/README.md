@@ -39,15 +39,12 @@ that call `espflash --port` themselves (`capture.py`, `drift_capture.py`, …)
 only work with a board on devbox's USB. Logs are host-timestamped on devbox,
 a few ms after the Mac reads them. Long captures need the Mac awake (the gate
 runs them under `caffeinate -i`, which doesn't survive a closed lid on battery).
-`read` returns garbled bytes (2026-11-22: 6 KB in 15 min; 2026-11-23: 310 B
-over a release-16 install), while `monitor` works. Likely cause: the gate runs
-`stty -f PORT` and then a separate `cat PORT`, and macOS can reset the speed
-between the two opens (on the Mac itself, `(stty 115200 raw -echo -hupcl;
-exec cat) < /dev/cu.usbserial-N` holds one fd for both); a fix
-is a gate change on the Mac, ask first. Until then use `monitor`, which resets
-the board: never during an OTA probation (a reset there rolls back and marks
-the build failed); after an update, check the info page first (one knob press
-shows `Version … (build N)`).
+`read` returned garbled bytes on 2026-11-22/23: the gate ran `stty -f PORT`
+and then a separate `cat PORT`, and macOS resets a port's speed on its last
+close, so `cat` read at 9600 baud. Fixed 2026-11-23 in the gate (one open for
+both; devbox README log): `read` now gives clean lines without a reset.
+`monitor` resets the board, so never use it during an OTA probation (a reset
+there rolls back and marks the build failed).
 Through the user's Anker dock the CP2102N sometimes doesn't enumerate (no
 `cu.usbserial-*`, as at bring-up and again 2026-11-23 on two dock ports);
 plugged straight into the MacBook it appeared at once (`cu.usbserial-10`).
